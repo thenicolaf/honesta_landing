@@ -1,3 +1,16 @@
+import { Navbar, Hero, TrustBadges, CategoryCards, ProductGrid, PhilosophyBlock, InstagramCTA, Footer } from "@/shared/sections";
+
 export default function Home() {
-  return <div className="text-3xl">Honesta</div>;
+  return (
+    <>
+      <Navbar />
+      <Hero />
+      <TrustBadges />
+      <CategoryCards />
+      <ProductGrid />
+      <PhilosophyBlock />
+      <InstagramCTA />
+      <Footer />
+    </>
+  );
 }

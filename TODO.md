@@ -20,21 +20,20 @@
 
 > Порядок секций: [spec §2](./HONESTA_LANDING_SPEC.md#2-архитектура-страницы-секции)
 
-- [ ] `Navbar.tsx` — логотип, tagline, nav-ссылки, Instagram-иконка, sticky + backdrop-blur → [spec §3 / Hero / Navbar](./HONESTA_LANDING_SPEC.md#01-hero-section)
-- [ ] `Hero.tsx` — 100vh, фото-фон + overlay, H1 italic, subtitle, CTA-кнопка, parallax → [spec §3.01](./HONESTA_LANDING_SPEC.md#01-hero-section)
-- [ ] `TrustBadges.tsx` — 4 бейджа (100% Fruit / Small Batch / Clean Label / No Sugar), stagger анимация → [spec §3.02](./HONESTA_LANDING_SPEC.md#02-trust-badges)
-- [ ] `CategoryCards.tsx` — 3 карточки (Pastila / Dried Fruits / Gourmet), копирайт из спека → [spec §3.03](./HONESTA_LANDING_SPEC.md#03-product-categories)
-- [ ] `ProductGrid.tsx` — 6 продуктов 3×2, hover overlay, CTA → Instagram DM → [spec §3.04](./HONESTA_LANDING_SPEC.md#04-featured-products-grid)
-- [ ] `PhilosophyBlock.tsx` — тёмный фон `earth`, split 60/40, манифест + pull-quote → [spec §3.05](./HONESTA_LANDING_SPEC.md#05-why-honesta--philosophy-block)
-- [ ] `Reviews.tsx` — masonry фото + 2–3 текстовых отзыва → [spec §3.06](./HONESTA_LANDING_SPEC.md#06-social-proof)
-- [ ] `InstagramCTA.tsx` — оранжевый блок, кнопка `ig.me/m/honesta_brand`, микро-текст → [spec §3.07](./HONESTA_LANDING_SPEC.md#07-main-cta-block--instagram-dm)
-- [ ] `Footer.tsx` — 3 колонки, фон `earth`, кремовый текст → [spec §3.08](./HONESTA_LANDING_SPEC.md#08-footer)
+- [x] `Navbar.tsx` — логотип, tagline, nav-ссылки, Instagram-иконка, sticky + backdrop-blur → [spec §3 / Hero / Navbar](./HONESTA_LANDING_SPEC.md#01-hero-section)
+- [x] `Hero.tsx` — 100vh, фото-фон + overlay, H1 italic, subtitle, CTA-кнопка, parallax → [spec §3.01](./HONESTA_LANDING_SPEC.md#01-hero-section)
+- [x] `TrustBadges.tsx` — 4 бейджа (100% Fruit / Small Batch / Clean Label / No Sugar), stagger анимация → [spec §3.02](./HONESTA_LANDING_SPEC.md#02-trust-badges)
+- [x] `CategoryCards.tsx` — 3 карточки (Pastila / Dried Fruits / Gourmet), копирайт из спека → [spec §3.03](./HONESTA_LANDING_SPEC.md#03-product-categories)
+- [x] `ProductGrid.tsx` — 6 продуктов 3×2, hover overlay, CTA → Instagram DM → [spec §3.04](./HONESTA_LANDING_SPEC.md#04-featured-products-grid)
+- [x] `PhilosophyBlock.tsx` — тёмный фон `earth`, split 60/40, манифест + pull-quote → [spec §3.05](./HONESTA_LANDING_SPEC.md#05-why-honesta--philosophy-block)
+- [x] `InstagramCTA.tsx` — оранжевый блок, кнопка `ig.me/m/honesta_brand`, микро-текст → [spec §3.07](./HONESTA_LANDING_SPEC.md#07-main-cta-block--instagram-dm)
+- [x] `Footer.tsx` — 3 колонки, фон `earth`, кремовый текст → [spec §3.08](./HONESTA_LANDING_SPEC.md#08-footer)
 
 ---
 
 ## Сборка страницы
 
-- [ ] `page.tsx` — собрать все секции в порядке из спека → [spec §2](./HONESTA_LANDING_SPEC.md#2-архитектура-страницы-секции)
+- [x] `page.tsx` — собрать все секции в порядке из спека → [spec §2](./HONESTA_LANDING_SPEC.md#2-архитектура-страницы-секции)
 
 ---
 

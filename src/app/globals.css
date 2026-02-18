@@ -27,6 +27,12 @@
   --foreground: var(--color-earth);
 }
 
+html {
+  scroll-behavior: smooth;
+  /* offset for the fixed navbar: h-16 mobile → h-20 desktop */
+  scroll-padding-top: 5rem;
+}
+
 body {
   background: var(--color-cream);
   color: var(--color-earth);
