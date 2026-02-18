@@ -17,7 +17,7 @@ export function Hero() {
   const imageY = useTransform(scrollY, [0, 600], [0, 120]);
 
   return (
-    <section className="relative h-screen min-h-160 overflow-hidden">
+    <section id="hero" className="relative h-screen min-h-160 overflow-hidden">
       {/* Background image with parallax */}
       <motion.div className="absolute inset-0 scale-110" style={{ y: imageY }}>
         <Image

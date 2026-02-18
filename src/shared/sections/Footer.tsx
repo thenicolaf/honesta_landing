@@ -38,7 +38,7 @@ export function Footer() {
               </span>
             </Link>
 
-            <p className="font-body font-light text-sand/50 text-sm leading-relaxed max-w-[220px]">
+            <p className="font-body font-light text-sand/50 text-sm leading-relaxed max-w-55">
               Handcrafted dried fruits and pastila.
               <br />
               100% fruit. No additives. Made with care.
@@ -53,12 +53,12 @@ export function Footer() {
             <ul className="flex flex-col gap-3">
               {NAV_LINKS.map(({ href, label }) => (
                 <li key={href}>
-                  <a
+                  <Link
                     href={href}
                     className="font-body font-light text-sand/65 text-sm hover:text-orange-light transition-colors duration-200"
                   >
                     {label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -94,10 +94,10 @@ export function Footer() {
               <li>
                 {/* TODO: replace with real email address */}
                 <a
-                  href="mailto:honest@honesta.brand"
+                  href={`mailto:${process.env.NEXT_PUBLIC_EMAIL}`}
                   className="font-body font-light text-sand/65 text-sm hover:text-orange-light transition-colors duration-200"
                 >
-                  honest@honesta.brand
+                  {process.env.NEXT_PUBLIC_EMAIL}
                 </a>
               </li>
             </ul>

@@ -5,8 +5,16 @@ import { IconBotanical } from "@/shared/icons";
 
 const manifestLines = [
   { prefix: "We don't add", emphasis: "flavors", suffix: "to mask reality." },
-  { prefix: "We don't add", emphasis: "sugar", suffix: "to make up for poor ingredients." },
-  { prefix: "We don't add", emphasis: "colors", suffix: "to make things look good in photos." },
+  {
+    prefix: "We don't add",
+    emphasis: "sugar",
+    suffix: "to make up for poor ingredients.",
+  },
+  {
+    prefix: "We don't add",
+    emphasis: "colors",
+    suffix: "to make things look good in photos.",
+  },
 ];
 
 const fadeUp = {
@@ -18,8 +26,7 @@ export function PhilosophyBlock() {
   return (
     <section id="story" className="noise relative bg-earth overflow-hidden">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
-        <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] min-h-[600px]">
-
+        <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] min-h-150">
           {/* ── Left: text ─────────────────────────────── */}
           <motion.div
             className="flex flex-col justify-center py-20 lg:py-28 lg:pr-16"
@@ -27,7 +34,9 @@ export function PhilosophyBlock() {
             whileInView="visible"
             viewport={{ once: true, margin: "-80px" }}
             variants={{
-              visible: { transition: { staggerChildren: 0.13, delayChildren: 0.05 } },
+              visible: {
+                transition: { staggerChildren: 0.13, delayChildren: 0.05 },
+              },
             }}
           >
             {/* Label */}
@@ -61,7 +70,9 @@ export function PhilosophyBlock() {
                   className="font-body font-light text-sand/65 text-base leading-relaxed"
                 >
                   {prefix}{" "}
-                  <span className="font-medium text-sand/85 italic">{emphasis}</span>{" "}
+                  <span className="font-medium text-sand/85 italic">
+                    {emphasis}
+                  </span>{" "}
                   {suffix}
                 </li>
               ))}
@@ -75,8 +86,12 @@ export function PhilosophyBlock() {
             >
               <p className="font-body font-light text-sand/65 text-base leading-relaxed">
                 What we{" "}
-                <span className="font-semibold text-orange-light">DO</span> add — is{" "}
-                <span className="font-semibold text-orange-light italic">time</span>.
+                <span className="font-semibold text-orange-light">DO</span> add
+                — is{" "}
+                <span className="font-semibold text-orange-light italic">
+                  time
+                </span>
+                .
               </p>
               <p className="font-body font-light text-sand/65 text-base leading-relaxed">
                 Each batch is made slowly, by hand, with care.
@@ -119,7 +134,6 @@ export function PhilosophyBlock() {
               </p>
             </div>
           </motion.div>
-
         </div>
       </div>
     </section>

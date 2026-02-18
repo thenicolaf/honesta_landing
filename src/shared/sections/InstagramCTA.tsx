@@ -10,7 +10,10 @@ const fadeUp = {
 
 export function InstagramCTA() {
   return (
-    <section id="contact" className="noise relative bg-orange overflow-hidden py-24 md:py-32">
+    <section
+      id="contact"
+      className="noise relative bg-orange overflow-hidden py-24 md:py-32"
+    >
       {/* Decorative botanical accents */}
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
         <IconBotanical className="absolute -left-20 top-1/2 -translate-y-1/2 w-96 text-white/10 -rotate-12" />
