@@ -39,7 +39,7 @@ export function Footer() {
             </Link>
 
             <p className="font-body font-light text-sand/50 text-sm leading-relaxed max-w-55">
-              Handcrafted dried fruits and pastila.
+              Handcrafted dried fruit snacks.
               <br />
               100% fruit. No additives. Made with care.
             </p>

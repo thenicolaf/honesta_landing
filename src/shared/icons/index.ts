@@ -6,3 +6,5 @@ export { IconNoSugar } from "./IconNoSugar";
 export { IconLightning } from "./IconLightning";
 export { IconGift } from "./IconGift";
 export { IconBotanical } from "./IconBotanical";
+export { IconChevron } from "./IconChevron";
+export { IconInfo } from "./IconInfo";
