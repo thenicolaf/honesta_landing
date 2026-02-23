@@ -60,10 +60,10 @@ export function Navbar() {
               href="#hero"
               className="flex flex-col leading-none select-none"
             >
-              <span className="font-display font-bold text-2xl md:text-[28px] text-earth tracking-widest uppercase">
+              <span className="font-display font-bold text-2xl md:text-[1.75rem] text-earth tracking-widest uppercase">
                 HONESTA
               </span>
-              <span className="font-body font-light text-[9px] uppercase tracking-[0.22em] text-bark mt-0.5 hidden sm:block">
+              <span className="font-body font-light text-xs uppercase tracking-[0.22em] text-bark mt-0.5 hidden sm:block">
                 Sweetness Before Marketing
               </span>
             </Link>
@@ -74,7 +74,7 @@ export function Navbar() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="font-body font-semibold uppercase text-[11px] tracking-[0.14em] text-earth/80 hover:text-orange transition-colors duration-200"
+                    className="font-body font-semibold uppercase text-2xs tracking-[0.14em] text-earth/80 hover:text-orange transition-colors duration-200"
                   >
                     {link.label}
                   </Link>
@@ -116,7 +116,7 @@ export function Navbar() {
               className="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-full text-earth/50 hover:text-orange hover:bg-sand/50 active:bg-sand transition-colors duration-200"
             >
               <Icon className="w-5 h-5" strokeWidth={1.5} />
-              <span className="font-body font-semibold uppercase text-[8px] tracking-widest">
+              <span className="font-body font-semibold uppercase text-[0.5rem] tracking-widest">
                 {label}
               </span>
             </Link>

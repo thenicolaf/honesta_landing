@@ -43,7 +43,7 @@ export function PhilosophyBlock() {
             <motion.p
               variants={fadeUp}
               transition={{ duration: 0.5, ease: "easeOut" }}
-              className="font-body font-semibold uppercase tracking-[0.18em] text-[11px] text-orange-light mb-6"
+              className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-orange-light mb-6"
             >
               Our Philosophy
             </motion.p>
@@ -129,7 +129,7 @@ export function PhilosophyBlock() {
             {/* TODO: replace inner content with <Image src="/images/philosophy.jpg" fill className="object-cover" alt="Hands holding fresh fruit — Honesta"/> */}
             <div className="relative w-full bg-bark/20 flex items-center justify-center">
               <IconBotanical className="w-40 text-sand opacity-10" />
-              <p className="absolute bottom-6 left-0 right-0 text-center font-body font-light text-[10px] uppercase tracking-[0.15em] text-sand/20">
+              <p className="absolute bottom-6 left-0 right-0 text-center font-body font-light text-2xs uppercase tracking-[0.15em] text-sand/20">
                 Photo placeholder
               </p>
             </div>

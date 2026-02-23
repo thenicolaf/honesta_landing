@@ -53,7 +53,7 @@ export function Hero() {
           <motion.p
             variants={fadeUp}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="font-body font-semibold uppercase text-[11px] tracking-[0.22em] text-bark mb-6"
+            className="font-body font-semibold uppercase text-2xs tracking-[0.22em] text-bark mb-6"
           >
             100% Natural · Handcrafted · No additives
           </motion.p>
@@ -62,7 +62,7 @@ export function Hero() {
           <motion.h1
             variants={fadeUp}
             transition={{ duration: 0.7, ease: "easeOut" }}
-            className="font-display font-bold italic text-earth leading-[1.1] mb-6"
+            className="font-display font-bold italic text-heading leading-[1.1] mb-6"
             style={{ fontSize: "clamp(2.6rem, 5.5vw, 4.5rem)" }}
           >
             Natural sweetness
@@ -94,7 +94,7 @@ export function Hero() {
               href={process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 font-body font-semibold uppercase text-[11px] tracking-[0.14em] text-earth/60 hover:text-orange transition-colors duration-200"
+              className="flex items-center gap-2 font-body font-semibold uppercase text-2xs tracking-[0.14em] text-earth/60 hover:text-orange transition-colors duration-200"
             >
               <IconInstagram className="w-4 h-4" />
               Write us on Instagram
@@ -110,7 +110,7 @@ export function Hero() {
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2, duration: 0.8 }}
       >
-        <span className="font-body font-light uppercase text-[9px] tracking-[0.2em] text-earth/40">
+        <span className="font-body font-light uppercase text-xs tracking-[0.2em] text-earth/40">
           Scroll
         </span>
         <motion.div

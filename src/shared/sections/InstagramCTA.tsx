@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { IconInstagram, IconBotanical } from "@/shared/icons";
+import { IconInstagram } from "@/shared/icons";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -14,12 +14,6 @@ export function InstagramCTA() {
       id="contact"
       className="noise relative bg-orange overflow-hidden py-24 md:py-32"
     >
-      {/* Decorative botanical accents */}
-      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-        <IconBotanical className="absolute -left-20 top-1/2 -translate-y-1/2 w-96 text-white/10 -rotate-12" />
-        <IconBotanical className="absolute -right-20 top-1/2 -translate-y-1/2 w-96 text-white/10 rotate-12 -scale-x-100" />
-      </div>
-
       <div className="relative mx-auto max-w-2xl px-6 text-center">
         <motion.div
           initial="hidden"
@@ -35,7 +29,7 @@ export function InstagramCTA() {
           <motion.p
             variants={fadeUp}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="font-body font-semibold uppercase tracking-[0.18em] text-[11px] text-white/70 mb-6"
+            className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-white/70 mb-6"
           >
             We&apos;re here to help
           </motion.p>
@@ -86,11 +80,11 @@ export function InstagramCTA() {
               Write us on Instagram
             </a>
 
-            <p className="font-body font-light text-[12px] text-white/60 tracking-wide">
+            <p className="font-body font-light text-2xs text-white/60 tracking-wide">
               No bots. No auto-replies. A real person will answer you.
             </p>
 
-            <p className="font-body font-light text-[11px] text-white/55 tracking-[0.16em] uppercase mt-1">
+            <p className="font-body font-light text-2xs text-white/55 tracking-[0.16em] uppercase mt-1">
               We reply to every message. Usually within an hour.
             </p>
 
@@ -99,7 +93,7 @@ export function InstagramCTA() {
               href={process.env.NEXT_PUBLIC_INSTAGRAM_BRAND_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-body font-light text-[12px] text-white/45 hover:text-white/75 transition-colors duration-200 tracking-widest uppercase mt-2"
+              className="font-body font-light text-2xs text-white/45 hover:text-white/75 transition-colors duration-200 tracking-widest uppercase mt-2"
             >
               instagram.com/{process.env.NEXT_PUBLIC_INSTAGRAM_BRAND}
             </a>

@@ -6,9 +6,15 @@ import {
   IconHands,
   IconCleanLabel,
   IconNoSugar,
+  IconBurjKhalifa,
 } from "@/shared/icons";
 
 const badges = [
+  {
+    Icon: IconBurjKhalifa,
+    label: "Made in UAE",
+    description: "Crafted in Dubai",
+  },
   {
     Icon: IconLeaf,
     label: "100% Fruit",
@@ -48,7 +54,7 @@ export function TrustBadges() {
     <section className="noise relative bg-cream py-16 md:py-20">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <motion.div
-          className="grid grid-cols-2 gap-10 md:grid-cols-4 md:gap-6"
+          className="flex flex-wrap justify-center gap-10 md:gap-6"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
@@ -59,13 +65,13 @@ export function TrustBadges() {
               key={label}
               variants={itemVariants}
               transition={{ duration: 0.55, ease: "easeOut" }}
-              className="flex flex-col items-center gap-3 text-center"
+              className="flex flex-col items-center gap-3 text-center w-36 md:w-40"
             >
               <Icon className="w-12 h-12 text-moss" />
 
               <div className="w-8 h-px bg-parchment" />
 
-              <p className="font-body font-semibold uppercase tracking-[0.12em] text-[11px] text-earth">
+              <p className="font-body font-semibold uppercase tracking-[0.12em] text-2xs text-earth">
                 {label}
               </p>
 

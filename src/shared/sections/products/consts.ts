@@ -1,10 +1,11 @@
 import type { Product } from "./types";
+import { Category } from "@/shared/types";
 
 export const products: Product[] = [
   {
     name: "DRIED APPLE",
     title: "Natural Apple Snack",
-    category: "Pure Snack",
+    category: Category.DriedFruits,
     badge: "natural",
     tagline:
       "A natural snack made from 100% apples with no added sugar, preservatives, or processing. Just fruit — nothing else.",
@@ -59,12 +60,18 @@ export const products: Product[] = [
   {
     name: "DRIED APPLE WITH CINNAMON",
     title: "Apple & Cinnamon Snack",
-    category: "Pure Snack",
+    category: Category.DriedFruits,
     badge: "natural",
     tagline:
       "A natural snack made from 100% apples with a touch of cinnamon. No added sugar, preservatives, or artificial ingredients. Just fruit and spice — nothing else.",
     tags: ["100% Apples", "No Added Sugar", "High Fiber", "Low GI"],
-    freeFrom: ["added sugar", "preservatives", "artificial colors", "syrups", "gluten"],
+    freeFrom: [
+      "added sugar",
+      "preservatives",
+      "artificial colors",
+      "syrups",
+      "gluten",
+    ],
     image: "/images/products/DRIED APPLE WITH CINNAMON.webp",
     benefits: [
       {
@@ -82,8 +89,7 @@ export const products: Product[] = [
       },
       {
         name: "Low Glycemic Load",
-        description:
-          "Helps avoid sharp glucose and energy fluctuations",
+        description: "Helps avoid sharp glucose and energy fluctuations",
       },
     ],
     nutrition: {
@@ -113,12 +119,23 @@ export const products: Product[] = [
   {
     name: "DRIED APPLE WITH HONEY & PEANUT",
     title: "Apple, Honey & Peanut Snack",
-    category: "Pure Snack",
+    category: Category.DriedFruits,
     badge: "natural",
     tagline:
       "A natural snack made from apples with the addition of honey and peanuts. Fruit, nuts, and natural honey — a source of both quick and sustained energy.",
-    tags: ["Apple + Honey + Peanut", "No Refined Sugar", "Plant Protein", "Energy Boost"],
-    freeFrom: ["refined sugar", "preservatives", "artificial colors", "syrups", "gluten"],
+    tags: [
+      "Apple + Honey + Peanut",
+      "No Refined Sugar",
+      "Plant Protein",
+      "Energy Boost",
+    ],
+    freeFrom: [
+      "refined sugar",
+      "preservatives",
+      "artificial colors",
+      "syrups",
+      "gluten",
+    ],
     image: "/images/products/DRIED APPLE WITH HONEY & PEANUT.webp",
     benefits: [
       {
@@ -136,8 +153,7 @@ export const products: Product[] = [
       },
       {
         name: "Healthy Fats & Plant-Based Protein",
-        description:
-          "Prolong satiety and help maintain stable energy levels",
+        description: "Prolong satiety and help maintain stable energy levels",
       },
     ],
     nutrition: {
@@ -168,12 +184,18 @@ export const products: Product[] = [
   {
     name: "NATURAL BANANA SNACK",
     title: "Natural Banana Snack",
-    category: "Pure Snack",
+    category: Category.DriedFruits,
     badge: "natural",
     tagline:
       "A natural snack made from 100% bananas. No added sugar, preservatives, or artificial ingredients. Just fruit — nothing else.",
     tags: ["100% Bananas", "No Added Sugar", "High Fiber", "Natural Energy"],
-    freeFrom: ["added sugar", "preservatives", "artificial colors", "syrups", "gluten"],
+    freeFrom: [
+      "added sugar",
+      "preservatives",
+      "artificial colors",
+      "syrups",
+      "gluten",
+    ],
     image: "/images/products/NATURAL BANANA SNACK.webp",
     benefits: [
       {
@@ -190,8 +212,7 @@ export const products: Product[] = [
       },
       {
         name: "Natural Carbohydrates",
-        description:
-          "Provide sustained energy without rapid glucose spikes",
+        description: "Provide sustained energy without rapid glucose spikes",
       },
     ],
     nutrition: {
@@ -222,12 +243,23 @@ export const products: Product[] = [
   {
     name: "DRIED BANANA WITH COCONUT",
     title: "Banana & Coconut Snack",
-    category: "Pure Snack",
+    category: Category.DriedFruits,
     badge: "natural",
     tagline:
       "A natural snack made from bananas with the addition of coconut. Fruit and coconut — a naturally sweet source of clean energy.",
-    tags: ["Banana + Coconut", "No Added Sugar", "High Fiber", "Tropical Taste"],
-    freeFrom: ["added sugar", "preservatives", "artificial colors", "syrups", "gluten"],
+    tags: [
+      "Banana + Coconut",
+      "No Added Sugar",
+      "High Fiber",
+      "Tropical Taste",
+    ],
+    freeFrom: [
+      "added sugar",
+      "preservatives",
+      "artificial colors",
+      "syrups",
+      "gluten",
+    ],
     image: "/images/products/DRIED BANANA WITH COCONUT.webp",
     benefits: [
       {
@@ -275,12 +307,23 @@ export const products: Product[] = [
   {
     name: "DRIED PERSIMMON",
     title: "Dried Persimmon",
-    category: "Pure Snack",
+    category: Category.DriedFruits,
     badge: "natural",
     tagline:
       "A natural snack made from 100% ripe persimmons, gently dehydrated to preserve their natural properties. Just fruit — nothing else.",
-    tags: ["100% Persimmon", "No Added Sugar", "High Fiber", "Rich in Antioxidants"],
-    freeFrom: ["added sugar", "preservatives", "artificial colors", "syrups", "gluten"],
+    tags: [
+      "100% Persimmon",
+      "No Added Sugar",
+      "High Fiber",
+      "Rich in Antioxidants",
+    ],
+    freeFrom: [
+      "added sugar",
+      "preservatives",
+      "artificial colors",
+      "syrups",
+      "gluten",
+    ],
     image: "/images/products/DRIED PERSIMMON.webp",
     benefits: [
       {
@@ -332,12 +375,18 @@ export const products: Product[] = [
   {
     name: "DRIED ORANGE",
     title: "Dried Orange",
-    category: "Pure Snack",
+    category: Category.DriedFruits,
     badge: "natural",
     tagline:
       "A natural snack made from 100% ripe oranges, gently dehydrated to preserve their natural taste and nutrients. Just fruit — nothing else.",
     tags: ["100% Oranges", "No Added Sugar", "High Vitamin C", "High Fiber"],
-    freeFrom: ["added sugar", "preservatives", "artificial colors", "syrups", "gluten"],
+    freeFrom: [
+      "added sugar",
+      "preservatives",
+      "artificial colors",
+      "syrups",
+      "gluten",
+    ],
     image: "/images/products/DRIED ORANGE.webp",
     benefits: [
       {
@@ -382,7 +431,252 @@ export const products: Product[] = [
       "kids' lunchboxes",
     ],
   },
-  // TODO: add remaining products
+  {
+    name: "APPLE FRUIT LEATHER",
+    title: "Apple Fruit Leather",
+    category: Category.FruitLeather,
+    badge: "natural",
+    tagline:
+      "A natural fruit leather made from 100% ripe apples, gently dehydrated to preserve their natural taste and nutrients. Just fruit — nothing else.",
+    tags: ["100% Apples", "No Added Sugar", "High Fiber", "Natural Treat"],
+    freeFrom: [
+      "added sugar",
+      "preservatives",
+      "artificial colors",
+      "syrups",
+      "gluten",
+    ],
+    image: "/images/products/APPLE FRUIT LEATHER.webp",
+    benefits: [
+      {
+        name: "Dietary Fiber",
+        description: "Supports digestion and gut health",
+      },
+      {
+        name: "Polyphenols",
+        description: "Provide antioxidant protection",
+      },
+      {
+        name: "Natural Carbohydrates",
+        description: "Provide steady energy throughout the day",
+      },
+      {
+        name: "Potassium",
+        description: "Supports heart and muscle function",
+      },
+    ],
+    nutrition: {
+      calories: 359,
+      carbs: 83,
+      naturalSugars: 58,
+      addedSugars: 0,
+      fiber: 4,
+      protein: 1,
+      fat: 0.5,
+      vitaminC: 6,
+    },
+    servingIdeas: [
+      "as a standalone fruit treat",
+      "with tea or coffee",
+      "in breakfast bowls",
+      "in yogurt",
+      "on the go",
+    ],
+    occasions: [
+      "work",
+      "travel",
+      "mid-day snack",
+      "between meals",
+      "kids' lunchboxes",
+    ],
+  },
+  {
+    name: "APPLE / BANANA FRUIT LEATHER",
+    title: "Apple & Banana Fruit Leather",
+    category: Category.FruitLeather,
+    badge: "natural",
+    tagline:
+      "A natural fruit leather made from ripe apples and bananas, gently dehydrated to preserve their natural taste and nutrients. Just fruit — nothing else.",
+    tags: ["Apple + Banana", "No Added Sugar", "High Fiber", "Natural Treat"],
+    freeFrom: [
+      "added sugar",
+      "preservatives",
+      "artificial colors",
+      "syrups",
+      "gluten",
+    ],
+    image: "/images/products/APPLE : BANANA FRUIT LEATHER.webp",
+    benefits: [
+      {
+        name: "Dietary Fiber",
+        description: "Supports digestion and gut health",
+      },
+      {
+        name: "Natural Carbohydrates",
+        description: "Provide steady energy throughout the day",
+      },
+      {
+        name: "Potassium (Banana)",
+        description: "Supports heart and muscle function",
+      },
+      {
+        name: "Polyphenols (Apple)",
+        description: "Provide antioxidant protection",
+      },
+    ],
+    nutrition: {
+      calories: 353,
+      carbs: 86,
+      naturalSugars: 52,
+      addedSugars: 0,
+      fiber: 5,
+      protein: 2.4,
+      fat: 0.6,
+      vitaminC: 6,
+    },
+    servingIdeas: [
+      "as a standalone fruit treat",
+      "with tea or coffee",
+      "in breakfast bowls",
+      "in yogurt",
+      "on the go",
+    ],
+    occasions: [
+      "work",
+      "travel",
+      "mid-day snack",
+      "between meals",
+      "kids' lunchboxes",
+    ],
+  },
+  {
+    name: "APPLE / PINEAPPLE FRUIT LEATHER",
+    title: "Apple & Pineapple Fruit Leather",
+    category: Category.FruitLeather,
+    badge: "natural",
+    tagline:
+      "A natural fruit leather made from ripe apples and pineapples, gently dehydrated to preserve their natural taste and nutrients. Just fruit — nothing else.",
+    tags: [
+      "Apple + Pineapple",
+      "No Added Sugar",
+      "High Vitamin C",
+      "Natural Treat",
+    ],
+    freeFrom: [
+      "added sugar",
+      "preservatives",
+      "artificial colors",
+      "syrups",
+      "gluten",
+    ],
+    image: "/images/products/APPLE : PINEAPPLE FRUIT LEATHER.webp",
+    benefits: [
+      {
+        name: "Vitamin C (Pineapple)",
+        description: "Supports immune function",
+      },
+      {
+        name: "Dietary Fiber",
+        description: "Supports digestion and gut health",
+      },
+      {
+        name: "Natural Carbohydrates",
+        description: "Provide steady energy throughout the day",
+      },
+      {
+        name: "Antioxidants",
+        description: "Help protect cells from oxidative stress",
+      },
+    ],
+    nutrition: {
+      calories: 359,
+      carbs: 86,
+      naturalSugars: 69,
+      addedSugars: 0,
+      fiber: 3,
+      protein: 1.6,
+      fat: 0.5,
+      vitaminC: 29,
+    },
+    servingIdeas: [
+      "as a standalone fruit treat",
+      "with tea or coffee",
+      "in breakfast bowls",
+      "in yogurt",
+      "on the go",
+    ],
+    occasions: [
+      "work",
+      "travel",
+      "mid-day snack",
+      "between meals",
+      "kids' lunchboxes",
+    ],
+  },
+  {
+    name: "DRIED PINEAPPLE",
+    title: "Dried Pineapple",
+    category: Category.DriedFruits,
+    badge: "natural",
+    tagline:
+      "A natural fruit snack made from ripe pineapples, gently dehydrated to preserve their natural taste and nutrients. Just fruit — nothing else.",
+    tags: [
+      "100% Pineapple",
+      "No Added Sugar",
+      "High Vitamin C",
+      "Tropical Taste",
+    ],
+    freeFrom: [
+      "added sugar",
+      "preservatives",
+      "artificial colors",
+      "syrups",
+      "gluten",
+    ],
+    image: "/images/products/DRIED PINEAPPLE.webp",
+    benefits: [
+      {
+        name: "Vitamin C",
+        description: "Supports immune function",
+      },
+      {
+        name: "Dietary Fiber",
+        description: "Supports digestion and gut health",
+      },
+      {
+        name: "Natural Carbohydrates",
+        description: "Provide steady energy throughout the day",
+      },
+      {
+        name: "Antioxidants",
+        description: "Help protect cells from oxidative stress",
+      },
+    ],
+    nutrition: {
+      calories: 353,
+      carbs: 89,
+      naturalSugars: 68,
+      addedSugars: 0,
+      fiber: 2.3,
+      protein: 0.8,
+      fat: 0.2,
+      vitaminC: 28,
+    },
+    servingIdeas: [
+      "as a standalone fruit snack",
+      "with tea or coffee",
+      "in breakfast bowls",
+      "in yogurt",
+      "on the go",
+    ],
+    occasions: [
+      "work",
+      "travel",
+      "mid-day snack",
+      "between meals",
+      "kids' lunchboxes",
+    ],
+  },
 ];
 
 export const containerVariants = {

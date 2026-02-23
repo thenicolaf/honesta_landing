@@ -1,7 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { Badge, Collapsible, CollapsibleTrigger, CollapsibleChevron, CollapsibleContent } from "@/shared/ui";
+import {
+  Button,
+  Badge,
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleChevron,
+  CollapsibleContent,
+} from "@/shared/ui";
 import { IconInfo } from "@/shared/icons";
 import type { Benefit, NutritionInfo, Product } from "./types";
 
@@ -57,7 +64,7 @@ function ProductHeader({
 }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <p className="font-body font-semibold uppercase tracking-[0.13em] text-[10px] text-earth/40">
+      <p className="font-body font-semibold uppercase tracking-[0.13em] text-2xs text-earth/60">
         {category}
       </p>
       <Badge variant={badge}>{badge === "warm" ? "Gourmet" : "Natural"}</Badge>
@@ -68,7 +75,7 @@ function ProductHeader({
 function ProductTitle({ title }: { title: string }) {
   return (
     <h3
-      className="font-display font-semibold text-earth leading-tight"
+      className="font-display font-semibold text-heading leading-tight"
       style={{ fontSize: "clamp(1.15rem, 2vw, 1.4rem)" }}
     >
       {title}
@@ -82,7 +89,7 @@ function ProductTags({ tags }: { tags: string[] }) {
       {tags.map((tag) => (
         <li
           key={tag}
-          className="flex items-center gap-1 font-body font-light text-[11px] text-moss"
+          className="flex items-center gap-1 font-body font-light text-2xs text-moss"
         >
           <span className="w-1 h-1 rounded-full bg-moss inline-block shrink-0" />
           {tag}
@@ -99,7 +106,7 @@ function ProductFreeFrom({ freeFrom }: { freeFrom: string[] }) {
       {freeFrom.map((item) => (
         <li
           key={item}
-          className="font-body font-light text-[11px] text-earth/35"
+          className="font-body font-light text-2xs text-earth/55"
         >
           ✕ {item}
         </li>
@@ -111,16 +118,16 @@ function ProductFreeFrom({ freeFrom }: { freeFrom: string[] }) {
 function BenefitsList({ benefits }: { benefits: Benefit[] }) {
   return (
     <div>
-      <p className="font-body font-semibold uppercase tracking-[0.13em] text-[9px] text-earth/35 mb-2.5">
+      <p className="font-body font-semibold uppercase tracking-[0.13em] text-2xs text-earth/55 mb-2.5">
         Health Benefits
       </p>
       <ul className="flex flex-col gap-2">
         {benefits.map((b) => (
           <li key={b.name}>
-            <span className="font-body font-semibold text-[11px] text-earth/70 leading-snug">
+            <span className="font-body font-semibold text-2xs text-earth/70 leading-snug">
               {b.name}
             </span>
-            <p className="font-body font-light text-[11px] text-earth/45 leading-snug mt-0.5">
+            <p className="font-body font-light text-2xs text-earth/60 leading-snug mt-0.5">
               {b.description}
             </p>
           </li>
@@ -146,16 +153,16 @@ function NutritionTable({ nutrition }: { nutrition: NutritionInfo }) {
 
   return (
     <div>
-      <p className="font-body font-semibold uppercase tracking-[0.13em] text-[9px] text-earth/35 mb-2.5">
+      <p className="font-body font-semibold uppercase tracking-[0.13em] text-2xs text-earth/55 mb-2.5">
         Per 100 g
       </p>
       <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
         {rows.map(({ label, value }) => (
           <div key={label} className="flex justify-between gap-1">
-            <span className="font-body font-light text-[11px] text-earth/40">
+            <span className="font-body font-light text-2xs text-earth/60">
               {label}
             </span>
-            <span className="font-body font-semibold text-[11px] text-earth/65">
+            <span className="font-body font-semibold text-2xs text-earth/80">
               {value}
             </span>
           </div>
@@ -168,14 +175,14 @@ function NutritionTable({ nutrition }: { nutrition: NutritionInfo }) {
 function ServingIdeas({ servingIdeas }: { servingIdeas: string[] }) {
   return (
     <div>
-      <p className="font-body font-semibold uppercase tracking-[0.13em] text-[9px] text-earth/35 mb-2.5">
+      <p className="font-body font-semibold uppercase tracking-[0.13em] text-2xs text-earth/55 mb-2.5">
         How to Enjoy
       </p>
       <ul className="flex flex-col gap-1">
         {servingIdeas.map((idea) => (
           <li
             key={idea}
-            className="flex items-center gap-1.5 font-body font-light text-[11px] text-earth/50"
+            className="flex items-center gap-1.5 font-body font-light text-2xs text-earth/65"
           >
             <span className="w-1 h-1 rounded-full bg-earth/25 inline-block shrink-0" />
             {idea}
@@ -200,7 +207,7 @@ function ProductDetails({
 
   return (
     <Collapsible className="border-t border-parchment/50 pt-3">
-      <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 font-body font-semibold uppercase tracking-[0.12em] text-[11px] text-earth/40 hover:text-orange transition-colors duration-200">
+      <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 font-body font-semibold uppercase tracking-[0.12em] text-2xs text-earth/55 hover:text-orange transition-colors duration-200">
         <span>Details</span>
         <CollapsibleChevron />
       </CollapsibleTrigger>
@@ -221,15 +228,16 @@ function ProductDetails({
 
 function ProductCta() {
   return (
-    <a
+    <Button
       href={process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL}
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-auto pt-1 flex items-center gap-1.5 font-body font-semibold uppercase tracking-[0.12em] text-[11px] text-earth/40 hover:text-orange transition-colors duration-200 w-fit"
+      variant="ghost"
+      size="sm"
+      className="mt-auto w-full"
     >
-      <span aria-hidden="true">▸</span>
-      Ask on Instagram
-    </a>
+      Order via Instagram
+    </Button>
   );
 }
 
@@ -240,7 +248,18 @@ interface ProductItemProps {
 }
 
 export function ProductItem({ product }: ProductItemProps) {
-  const { title, category, badge, tagline, tags, freeFrom, image, benefits, nutrition, servingIdeas } = product;
+  const {
+    title,
+    category,
+    badge,
+    tagline,
+    tags,
+    freeFrom,
+    image,
+    benefits,
+    nutrition,
+    servingIdeas,
+  } = product;
 
   return (
     <div className="h-full flex flex-col rounded-[16px] overflow-hidden bg-white-warm border border-parchment/60 hover:shadow-lg hover:border-transparent transition-all duration-300">
@@ -251,7 +270,11 @@ export function ProductItem({ product }: ProductItemProps) {
         <ProductTitle title={title} />
         <ProductTags tags={tags} />
         <ProductFreeFrom freeFrom={freeFrom} />
-        <ProductDetails benefits={benefits} nutrition={nutrition} servingIdeas={servingIdeas} />
+        <ProductDetails
+          benefits={benefits}
+          nutrition={nutrition}
+          servingIdeas={servingIdeas}
+        />
         <ProductCta />
       </div>
     </div>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { IconInstagram, IconBotanical } from "@/shared/icons";
+import { IconInstagram } from "@/shared/icons";
 
 const NAV_LINKS = [
   { href: "#products", label: "Products" },
@@ -13,14 +13,6 @@ export function Footer() {
 
   return (
     <footer className="noise relative bg-earth overflow-hidden">
-      {/* Decorative botanical — bottom-right */}
-      <div
-        className="pointer-events-none absolute -bottom-12 -right-16"
-        aria-hidden="true"
-      >
-        <IconBotanical className="w-72 text-sand/5 rotate-12" />
-      </div>
-
       <div className="relative mx-auto max-w-7xl px-6 lg:px-10 py-16 md:py-20">
         {/* ── Main columns ─────────────────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-12 md:gap-8 pb-12 border-b border-sand/10">
@@ -33,7 +25,7 @@ export function Footer() {
               <span className="font-display font-bold text-2xl text-white-warm tracking-widest uppercase">
                 HONESTA
               </span>
-              <span className="font-body font-light text-[9px] uppercase tracking-[0.22em] text-sand/50 mt-0.5">
+              <span className="font-body font-light text-xs uppercase tracking-[0.22em] text-sand/50 mt-0.5">
                 Sweetness Before Marketing
               </span>
             </Link>
@@ -47,7 +39,7 @@ export function Footer() {
 
           {/* Column 2: Navigate */}
           <div>
-            <p className="font-body font-semibold uppercase tracking-[0.18em] text-[10px] text-sand/40 mb-5">
+            <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-sand/40 mb-5">
               Navigate
             </p>
             <ul className="flex flex-col gap-3">
@@ -66,7 +58,7 @@ export function Footer() {
 
           {/* Column 3: Contact */}
           <div>
-            <p className="font-body font-semibold uppercase tracking-[0.18em] text-[10px] text-sand/40 mb-5">
+            <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-sand/40 mb-5">
               Contact
             </p>
             <ul className="flex flex-col gap-3">
@@ -106,10 +98,10 @@ export function Footer() {
 
         {/* ── Bottom bar ────────────────────────────────── */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="font-body font-light text-[11px] text-sand/30 tracking-wide">
+          <p className="font-body font-light text-2xs text-sand/30 tracking-wide">
             © {year} HONESTA. All rights reserved.
           </p>
-          <p className="font-body font-light text-[11px] text-sand/30 tracking-wide">
+          <p className="font-body font-light text-2xs text-sand/30 tracking-wide">
             Made with care.
           </p>
         </div>

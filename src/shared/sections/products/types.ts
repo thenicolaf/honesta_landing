@@ -1,3 +1,5 @@
+import { Category } from "@/shared/types";
+
 export type BadgeVariant = "natural" | "warm" | "outline";
 
 export interface NutritionInfo {
@@ -21,7 +23,7 @@ export interface Product {
   name: string;
   /** Marketing display name shown as card heading, e.g. "Natural Apple Snack" */
   title: string;
-  category: string;
+  category: Category;
   badge: BadgeVariant;
   /** Short text shown in hover overlay */
   tagline: string;

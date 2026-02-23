@@ -1,13 +1,25 @@
-import { Navbar, Hero, TrustBadges, CategoryCards, ProductGrid, PhilosophyBlock, InstagramCTA, Footer } from "@/shared/sections";
+import {
+  Navbar,
+  Hero,
+  TrustBadges,
+  CategoryCards,
+  ProductGrid,
+  PhilosophyBlock,
+  InstagramCTA,
+  Footer,
+} from "@/shared/sections";
+import { CategoryFilterProvider } from "@/shared/providers";
 
-export default function Home() {
+export default async function Home() {
   return (
     <>
       <Navbar />
       <Hero />
       <TrustBadges />
-      <CategoryCards />
-      <ProductGrid />
+      <CategoryFilterProvider>
+        <CategoryCards />
+        <ProductGrid />
+      </CategoryFilterProvider>
       <PhilosophyBlock />
       <InstagramCTA />
       <Footer />

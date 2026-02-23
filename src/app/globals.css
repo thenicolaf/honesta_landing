@@ -9,9 +9,14 @@
   --color-bark: #8b6914; /* тёмный акцент, иконки */
   --color-orange: #d4731a; /* главный CTA, ключевые акценты */
   --color-orange-light: #f0a050; /* hover, вторичный акцент */
-  --color-earth: #3d2b1f; /* основной текст, заголовки */
+  --color-earth: #3d2b1f; /* основной текст */
+  --color-heading: #3f5123; /* headings */
   --color-moss: #5c6b3a; /* бейджи "natural", eco-метки */
   --color-white-warm: #fffdf8; /* карточки, выделенные блоки */
+
+  /* Font sizes (micro scale below Tailwind's text-xs = 0.75rem) */
+  --text-xs: 0.625rem;  /* 10px – tiny meta text (overrides Tailwind default) */
+  --text-2xs: 0.75rem;  /* 12px – standard small labels */
 
   /* Fonts */
   --font-display: "Cormorant Garamond", serif;

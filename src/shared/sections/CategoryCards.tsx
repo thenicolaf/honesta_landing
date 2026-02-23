@@ -2,46 +2,75 @@
 
 import { motion } from "motion/react";
 import { Badge } from "@/shared/ui";
-import { IconLeaf, IconLightning, IconGift } from "@/shared/icons";
+import {
+  IconLeaf,
+  IconLightning,
+  IconGift,
+  IconFruitLeather,
+} from "@/shared/icons";
+import { Category } from "@/shared/types";
+import { useCategoryFilter } from "@/shared/providers";
 
 const categories = [
   {
-    audience: "For Moms & Kids",
-    Icon: IconLeaf,
-    name: "Kids Collection",
-    tagline: "No chemistry. Just fruit.",
+    audience: "For Every Occasion",
+    Icon: IconGift,
+    name: Category.MixAndGift,
+    tagline: "Curated to impress.",
     description:
-      "Kids deserve real food. No preservatives, no additives — just pure fruit, exactly as nature made it.",
-    products: ["Natural Apple Snack", "Apple & Cinnamon Snack", "Natural Banana Snack", "Dried Persimmon"],
+      "A thoughtful selection of our finest snacks. Perfect for gifting — or keeping all to yourself.",
+    products: [
+      "Gift Set Classic",
+      "Gift Set Premium",
+      "Seasonal Mix",
+      "Custom Box",
+    ],
+    placeholderBg: "bg-bark/10",
+    badge: "natural" as const,
+    href: "#products",
+  },
+  {
+    audience: "Pure & Simple",
+    Icon: IconLeaf,
+    name: Category.DriedFruits,
+    tagline: "Sun-dried. Nothing else.",
+    description:
+      "Just fruit, slowly dried to perfection. No added sugar, no sulfites — pure concentrated flavour.",
+    products: [
+      "Dried Persimmon",
+      "Dried Orange",
+      "Dried Pineapple",
+      "Dried Mango",
+    ],
     placeholderBg: "bg-orange/10",
     badge: "natural" as const,
     href: "#products",
   },
   {
-    audience: "For Sport & Office",
-    Icon: IconLightning,
-    name: "Clean Energy",
-    tagline: "Fuel without guilt.",
+    audience: "For Snacking On the Go",
+    Icon: IconFruitLeather,
+    name: Category.FruitLeather,
+    tagline: "Smooth, chewy, addictive.",
     description:
-      "Sport. Office. On the go. Real fuel that fits in your pocket.",
-    products: ["Apple, Honey & Peanut Snack", "Banana & Coconut Snack", "Dried Orange", "Natural Banana Snack"],
+      "Real fruit pressed into a thin, satisfying sheet. A snack that needs no explanation.",
+    products: [
+      "Apple Fruit Leather",
+      "Apple & Banana Leather",
+      "Apple & Pineapple Leather",
+    ],
     placeholderBg: "bg-moss/10",
     badge: "natural" as const,
     href: "#products",
   },
   {
-    audience: "For Gifts & Occasions",
-    Icon: IconGift,
-    name: "Seasonal Picks",
-    tagline: "Seasonal. Special. Pure.",
-    description: "A perfect gift. Or a treat you don't have to justify.",
-    products: [
-      "Dried Persimmon",
-      "Dried Orange",
-      "Banana & Coconut Snack",
-      "Apple, Honey & Peanut Snack",
-    ],
-    placeholderBg: "bg-bark/10",
+    audience: "For Energy & Focus",
+    Icon: IconLightning,
+    name: Category.MixSeeds,
+    tagline: "Small. Dense. Powerful.",
+    description:
+      "A handpicked blend of seeds and dried fruit — the cleanest fuel you can carry.",
+    products: ["Classic Seed Mix", "Berry & Seed Mix", "Nut & Seed Blend"],
+    placeholderBg: "bg-earth/10",
     badge: "natural" as const,
     href: "#products",
   },
@@ -58,9 +87,11 @@ const cardVariants = {
 };
 
 export function CategoryCards() {
+  const { setActiveCategory } = useCategoryFilter();
+
   return (
     <section id="categories" className="bg-sand py-20 md:py-28">
-      <div className="mx-auto max-w-7xl px-6 lg:px-10">
+      <div className="mx-auto max-w-screen-2xl px-6 lg:px-10">
         {/* Section header */}
         <motion.div
           className="mb-14 text-center"
@@ -69,11 +100,11 @@ export function CategoryCards() {
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          <p className="font-body font-semibold uppercase tracking-[0.18em] text-[11px] text-moss mb-4">
+          <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-moss mb-4">
             Collections
           </p>
           <h2
-            className="font-display font-semibold text-earth leading-tight"
+            className="font-display font-semibold text-heading leading-tight"
             style={{ fontSize: "clamp(2rem, 4vw, 3rem)" }}
           >
             Find your perfect snack
@@ -82,7 +113,7 @@ export function CategoryCards() {
 
         {/* Cards grid */}
         <motion.div
-          className="grid grid-cols-1 gap-6 md:grid-cols-3"
+          className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
@@ -103,6 +134,7 @@ export function CategoryCards() {
               <motion.a
                 key={name}
                 href={href}
+                onClick={() => setActiveCategory(name)}
                 variants={cardVariants}
                 transition={{ duration: 0.55, ease: "easeOut" }}
                 className="group flex flex-col rounded-[16px] overflow-hidden bg-white-warm hover:shadow-lg transition-shadow duration-300"
@@ -119,7 +151,7 @@ export function CategoryCards() {
                 <div className="flex flex-col flex-1 p-6 gap-4">
                   {/* Audience label + badge */}
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-body font-semibold uppercase tracking-[0.14em] text-[10px] text-earth/50">
+                    <p className="font-body font-semibold uppercase tracking-[0.14em] text-2xs text-earth/65">
                       {audience}
                     </p>
                     <Badge variant={badge} className="shrink-0">
@@ -130,12 +162,12 @@ export function CategoryCards() {
                   {/* Name + tagline */}
                   <div>
                     <h3
-                      className="font-display font-semibold text-earth leading-tight mb-1"
+                      className="font-display font-semibold text-heading leading-tight mb-1"
                       style={{ fontSize: "clamp(1.3rem, 2.5vw, 1.6rem)" }}
                     >
                       {name}
                     </h3>
-                    <p className="font-body font-light text-sm text-earth/55 italic">
+                    <p className="font-body font-light text-sm text-earth/70 italic">
                       {tagline}
                     </p>
                   </div>
@@ -150,7 +182,7 @@ export function CategoryCards() {
                     {products.map((p) => (
                       <li
                         key={p}
-                        className="font-body font-light text-[11px] text-earth/45 leading-tight before:content-['·'] before:mr-1.5 first:before:content-none"
+                        className="font-body font-light text-2xs text-earth/65 leading-tight before:content-['·'] before:mr-1.5 first:before:content-none"
                       >
                         {p}
                       </li>
@@ -158,7 +190,7 @@ export function CategoryCards() {
                   </ul>
 
                   {/* CTA */}
-                  <div className="mt-auto pt-2 flex items-center gap-2 font-body font-semibold uppercase tracking-[0.12em] text-[11px] text-orange group-hover:text-orange-light transition-colors duration-200">
+                  <div className="mt-auto pt-2 flex items-center gap-2 font-body font-semibold uppercase tracking-[0.12em] text-2xs text-orange group-hover:text-orange-light transition-colors duration-200">
                     Explore
                     <span
                       className="inline-block transition-transform duration-200 group-hover:translate-x-1"
