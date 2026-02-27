@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useScroll, useTransform, motion } from "motion/react";
 import { Button } from "@/shared/ui";
-import { IconInstagram } from "@/shared/icons/IconInstagram";
+import { IconInstagram, IconNaturalBadge } from "@/shared/icons";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -19,9 +19,9 @@ export function Hero() {
   return (
     <section id="hero" className="relative h-screen min-h-160 overflow-hidden">
       {/* Background image with parallax */}
-      <motion.div className="absolute inset-0 scale-110" style={{ y: imageY }}>
+      <motion.div className="absolute inset-0" style={{ y: imageY }}>
         <Image
-          src={"/images/hero.avif"}
+          src={"/images/sections/Hero.webp"}
           alt="Natural dried orange slices — Honesta"
           fill
           priority
@@ -30,17 +30,17 @@ export function Hero() {
         />
       </motion.div>
 
-      {/* Warm amber wash — gives the whole hero a dried-orange richness */}
+      {/* Warm amber wash */}
       <div className="absolute inset-0 bg-orange/10" />
-      {/* Gradient overlay: warm sand from left, fading to transparent right */}
-      <div className="absolute inset-0 bg-linear-to-r from-sand/88 via-sand/55 to-transparent" />
+      {/* Subtle center softening for text legibility */}
+      <div className="absolute inset-0 bg-sand/15" />
       {/* Bottom fade for smooth transition to next section */}
       <div className="absolute inset-x-0 bottom-0 h-32 bg-linear-to-t from-sand/55 to-transparent" />
 
       {/* Content */}
-      <div className="relative h-full mx-auto max-w-7xl px-6 lg:px-10 flex items-center">
+      <div className="relative h-full mx-auto max-w-7xl px-6 lg:px-10 flex items-center justify-center">
         <motion.div
-          className="max-w-xl pt-20"
+          className="max-w-lg pt-20 text-center relative"
           initial="hidden"
           animate="visible"
           variants={{
@@ -49,57 +49,66 @@ export function Hero() {
             },
           }}
         >
-          {/* Label */}
-          <motion.p
-            variants={fadeUp}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="font-body font-semibold uppercase text-2xs tracking-[0.22em] text-bark mb-6"
-          >
-            100% Natural · Handcrafted · No additives
-          </motion.p>
-
-          {/* H1 */}
-          <motion.h1
-            variants={fadeUp}
-            transition={{ duration: 0.7, ease: "easeOut" }}
-            className="font-display font-bold italic text-heading leading-[1.1] mb-6"
-            style={{ fontSize: "clamp(2.6rem, 5.5vw, 4.5rem)" }}
-          >
-            Natural sweetness
-            <br />
-            invented by nature.
-          </motion.h1>
-
-          {/* Subtitle */}
-          <motion.p
-            variants={fadeUp}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="font-body font-light text-earth/75 text-lg leading-relaxed mb-10"
-          >
-            Honest. Simple. No additives.
-            <br />
-            Small Batch &amp; Handcrafted.
-          </motion.p>
-
-          {/* CTA */}
+          {/* Stamp badge — absolute, bottom edge fades and tucks under text block */}
           <motion.div
             variants={fadeUp}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="flex items-center gap-4 flex-wrap"
+            className="absolute top-6 md:top-8 left-1/2 -translate-x-1/2 z-0 pointer-events-none"
+            style={{
+              maskImage:
+                "linear-gradient(to bottom, black 48%, transparent 78%)",
+              WebkitMaskImage:
+                "linear-gradient(to bottom, black 48%, transparent 78%)",
+            }}
           >
-            <Button href="#products" size="lg">
-              Explore Honest Sweets
-            </Button>
-            <a
-              href={process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 font-body font-semibold uppercase text-2xs tracking-[0.14em] text-earth/60 hover:text-orange transition-colors duration-200"
-            >
-              <IconInstagram className="w-4 h-4" />
-              Write us on Instagram
-            </a>
+            <IconNaturalBadge className="w-40 h-40 md:w-52 md:h-52 lg:w-64 lg:h-64 text-bark" />
           </motion.div>
+
+          {/* Text block sits on top, covering the faded bottom of the badge */}
+          <div className="relative z-10 pt-14 md:pt-23 lg:pt-30">
+            {/* H1 */}
+            <motion.h1
+              variants={fadeUp}
+              transition={{ duration: 0.7, ease: "easeOut" }}
+              className="font-display font-bold italic text-heading leading-[1.1] mb-6"
+              style={{ fontSize: "clamp(2.6rem, 5.5vw, 4.5rem)" }}
+            >
+              Natural sweetness
+              <br />
+              invented by nature.
+            </motion.h1>
+
+            {/* Subtitle */}
+            <motion.p
+              variants={fadeUp}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="font-body font-light text-earth/75 text-lg leading-relaxed mb-10"
+            >
+              Honest. Simple. No additives.
+              <br />
+              Small Batch &amp; Handcrafted.
+            </motion.p>
+
+            {/* CTA */}
+            <motion.div
+              variants={fadeUp}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="flex flex-col items-center gap-4"
+            >
+              <Button href="#products" size="lg">
+                Explore Honest Sweets
+              </Button>
+              <a
+                href={process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 font-body font-semibold uppercase text-2xs tracking-[0.14em] text-earth/60 hover:text-orange transition-colors duration-200"
+              >
+                <IconInstagram className="w-4 h-4" />
+                Write us on Instagram
+              </a>
+            </motion.div>
+          </div>
         </motion.div>
       </div>
 

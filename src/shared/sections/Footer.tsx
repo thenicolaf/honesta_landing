@@ -15,9 +15,9 @@ export function Footer() {
     <footer className="noise relative bg-earth overflow-hidden">
       <div className="relative mx-auto max-w-7xl px-6 lg:px-10 py-16 md:py-20">
         {/* ── Main columns ─────────────────────────────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-12 md:gap-8 pb-12 border-b border-sand/10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-12 md:gap-8 pb-12 border-b border-sand/10 text-center sm:text-left">
           {/* Column 1: Brand */}
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-5 items-center sm:items-start">
             <Link
               href="/"
               className="flex flex-col leading-none select-none w-fit"

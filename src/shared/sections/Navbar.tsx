@@ -54,13 +54,13 @@ export function Navbar() {
         />
 
         <div className="relative mx-auto max-w-7xl px-6 lg:px-10">
-          <nav className="flex items-center justify-between h-16 md:h-20">
+          <nav className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
             <Link
               href="#hero"
               className="flex flex-col leading-none select-none"
             >
-              <span className="font-display font-bold text-2xl md:text-[1.75rem] text-earth tracking-widest uppercase">
+              <span className="font-display font-bold text-2xl lg:text-[1.75rem] text-earth tracking-widest uppercase">
                 HONESTA
               </span>
               <span className="font-body font-light text-xs uppercase tracking-[0.22em] text-bark mt-0.5 hidden sm:block">
@@ -69,7 +69,7 @@ export function Navbar() {
             </Link>
 
             {/* Desktop navigation */}
-            <ul className="hidden md:flex items-center gap-8">
+            <ul className="hidden lg:flex items-center gap-8">
               {NAV_LINKS.map((link) => (
                 <li key={link.href}>
                   <Link
@@ -98,9 +98,9 @@ export function Navbar() {
         </div>
       </motion.header>
 
-      {/* Mobile bottom tab bar — visible only on < md */}
+      {/* Mobile bottom tab bar — visible only on < lg */}
       <motion.div
-        className="fixed bottom-6 left-1/2 z-50 md:hidden"
+        className="fixed bottom-6 left-1/2 z-50 lg:hidden"
         initial={{ x: "-50%", y: 0 }}
         animate={{ x: "-50%", y: tabHidden ? "calc(100% + 1.5rem)" : 0 }}
         transition={{ type: "spring", stiffness: 380, damping: 34 }}

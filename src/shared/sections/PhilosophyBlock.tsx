@@ -1,7 +1,7 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "motion/react";
-import { IconBotanical } from "@/shared/icons";
 
 const manifestLines = [
   { prefix: "We don't add", emphasis: "flavors", suffix: "to mask reality." },
@@ -29,7 +29,7 @@ export function PhilosophyBlock() {
         <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] min-h-150">
           {/* ── Left: text ─────────────────────────────── */}
           <motion.div
-            className="flex flex-col justify-center py-20 lg:py-28 lg:pr-16"
+            className="flex flex-col justify-center items-center lg:items-start text-center lg:text-left py-20 lg:py-28 lg:pr-16"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-80px" }}
@@ -105,7 +105,7 @@ export function PhilosophyBlock() {
             <motion.blockquote
               variants={fadeUp}
               transition={{ duration: 0.6, ease: "easeOut" }}
-              className="border-l-2 border-orange pl-5"
+              className="lg:border-l-2 lg:border-orange lg:pl-5"
             >
               <p
                 className="font-display italic text-white-warm/85 leading-snug"
@@ -126,12 +126,19 @@ export function PhilosophyBlock() {
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
           >
-            {/* TODO: replace inner content with <Image src="/images/philosophy.jpg" fill className="object-cover" alt="Hands holding fresh fruit — Honesta"/> */}
-            <div className="relative w-full bg-bark/20 flex items-center justify-center">
-              <IconBotanical className="w-40 text-sand opacity-10" />
-              <p className="absolute bottom-6 left-0 right-0 text-center font-body font-light text-2xs uppercase tracking-[0.15em] text-sand/20">
-                Photo placeholder
-              </p>
+            <div className="relative w-full">
+              <Image
+                src="/images/sections/Our Philosophy.webp"
+                fill
+                className="object-cover object-center"
+                alt="Hands holding fresh fruit — Honesta"
+              />
+              {/* Left edge blend */}
+              <div className="absolute inset-y-0 left-0 w-1/4 bg-linear-to-r from-earth to-transparent" />
+              {/* Right edge blend */}
+              <div className="absolute inset-y-0 right-0 w-1/4 bg-linear-to-l from-earth to-transparent" />
+              {/* Subtle top/bottom vignette */}
+              <div className="absolute inset-0 bg-linear-to-b from-earth/40 via-transparent to-earth/40" />
             </div>
           </motion.div>
         </div>

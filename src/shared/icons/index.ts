@@ -1,4 +1,5 @@
 export { IconInstagram } from "./IconInstagram";
+export { IconNaturalBadge } from "./IconNaturalBadge";
 export { IconLeaf } from "./IconLeaf";
 export { IconHands } from "./IconHands";
 export { IconCleanLabel } from "./IconCleanLabel";

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "motion/react";
 import { IconInstagram } from "@/shared/icons";
 
@@ -14,6 +15,17 @@ export function InstagramCTA() {
       id="contact"
       className="noise relative bg-orange overflow-hidden py-24 md:py-32"
     >
+      {/* Background photo */}
+      <Image
+        src="/images/sections/Contact.webp"
+        fill
+        className="object-cover scale-105 blur-sm"
+        alt=""
+        aria-hidden="true"
+      />
+      {/* Orange tint overlay */}
+      <div className="absolute inset-0 bg-orange/60" />
+
       <div className="relative mx-auto max-w-2xl px-6 text-center">
         <motion.div
           initial="hidden"
