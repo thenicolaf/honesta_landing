@@ -1,4 +1,4 @@
-const siteUrl = process.env.NEXT_PUBLIC_URL_SITE!;
+const siteUrl = process.env.PUBLIC_BASE_URL!;
 const instagramUrl = process.env.NEXT_PUBLIC_INSTAGRAM_BRAND_URL!;
 const instagramDmUrl = process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL!;
 

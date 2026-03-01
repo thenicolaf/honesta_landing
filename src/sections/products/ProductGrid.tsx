@@ -2,11 +2,11 @@
 
 import { motion } from "motion/react";
 import { TagToolbar, TagToolbarItem } from "@/shared/ui";
-import { products } from "./consts";
 import { ProductItem } from "./ProductItem";
-import type { Product } from "./types";
 import { Category } from "@/shared/types";
-import { useCategoryFilter } from "@/shared/providers";
+import { useCategoryFilter } from "@/providers";
+import type { DbProductGridProps, Product } from "./types";
+import { mapDbProducts } from "./utils";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -111,8 +111,23 @@ function ProductList({ products }: { products: Product[] }) {
 
 // ─── ProductGrid ──────────────────────────────────────────────────────────────
 
-export function ProductGrid() {
+export function ProductGrid({
+  rawProducts,
+  tagOptions,
+  freeFromOptions,
+  servingIdeaOptions,
+  occasionOptions,
+  benefits,
+}: DbProductGridProps) {
   const { activeCategory, setActiveCategory } = useCategoryFilter();
+
+  const products: Product[] = mapDbProducts(rawProducts, {
+    tagOptions,
+    freeFromOptions,
+    servingIdeaOptions,
+    occasionOptions,
+    benefits,
+  });
 
   const filtered = activeCategory
     ? products.filter((p) => p.category === activeCategory)

@@ -7,28 +7,36 @@ import {
   useMotionValueEvent,
   motion,
 } from "motion/react";
-import { ShoppingBag, Grid3X3, BookOpen, MessageCircle } from "lucide-react";
+import {
+  ShoppingBag,
+  Grid3X3,
+  BookOpen,
+  MessageCircle,
+  ShoppingCart,
+} from "lucide-react";
 import { Button } from "@/shared/ui";
 import Link from "next/link";
 import { IconInstagram } from "@/shared/icons";
+import { useCart } from "@/providers";
 
 const NAV_LINKS = [
-  { href: "#products", label: "Products" },
-  { href: "#categories", label: "Categories" },
-  { href: "#story", label: "Story" },
-  { href: "#contact", label: "Contact" },
+  { href: "/#products", label: "Products" },
+  { href: "/#categories", label: "Categories" },
+  { href: "/#story", label: "Story" },
+  { href: "/#contact", label: "Contact" },
 ];
 
 const TAB_LINKS = [
-  { href: "#products", label: "Products", Icon: ShoppingBag },
-  { href: "#categories", label: "Categories", Icon: Grid3X3 },
-  { href: "#story", label: "Story", Icon: BookOpen },
-  { href: "#contact", label: "Contact", Icon: MessageCircle },
+  { href: "/#products", label: "Products", Icon: ShoppingBag },
+  { href: "/#categories", label: "Categories", Icon: Grid3X3 },
+  { href: "/#story", label: "Story", Icon: BookOpen },
+  { href: "/#contact", label: "Contact", Icon: MessageCircle },
 ];
 
 export function Navbar() {
   const { scrollY } = useScroll();
   const [tabHidden, setTabHidden] = useState(false);
+  const { itemCount } = useCart();
 
   const bgOpacity = useTransform(scrollY, [0, 80], [0, 1]);
   const shadowOpacity = useTransform(scrollY, [0, 80], [0, 1]);
@@ -57,7 +65,7 @@ export function Navbar() {
           <nav className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
             <Link
-              href="#hero"
+              href="/#hero"
               className="flex flex-col leading-none select-none"
             >
               <span className="font-display font-bold text-2xl lg:text-[1.75rem] text-earth tracking-widest uppercase">
@@ -83,7 +91,22 @@ export function Navbar() {
             </ul>
 
             {/* Right actions */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <Link
+                href="/cart"
+                className="relative p-2 text-earth hover:text-orange transition-colors duration-200"
+                aria-label={`Cart${itemCount > 0 ? `, ${itemCount} items` : ""}`}
+              >
+                <ShoppingCart className="w-5 h-5" strokeWidth={1.5} />
+                {itemCount > 0 && (
+                  <span
+                    className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-orange text-white-warm font-body font-semibold flex items-center justify-center leading-none"
+                    style={{ fontSize: "0.5rem" }}
+                  >
+                    {itemCount > 9 ? "9+" : itemCount}
+                  </span>
+                )}
+              </Link>
               <Button
                 href={process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL}
                 target="_blank"

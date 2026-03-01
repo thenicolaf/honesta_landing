@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { motion } from "motion/react";
+import { Button } from "@/shared/ui";
 import { IconInstagram } from "@/shared/icons";
 
 const fadeUp = {
@@ -82,15 +83,17 @@ export function InstagramCTA() {
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="flex flex-col items-center gap-4"
           >
-            <a
+            <Button
               href={process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 bg-white-warm text-orange border-2 border-white-warm rounded-full font-body font-semibold uppercase tracking-[0.12em] text-sm px-10 py-5 hover:bg-transparent hover:text-white-warm hover:border-white-warm transition-all duration-300"
+              variant="secondary"
+              size="lg"
+              className="px-10 hover:bg-transparent hover:text-white-warm hover:border-white-warm"
             >
               <IconInstagram className="w-5 h-5 shrink-0" />
               Write us on Instagram
-            </a>
+            </Button>
 
             <p className="font-body font-light text-2xs text-white/60 tracking-wide">
               No bots. No auto-replies. A real person will answer you.
@@ -101,14 +104,16 @@ export function InstagramCTA() {
             </p>
 
             {/* Soft Instagram handle link */}
-            <a
+            <Button
               href={process.env.NEXT_PUBLIC_INSTAGRAM_BRAND_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-body font-light text-2xs text-white/45 hover:text-white/75 transition-colors duration-200 tracking-widest uppercase mt-2"
+              variant="ghost"
+              size="lg"
+              className="border-transparent text-white/45 hover:text-white/75 hover:border-transparent font-light mt-2"
             >
               instagram.com/{process.env.NEXT_PUBLIC_INSTAGRAM_BRAND}
-            </a>
+            </Button>
           </motion.div>
         </motion.div>
       </div>

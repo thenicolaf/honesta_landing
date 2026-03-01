@@ -2,10 +2,10 @@ import Link from "next/link";
 import { IconInstagram } from "@/shared/icons";
 
 const NAV_LINKS = [
-  { href: "#products", label: "Products" },
-  { href: "#categories", label: "Categories" },
-  { href: "#story", label: "Our Story" },
-  { href: "#contact", label: "Contact" },
+  { href: "/#products", label: "Products" },
+  { href: "/#categories", label: "Categories" },
+  { href: "/#story", label: "Our Story" },
+  { href: "/#contact", label: "Contact" },
 ];
 
 export function Footer() {
@@ -19,7 +19,7 @@ export function Footer() {
           {/* Column 1: Brand */}
           <div className="flex flex-col gap-5 items-center sm:items-start">
             <Link
-              href="/"
+              href="/#hero"
               className="flex flex-col leading-none select-none w-fit"
             >
               <span className="font-display font-bold text-2xl text-white-warm tracking-widest uppercase">

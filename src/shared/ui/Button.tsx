@@ -2,7 +2,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/shared/utils/cn";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-3 rounded-full font-body font-medium uppercase transition-all duration-300",
+  "inline-flex items-center justify-center gap-3 rounded-full font-body cursor-pointer font-medium uppercase transition-all duration-300",
   {
     variants: {
       variant: {
@@ -14,9 +14,10 @@ const buttonVariants = cva(
           "bg-transparent text-earth border-2 border-parchment hover:border-bark hover:text-bark",
       },
       size: {
-        sm: "px-5 py-2 text-sm tracking-widest",
-        md: "px-8 py-4 text-sm tracking-[0.12em]",
-        lg: "px-10 py-5 text-base tracking-[0.12em]",
+        icon: "w-8 h-8 text-xs",
+        sm: "h-8 px-4 text-xs tracking-widest",
+        md: "h-11 px-6 text-sm tracking-[0.12em]",
+        lg: "h-13 px-8 text-sm tracking-[0.12em]",
       },
     },
     defaultVariants: {

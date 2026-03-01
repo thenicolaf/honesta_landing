@@ -11,3 +11,5 @@ export { IconFruitLeather } from "./IconFruitLeather";
 export { IconChevron } from "./IconChevron";
 export { IconInfo } from "./IconInfo";
 export { IconBurjKhalifa } from "./IconBurjKhalifa";
+export { IconCheckCircle } from "./IconCheckCircle";
+export { IconAlertCircle } from "./IconAlertCircle";

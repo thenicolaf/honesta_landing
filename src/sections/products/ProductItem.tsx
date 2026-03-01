@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { Minus, Plus } from "lucide-react";
 import {
   Button,
   Badge,
@@ -10,16 +11,17 @@ import {
   CollapsibleContent,
 } from "@/shared/ui";
 import { IconInfo } from "@/shared/icons";
+import { useCart } from "@/providers";
 import type { Benefit, NutritionInfo, Product } from "./types";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function ProductImage({
-  image,
+  image_url,
   title,
   tagline,
 }: {
-  image: string;
+  image_url: string;
   title: string;
   tagline: string;
 }) {
@@ -28,9 +30,9 @@ function ProductImage({
       className="group/img relative aspect-3/2 overflow-hidden focus:outline-none"
       tabIndex={0}
     >
-      {image ? (
+      {image_url ? (
         <Image
-          src={image}
+          src={image_url}
           alt={title}
           fill
           className="object-cover transition-transform duration-500 group-hover/img:scale-105 group-focus/img:scale-105"
@@ -83,6 +85,11 @@ function ProductTitle({ title }: { title: string }) {
   );
 }
 
+function ProductWeight({ weight_g }: { weight_g?: number }) {
+  if (weight_g == null) return null;
+  return <p className="font-body text-2xs text-earth">{weight_g} g</p>;
+}
+
 function ProductTags({ tags }: { tags: string[] }) {
   return (
     <ul className="flex flex-wrap gap-x-3 gap-y-1">
@@ -104,10 +111,7 @@ function ProductFreeFrom({ freeFrom }: { freeFrom: string[] }) {
   return (
     <ul className="flex flex-wrap gap-x-3 gap-y-1">
       {freeFrom.map((item) => (
-        <li
-          key={item}
-          className="font-body font-light text-2xs text-earth/55"
-        >
+        <li key={item} className="font-body font-light text-2xs text-earth/55">
           ✕ {item}
         </li>
       ))}
@@ -226,18 +230,102 @@ function ProductDetails({
   );
 }
 
-function ProductCta() {
+function ProductPriceAndCart({
+  product,
+}: {
+  product: Pick<Product, "id" | "title" | "price" | "image_url" | "in_stock">;
+}) {
+  const { items, addToCart, updateItemQuantity, removeFromCart } = useCart();
+  const cartItem = items.find((i) => i.id === product.id);
+  const quantity = cartItem?.quantity ?? 0;
+
+  const priceLabel =
+    product.price != null ? (
+      <span className="font-body font-semibold text-earth text-sm">
+        AED {product.price}
+      </span>
+    ) : null;
+
+  if (product.in_stock === false) {
+    return (
+      <div className="mt-auto flex items-center justify-between gap-3 pt-1">
+        {priceLabel}
+        <Badge variant="outline" size="md">
+          Out of Stock
+        </Badge>
+      </div>
+    );
+  }
+
+  if (product.price == null || product.id == null) {
+    return (
+      <Button
+        href={process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        variant="ghost"
+        size="sm"
+        className="mt-auto w-full"
+      >
+        Order via Instagram
+      </Button>
+    );
+  }
+
+  if (quantity > 0) {
+    return (
+      <div className="mt-auto flex items-center justify-between gap-3 pt-1">
+        {priceLabel}
+        <div className="flex items-center gap-2">
+          <Button
+            as="button"
+            variant="ghost"
+            size="icon"
+            onClick={() =>
+              quantity === 1
+                ? removeFromCart(product.id!)
+                : updateItemQuantity(product.id!, quantity - 1)
+            }
+            aria-label="Decrease quantity"
+          >
+            <Minus className="w-3.5 h-3.5" />
+          </Button>
+          <span className="font-body font-semibold text-earth text-sm w-4 text-center">
+            {quantity}
+          </span>
+          <Button
+            as="button"
+            variant="primary"
+            size="icon"
+            onClick={() => updateItemQuantity(product.id!, quantity + 1)}
+            aria-label="Increase quantity"
+          >
+            <Plus className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <Button
-      href={process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      variant="ghost"
-      size="sm"
-      className="mt-auto w-full"
-    >
-      Order via Instagram
-    </Button>
+    <div className="mt-auto flex items-center justify-between gap-3 pt-1">
+      {priceLabel}
+      <Button
+        as="button"
+        variant="primary"
+        size="sm"
+        onClick={() =>
+          addToCart({
+            id: product.id!,
+            name: product.title,
+            price: product.price!,
+            image_url: product.image_url,
+          })
+        }
+      >
+        Add to Cart
+      </Button>
+    </div>
   );
 }
 
@@ -255,7 +343,8 @@ export function ProductItem({ product }: ProductItemProps) {
     tagline,
     tags,
     freeFrom,
-    image,
+    image_url,
+    weight_g,
     benefits,
     nutrition,
     servingIdeas,
@@ -263,11 +352,12 @@ export function ProductItem({ product }: ProductItemProps) {
 
   return (
     <div className="h-full flex flex-col rounded-[16px] overflow-hidden bg-white-warm border border-parchment/60 hover:shadow-lg hover:border-transparent transition-all duration-300">
-      <ProductImage image={image} title={title} tagline={tagline} />
+      <ProductImage image_url={image_url} title={title} tagline={tagline} />
 
       <div className="flex-1 p-5 flex flex-col gap-3">
         <ProductHeader category={category} badge={badge} />
         <ProductTitle title={title} />
+        <ProductWeight weight_g={weight_g} />
         <ProductTags tags={tags} />
         <ProductFreeFrom freeFrom={freeFrom} />
         <ProductDetails
@@ -275,7 +365,7 @@ export function ProductItem({ product }: ProductItemProps) {
           nutrition={nutrition}
           servingIdeas={servingIdeas}
         />
-        <ProductCta />
+        <ProductPriceAndCart product={product} />
       </div>
     </div>
   );

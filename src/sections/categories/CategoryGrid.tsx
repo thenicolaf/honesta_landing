@@ -1,0 +1,74 @@
+"use client";
+
+import { motion } from "motion/react";
+import { Category } from "@/shared/types";
+import { IconLeaf } from "@/shared/icons";
+import { useCategoryFilter } from "@/providers";
+import { CategoryCard } from "./CategoryCard";
+import { SLUG_TO_CATEGORY, CATEGORY_UI_MAP, containerVariants } from "./consts";
+import type { DbCategory, CategoryCard as CategoryCardData } from "./types";
+
+export function CategoryGrid({
+  categories: dbCategories,
+}: {
+  categories?: DbCategory[];
+}) {
+  const { setActiveCategory } = useCategoryFilter();
+
+  const categories: CategoryCardData[] = (dbCategories ?? []).map((c) => ({
+    id: c.id,
+    name: (SLUG_TO_CATEGORY[c.slug] ?? c.name) as Category,
+    slug: c.slug,
+    audience: c.audience,
+    tagline: c.tagline,
+    description: c.description,
+    badge: c.badge as CategoryCardData["badge"],
+    href: "#products",
+    ...(CATEGORY_UI_MAP[c.slug] ?? {
+      Icon: IconLeaf,
+      placeholderBg: "bg-earth/10",
+    }),
+  }));
+
+  return (
+    <section id="categories" className="bg-sand py-20 md:py-28">
+      <div className="mx-auto max-w-screen-2xl px-6 lg:px-10">
+        {/* Section header */}
+        <motion.div
+          className="mb-14 text-center"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        >
+          <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-moss mb-4">
+            Collections
+          </p>
+          <h2
+            className="font-display font-semibold text-heading leading-tight"
+            style={{ fontSize: "clamp(2rem, 4vw, 3rem)" }}
+          >
+            Find your perfect snack
+          </h2>
+        </motion.div>
+
+        {/* Cards grid */}
+        <motion.div
+          className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-60px" }}
+        >
+          {categories.map((card) => (
+            <CategoryCard
+              key={card.name}
+              {...card}
+              onClick={() => setActiveCategory(card.name)}
+            />
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-const siteUrl = process.env.NEXT_PUBLIC_URL_SITE!;
+const siteUrl = process.env.PUBLIC_BASE_URL!;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

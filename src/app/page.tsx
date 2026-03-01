@@ -1,28 +1,24 @@
-import {
-  Navbar,
-  Hero,
-  TrustBadges,
-  CategoryCards,
-  ProductGrid,
-  PhilosophyBlock,
-  InstagramCTA,
-  Footer,
-} from "@/shared/sections";
-import { CategoryFilterProvider } from "@/shared/providers";
+import { Suspense } from "react";
+import { Hero, TrustBadges, PhilosophyBlock, InstagramCTA } from "@/sections";
+import { CategoryFilterProvider } from "@/providers";
+import { Loader } from "@/shared/ui";
+import { CategoriesSection, ProductsSection } from "@/pages_flow/home";
 
-export default async function Home() {
+export default function Home() {
   return (
-    <>
-      <Navbar />
+    <main className="grow">
       <Hero />
       <TrustBadges />
       <CategoryFilterProvider>
-        <CategoryCards />
-        <ProductGrid />
+        <Suspense fallback={<Loader />}>
+          <CategoriesSection />
+        </Suspense>
+        <Suspense fallback={<Loader />}>
+          <ProductsSection />
+        </Suspense>
       </CategoryFilterProvider>
       <PhilosophyBlock />
       <InstagramCTA />
-      <Footer />
-    </>
+    </main>
   );
 }
