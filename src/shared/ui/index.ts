@@ -15,3 +15,13 @@ export {
   CollapsibleContent,
   useCollapsible,
 } from "./Collapsible";
+export {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+  SelectSeparator,
+  SelectGroup,
+  useSelect,
+} from "./Select";

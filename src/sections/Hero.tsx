@@ -25,11 +25,13 @@ export function Hero() {
           alt="Natural dried orange slices — Honesta"
           fill
           priority
-          className="object-cover object-center"
+          className="object-cover max-lg:object-left"
           sizes="100vw"
         />
       </motion.div>
 
+      {/* Cool blue-slate overlay on mobile/tablet for text legibility */}
+      <div className="absolute inset-0 bg-sand/30 lg:hidden" />
       {/* Warm amber wash */}
       <div className="absolute inset-0 bg-orange/10" />
       {/* Subtle center softening for text legibility */}
@@ -53,7 +55,7 @@ export function Hero() {
           <motion.div
             variants={fadeUp}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="absolute top-6 md:top-8 left-1/2 -translate-x-1/2 z-0 pointer-events-none"
+            className="absolute top-8 left-1/2 -translate-x-1/2 z-0 pointer-events-none"
             style={{
               maskImage:
                 "linear-gradient(to bottom, black 48%, transparent 78%)",
@@ -61,17 +63,17 @@ export function Hero() {
                 "linear-gradient(to bottom, black 48%, transparent 78%)",
             }}
           >
-            <IconNaturalBadge className="w-40 h-40 md:w-52 md:h-52 lg:w-64 lg:h-64 text-bark" />
+            <IconNaturalBadge className="size-52 sm:size-64 text-bark" />
           </motion.div>
 
           {/* Text block sits on top, covering the faded bottom of the badge */}
-          <div className="relative z-10 pt-14 md:pt-23 lg:pt-30">
+          <div className="relative z-10 pt-23 sm:pt-30">
             {/* H1 */}
             <motion.h1
               variants={fadeUp}
               transition={{ duration: 0.7, ease: "easeOut" }}
               className="font-display font-bold italic text-heading leading-[1.1] mb-6"
-              style={{ fontSize: "clamp(2.6rem, 5.5vw, 4.5rem)" }}
+              style={{ fontSize: "clamp(2.6rem, 6.5vw, 4.5rem)" }}
             >
               Natural sweetness
               <br />

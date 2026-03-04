@@ -4,5 +4,5 @@ export { TrustBadges } from "./TrustBadges";
 export * from "./categories";
 export * from "./products";
 export { PhilosophyBlock } from "./PhilosophyBlock";
-export { InstagramCTA } from "./InstagramCTA";
+export { PartnershipCTA } from "./PartnershipCTA";
 export { Footer } from "./Footer";

@@ -131,17 +131,11 @@ export function CheckoutForm({
           id="district"
           name="district"
           defaultValue={defaultValues.district ?? ""}
+          placeholder="Select your district"
+          options={DUBAI_DISTRICTS}
+          clearable
           state={fieldErrors?.district ? "error" : "default"}
-        >
-          <option value="" disabled>
-            Select your district
-          </option>
-          {DUBAI_DISTRICTS.map((d) => (
-            <option key={d} value={d}>
-              {d}
-            </option>
-          ))}
-        </FormSelect>
+        />
         <FormError message={fieldErrors?.district} />
       </div>
 

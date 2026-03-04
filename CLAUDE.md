@@ -22,37 +22,108 @@ No test suite configured yet.
 - **Next.js 16** (App Router) + **React 19** + **TypeScript**
 - **Tailwind CSS v4** — config is CSS-only via `@theme` in `globals.css`, no `tailwind.config.ts`
 - **React Compiler** enabled (`reactCompiler: true` in `next.config.ts`) — no manual `useMemo`/`useCallback` needed
+- **Supabase** (`@supabase/supabase-js`) — orders + products database
+- **N-Genius** — payment gateway (UAE, amounts in fils: 1 AED = 100 fils)
+- **motion/react** (not `framer-motion`) — animations
+- **lucide-react** — supplemental icon library (prefer custom icons in `src/shared/icons/` first)
 - **pnpm** as package manager
 
 ## Path alias
 
-`@/*` maps to `src/*` — use `@/shared/ui`, `@/components`, etc.
+`@/*` maps to `src/*` — use `@/shared/ui`, `@/lib/supabase`, `@/providers`, etc.
 
 ## Architecture
 
 ```
 src/
-├── app/                    # Next.js App Router
-│   ├── layout.tsx          # fonts + SEO metadata
-│   ├── page.tsx            # landing page (assembles all sections)
-│   ├── globals.css         # Tailwind @theme tokens (brand colors, fonts)
-│   ├── metadata.ts         # shared Next.js Metadata object
-│   ├── structured-data.ts  # JSON-LD schema
-│   ├── sitemap.ts          # dynamic sitemap
-│   └── robots.ts           # robots.txt rules
+├── app/                        # Next.js App Router routes
+│   ├── layout.tsx              # Root layout — wraps with CartProvider
+│   ├── page.tsx                # Landing page (Hero, Products, Categories)
+│   ├── cart/page.tsx           # Shopping cart route
+│   ├── checkout/
+│   │   ├── page.tsx            # Checkout form (reads customer cookie)
+│   │   ├── cancel/page.tsx     # Payment cancelled fallback
+│   │   └── result/page.tsx     # Payment result (polls N-Genius, updates DB)
+│   ├── api/payment/webhook/    # N-Genius webhook → updates order status in Supabase
+│   └── globals.css, metadata.ts, sitemap.ts, robots.ts, structured-data.ts
+│
+├── lib/                        # Backend / data-access layer (server-only)
+│   ├── supabase.ts             # Two clients: `supabase` (anon/RLS) + `supabaseAdmin` (service role)
+│   ├── ngenius.ts              # N-Genius payment API (auth, create order, poll status)
+│   ├── payments.ts             # Orchestrates: create payment → update DB with ngenius_ref
+│   ├── orders.ts               # Supabase order creation (orders + order_items tables)
+│   └── cart.ts                 # localStorage cart helpers (getCart, addItem, removeItem, etc.)
+│
+├── pages_flow/                 # Page-level component trees (co-located with their routes)
+│   ├── cart/                   # CartPage + CartItems + CartSummary
+│   ├── checkout/               # CheckoutPage + CheckoutForm + OrderSummary + SubmitButton
+│   │   └── actions.ts          # Server action: validate → save to DB → create payment → redirect
+│   └── home/                   # CategoriesSection, ProductsSection
+│
+├── providers/                  # React context providers + hooks
+│   ├── CartProvider.tsx        # useSyncExternalStore-based cart state (hydration-safe)
+│   └── CategoryFilterProvider.tsx
+│
+├── sections/                   # Landing-page section components
+│   ├── Navbar.tsx, Hero.tsx, PhilosophyBlock.tsx, PartnershipCTA.tsx, TrustBadges.tsx, Footer.tsx
+│   ├── partnership/            # actions.ts — submitPartnershipInquiry server action → partnership_inquiries table
+│   ├── categories/             # CategoryCard, CategoryGrid, consts, types
+│   └── products/               # ProductGrid, ProductItem, consts, mapDbProducts
+│       └── types/              # Product & CartItem types + Supabase db-types
+│
 └── shared/
-    ├── ui/                 # reusable primitives (Button, Badge, Card, etc.)
-    ├── sections/           # page-level section components (Navbar, Hero, etc.)
-    │   └── products/       # product sub-module: types.ts, consts.ts, ProductGrid, ProductItem
-    ├── providers/          # React context providers + hooks
-    ├── icons/              # SVG icon components + index.ts barrel
-    ├── types/              # shared TypeScript types (Category enum, etc.)
-    └── utils/cn.ts         # clsx + tailwind-merge
+    ├── consts.ts               # CUSTOMER_COOKIE_KEY, DELIVERY_FEE
+    ├── ui/                     # Reusable primitives (Button, Badge, Card, Form, Collapsible, etc.)
+    ├── icons/                  # SVG icon components + index.ts barrel
+    ├── types/                  # Categories enum, CustomerInfo, OrderStatus
+    └── utils/                  # cn.ts, validateCustomer.ts, validatePartnership.ts
 ```
 
-**Rule:** generic primitives → `src/shared/ui/`, page sections → `src/shared/sections/`, SVG icons → `src/shared/icons/`, React context providers → `src/shared/providers/`.
+**Rule:** backend/data-access → `src/lib/`, page-level component trees → `src/pages_flow/`, landing sections → `src/sections/`, generic primitives → `src/shared/ui/`, SVG icons → `src/shared/icons/`, React context providers → `src/providers/`.
 
-**Page assembly** (`page.tsx`): `CategoryFilterProvider` wraps `CategoryCards` + `ProductGrid` so they share a single active-category state.
+## Routes
+
+| Route | Purpose |
+|-------|---------|
+| `/` | Landing page |
+| `/cart` | Shopping cart |
+| `/checkout` | Checkout form (customer info + order summary) |
+| `/checkout/result?ref={orderRef}` | Payment result — polls N-Genius, shows success/failure |
+| `/checkout/cancel` | Payment cancelled screen |
+| `POST /api/payment/webhook` | N-Genius webhook — updates `orders.status` in Supabase |
+
+## E-commerce & Payment Flow
+
+**Checkout server action** (`src/pages_flow/checkout/actions.ts`):
+1. Validates `CustomerInfo` (phone must match `^\+971[0-9]{9}$`, UAE format)
+2. Saves customer to `CUSTOMER_COOKIE_KEY` cookie (30 days) for form repopulation
+3. Creates order in Supabase (`orders` + `order_items` tables)
+4. Calls N-Genius to create a payment, gets back payment URL
+5. Updates order with `ngenius_ref`, then `redirect()` to N-Genius hosted page
+
+**Result page** (`src/app/checkout/result/page.tsx`):
+- Server component — polls N-Genius directly for final status
+- Updates `orders.status` → `PAID` or `FAILED`
+- Renders `<ClearCartOnSuccess>` (client component) which clears localStorage cart on success
+
+**Webhook** (`src/app/api/payment/webhook/route.ts`):
+- Receives N-Genius events; maps states (PURCHASED/CAPTURED → PAID, FAILED/REVERSED → FAILED/CANCELLED)
+- Validates via `NGENIUS_WEBHOOK_SECRET` header
+
+## Cart System
+
+- **Storage:** localStorage under key `"honesta_cart"`
+- **Provider:** `CartProvider` uses `useSyncExternalStore` — no Zustand/Redux
+- **Hydration:** `isHydrated` flag prevents SSR/client mismatch; server always renders empty cart
+- **Hook:** `useCart()` exposes `items`, `itemCount`, `total`, `addToCart`, `removeFromCart`, `updateItemQuantity`, `clearCart`, `isHydrated`
+
+## Supabase
+
+Two client instances in `src/lib/supabase.ts`:
+- `supabase` — anon key, subject to RLS (use in client components and non-sensitive queries)
+- `supabaseAdmin` — service role, bypasses RLS (use only in server actions, API routes, and `lib/`)
+
+**DB tables:** `orders` (status, subtotal, delivery_fee, total, customer fields, ngenius_ref), `order_items` (order_id, product_id, name, price, quantity), `products` (images in Supabase Storage → `image_url` field), `partnership_inquiries` (business_name, contact_name, phone, business_type, message).
 
 ## Design system
 
@@ -97,17 +168,22 @@ Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React conte
 - **`Badge`** — inline label/tag. Variants: `natural` (moss green) | `warm` (sand) | `outline`.
 - **`Card`** — wrapper with 16px radius. Variants: `default` (white-warm) | `sand` | `outline` | `dark` (earth bg).
 - **`TagToolbar` / `TagToolbarItem`** — single-select pill filter bar (`role="radiogroup"`). Controlled or uncontrolled via `value`/`onValueChange`/`defaultValue`. Empty string `""` means "All".
-- **`Collapsible` / `CollapsibleTrigger` / `CollapsibleChevron` / `CollapsibleContent`** — animated accordion. `CollapsibleContent` uses `motion/react` `AnimatePresence` for height transition.
+- **`Collapsible` / `CollapsibleTrigger` / `CollapsibleChevron` / `CollapsibleContent`** — animated accordion using `motion/react` `AnimatePresence`.
+- **`Select` / `SelectTrigger` / `SelectValue` / `SelectContent` / `SelectItem` / `SelectGroup` / `SelectSeparator`** — custom dropdown, context-based, supports controlled/uncontrolled, `clearable` prop, auto up/down direction.
+- **`Form` components** — `FormLabel`, `FormInput`, `FormSelect`, `FormTextarea`, `FormError` — CVA variants with `default` / `error` states. `FormSelect` wraps the `Select` compound component.
+- **`CartEmpty`** — empty cart placeholder screen.
+- **`Loader`** — loading spinner (used during cart hydration).
 
 ## Key business logic
 
-- **Main CTA** links to Instagram DM via `process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL`. Always use `target="_blank" rel="noopener noreferrer"`. See `.env.example` for the full set of Instagram env vars (`NEXT_PUBLIC_INSTAGRAM_DM_URL`, `NEXT_PUBLIC_INSTAGRAM_BRAND_URL`, `NEXT_PUBLIC_INSTAGRAM_BRAND`).
-- No cart or e-commerce — this is a pure showcase landing. All purchase flow goes through Instagram.
-- Product data is static (no API). Lives in `src/shared/sections/products/consts.ts`. The `Product` type and `Category` enum are defined alongside in `types.ts` and `src/shared/types/Categories.ts` respectively. Product fields `benefits`, `nutrition`, `servingIdeas`, `occasions` are stored for future modal/detail use but not rendered yet.
+- **PartnershipCTA** section (`src/sections/PartnershipCTA.tsx`) replaces the old InstagramCTA. It offers two contact channels: Instagram DM button (uses `NEXT_PUBLIC_INSTAGRAM_DM_URL` + `NEXT_PUBLIC_INSTAGRAM_BRAND_URL`) and an inline partnership inquiry form that submits via `useActionState` to a server action saving to `partnership_inquiries`. Always use `target="_blank" rel="noopener noreferrer"` for Instagram links. See `.env.example` for all Instagram env vars.
+- **Product data** loaded from Supabase (with `image_url` from Storage). Static fallback data lives in `src/sections/products/consts.ts`. `mapDbProducts()` converts Supabase rows to the `Product` type.
+- **Delivery fee** is `NEXT_PUBLIC_DELIVERY_FEE` env var (default 25 AED), defined in `src/shared/consts.ts`.
+- **Product fields** `benefits`, `nutrition`, `servingIdeas`, `occasions` are stored for future modal/detail use but not rendered yet.
 
 ## Animations
 
-`motion/react` (not `framer-motion`) — lighter package, same API. Import as:
+Import as:
 
 ```ts
 import { motion } from "motion/react";

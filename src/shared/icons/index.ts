@@ -13,3 +13,4 @@ export { IconInfo } from "./IconInfo";
 export { IconBurjKhalifa } from "./IconBurjKhalifa";
 export { IconCheckCircle } from "./IconCheckCircle";
 export { IconAlertCircle } from "./IconAlertCircle";
+export { IconX } from "./IconX";
