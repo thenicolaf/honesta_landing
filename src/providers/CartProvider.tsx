@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useSyncExternalStore,
 } from "react";
 import type { CartItem } from "@/sections/products/types";
@@ -15,6 +16,14 @@ import {
   clearCart as clearCartStorage,
   getTotal,
 } from "@/lib/cart";
+import { createSupabaseBrowserClient } from "@/lib/supabase";
+import {
+  getCartFromDb,
+  upsertItemInDb,
+  removeItemFromDb,
+  updateQuantityInDb,
+  clearCartInDb,
+} from "@/lib/cartDb";
 
 // ─── External cart store ───────────────────────────────────────────────────────
 
@@ -50,6 +59,12 @@ function setStore(items: CartItem[]) {
   _listeners.forEach((l) => l());
 }
 
+function resetStore() {
+  _items = EMPTY;
+  _isHydrated = false;
+  _listeners.forEach((l) => l());
+}
+
 // ─── Context ───────────────────────────────────────────────────────────────────
 
 interface CartContextValue {
@@ -65,7 +80,13 @@ interface CartContextValue {
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
+export function CartProvider({
+  children,
+  userId,
+}: {
+  children: React.ReactNode;
+  userId?: string | null;
+}) {
   const items = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const isHydrated = useSyncExternalStore(
     subscribe,
@@ -73,29 +94,76 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     getHydratedServerSnapshot,
   );
 
-  // Hydrate from localStorage after mount (server always renders with empty cart)
+  const supabaseRef =
+    useRef<ReturnType<typeof createSupabaseBrowserClient> | null>(null);
+
   useEffect(() => {
-    setStore(getCart());
-  }, []);
+    resetStore();
+    if (userId) {
+      const supabase = createSupabaseBrowserClient();
+      supabaseRef.current = supabase;
+      getCartFromDb(supabase).then(setStore);
+    } else {
+      supabaseRef.current = null;
+      setStore(getCart());
+    }
+  }, [userId]);
 
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
   const total = getTotal(items);
 
   function addToCart(item: Omit<CartItem, "quantity"> & { quantity?: number }) {
-    setStore(addItem(item));
+    if (userId && supabaseRef.current) {
+      const qty = item.quantity ?? 1;
+      const existing = _items.find((i) => i.id === item.id);
+      const newQty = existing ? existing.quantity + qty : qty;
+      const newItems = existing
+        ? _items.map((i) => (i.id === item.id ? { ...i, quantity: newQty } : i))
+        : [..._items, { ...item, quantity: qty }];
+      setStore(newItems);
+      upsertItemInDb(supabaseRef.current, userId, {
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: newQty,
+        image_url: item.image_url,
+      });
+    } else {
+      setStore(addItem(item));
+    }
   }
 
   function removeFromCart(id: string) {
-    setStore(removeItem(id));
+    if (userId && supabaseRef.current) {
+      setStore(_items.filter((i) => i.id !== id));
+      removeItemFromDb(supabaseRef.current, userId, id);
+    } else {
+      setStore(removeItem(id));
+    }
   }
 
   function updateItemQuantity(id: string, quantity: number) {
-    setStore(updateQuantity(id, quantity));
+    if (userId && supabaseRef.current) {
+      if (quantity <= 0) {
+        setStore(_items.filter((i) => i.id !== id));
+        removeItemFromDb(supabaseRef.current, userId, id);
+      } else {
+        setStore(_items.map((i) => (i.id === id ? { ...i, quantity } : i)));
+        updateQuantityInDb(supabaseRef.current, userId, id, quantity);
+      }
+    } else {
+      setStore(updateQuantity(id, quantity));
+    }
   }
 
   function clearCart() {
-    clearCartStorage();
-    setStore([]);
+    if (userId && supabaseRef.current) {
+      setStore([]);
+      clearCartInDb(supabaseRef.current, userId);
+    } else {
+      clearCartStorage();
+      setStore([]);
+    }
   }
 
   return (

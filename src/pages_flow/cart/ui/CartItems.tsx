@@ -66,7 +66,7 @@ export function CartItems() {
             </div>
 
             {/* Line total */}
-            <p className="font-body font-semibold text-earth whitespace-nowrap text-sm shrink-0 w-16 text-right">
+            <p className="font-body font-semibold text-earth whitespace-nowrap text-sm shrink-0 text-right">
               AED {(item.price * item.quantity).toFixed(2)}
             </p>
           </div>

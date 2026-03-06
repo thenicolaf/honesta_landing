@@ -10,5 +10,11 @@ export default async function Page() {
 
   if (!user) redirect("/login");
 
-  return <ProfilePage email={user.email!} />;
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("first_name, last_name, phone, address, coordinates")
+    .eq("id", user.id)
+    .single();
+
+  return <ProfilePage email={user.email!} profile={profile} />;
 }

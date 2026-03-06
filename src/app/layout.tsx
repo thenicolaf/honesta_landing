@@ -36,7 +36,7 @@ export default async function RootLayout({
       <body
         className={`${cormorant.variable} ${jost.variable} antialiased flex flex-col min-h-screen`}
       >
-        <CartProvider>
+        <CartProvider userId={user?.id ?? null}>
           <Navbar user={user ? { email: user.email! } : null} />
           {children}
           <Footer />
