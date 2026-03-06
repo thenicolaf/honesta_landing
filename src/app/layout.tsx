@@ -4,6 +4,7 @@ import { metadata as siteMetadata } from "./metadata";
 import { structuredData } from "./structured-data";
 import { Footer, Navbar } from "@/sections";
 import { CartProvider } from "@/providers";
+import { createSupabaseServerClient } from "@/lib/supabase.server";
 
 export { siteMetadata as metadata };
 
@@ -20,18 +21,23 @@ const jost = Jost({
   weight: ["300", "400", "500", "600"],
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <html lang="en">
       <body
         className={`${cormorant.variable} ${jost.variable} antialiased flex flex-col min-h-screen`}
       >
         <CartProvider>
-          <Navbar />
+          <Navbar user={user ? { email: user.email! } : null} />
           {children}
           <Footer />
         </CartProvider>

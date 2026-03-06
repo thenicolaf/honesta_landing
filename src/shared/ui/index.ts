@@ -1,4 +1,5 @@
 export { Button } from "./Button";
+export { Avatar } from "./Avatar";
 export { FormLabel, FormInput, FormSelect, FormTextarea, FormError } from "./Form";
 export { Loader } from "./Loader";
 export { Badge } from "./Badge";
@@ -15,6 +16,15 @@ export {
   CollapsibleContent,
   useCollapsible,
 } from "./Collapsible";
+export {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+  useDropdownMenu,
+} from "./DropdownMenu";
 export {
   Select,
   SelectTrigger,

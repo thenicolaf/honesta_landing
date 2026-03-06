@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase.server";
 import type { CartItem } from "@/sections/products/types/types";
 import type { CustomerInfo } from "@/shared/types";
 import { OrderStatus } from "@/shared/types";

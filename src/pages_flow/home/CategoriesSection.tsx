@@ -1,5 +1,5 @@
 import { CategoryGrid } from "@/sections";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase.server";
 import type { DbCategory } from "@/sections/categories";
 
 export async function CategoriesSection() {

@@ -1,5 +1,5 @@
 import { ProductGrid } from "@/sections";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase.server";
 
 export async function ProductsSection() {
   const [

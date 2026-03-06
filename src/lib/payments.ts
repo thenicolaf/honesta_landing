@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase.server";
 import { createOrder as createNGeniusOrder } from "@/lib/ngenius";
 import type { CustomerInfo } from "@/shared/types";
 

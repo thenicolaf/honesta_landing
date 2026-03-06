@@ -1,5 +1,5 @@
 import { Card, Button } from "@/shared/ui";
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase.server";
 import { OrderStatus } from "@/shared/types";
 
 export default async function CheckoutCancelPage({

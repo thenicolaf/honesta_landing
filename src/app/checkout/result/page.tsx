@@ -2,7 +2,7 @@ import { Card, Button } from "@/shared/ui";
 import { IconCheckCircle, IconAlertCircle } from "@/shared/icons";
 import { cn } from "@/shared/utils/cn";
 import { getOrderStatus } from "@/lib/ngenius";
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase.server";
 import { OrderStatus } from "@/shared/types";
 import { ClearCartOnSuccess } from "./ClearCartOnSuccess";
 

@@ -1,6 +1,6 @@
 "use server";
 
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase.server";
 import {
   validatePartnership,
   type PartnershipInquiry,

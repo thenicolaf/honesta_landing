@@ -22,7 +22,7 @@ No test suite configured yet.
 - **Next.js 16** (App Router) + **React 19** + **TypeScript**
 - **Tailwind CSS v4** — config is CSS-only via `@theme` in `globals.css`, no `tailwind.config.ts`
 - **React Compiler** enabled (`reactCompiler: true` in `next.config.ts`) — no manual `useMemo`/`useCallback` needed
-- **Supabase** (`@supabase/supabase-js`) — orders + products database
+- **Supabase** (`@supabase/supabase-js` + `@supabase/ssr`) — orders, products, and auth
 - **N-Genius** — payment gateway (UAE, amounts in fils: 1 AED = 100 fils)
 - **motion/react** (not `framer-motion`) — animations
 - **lucide-react** — supplemental icon library (prefer custom icons in `src/shared/icons/` first)
@@ -44,21 +44,27 @@ src/
 │   │   ├── page.tsx            # Checkout form (reads customer cookie)
 │   │   ├── cancel/page.tsx     # Payment cancelled fallback
 │   │   └── result/page.tsx     # Payment result (polls N-Genius, updates DB)
+│   ├── login/page.tsx          # Google OAuth login page
+│   ├── auth/callback/route.ts  # OAuth code → session exchange, then redirect
 │   ├── api/payment/webhook/    # N-Genius webhook → updates order status in Supabase
 │   └── globals.css, metadata.ts, sitemap.ts, robots.ts, structured-data.ts
 │
 ├── lib/                        # Backend / data-access layer (server-only)
-│   ├── supabase.ts             # Two clients: `supabase` (anon/RLS) + `supabaseAdmin` (service role)
+│   ├── supabase.ts             # Two static clients: `supabase` (anon/RLS) + `supabaseAdmin` (service role)
+│   ├── supabase.server.ts      # `createSupabaseServerClient()` — auth-aware client (reads cookies, use for authed routes)
 │   ├── ngenius.ts              # N-Genius payment API (auth, create order, poll status)
 │   ├── payments.ts             # Orchestrates: create payment → update DB with ngenius_ref
 │   ├── orders.ts               # Supabase order creation (orders + order_items tables)
 │   └── cart.ts                 # localStorage cart helpers (getCart, addItem, removeItem, etc.)
 │
+├── proxy.ts                    # Next.js middleware helper — refreshes Supabase auth session on every request
+│
 ├── pages_flow/                 # Page-level component trees (co-located with their routes)
 │   ├── cart/                   # CartPage + CartItems + CartSummary
 │   ├── checkout/               # CheckoutPage + CheckoutForm + OrderSummary + SubmitButton
 │   │   └── actions.ts          # Server action: validate → save to DB → create payment → redirect
-│   └── home/                   # CategoriesSection, ProductsSection
+│   ├── home/                   # CategoriesSection, ProductsSection
+│   └── login/                  # LoginPage + GoogleSignInButton
 │
 ├── providers/                  # React context providers + hooks
 │   ├── CartProvider.tsx        # useSyncExternalStore-based cart state (hydration-safe)
@@ -91,6 +97,8 @@ src/
 | `/checkout/result?ref={orderRef}` | Payment result — polls N-Genius, shows success/failure |
 | `/checkout/cancel` | Payment cancelled screen |
 | `POST /api/payment/webhook` | N-Genius webhook — updates `orders.status` in Supabase |
+| `/login` | Google OAuth login page |
+| `/auth/callback` | OAuth PKCE code exchange → session cookie → redirect |
 
 ## E-commerce & Payment Flow
 
@@ -117,11 +125,25 @@ src/
 - **Hydration:** `isHydrated` flag prevents SSR/client mismatch; server always renders empty cart
 - **Hook:** `useCart()` exposes `items`, `itemCount`, `total`, `addToCart`, `removeFromCart`, `updateItemQuantity`, `clearCart`, `isHydrated`
 
+## Auth (Google OAuth)
+
+Flow: `/login` → `GoogleSignInButton` calls `supabase.auth.signInWithOAuth({ provider: "google" })` → Google redirects to `/auth/callback?code=…` → `createSupabaseServerClient().auth.exchangeCodeForSession(code)` sets a cookie → redirect to `/` (or `next` param).
+
+Session refresh: `src/proxy.ts` exports a middleware helper (`proxy()`) that must be called from `middleware.ts`. It creates an `@supabase/ssr` server client and calls `auth.getUser()` on every request to keep the session cookie fresh.
+
+**Client selection guide:**
+| Situation | Use |
+|-----------|-----|
+| Server Action / API route needing auth identity | `createSupabaseServerClient()` from `@/lib/supabase.server` |
+| Server Action / API route, no auth needed | `supabase` or `supabaseAdmin` from `@/lib/supabase` |
+| Bypassing RLS (admin ops) | `supabaseAdmin` from `@/lib/supabase` |
+
 ## Supabase
 
-Two client instances in `src/lib/supabase.ts`:
-- `supabase` — anon key, subject to RLS (use in client components and non-sensitive queries)
-- `supabaseAdmin` — service role, bypasses RLS (use only in server actions, API routes, and `lib/`)
+Three client instances across two files:
+- `supabase` (`supabase.ts`) — static anon client, subject to RLS (non-auth server queries)
+- `supabaseAdmin` (`supabase.ts`) — static service-role client, bypasses RLS (use only in server actions, API routes, and `lib/`)
+- `createSupabaseServerClient()` (`supabase.server.ts`) — async, reads cookies via `@supabase/ssr`; use whenever you need the current user's session
 
 **DB tables:** `orders` (status, subtotal, delivery_fee, total, customer fields, ngenius_ref), `order_items` (order_id, product_id, name, price, quantity), `products` (images in Supabase Storage → `image_url` field), `partnership_inquiries` (business_name, contact_name, phone, business_type, message).
 
@@ -171,6 +193,7 @@ Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React conte
 - **`Collapsible` / `CollapsibleTrigger` / `CollapsibleChevron` / `CollapsibleContent`** — animated accordion using `motion/react` `AnimatePresence`.
 - **`Select` / `SelectTrigger` / `SelectValue` / `SelectContent` / `SelectItem` / `SelectGroup` / `SelectSeparator`** — custom dropdown, context-based, supports controlled/uncontrolled, `clearable` prop, auto up/down direction.
 - **`Form` components** — `FormLabel`, `FormInput`, `FormSelect`, `FormTextarea`, `FormError` — CVA variants with `default` / `error` states. `FormSelect` wraps the `Select` compound component.
+- **`DropdownMenu` / `DropdownMenuTrigger` / `DropdownMenuContent` / `DropdownMenuItem` / `DropdownMenuSeparator` / `DropdownMenuLabel`** — context-based dropdown menu with auto up/down direction, outside-click and Escape close, `destructive` + `disabled` item variants.
 - **`CartEmpty`** — empty cart placeholder screen.
 - **`Loader`** — loading spinner (used during cart hydration).
 
