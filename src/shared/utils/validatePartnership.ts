@@ -4,6 +4,9 @@ export interface PartnershipInquiry {
   phone: string;
   business_type: string;
   message: string;
+  address?: string;
+  lat?: string;
+  lng?: string;
 }
 
 export type PartnershipErrors = Partial<

@@ -3,34 +3,13 @@
 import {
   FormLabel,
   FormInput,
-  FormSelect,
   FormTextarea,
   FormError,
 } from "@/shared/ui";
 import { SubmitButton } from "./SubmitButton";
+import { AddressWithMap } from "./AddressWithMap";
 import { CustomerInfo } from "@/shared/types";
 import type { CustomerErrors } from "@/shared/utils/validateCustomer";
-
-const DUBAI_DISTRICTS = [
-  "JBR",
-  "Marina",
-  "Palm Jumeirah",
-  "Downtown Dubai",
-  "Business Bay",
-  "DIFC",
-  "Jumeirah",
-  "Al Barsha",
-  "Dubai Hills",
-  "Mirdif",
-  "JLT",
-  "Sports City",
-  "Motor City",
-  "Arabian Ranches",
-  "Deira",
-  "Bur Dubai",
-  "Discovery Gardens",
-  "International City",
-];
 
 interface CheckoutFormProps {
   defaultValues?: Partial<CustomerInfo>;
@@ -110,34 +89,13 @@ export function CheckoutForm({
         )}
       </div>
 
-      {/* Address */}
-      <div>
-        <FormLabel htmlFor="address">Delivery Address</FormLabel>
-        <FormInput
-          id="address"
-          name="address"
-          type="text"
-          defaultValue={defaultValues.address}
-          placeholder="Street, building, apartment"
-          state={fieldErrors?.address ? "error" : "default"}
-        />
-        <FormError message={fieldErrors?.address} />
-      </div>
-
-      {/* District */}
-      <div>
-        <FormLabel htmlFor="district">District</FormLabel>
-        <FormSelect
-          id="district"
-          name="district"
-          defaultValue={defaultValues.district ?? ""}
-          placeholder="Select your district"
-          options={DUBAI_DISTRICTS}
-          clearable
-          state={fieldErrors?.district ? "error" : "default"}
-        />
-        <FormError message={fieldErrors?.district} />
-      </div>
+      {/* Address + Map */}
+      <AddressWithMap
+        defaultValue={defaultValues.address}
+        defaultLat={defaultValues.lat}
+        defaultLng={defaultValues.lng}
+        error={fieldErrors?.address}
+      />
 
       {/* Notes */}
       <div>

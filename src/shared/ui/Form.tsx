@@ -42,10 +42,11 @@ export function FormLabel({
 export function FormInput({
   className,
   state,
+  ref,
   ...props
-}: React.InputHTMLAttributes<HTMLInputElement> & FieldVariantProps) {
+}: React.ComponentPropsWithRef<"input"> & FieldVariantProps) {
   return (
-    <input className={cn(fieldVariants({ state }), className)} {...props} />
+    <input ref={ref} className={cn(fieldVariants({ state }), className)} {...props} />
   );
 }
 

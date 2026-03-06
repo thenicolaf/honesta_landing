@@ -13,6 +13,7 @@ export async function createOrderWithItems(
   customer: Partial<CustomerInfo>,
   subtotal: number,
   deliveryFee: number,
+  userId?: string,
 ): Promise<{ data: OrderResult | null; error: string | null }> {
   const total = subtotal + deliveryFee;
 
@@ -28,9 +29,10 @@ export async function createOrderWithItems(
       email: customer.email,
       phone: customer.phone,
       address: customer.address,
-      district: customer.district,
-      city: "Dubai",
       notes: customer.notes,
+      lat: customer.lat ? parseFloat(customer.lat) : null,
+      lng: customer.lng ? parseFloat(customer.lng) : null,
+      user_id: userId ?? null,
     })
     .select()
     .single();

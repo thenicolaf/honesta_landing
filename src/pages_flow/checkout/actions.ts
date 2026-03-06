@@ -5,9 +5,13 @@ import { cookies } from "next/headers";
 import type { CartItem } from "@/sections/products/types/types";
 import { CUSTOMER_COOKIE_KEY, DELIVERY_FEE } from "@/shared/consts";
 import type { CustomerInfo } from "@/shared/types";
-import { validateCustomer, type CustomerErrors } from "@/shared/utils/validateCustomer";
+import {
+  validateCustomer,
+  type CustomerErrors,
+} from "@/shared/utils/validateCustomer";
 import { createOrderWithItems } from "@/lib/orders";
 import { createPaymentForOrder } from "@/lib/payments";
+import { createSupabaseServerClient } from "@/lib/supabase.server";
 
 export interface CheckoutState {
   error?: string;
@@ -20,6 +24,8 @@ export async function submitCheckout(
   formData: FormData,
 ): Promise<CheckoutState | null> {
   const customer = Object.fromEntries(formData) as Partial<CustomerInfo>;
+
+  console.log(customer);
 
   // Persist customer info for next visit
   const cookieStore = await cookies();
@@ -34,12 +40,18 @@ export async function submitCheckout(
   }
 
   // 1. Create order
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const { data: order, error: orderError } = await createOrderWithItems(
     items,
     customer,
     subtotal,
     DELIVERY_FEE,
+    user?.id,
   );
   if (orderError || !order) {
     return { error: orderError ?? "Failed to create order" };

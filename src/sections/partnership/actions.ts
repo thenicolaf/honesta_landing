@@ -33,6 +33,11 @@ export async function submitPartnershipInquiry(
     phone: data.phone!.trim(),
     business_type: data.business_type?.trim() || null,
     message: data.message?.trim() || null,
+    address: data.address?.trim() || null,
+    coordinates:
+      data.lat && data.lng
+        ? { lat: parseFloat(data.lat), lng: parseFloat(data.lng) }
+        : null,
   });
 
   if (error) {

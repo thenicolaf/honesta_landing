@@ -15,7 +15,6 @@ export async function createPaymentForOrder(
       firstName: customer.firstName,
       lastName: customer.lastName,
       address1: customer.address,
-      address2: customer.district,
     });
 
     await supabaseAdmin

@@ -27,9 +27,6 @@ export function validateCustomer(
   if (!customer.address?.trim()) {
     errors.address = "Delivery address is required.";
   }
-  if (!customer.district?.trim()) {
-    errors.district = "Please select a district.";
-  }
 
   return Object.keys(errors).length > 0 ? errors : null;
 }
