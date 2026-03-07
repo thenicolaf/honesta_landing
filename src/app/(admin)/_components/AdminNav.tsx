@@ -7,6 +7,7 @@ import { cn } from "@/shared/utils/cn";
 const NAV_ITEMS = [
   { href: "/profile", label: "Personal Info" },
   { href: "/favorites", label: "Favorites" },
+  { href: "/orders", label: "Orders" },
 ];
 
 export function AdminNav() {

@@ -16,3 +16,4 @@ export { IconAlertCircle } from "./IconAlertCircle";
 export { IconX } from "./IconX";
 export { IconGoogle } from "./IconGoogle";
 export { IconHeart } from "./IconHeart";
+export { IconReceipt } from "./IconReceipt";

@@ -26,6 +26,17 @@ export {
   useDropdownMenu,
 } from "./DropdownMenu";
 export {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogClose,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  useDialog,
+} from "./Dialog";
+export {
   Select,
   SelectTrigger,
   SelectValue,

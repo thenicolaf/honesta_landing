@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { UserCircle } from "lucide-react";
 import { Avatar } from "@/shared/ui";
@@ -11,43 +12,50 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/shared/ui";
-import { signOut } from "@/pages_flow/profile/actions";
+import { SignOutButton } from "@/pages_flow/profile/SignOutButton";
 
 interface NavUserButtonProps {
   user: { email: string } | null;
 }
 
 export function NavUserButton({ user }: NavUserButtonProps) {
+  const [logoutOpen, setLogoutOpen] = useState(false);
+
   if (user) {
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger className="p-1">
-          <Avatar initial={user.email} size="sm" title={user.email} />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="right">
-          <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            <Link href="/profile" className="w-full">
-              Profile
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Link href="/favorites" className="w-full">
-              Favorites
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            destructive
-            onClick={async () => {
-              await signOut();
-            }}
-          >
-            Logout
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <>
+        <DropdownMenu>
+          <DropdownMenuTrigger className="p-1">
+            <Avatar initial={user.email} size="sm" title={user.email} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="right">
+            <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <Link href="/profile" className="w-full">
+                Profile
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link href="/favorites" className="w-full">
+                Favorites
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link href="/orders" className="w-full">
+                Orders
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem destructive onClick={() => setLogoutOpen(true)}>
+              Logout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Dialog lives outside DropdownMenu so it isn't unmounted when the dropdown closes */}
+        <SignOutButton open={logoutOpen} onOpenChange={setLogoutOpen} />
+      </>
     );
   }
 

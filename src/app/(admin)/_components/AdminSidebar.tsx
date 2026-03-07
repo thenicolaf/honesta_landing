@@ -1,6 +1,6 @@
-import { Card, Button, Avatar } from "@/shared/ui";
-import { signOut } from "@/pages_flow/profile/actions";
+import { Card, Avatar, Button } from "@/shared/ui";
 import { AdminNav } from "./AdminNav";
+import { SignOutButton } from "@/pages_flow/profile/SignOutButton";
 
 export function AdminSidebar({ email }: { email: string }) {
   return (
@@ -19,17 +19,17 @@ export function AdminSidebar({ email }: { email: string }) {
         {/* Separator + logout */}
         <div className="mt-auto border-t border-sand mx-3" />
         <div className="px-3 py-3">
-          <form action={signOut}>
+          <SignOutButton>
             <Button
               as="button"
-              type="submit"
+              type="button"
               variant="ghost"
               size="sm"
               className="w-full text-red-500 hover:text-red-600 border-red-200 hover:bg-red-50"
             >
               Sign out
             </Button>
-          </form>
+          </SignOutButton>
         </div>
       </Card>
     </aside>
