@@ -38,20 +38,22 @@ function SubmitButton() {
 export function ProfileForm({ defaultValues }: ProfileFormProps) {
   const [state, action] = useActionState<ProfileState | null, FormData>(
     updateProfile,
-    null
+    null,
   );
 
   return (
     <form action={action} className="flex flex-col gap-5">
       {/* Name row */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 min-[26.25rem]:grid-cols-2">
         <div>
           <FormLabel htmlFor="firstName">First Name</FormLabel>
           <FormInput
             id="firstName"
             name="firstName"
             type="text"
-            defaultValue={state?.values?.firstName ?? defaultValues?.first_name ?? undefined}
+            defaultValue={
+              state?.values?.firstName ?? defaultValues?.first_name ?? undefined
+            }
             placeholder="Ahmed"
             state={state?.fieldErrors?.firstName ? "error" : "default"}
           />
@@ -63,7 +65,9 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
             id="lastName"
             name="lastName"
             type="text"
-            defaultValue={state?.values?.lastName ?? defaultValues?.last_name ?? undefined}
+            defaultValue={
+              state?.values?.lastName ?? defaultValues?.last_name ?? undefined
+            }
             placeholder="Al Rashid"
             state={state?.fieldErrors?.lastName ? "error" : "default"}
           />
@@ -78,7 +82,9 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
           id="phone"
           name="phone"
           type="tel"
-          defaultValue={state?.values?.phone ?? defaultValues?.phone ?? undefined}
+          defaultValue={
+            state?.values?.phone ?? defaultValues?.phone ?? undefined
+          }
           placeholder="+971500000000"
           title="Format: +971XXXXXXXXX"
           state={state?.fieldErrors?.phone ? "error" : "default"}
@@ -94,9 +100,15 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
 
       {/* Address + Map */}
       <AddressWithMap
-        defaultValue={state?.values?.address ?? defaultValues?.address ?? undefined}
-        defaultLat={state?.values?.lat ?? defaultValues?.coordinates?.lat?.toString()}
-        defaultLng={state?.values?.lng ?? defaultValues?.coordinates?.lng?.toString()}
+        defaultValue={
+          state?.values?.address ?? defaultValues?.address ?? undefined
+        }
+        defaultLat={
+          state?.values?.lat ?? defaultValues?.coordinates?.lat?.toString()
+        }
+        defaultLng={
+          state?.values?.lng ?? defaultValues?.coordinates?.lng?.toString()
+        }
         error={state?.fieldErrors?.address}
       />
 
