@@ -15,3 +15,4 @@ export { IconCheckCircle } from "./IconCheckCircle";
 export { IconAlertCircle } from "./IconAlertCircle";
 export { IconX } from "./IconX";
 export { IconGoogle } from "./IconGoogle";
+export { IconHeart } from "./IconHeart";

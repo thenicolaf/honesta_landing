@@ -32,6 +32,11 @@ export function NavUserButton({ user }: NavUserButtonProps) {
               Profile
             </Link>
           </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Link href="/favorites" className="w-full">
+              Favorites
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             destructive

@@ -10,20 +10,52 @@ import {
   CollapsibleChevron,
   CollapsibleContent,
 } from "@/shared/ui";
-import { IconInfo } from "@/shared/icons";
-import { useCart } from "@/providers";
+import { IconInfo, IconHeart } from "@/shared/icons";
+import { useCart, useFavorites } from "@/providers";
+import { cn } from "@/shared/utils/cn";
 import type { Benefit, NutritionInfo, Product } from "./types";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
+
+function FavoriteButton({ productId }: { productId: string }) {
+  const { isAuthenticated, isFavorite, toggleFavorite } = useFavorites();
+  if (!isAuthenticated) {
+    return null;
+  }
+  const active = isFavorite(productId);
+
+  const handleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleFavorite(productId);
+  };
+
+  return (
+    <Button
+      as="button"
+      variant="ghost"
+      size="icon"
+      aria-label={active ? "Remove from favorites" : "Add to favorites"}
+      onClick={handleFavorite}
+      className={cn(
+        "absolute top-3 right-3 z-20 bg-white-warm/80 backdrop-blur-sm hover:bg-white-warm",
+        active ? "text-orange" : "text-earth/30 hover:text-orange",
+      )}
+    >
+      <IconHeart filled={active} className="w-3.5 h-3.5" />
+    </Button>
+  );
+}
 
 function ProductImage({
   image_url,
   title,
   tagline,
+  productId,
 }: {
   image_url: string;
   title: string;
   tagline: string;
+  productId?: string;
 }) {
   return (
     <div
@@ -41,6 +73,8 @@ function ProductImage({
       ) : (
         <div className="w-full h-full bg-sand transition-transform duration-500 group-hover/img:scale-105 group-focus/img:scale-105" />
       )}
+
+      {productId && <FavoriteButton productId={productId} />}
 
       {/* Hint icon — visible by default, fades out when overlay appears */}
       <div className="absolute bottom-3 right-3 z-10 rounded-full bg-earth/30 p-1.5 text-white-warm backdrop-blur-sm transition-opacity duration-300 group-hover/img:opacity-0 group-focus/img:opacity-0">
@@ -352,7 +386,12 @@ export function ProductItem({ product }: ProductItemProps) {
 
   return (
     <div className="h-full flex flex-col rounded-[16px] overflow-hidden bg-white-warm border border-parchment/60 hover:shadow-lg hover:border-transparent transition-all duration-300">
-      <ProductImage image_url={image_url} title={title} tagline={tagline} />
+      <ProductImage
+        image_url={image_url}
+        title={title}
+        tagline={tagline}
+        productId={product.id ?? undefined}
+      />
 
       <div className="flex-1 p-5 flex flex-col gap-3">
         <ProductHeader category={category} badge={badge} />

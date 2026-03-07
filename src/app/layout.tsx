@@ -3,7 +3,7 @@ import "./globals.css";
 import { metadata as siteMetadata } from "./metadata";
 import { structuredData } from "./structured-data";
 import { Footer, Navbar } from "@/sections";
-import { CartProvider } from "@/providers";
+import { CartProvider, FavoritesProvider } from "@/providers";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
 
 export { siteMetadata as metadata };
@@ -37,9 +37,11 @@ export default async function RootLayout({
         className={`${cormorant.variable} ${jost.variable} antialiased flex flex-col min-h-screen`}
       >
         <CartProvider userId={user?.id ?? null}>
-          <Navbar user={user ? { email: user.email! } : null} />
-          {children}
-          <Footer />
+          <FavoritesProvider userId={user?.id ?? null}>
+            <Navbar user={user ? { email: user.email! } : null} />
+            {children}
+            <Footer />
+          </FavoritesProvider>
         </CartProvider>
         <script
           type="application/ld+json"
