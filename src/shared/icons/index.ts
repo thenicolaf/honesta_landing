@@ -17,3 +17,4 @@ export { IconX } from "./IconX";
 export { IconGoogle } from "./IconGoogle";
 export { IconHeart } from "./IconHeart";
 export { IconReceipt } from "./IconReceipt";
+export { IconMenu } from "./IconMenu";

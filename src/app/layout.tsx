@@ -31,14 +31,22 @@ export default async function RootLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
+  const { data: profile } = user
+    ? await supabase.from("profiles").select("role").eq("id", user.id).single()
+    : { data: null };
+
   return (
     <html lang="en">
       <body
         className={`${cormorant.variable} ${jost.variable} antialiased flex flex-col min-h-screen`}
+        suppressHydrationWarning
       >
         <CartProvider userId={user?.id ?? null}>
           <FavoritesProvider userId={user?.id ?? null}>
-            <Navbar user={user ? { email: user.email! } : null} />
+            <Navbar
+              user={user ? { email: user.email! } : null}
+              isAdmin={profile?.role === "admin"}
+            />
             {children}
             <Footer />
           </FavoritesProvider>

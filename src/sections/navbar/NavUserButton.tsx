@@ -16,9 +16,10 @@ import { SignOutButton } from "@/pages_flow/profile/SignOutButton";
 
 interface NavUserButtonProps {
   user: { email: string } | null;
+  isAdmin: boolean;
 }
 
-export function NavUserButton({ user }: NavUserButtonProps) {
+export function NavUserButton({ user, isAdmin }: NavUserButtonProps) {
   const [logoutOpen, setLogoutOpen] = useState(false);
 
   if (user) {
@@ -40,6 +41,14 @@ export function NavUserButton({ user }: NavUserButtonProps) {
             <DropdownMenuItem asChild>
               <Link href="/orders">Orders</Link>
             </DropdownMenuItem>
+            {isAdmin && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/panel">Admin Panel</Link>
+                </DropdownMenuItem>
+              </>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem destructive onClick={() => setLogoutOpen(true)}>
               Logout

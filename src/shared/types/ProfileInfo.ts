@@ -5,4 +5,5 @@ export interface ProfileInfo {
   address: string;
   lat?: string;
   lng?: string;
+  role?: "user" | "admin";
 }

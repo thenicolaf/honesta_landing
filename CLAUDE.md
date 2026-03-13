@@ -37,13 +37,18 @@ No test suite configured yet.
 ```
 src/
 ├── app/                        # Next.js App Router routes
-│   ├── layout.tsx              # Root layout — wraps with CartProvider
+│   ├── layout.tsx              # Root layout — wraps with CartProvider + FavoritesProvider
 │   ├── page.tsx                # Landing page (Hero, Products, Categories)
 │   ├── cart/page.tsx           # Shopping cart route
 │   ├── checkout/
 │   │   ├── page.tsx            # Checkout form (reads customer cookie)
 │   │   ├── cancel/page.tsx     # Payment cancelled fallback
 │   │   └── result/page.tsx     # Payment result (polls N-Genius, updates DB)
+│   ├── (admin)/                # Authenticated route group — layout adds AdminSidebar
+│   │   ├── layout.tsx          # Reads user via createSupabaseServerClient(), passes email to sidebar
+│   │   ├── profile/page.tsx
+│   │   ├── favorites/page.tsx
+│   │   └── orders/page.tsx
 │   ├── login/page.tsx          # Google OAuth login page
 │   ├── auth/callback/route.ts  # OAuth code → session exchange, then redirect
 │   ├── api/payment/webhook/    # N-Genius webhook → updates order status in Supabase
@@ -55,19 +60,26 @@ src/
 │   ├── ngenius.ts              # N-Genius payment API (auth, create order, poll status)
 │   ├── payments.ts             # Orchestrates: create payment → update DB with ngenius_ref
 │   ├── orders.ts               # Supabase order creation (orders + order_items tables)
+│   ├── favoritesDb.ts          # getFavoritesFromDb, addFavoriteToDb, removeFavoriteFromDb
 │   └── cart.ts                 # localStorage cart helpers (getCart, addItem, removeItem, etc.)
 │
-├── proxy.ts                    # Next.js middleware helper — refreshes Supabase auth session on every request
+├── proxy.ts                    # Next.js middleware helper — refreshes auth session + protects private routes
 │
 ├── pages_flow/                 # Page-level component trees (co-located with their routes)
 │   ├── cart/                   # CartPage + CartItems + CartSummary
 │   ├── checkout/               # CheckoutPage + CheckoutForm + OrderSummary + SubmitButton
 │   │   └── actions.ts          # Server action: validate → save to DB → create payment → redirect
 │   ├── home/                   # CategoriesSection, ProductsSection
-│   └── login/                  # LoginPage + GoogleSignInButton
+│   ├── login/                  # LoginPage + GoogleSignInButton
+│   ├── favorites/              # FavoritesPage + FavoritesGrid
+│   ├── profile/                # ProfilePage + ProfileForm + SignOutButton
+│   │   └── actions.ts          # updateProfile() server action → upserts to profiles table
+│   ├── orders/                 # OrdersPage + OrderCard + EmptyOrders
+│   └── PageLoader.tsx          # Thin wrapper around <Loader /> for route loading.tsx files
 │
 ├── providers/                  # React context providers + hooks
 │   ├── CartProvider.tsx        # useSyncExternalStore-based cart state (hydration-safe)
+│   ├── FavoritesProvider.tsx   # useSyncExternalStore-based favorites state + useOptimistic
 │   └── CategoryFilterProvider.tsx
 │
 ├── sections/                   # Landing-page section components
@@ -99,6 +111,34 @@ src/
 | `POST /api/payment/webhook` | N-Genius webhook — updates `orders.status` in Supabase |
 | `/login` | Google OAuth login page |
 | `/auth/callback` | OAuth PKCE code exchange → session cookie → redirect |
+| `/profile` | User profile form (name, phone, address + map) |
+| `/favorites` | Saved favourite products |
+| `/orders` | Order history |
+
+## Admin Section (`(admin)` route group)
+
+Routes `/profile`, `/favorites`, `/orders` share an authenticated layout:
+- `AdminLayout` — server component, reads user via `createSupabaseServerClient()`, passes `email` to `AdminSidebar`
+- `AdminSidebar` — responsive: horizontal on mobile, sticky vertical on desktop; contains `AdminNav` + sign-out button
+- `AdminNav` — client component with route-aware active underline
+- `AdminPageHeader` — reusable header with "My Account" label + dynamic `title` prop
+
+**Protected routes:** `src/proxy.ts` defines `PRIVATE_ROUTES = ["/profile", "/favorites", "/orders"]`. Unauthenticated users are redirected to `/login?next={pathname}`; authenticated users are redirected away from `/login` (unless `?next` is present).
+
+## Favorites
+
+- `FavoritesProvider` (`src/providers/FavoritesProvider.tsx`) — same `useSyncExternalStore` + listener pattern as `CartProvider`; uses `useOptimistic` for instant toggle feedback
+- `useFavorites()` exposes `toggleFavorite(id)`, `isFavorite(id)`, `isHydrated`
+- DB layer: `src/lib/favoritesDb.ts` — `getFavoritesFromDb()`, `addFavoriteToDb()`, `removeFavoriteFromDb()`
+- DB table: `user_favorites` (user_id, product_id)
+
+## Loading pattern
+
+Every route segment has a `loading.tsx` that renders:
+```tsx
+<main className="grow"><PageLoader /></main>
+```
+`PageLoader` lives in `src/pages_flow/PageLoader.tsx` and is re-exported from `@/shared/ui`.
 
 ## E-commerce & Payment Flow
 
@@ -145,7 +185,7 @@ Three client instances across two files:
 - `supabaseAdmin` (`supabase.ts`) — static service-role client, bypasses RLS (use only in server actions, API routes, and `lib/`)
 - `createSupabaseServerClient()` (`supabase.server.ts`) — async, reads cookies via `@supabase/ssr`; use whenever you need the current user's session
 
-**DB tables:** `orders` (status, subtotal, delivery_fee, total, customer fields, ngenius_ref), `order_items` (order_id, product_id, name, price, quantity), `products` (images in Supabase Storage → `image_url` field), `partnership_inquiries` (business_name, contact_name, phone, business_type, message).
+**DB tables:** `orders` (status, subtotal, delivery_fee, total, customer fields, ngenius_ref), `order_items` (order_id, product_id, name, price, quantity), `products` (images in Supabase Storage → `image_url` field; also `weight_g`, `in_stock`, `nutrition` JSON), `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, address, coordinates JSON {lat, lng}).
 
 ## Design system
 

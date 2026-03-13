@@ -45,9 +45,10 @@ function NavDesktopLinks() {
 
 interface NavbarProps {
   user: { email: string } | null;
+  isAdmin: boolean;
 }
 
-export function Navbar({ user }: NavbarProps) {
+export function Navbar({ user, isAdmin }: NavbarProps) {
   const { scrollY } = useScroll();
 
   const bgOpacity = useTransform(scrollY, [0, 80], [0, 1]);
@@ -74,7 +75,7 @@ export function Navbar({ user }: NavbarProps) {
             {/* Right actions */}
             <div className="flex items-center gap-3">
               <NavCartButton />
-              <NavUserButton user={user} />
+              <NavUserButton user={user} isAdmin={isAdmin} />
               <Button
                 href={process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL}
                 target="_blank"
