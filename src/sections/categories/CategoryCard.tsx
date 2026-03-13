@@ -1,19 +1,25 @@
+"use client";
+
 import { motion } from "motion/react";
 import { Badge } from "@/shared/ui";
+import { IconLeaf } from "@/shared/icons";
 import type { CategoryCard as CategoryCardData } from "./types";
-import { cardVariants } from "./consts";
+import { CATEGORY_UI_MAP, cardVariants } from "./consts";
 
 export function CategoryCard({
   audience,
-  Icon,
+  slug,
   name,
   tagline,
   description,
-  placeholderBg,
-  badge,
   href,
   onClick,
 }: CategoryCardData & { onClick?: () => void }) {
+  const { Icon, placeholderBg } = CATEGORY_UI_MAP[slug] ?? {
+    Icon: IconLeaf,
+    placeholderBg: "bg-earth/10",
+  };
+
   return (
     <motion.a
       href={href}
@@ -37,7 +43,7 @@ export function CategoryCard({
           <p className="font-body font-semibold uppercase tracking-[0.14em] text-2xs text-earth/65">
             {audience}
           </p>
-          <Badge variant={badge} className="shrink-0">
+          <Badge variant="natural" className="shrink-0">
             Natural
           </Badge>
         </div>

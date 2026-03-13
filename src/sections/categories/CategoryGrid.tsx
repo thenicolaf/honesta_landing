@@ -2,10 +2,9 @@
 
 import { motion } from "motion/react";
 import { Category } from "@/shared/types";
-import { IconLeaf } from "@/shared/icons";
 import { useCategoryFilter } from "@/providers";
 import { CategoryCard } from "./CategoryCard";
-import { SLUG_TO_CATEGORY, CATEGORY_UI_MAP, containerVariants } from "./consts";
+import { SLUG_TO_CATEGORY, containerVariants } from "./consts";
 import type { DbCategory, CategoryCard as CategoryCardData } from "./types";
 
 export function CategoryGrid({
@@ -22,12 +21,7 @@ export function CategoryGrid({
     audience: c.audience,
     tagline: c.tagline,
     description: c.description,
-    badge: c.badge as CategoryCardData["badge"],
     href: "#products",
-    ...(CATEGORY_UI_MAP[c.slug] ?? {
-      Icon: IconLeaf,
-      placeholderBg: "bg-earth/10",
-    }),
   }));
 
   return (

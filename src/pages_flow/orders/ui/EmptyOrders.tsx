@@ -11,7 +11,7 @@ export function EmptyOrders() {
       <p className="font-body font-light text-sm text-earth/40 max-w-xs">
         Your completed orders will appear here once you make a purchase.
       </p>
-      <Button href="/#products" variant="ghost" size="sm" className="mt-2">
+      <Button href="/#products" variant="outline" size="sm" className="mt-2">
         Browse Products
       </Button>
     </div>

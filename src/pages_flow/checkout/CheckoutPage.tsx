@@ -43,7 +43,7 @@ export function CheckoutPage({ defaultValues }: CheckoutPageProps) {
           Checkout
         </p>
         <div className="relative flex items-center justify-center mb-10">
-          <Button href="/cart" variant="ghost" size="sm" className="absolute left-0 gap-1.5">
+          <Button href="/cart" variant="outline" size="sm" className="absolute left-0 gap-1.5">
             <IconChevron className="w-3.5 h-3.5 rotate-90" aria-hidden />
             Back to cart
           </Button>

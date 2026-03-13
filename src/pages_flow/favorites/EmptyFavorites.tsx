@@ -12,7 +12,7 @@ export function EmptyFavorites() {
         Add products to your favorites by tapping the heart icon on any product
         card.
       </p>
-      <Button href="/#products" variant="ghost" size="sm" className="mt-2">
+      <Button href="/#products" variant="outline" size="sm" className="mt-2">
         Browse Products
       </Button>
     </div>

@@ -38,7 +38,7 @@ export function SignOutButton({ children, open, onOpenChange }: SignOutButtonPro
           <Button
             as="button"
             type="button"
-            variant="ghost"
+            variant="outline"
             size="sm"
             className="text-red-500 hover:text-red-600 border-red-200 hover:bg-red-50"
             onClick={() => signOut()}

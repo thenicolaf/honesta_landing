@@ -47,6 +47,9 @@ export function NavUserButton({ user, isAdmin }: NavUserButtonProps) {
                 <DropdownMenuItem asChild>
                   <Link href="/panel">Admin Panel</Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/categories">Categories</Link>
+                </DropdownMenuItem>
               </>
             )}
             <DropdownMenuSeparator />

@@ -33,7 +33,7 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Protect private routes — redirect guests to /login
-  const privateRoutes = ["/profile", "/favorites", "/orders", "/panel"];
+  const privateRoutes = ["/profile", "/favorites", "/orders", "/panel", "/categories"];
   if (!user && privateRoutes.some((r) => pathname.startsWith(r))) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
@@ -41,8 +41,9 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Protect /panel — admin role required
-  if (user && pathname.startsWith("/panel")) {
+  // Protect /panel and /categories — admin role required
+  const adminRoutes = ["/panel", "/categories"];
+  if (user && adminRoutes.some((r) => pathname.startsWith(r))) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")

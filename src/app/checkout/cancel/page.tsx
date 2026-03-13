@@ -40,7 +40,7 @@ export default async function CheckoutCancelPage({
 
           <div className="flex flex-col gap-3">
             <Button href="/cart">Back to Cart</Button>
-            <Button href="/" variant="ghost">
+            <Button href="/" variant="outline">
               Back to Home
             </Button>
           </div>

@@ -1,13 +1,8 @@
 import { CategoryGrid } from "@/sections";
-import { supabase } from "@/lib/supabase.server";
-import type { DbCategory } from "@/sections/categories";
+import { getCategories } from "@/lib/categoriesDb";
 
 export async function CategoriesSection() {
-  const { data } = await supabase
-    .from("categories")
-    .select("id, name, slug, badge, audience, tagline, description");
+  const categories = await getCategories();
 
-  return (
-    <CategoryGrid categories={(data as DbCategory[] | null) ?? undefined} />
-  );
+  return <CategoryGrid categories={categories} />;
 }

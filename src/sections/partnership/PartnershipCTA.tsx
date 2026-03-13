@@ -37,7 +37,7 @@ function PartnershipInstagramCard() {
         href={process.env.NEXT_PUBLIC_INSTAGRAM_BRAND_URL}
         target="_blank"
         rel="noopener noreferrer"
-        variant="ghost"
+        variant="outline"
         size="lg"
         className="border-transparent text-white/45 hover:text-white/75 hover:border-transparent font-light -mt-2 w-full justify-center"
       >

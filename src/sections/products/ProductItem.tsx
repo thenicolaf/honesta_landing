@@ -32,7 +32,7 @@ function FavoriteButton({ productId }: { productId: string }) {
   return (
     <Button
       as="button"
-      variant="ghost"
+      variant="outline"
       size="icon"
       aria-label={active ? "Remove from favorites" : "Add to favorites"}
       onClick={handleFavorite}
@@ -297,7 +297,7 @@ function ProductPriceAndCart({
         href={process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL}
         target="_blank"
         rel="noopener noreferrer"
-        variant="ghost"
+        variant="outline"
         size="sm"
         className="mt-auto w-full"
       >
@@ -313,7 +313,7 @@ function ProductPriceAndCart({
         <div className="flex items-center gap-2">
           <Button
             as="button"
-            variant="ghost"
+            variant="outline"
             size="icon"
             onClick={() =>
               quantity === 1

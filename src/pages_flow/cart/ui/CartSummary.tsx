@@ -44,7 +44,7 @@ export function CartSummary() {
         </Button>
         <Button
           href="/#products"
-          variant="ghost"
+          variant="outline"
           size="sm"
           className="border-transparent hover:border-transparent text-earth/50 hover:text-orange hover:bg-transparent"
         >

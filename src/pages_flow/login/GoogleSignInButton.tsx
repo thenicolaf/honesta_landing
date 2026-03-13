@@ -18,7 +18,7 @@ export function GoogleSignInButton({ next }: { next: string }) {
   return (
     <Button
       as="button"
-      variant="ghost"
+      variant="outline"
       size="lg"
       className="w-full normal-case tracking-normal font-medium text-sm"
       onClick={handleClick}

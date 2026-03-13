@@ -90,7 +90,7 @@ export default async function CheckoutResultPage({
           <div className="flex flex-col gap-3">
             <Button href="/">Back to Home</Button>
             {!success && (
-              <Button href="/cart" variant="ghost">
+              <Button href="/cart" variant="outline">
                 Back to Cart
               </Button>
             )}

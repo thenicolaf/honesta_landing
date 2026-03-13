@@ -175,15 +175,17 @@ Session refresh: `src/proxy.ts` exports a middleware helper (`proxy()`) that mus
 | Situation | Use |
 |-----------|-----|
 | Server Action / API route needing auth identity | `createSupabaseServerClient()` from `@/lib/supabase.server` |
-| Server Action / API route, no auth needed | `supabase` or `supabaseAdmin` from `@/lib/supabase` |
-| Bypassing RLS (admin ops) | `supabaseAdmin` from `@/lib/supabase` |
+| Server Action / API route, no auth needed | `supabase` from `@/lib/supabase.server` |
+| Bypassing RLS (admin ops) | `supabaseAdmin` from `@/lib/supabase.server` |
 
 ## Supabase
 
-Three client instances across two files:
-- `supabase` (`supabase.ts`) — static anon client, subject to RLS (non-auth server queries)
-- `supabaseAdmin` (`supabase.ts`) — static service-role client, bypasses RLS (use only in server actions, API routes, and `lib/`)
-- `createSupabaseServerClient()` (`supabase.server.ts`) — async, reads cookies via `@supabase/ssr`; use whenever you need the current user's session
+Two files, three client instances:
+- `src/lib/supabase.ts` — `createSupabaseBrowserClient()` — browser client for Client Components
+- `src/lib/supabase.server.ts` — three server-side exports:
+  - `supabase` — static anon client, subject to RLS (non-auth server queries)
+  - `supabaseAdmin` — static service-role client, bypasses RLS (use only in server actions, API routes, and `lib/`)
+  - `createSupabaseServerClient()` — async, reads cookies via `@supabase/ssr`; use whenever you need the current user's session
 
 **DB tables:** `orders` (status, subtotal, delivery_fee, total, customer fields, ngenius_ref), `order_items` (order_id, product_id, name, price, quantity), `products` (images in Supabase Storage → `image_url` field; also `weight_g`, `in_stock`, `nutrition` JSON), `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, address, coordinates JSON {lat, lng}).
 
@@ -220,6 +222,10 @@ Grain texture: add class `noise` + `relative` on a section — the `.noise::afte
 - Component signature: `function Icon{Name}(props: React.ComponentProps<"svg">)` — spread `{...props}` on the `<svg>` so callers can pass `className`, `aria-hidden`, etc.
 - Never inline `<svg>` markup directly in section components. Always import from `@/shared/icons`.
 
+## UI component rule
+
+**Always use components from `@/shared/ui` instead of raw HTML elements.** Never use `<button>`, `<a>`, `<input>`, `<select>`, `<textarea>` directly — use `Button`, `FormInput`, `FormSelect`, `FormTextarea`, etc. This ensures consistent styling across the entire site.
+
 ## Shared UI components
 
 All use `class-variance-authority` (cva) for variants + `cn()` for className merging.
@@ -243,6 +249,62 @@ Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React conte
 - **Product data** loaded from Supabase (with `image_url` from Storage). Static fallback data lives in `src/sections/products/consts.ts`. `mapDbProducts()` converts Supabase rows to the `Product` type.
 - **Delivery fee** is `NEXT_PUBLIC_DELIVERY_FEE` env var (default 25 AED), defined in `src/shared/consts.ts`.
 - **Product fields** `benefits`, `nutrition`, `servingIdeas`, `occasions` are stored for future modal/detail use but not rendered yet.
+
+## Server Actions standard
+
+All `actions.ts` files follow this pattern (canonical example: `src/pages_flow/profile/actions.ts`):
+
+```ts
+"use server";
+
+// Import the appropriate Supabase client (see client selection guide above)
+import { supabaseAdmin } from "@/lib/supabase.server";
+// or: import { createSupabaseServerClient } from "@/lib/supabase.server";
+
+// 1. Export a typed State interface from the same file
+export interface FooState {
+  success?: boolean;
+  error?: string;           // top-level DB/network error message
+  fieldErrors?: {           // per-field validation errors
+    name?: string;
+  };
+  values?: Partial<FooInfo>; // echo back form values for repopulation (optional)
+}
+
+// 2. Action signature for useActionState: (_prevState, formData) => Promise<State>
+export async function createFoo(
+  _prevState: FooState | null,
+  formData: FormData,
+): Promise<FooState> {
+  const name = (formData.get("name") as string)?.trim();
+
+  // 3. Collect field errors into an object, return early if any
+  const fieldErrors: FooState["fieldErrors"] = {};
+  if (!name) fieldErrors.name = "Name is required";
+  if (Object.keys(fieldErrors).length > 0) return { fieldErrors };
+
+  // 4. DB call
+  const { error } = await supabaseAdmin.from("foos").insert({ name });
+  if (error) return { error: "Failed to save. Please try again." };
+
+  return { success: true };
+}
+
+// 5. For actions bound with .bind(null, id), id comes before _prevState
+export async function updateFoo(
+  id: string,
+  _prevState: FooState | null,
+  formData: FormData,
+): Promise<FooState> { ... }
+```
+
+**Rules:**
+- `"use server"` always at top
+- State interface exported from the same `actions.ts` file
+- Validation collects all field errors before returning — never throw, always return state
+- Top-level DB errors go in `error`, field-level errors go in `fieldErrors`
+- Never use `supabaseAdmin` for auth-identity operations — use `createSupabaseServerClient()` instead
+- Actions that need the current user must call `createSupabaseServerClient()` and redirect to `/login` if no session
 
 ## Animations
 

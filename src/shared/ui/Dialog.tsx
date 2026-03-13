@@ -222,7 +222,7 @@ interface DialogCloseProps {
 export function DialogClose({ children, className }: DialogCloseProps) {
   const { close } = useDialog();
   return (
-    <Button as="button" type="button" variant="ghost" size="sm" onClick={close} className={className}>
+    <Button as="button" type="button" variant="outline" size="sm" onClick={close} className={className}>
       {children}
     </Button>
   );

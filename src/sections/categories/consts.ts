@@ -5,7 +5,7 @@ import {
   IconGift,
   IconFruitLeather,
 } from "@/shared/icons";
-import type { CategoryCard } from "./types";
+
 
 export const SLUG_TO_CATEGORY: Record<string, Category> = {
   "dried-fruits": Category.DriedFruits,
@@ -16,7 +16,7 @@ export const SLUG_TO_CATEGORY: Record<string, Category> = {
 
 export const CATEGORY_UI_MAP: Record<
   string,
-  Pick<CategoryCard, "Icon" | "placeholderBg">
+  { Icon: React.ComponentType<React.ComponentProps<"svg">>; placeholderBg: string }
 > = {
   "mix-and-gift": {
     Icon: IconGift,

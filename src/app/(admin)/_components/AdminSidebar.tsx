@@ -8,7 +8,10 @@ const USER_NAV: NavItem[] = [
   { href: "/orders", label: "Orders" },
 ];
 
-const PANEL_NAV: NavItem[] = [{ href: "/panel", label: "Dashboard" }];
+const PANEL_NAV: NavItem[] = [
+  { href: "/panel", label: "Dashboard" },
+  { href: "/categories", label: "Categories" },
+];
 
 export function AdminSidebar({
   email,
@@ -30,7 +33,7 @@ export function AdminSidebar({
             <Button
               as="button"
               type="button"
-              variant="ghost"
+              variant="outline"
               size="sm"
               className="shrink-0 text-red-500 hover:text-red-600 border-red-200 hover:bg-red-50"
             >
@@ -63,7 +66,7 @@ export function AdminSidebar({
             <Button
               as="button"
               type="button"
-              variant="ghost"
+              variant="outline"
               size="sm"
               className="w-full text-red-500 hover:text-red-600 border-red-200 hover:bg-red-50"
             >

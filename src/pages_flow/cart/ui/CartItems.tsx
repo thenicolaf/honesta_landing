@@ -40,7 +40,7 @@ export function CartItems() {
             <div className="flex items-center gap-2 shrink-0">
               <Button
                 as="button"
-                variant="ghost"
+                variant="outline"
                 size="icon"
                 onClick={() =>
                   item.quantity === 1
