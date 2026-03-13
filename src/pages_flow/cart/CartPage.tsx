@@ -2,19 +2,15 @@
 
 import { useCart } from "@/providers";
 import { CartEmpty } from "@/shared/ui/CartEmpty";
-import { Loader } from "@/shared/ui/Loader";
 import { CartItems } from "./ui/CartItems";
 import { CartSummary } from "./ui/CartSummary";
+import { PageLoader } from "@/shared/ui";
 
 export function CartPage() {
   const { items, isHydrated } = useCart();
 
   if (!isHydrated) {
-    return (
-      <main className="grow">
-        <Loader />
-      </main>
-    );
+    return <PageLoader />;
   }
 
   if (items.length === 0) {

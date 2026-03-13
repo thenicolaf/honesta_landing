@@ -4,13 +4,13 @@ import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { Button } from "@/shared/ui/Button";
 import { IconGoogle } from "@/shared/icons";
 
-export function GoogleSignInButton() {
+export function GoogleSignInButton({ next }: { next: string }) {
   async function handleClick() {
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
       },
     });
   }

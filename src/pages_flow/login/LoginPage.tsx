@@ -1,6 +1,6 @@
 import { GoogleSignInButton } from "./GoogleSignInButton";
 
-export function LoginPage() {
+export function LoginPage({ next }: { next: string }) {
   return (
     <main className="grow bg-cream flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
@@ -14,7 +14,7 @@ export function LoginPage() {
         </div>
 
         <div className="bg-white-warm rounded-2xl p-8 shadow-sm border border-sand">
-          <GoogleSignInButton />
+          <GoogleSignInButton next={next} />
         </div>
       </div>
     </main>

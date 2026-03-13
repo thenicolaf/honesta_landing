@@ -7,6 +7,9 @@ import {
   useRef,
   useEffect,
   useId,
+  Children,
+  cloneElement,
+  isValidElement,
 } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/shared/utils/cn";
@@ -169,6 +172,7 @@ interface DropdownMenuItemProps {
   onClick?: () => void;
   disabled?: boolean;
   destructive?: boolean;
+  asChild?: boolean;
   className?: string;
 }
 
@@ -177,9 +181,22 @@ export function DropdownMenuItem({
   onClick,
   disabled = false,
   destructive = false,
+  asChild = false,
   className,
 }: DropdownMenuItemProps) {
   const { close } = useDropdownMenu();
+
+  const itemClassName = cn(
+    "flex items-center gap-2.5 px-4 py-2.5",
+    "font-body text-sm cursor-pointer select-none",
+    "transition-colors duration-150",
+    disabled
+      ? "text-earth/30 cursor-not-allowed"
+      : destructive
+      ? "text-red-600 hover:bg-red-50"
+      : "text-earth/70 hover:bg-earth/4 hover:text-earth",
+    className,
+  );
 
   const handleClick = () => {
     if (disabled) return;
@@ -187,22 +204,32 @@ export function DropdownMenuItem({
     close();
   };
 
+  if (asChild) {
+    const child = Children.only(children);
+    if (!isValidElement(child)) return null;
+    const childProps = child.props as { className?: string; onClick?: (e: React.MouseEvent) => void };
+    return (
+      <li role="presentation">
+        {cloneElement(child as React.ReactElement<Record<string, unknown>>, {
+          role: "menuitem",
+          "aria-disabled": disabled,
+          onClick: (e: React.MouseEvent) => {
+            if (disabled) { e.preventDefault(); return; }
+            childProps.onClick?.(e);
+            close();
+          },
+          className: cn(itemClassName, childProps.className),
+        })}
+      </li>
+    );
+  }
+
   return (
     <li
       role="menuitem"
       aria-disabled={disabled}
       onClick={handleClick}
-      className={cn(
-        "flex items-center gap-2.5 px-4 py-2.5",
-        "font-body text-sm cursor-pointer select-none",
-        "transition-colors duration-150",
-        disabled
-          ? "text-earth/30 cursor-not-allowed"
-          : destructive
-          ? "text-red-600 hover:bg-red-50"
-          : "text-earth/70 hover:bg-earth/4 hover:text-earth",
-        className,
-      )}
+      className={itemClassName}
     >
       {children}
     </li>

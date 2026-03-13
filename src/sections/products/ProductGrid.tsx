@@ -111,23 +111,10 @@ function ProductList({ products }: { products: Product[] }) {
 
 // ─── ProductGrid ──────────────────────────────────────────────────────────────
 
-export function ProductGrid({
-  rawProducts,
-  tagOptions,
-  freeFromOptions,
-  servingIdeaOptions,
-  occasionOptions,
-  benefits,
-}: DbProductGridProps) {
+export function ProductGrid({ rawProducts }: DbProductGridProps) {
   const { activeCategory, setActiveCategory } = useCategoryFilter();
 
-  const products: Product[] = mapDbProducts(rawProducts, {
-    tagOptions,
-    freeFromOptions,
-    servingIdeaOptions,
-    occasionOptions,
-    benefits,
-  });
+  const products: Product[] = mapDbProducts(rawProducts);
 
   const filtered = activeCategory
     ? products.filter((p) => p.category === activeCategory)

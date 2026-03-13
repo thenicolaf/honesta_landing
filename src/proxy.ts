@@ -32,8 +32,9 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Protect /profile — redirect guests to /login
-  if (!user && pathname.startsWith("/profile")) {
+  // Protect private routes — redirect guests to /login
+  const privateRoutes = ["/profile", "/favorites", "/orders"];
+  if (!user && privateRoutes.some((r) => pathname.startsWith(r))) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", pathname);

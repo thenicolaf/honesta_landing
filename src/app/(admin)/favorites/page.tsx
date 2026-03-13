@@ -1,4 +1,4 @@
-import { createSupabaseServerClient, supabase, supabaseAdmin } from "@/lib/supabase.server";
+import { createSupabaseServerClient, supabaseAdmin } from "@/lib/supabase.server";
 import { FavoritesPage } from "@/pages_flow/favorites/FavoritesPage";
 
 export default async function Page() {
@@ -7,24 +7,10 @@ export default async function Page() {
     data: { user },
   } = await supabaseServer.auth.getUser();
 
-  const [
-    { data: favoritesData },
-    { data: tagOptionsData },
-    { data: freeFromOptionsData },
-    { data: servingIdeaOptionsData },
-    { data: occasionOptionsData },
-    { data: benefitsData },
-  ] = await Promise.all([
-    supabaseAdmin
-      .from("user_favorites")
-      .select("product_id")
-      .eq("user_id", user!.id),
-    supabase.from("tag_options").select("id, label"),
-    supabase.from("free_from_options").select("id, label"),
-    supabase.from("serving_idea_options").select("id, label"),
-    supabase.from("occasion_options").select("id, label"),
-    supabase.from("benefits").select("id, name, description"),
-  ]);
+  const { data: favoritesData } = await supabaseAdmin
+    .from("user_favorites")
+    .select("product_id")
+    .eq("user_id", user!.id);
 
   const productIds = (favoritesData ?? []).map(
     (f: { product_id: string }) => f.product_id,
@@ -33,21 +19,19 @@ export default async function Page() {
   const productsData =
     productIds.length > 0
       ? (
-          await supabase
+          await supabaseAdmin
             .from("products")
-            .select("*, categories(name, slug)")
+            .select(
+              `*, categories(slug),
+              product_tags(tag_options(label)),
+              product_free_froms(free_from_options(label)),
+              product_serving_ideas(serving_idea_options(label)),
+              product_occasions(occasion_options(label)),
+              product_benefits(benefits(name, description))`,
+            )
             .in("id", productIds)
         ).data ?? []
       : [];
 
-  return (
-    <FavoritesPage
-      rawProducts={productsData}
-      tagOptions={tagOptionsData ?? []}
-      freeFromOptions={freeFromOptionsData ?? []}
-      servingIdeaOptions={servingIdeaOptionsData ?? []}
-      occasionOptions={occasionOptionsData ?? []}
-      benefits={benefitsData ?? []}
-    />
-  );
+  return <FavoritesPage rawProducts={productsData} />;
 }

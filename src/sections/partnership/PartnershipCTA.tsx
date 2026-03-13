@@ -77,7 +77,7 @@ export function PartnershipCTA() {
       {/* Orange tint overlay */}
       <div className="absolute inset-0 bg-orange/60" />
 
-      <div className="relative mx-auto max-w-5xl px-4 sm:px-6">
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
         <motion.div
           initial="hidden"
           whileInView="visible"

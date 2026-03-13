@@ -4,10 +4,10 @@ import { SignOutButton } from "@/pages_flow/profile/SignOutButton";
 
 export function AdminSidebar({ email }: { email: string }) {
   return (
-    <aside className="w-full md:w-64 shrink-0 md:sticky md:top-24">
-      <Card className="flex flex-col p-0 overflow-hidden md:min-h-80">
+    <aside className="w-full lg:w-64 shrink-0 lg:sticky lg:top-24">
+      <Card className="flex flex-col p-0 overflow-hidden lg:min-h-80">
         {/* Mobile: compact horizontal header */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-sand md:hidden">
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-sand lg:hidden">
           <Avatar initial={email} size="sm" />
           <p className="flex-1 font-body font-light text-earth/50 text-xs truncate">
             {email}
@@ -26,7 +26,7 @@ export function AdminSidebar({ email }: { email: string }) {
         </div>
 
         {/* Desktop: centered vertical header */}
-        <div className="hidden md:flex flex-col items-center gap-3 px-6 pt-8 pb-6">
+        <div className="hidden lg:flex flex-col items-center gap-3 px-6 pt-8 pb-6">
           <Avatar initial={email} size="lg" />
           <p className="font-body font-light text-earth/50 text-xs text-center break-all">
             {email}
@@ -36,8 +36,8 @@ export function AdminSidebar({ email }: { email: string }) {
         <AdminNav />
 
         {/* Desktop: separator + sign out */}
-        <div className="hidden md:block mt-auto border-t border-sand mx-3" />
-        <div className="hidden md:block px-3 py-3">
+        <div className="hidden lg:block mt-auto border-t border-sand mx-3" />
+        <div className="hidden lg:block px-3 py-3">
           <SignOutButton>
             <Button
               as="button"

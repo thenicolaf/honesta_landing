@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
 import { AdminSidebar } from "./_components/AdminSidebar";
 
@@ -12,15 +11,11 @@ export default async function AdminLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
-
   return (
     <main className="grow bg-cream pt-24 pb-12 md:pb-16">
-      <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-10">
-        <div className="flex flex-col md:flex-row gap-6 items-start">
-          <AdminSidebar email={user.email!} />
-          <div className="flex-1 min-w-0 w-full">{children}</div>
-        </div>
+      <div className="flex flex-col lg:flex-row gap-6 items-start justify-center px-4 md:px-6 lg:px-10">
+        <AdminSidebar email={user?.email ?? ""} />
+        <div className="flex-1 min-w-0 w-full max-w-7xl">{children}</div>
       </div>
     </main>
   );

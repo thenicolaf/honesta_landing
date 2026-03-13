@@ -19,7 +19,7 @@ export function ProfilePage({ profile }: ProfilePageProps) {
     <>
       <AdminPageHeader title="Profile" />
 
-      <Card className="p-8">
+      <Card className="p-4 md:px-6 md:py-4 lg:p-8">
         <p className="font-body font-semibold uppercase tracking-[0.12em] text-2xs text-earth/50 mb-6">
           Personal Information
         </p>

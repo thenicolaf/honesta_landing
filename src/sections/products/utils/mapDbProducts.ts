@@ -1,26 +1,9 @@
 import { Category } from "@/shared/types";
 import { SLUG_TO_CATEGORY } from "@/sections/categories";
 
-import type {
-  DbProduct,
-  DbProductGridProps,
-  DbBenefit,
-  LabelOption,
-  Product,
-  BadgeVariant,
-} from "../types";
+import type { DbProduct, Product, BadgeVariant } from "../types";
 
-function resolveLabels(ids: number[] | null, options: LabelOption[]): string[] {
-  if (!ids) return [];
-  return ids
-    .map((id) => options.find((o) => o.id === id)?.label ?? "")
-    .filter(Boolean);
-}
-
-export function mapDbProducts(
-  raw: DbProduct[],
-  refs: Omit<DbProductGridProps, "rawProducts">,
-): Product[] {
+export function mapDbProducts(raw: DbProduct[]): Product[] {
   return raw.map((p) => ({
     id: p.id,
     name: p.name,
@@ -34,13 +17,13 @@ export function mapDbProducts(
     in_stock: p.in_stock ?? true,
     category:
       SLUG_TO_CATEGORY[p.categories?.slug ?? ""] ?? Category.DriedFruits,
-    tags: resolveLabels(p.tag_ids, refs.tagOptions),
-    freeFrom: resolveLabels(p.free_from_ids, refs.freeFromOptions),
-    servingIdeas: resolveLabels(p.serving_idea_ids, refs.servingIdeaOptions),
-    occasions: resolveLabels(p.occasion_ids, refs.occasionOptions),
-    benefits: (p.benefit_ids ?? [])
-      .map((id) => refs.benefits.find((b) => b.id === id))
-      .filter((b): b is DbBenefit => b !== undefined),
+    tags: p.product_tags.map((pt) => pt.tag_options.label),
+    freeFrom: p.product_free_froms.map((pf) => pf.free_from_options.label),
+    servingIdeas: p.product_serving_ideas.map(
+      (ps) => ps.serving_idea_options.label,
+    ),
+    occasions: p.product_occasions.map((po) => po.occasion_options.label),
+    benefits: p.product_benefits.map((pb) => pb.benefits),
     nutrition: p.nutrition
       ? {
           calories: p.nutrition.calories,

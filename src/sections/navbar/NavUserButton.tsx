@@ -31,20 +31,14 @@ export function NavUserButton({ user }: NavUserButtonProps) {
           <DropdownMenuContent align="right">
             <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Link href="/profile" className="w-full">
-                Profile
-              </Link>
+            <DropdownMenuItem asChild>
+              <Link href="/profile">Profile</Link>
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Link href="/favorites" className="w-full">
-                Favorites
-              </Link>
+            <DropdownMenuItem asChild>
+              <Link href="/favorites">Favorites</Link>
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Link href="/orders" className="w-full">
-                Orders
-              </Link>
+            <DropdownMenuItem asChild>
+              <Link href="/orders">Orders</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem destructive onClick={() => setLogoutOpen(true)}>
