@@ -39,7 +39,7 @@ function ProductDetailContent({ product }: ProductDetailPageProps) {
       <div className="mb-6">
         <Button
           as="a"
-          href="/products"
+          href="/panel/products"
           variant="outline"
           size="sm"
           startIcon={<ArrowLeft size={14} />}
@@ -107,7 +107,7 @@ function ProductDetailContent({ product }: ProductDetailPageProps) {
             />
             <Button
               as="a"
-              href={`/products/${product.id}/edit`}
+              href={`/panel/products/${product.id}/edit`}
               variant="outline"
               size="sm"
               startIcon={<Pencil size={12} aria-hidden="true" />}

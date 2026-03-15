@@ -1,4 +1,4 @@
-import { AdminPageHeader } from "@/app/(admin)/_components/AdminPageHeader";
+import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
 import { OrderCard } from "./ui/OrderCard";
 import { EmptyOrders } from "./ui/EmptyOrders";
 

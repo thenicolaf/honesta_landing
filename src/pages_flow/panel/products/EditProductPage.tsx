@@ -14,7 +14,7 @@ export function EditProductPage({ product, options }: EditProductPageProps) {
       <div className="mb-6">
         <Button
           as="a"
-          href="/products"
+          href="/panel/products"
           variant="outline"
           size="sm"
           startIcon={<ArrowLeft size={14} />}

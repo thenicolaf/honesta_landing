@@ -3,15 +3,15 @@ import { AdminNav, NavItem } from "./AdminNav";
 import { SignOutButton } from "@/pages_flow/profile/SignOutButton";
 
 const USER_NAV: NavItem[] = [
-  { href: "/profile", label: "Personal Info" },
-  { href: "/favorites", label: "Favorites" },
-  { href: "/orders", label: "Orders" },
+  { href: "/panel/profile", label: "Personal Info" },
+  { href: "/panel/favorites", label: "Favorites" },
+  { href: "/panel/orders", label: "Orders" },
 ];
 
 const PANEL_NAV: NavItem[] = [
   { href: "/panel", label: "Dashboard" },
-  { href: "/categories", label: "Categories" },
-  { href: "/products", label: "Products" },
+  { href: "/panel/categories", label: "Categories" },
+  { href: "/panel/products", label: "Products" },
 ];
 
 export function AdminSidebar({

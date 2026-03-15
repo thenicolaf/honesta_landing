@@ -1,4 +1,4 @@
-import { AdminPageHeader } from "@/app/(admin)/_components/AdminPageHeader";
+import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
 import { mapDbProducts } from "@/sections/products/utils/mapDbProducts";
 import type { DbProductGridProps } from "@/sections/products/types";
 import { FavoritesGrid } from "./FavoritesGrid";

@@ -245,7 +245,7 @@ export async function createProduct(
 
   await insertJunctionRows(data.id, values);
 
-  redirect("/products");
+  redirect("/panel/products");
 }
 
 export async function updateProduct(
@@ -289,7 +289,7 @@ export async function updateProduct(
   await deleteJunctionRows(id);
   await insertJunctionRows(id, values);
 
-  redirect("/products");
+  redirect("/panel/products");
 }
 
 export async function deleteProduct(

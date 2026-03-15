@@ -33,13 +33,13 @@ export function NavUserButton({ user, isAdmin }: NavUserButtonProps) {
             <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/profile">Profile</Link>
+              <Link href="/panel/profile">Profile</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/favorites">Favorites</Link>
+              <Link href="/panel/favorites">Favorites</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/orders">Orders</Link>
+              <Link href="/panel/orders">Orders</Link>
             </DropdownMenuItem>
             {isAdmin && (
               <>
@@ -48,10 +48,10 @@ export function NavUserButton({ user, isAdmin }: NavUserButtonProps) {
                   <Link href="/panel">Admin Panel</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/categories">Categories</Link>
+                  <Link href="/panel/categories">Categories</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/products">Products</Link>
+                  <Link href="/panel/products">Products</Link>
                 </DropdownMenuItem>
               </>
             )}

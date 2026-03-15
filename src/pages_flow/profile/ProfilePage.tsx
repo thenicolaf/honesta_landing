@@ -1,6 +1,6 @@
 import { Card } from "@/shared/ui";
 import { ProfileForm } from "./ProfileForm";
-import { AdminPageHeader } from "@/app/(admin)/_components/AdminPageHeader";
+import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
 
 interface ProfileData {
   first_name: string | null;

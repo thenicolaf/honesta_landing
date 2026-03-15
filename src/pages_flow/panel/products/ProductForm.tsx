@@ -40,7 +40,7 @@ export function ProductForm({ product, options }: ProductFormProps) {
       <div className="flex items-center justify-end gap-3 pt-2">
         <Button
           as="a"
-          href="/products"
+          href="/panel/products"
           variant="secondary"
           color={"default"}
           size="sm"

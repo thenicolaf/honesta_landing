@@ -60,7 +60,7 @@ function ProductsPageInner({
           description="Try changing the filters or create a new product."
           action={{
             label: "New Product",
-            href: "/products/create",
+            href: "/panel/products/create",
             variant: "primary",
           }}
         />
@@ -91,7 +91,7 @@ export function ProductsPage({ products, categories }: ProductsPageProps) {
         </p>
         <Button
           as="a"
-          href="/products/create"
+          href="/panel/products/create"
           variant="primary"
           size="sm"
           startIcon={<Plus size={14} aria-hidden="true" />}

@@ -31,7 +31,7 @@ export function AdminProductCard({ product }: { product: AdminDbProduct }) {
 
   return (
     <Link
-      href={`/products/${product.id}/details`}
+      href={`/panel/products/${product.id}/details`}
       className="h-full flex flex-col rounded-2xl bg-white-warm border border-earth/8 hover:shadow-lg hover:border-transparent transition-all duration-300"
     >
       <ProductImage

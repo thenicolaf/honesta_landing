@@ -44,11 +44,14 @@ src/
 │   │   ├── page.tsx            # Checkout form (reads customer cookie)
 │   │   ├── cancel/page.tsx     # Payment cancelled fallback
 │   │   └── result/page.tsx     # Payment result (polls N-Genius, updates DB)
-│   ├── (admin)/                # Authenticated route group — layout adds AdminSidebar
+│   ├── panel/                  # Authenticated panel segment (/panel/*) — layout adds AdminSidebar
 │   │   ├── layout.tsx          # Reads user via createSupabaseServerClient(), passes email to sidebar
-│   │   ├── profile/page.tsx
-│   │   ├── favorites/page.tsx
-│   │   └── orders/page.tsx
+│   │   ├── page.tsx            # Admin dashboard (requires admin role)
+│   │   ├── profile/page.tsx    # /panel/profile
+│   │   ├── favorites/page.tsx  # /panel/favorites
+│   │   ├── orders/page.tsx     # /panel/orders
+│   │   ├── categories/page.tsx # /panel/categories (admin only)
+│   │   └── products/           # /panel/products (admin only)
 │   ├── login/page.tsx          # Google OAuth login page
 │   ├── auth/callback/route.ts  # OAuth code → session exchange, then redirect
 │   ├── api/payment/webhook/    # N-Genius webhook → updates order status in Supabase
@@ -111,19 +114,25 @@ src/
 | `POST /api/payment/webhook` | N-Genius webhook — updates `orders.status` in Supabase |
 | `/login` | Google OAuth login page |
 | `/auth/callback` | OAuth PKCE code exchange → session cookie → redirect |
-| `/profile` | User profile form (name, phone, address + map) |
-| `/favorites` | Saved favourite products |
-| `/orders` | Order history |
+| `/panel` | Admin dashboard (admin only) |
+| `/panel/profile` | User profile form (name, phone, address + map) |
+| `/panel/favorites` | Saved favourite products |
+| `/panel/orders` | Order history |
+| `/panel/categories` | Category management (admin only) |
+| `/panel/products` | Product management (admin only) |
+| `/panel/products/create` | Create new product (admin only) |
+| `/panel/products/[id]/details` | Product detail view (admin only) |
+| `/panel/products/[id]/edit` | Edit product (admin only) |
 
-## Admin Section (`(admin)` route group)
+## Panel Section (`panel` route segment)
 
-Routes `/profile`, `/favorites`, `/orders` share an authenticated layout:
+All panel routes live under `/panel` and share an authenticated layout:
 - `AdminLayout` — server component, reads user via `createSupabaseServerClient()`, passes `email` to `AdminSidebar`
 - `AdminSidebar` — responsive: horizontal on mobile, sticky vertical on desktop; contains `AdminNav` + sign-out button
 - `AdminNav` — client component with route-aware active underline
 - `AdminPageHeader` — reusable header with "My Account" label + dynamic `title` prop
 
-**Protected routes:** `src/proxy.ts` defines `PRIVATE_ROUTES = ["/profile", "/favorites", "/orders"]`. Unauthenticated users are redirected to `/login?next={pathname}`; authenticated users are redirected away from `/login` (unless `?next` is present).
+**Protected routes:** `src/proxy.ts` guards all `/panel/*` routes — unauthenticated users are redirected to `/login?next={pathname}`. Admin-only routes (`/panel`, `/panel/categories`, `/panel/products`) require `role=admin`; user routes (`/panel/profile`, `/panel/favorites`, `/panel/orders`) are available to any authenticated user.
 
 ## Favorites
 

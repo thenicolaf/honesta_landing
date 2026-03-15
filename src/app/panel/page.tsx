@@ -1,4 +1,4 @@
-import { AdminPageHeader } from "../_components/AdminPageHeader";
+import { AdminPageHeader } from "./_components/AdminPageHeader";
 import { Card } from "@/shared/ui";
 
 export default function PanelPage() {

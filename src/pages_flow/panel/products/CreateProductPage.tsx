@@ -13,7 +13,7 @@ export function CreateProductPage({ options }: CreateProductPageProps) {
       <div className="mb-6">
         <Button
           as="a"
-          href="/products"
+          href="/panel/products"
           variant="outline"
           size="sm"
           startIcon={<ArrowLeft size={14} />}

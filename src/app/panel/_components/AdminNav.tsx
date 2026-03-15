@@ -31,7 +31,7 @@ export function AdminNav({
           href={href}
           className={cn(
             "flex flex-1 justify-center items-center gap-3 rounded-xl px-4 py-2.5 font-body font-semibold text-xs uppercase tracking-widest transition-colors whitespace-nowrap lg:flex-none lg:justify-start",
-            pathname.startsWith(href) && href !== "/"
+            (pathname === href || (pathname.startsWith(href + "/") && href.split("/").length > 2))
               ? "text-orange bg-orange/8"
               : "text-earth/60 hover:text-orange hover:bg-orange/5",
           )}
