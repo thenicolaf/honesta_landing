@@ -43,15 +43,19 @@ export function Collapsible({ children, className, defaultOpen = false }: Collap
 interface CollapsibleTriggerProps {
   children: React.ReactNode;
   className?: string;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
-export function CollapsibleTrigger({ children, className }: CollapsibleTriggerProps) {
+export function CollapsibleTrigger({ children, className, onClick }: CollapsibleTriggerProps) {
   const { open, toggle } = useCollapsible();
 
   return (
     <button
       type="button"
-      onClick={toggle}
+      onClick={(e) => {
+        onClick?.(e);
+        toggle();
+      }}
       aria-expanded={open}
       className={cn("cursor-pointer", className)}
     >

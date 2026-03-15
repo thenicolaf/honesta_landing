@@ -1,7 +1,3 @@
-import { Category } from "@/shared/types";
-
-export type BadgeVariant = "natural" | "warm" | "outline";
-
 export interface NutritionInfo {
   calories: number;
   carbs: number;
@@ -21,14 +17,11 @@ export interface Benefit {
 export interface Product {
   /** Supabase UUID — present when loaded from DB, absent for static data */
   id?: string;
-  /** Image filename key, e.g. "DRIED APPLE" — used to reference the file in static data */
-  name: string;
   /** URL-safe slug, e.g. "dried-apple" — used in routing and Supabase queries */
   slug?: string;
   /** Marketing display name shown as card heading, e.g. "Natural Apple Snack" */
   title: string;
-  category: Category;
-  badge: BadgeVariant;
+  category: string;
   /** Short text shown in hover overlay */
   tagline: string;
   /** Key highlight chips, 3–5 items */

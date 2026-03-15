@@ -1,22 +1,16 @@
-import { Category } from "@/shared/types";
-import { SLUG_TO_CATEGORY } from "@/sections/categories";
-
-import type { DbProduct, Product, BadgeVariant } from "../types";
+import type { DbProduct, Product } from "../types";
 
 export function mapDbProducts(raw: DbProduct[]): Product[] {
   return raw.map((p) => ({
     id: p.id,
-    name: p.name,
     slug: p.slug,
     title: p.title,
     tagline: p.tagline ?? "",
-    badge: p.badge as BadgeVariant,
     price: Number(p.price),
     weight_g: p.weight_g ?? undefined,
     image_url: p.image_url ?? "",
     in_stock: p.in_stock ?? true,
-    category:
-      SLUG_TO_CATEGORY[p.categories?.slug ?? ""] ?? Category.DriedFruits,
+    category: p.categories?.name ?? "",
     tags: p.product_tags.map((pt) => pt.tag_options.label),
     freeFrom: p.product_free_froms.map((pf) => pf.free_from_options.label),
     servingIdeas: p.product_serving_ideas.map(

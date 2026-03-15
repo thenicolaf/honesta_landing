@@ -1,5 +1,3 @@
-import { Category } from "@/shared/types";
-
 export interface DbCategory {
   id: string;
   name: string;
@@ -11,7 +9,7 @@ export interface DbCategory {
 
 export interface CategoryCard {
   id?: string;
-  name: Category;
+  name: string;
   slug: string;
   audience: string;
   tagline: string;

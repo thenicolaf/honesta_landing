@@ -14,11 +14,19 @@ import { cn } from "@/shared/utils/cn";
 
 const DROPDOWN_MAX_H = 240; // max-h-60 = 240px
 
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
 // ─── Context ──────────────────────────────────────────────────────────────────
 
 interface SelectContextValue {
   open: boolean;
   value: string;
+  options: SelectOption[];
   clearable: boolean;
   direction: "down" | "up";
   triggerId: string;
@@ -44,6 +52,7 @@ interface SelectProps {
   className?: string;
   defaultValue?: string;
   value?: string;
+  options?: SelectOption[];
   clearable?: boolean;
   onValueChange?: (value: string) => void;
 }
@@ -53,6 +62,7 @@ export function Select({
   className,
   defaultValue = "",
   value: controlledValue,
+  options = [],
   clearable = false,
   onValueChange,
 }: SelectProps) {
@@ -114,7 +124,7 @@ export function Select({
 
   return (
     <SelectContext.Provider
-      value={{ open, value, clearable, direction, triggerId, listboxId, toggle, close, select, clear }}
+      value={{ open, value, options, clearable, direction, triggerId, listboxId, toggle, close, select, clear }}
     >
       <div ref={rootRef} className={cn("relative block", className)}>
         {children}
@@ -200,7 +210,9 @@ export function SelectValue({
   placeholder = "Выберите...",
   className,
 }: SelectValueProps) {
-  const { value } = useSelect();
+  const { value, options } = useSelect();
+
+  const displayLabel = options.find((o) => o.value === value)?.label ?? value;
 
   return (
     <span
@@ -210,7 +222,7 @@ export function SelectValue({
         className,
       )}
     >
-      {value || placeholder}
+      {value ? displayLabel : placeholder}
     </span>
   );
 }
@@ -218,15 +230,17 @@ export function SelectValue({
 // ─── SelectContent ────────────────────────────────────────────────────────────
 
 interface SelectContentProps {
-  children: React.ReactNode;
+  children: React.ReactNode | ((options: SelectOption[]) => React.ReactNode);
   className?: string;
 }
 
 export function SelectContent({ children, className }: SelectContentProps) {
-  const { open, direction, listboxId, triggerId } = useSelect();
+  const { open, options, direction, listboxId, triggerId } = useSelect();
 
   const isUp = direction === "up";
   const yOffset = isUp ? 6 : -6;
+
+  const resolved = typeof children === "function" ? children(options) : children;
 
   return (
     <AnimatePresence initial={false}>
@@ -247,7 +261,7 @@ export function SelectContent({ children, className }: SelectContentProps) {
             className,
           )}
         >
-          {children}
+          {resolved}
         </motion.ul>
       )}
     </AnimatePresence>

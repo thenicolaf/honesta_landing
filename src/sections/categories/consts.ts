@@ -1,18 +1,9 @@
-import { Category } from "@/shared/types";
 import {
   IconLeaf,
   IconLightning,
   IconGift,
   IconFruitLeather,
 } from "@/shared/icons";
-
-
-export const SLUG_TO_CATEGORY: Record<string, Category> = {
-  "dried-fruits": Category.DriedFruits,
-  "fruit-leather": Category.FruitLeather,
-  "mix-and-gift": Category.MixAndGift,
-  "mix-seeds": Category.MixSeeds,
-};
 
 export const CATEGORY_UI_MAP: Record<
   string,

@@ -114,7 +114,7 @@ export function DialogOverlay({ className }: { className?: string }) {
 interface DialogContentProps {
   children: React.ReactNode;
   className?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl" | "full";
   showCloseButton?: boolean;
 }
 
@@ -122,6 +122,8 @@ const sizeClasses: Record<NonNullable<DialogContentProps["size"]>, string> = {
   sm: "max-w-sm",
   md: "max-w-md",
   lg: "max-w-lg",
+  xl: "max-w-3xl",
+  full: "max-w-5xl",
 };
 
 export function DialogContent({
@@ -196,7 +198,7 @@ export function DialogContent({
                   type="button"
                   onClick={close}
                   aria-label="Close"
-                  className="absolute top-4 right-4 p-1 rounded-lg text-earth/40 hover:text-earth hover:bg-earth/6 transition-colors cursor-pointer"
+                  className="absolute top-4 right-4 z-10 p-1 rounded-lg text-earth/40 hover:text-earth hover:bg-earth/6 transition-colors cursor-pointer"
                 >
                   <IconX width={16} height={16} aria-hidden="true" />
                 </button>

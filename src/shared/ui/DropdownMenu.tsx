@@ -27,11 +27,14 @@ interface DropdownMenuContextValue {
   close: () => void;
 }
 
-const DropdownMenuContext = createContext<DropdownMenuContextValue | null>(null);
+const DropdownMenuContext = createContext<DropdownMenuContextValue | null>(
+  null,
+);
 
 export function useDropdownMenu() {
   const ctx = useContext(DropdownMenuContext);
-  if (!ctx) throw new Error("useDropdownMenu must be used within <DropdownMenu>");
+  if (!ctx)
+    throw new Error("useDropdownMenu must be used within <DropdownMenu>");
   return ctx;
 }
 
@@ -40,15 +43,17 @@ export function useDropdownMenu() {
 interface DropdownMenuProps {
   children: React.ReactNode;
   className?: string;
+  id?: string;
 }
 
-export function DropdownMenu({ children, className }: DropdownMenuProps) {
+export function DropdownMenu({ children, className, id }: DropdownMenuProps) {
   const [open, setOpen] = useState(false);
   const [direction, setDirection] = useState<"down" | "up">("down");
   const rootRef = useRef<HTMLDivElement>(null);
   const uid = useId();
-  const triggerId = `dropdown-trigger-${uid}`;
-  const menuId = `dropdown-menu-${uid}`;
+  const stableId = id ?? uid;
+  const triggerId = `dropdown-trigger-${stableId}`;
+  const menuId = `dropdown-menu-${stableId}`;
 
   const close = () => setOpen(false);
 
@@ -57,7 +62,11 @@ export function DropdownMenu({ children, className }: DropdownMenuProps) {
       const rect = rootRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
-      setDirection(spaceBelow >= DROPDOWN_MAX_H || spaceBelow >= spaceAbove ? "down" : "up");
+      setDirection(
+        spaceBelow >= DROPDOWN_MAX_H || spaceBelow >= spaceAbove
+          ? "down"
+          : "up",
+      );
     }
     setOpen((v) => !v);
   };
@@ -100,10 +109,45 @@ export function DropdownMenu({ children, className }: DropdownMenuProps) {
 interface DropdownMenuTriggerProps {
   children: React.ReactNode;
   className?: string;
+  /** Stop event propagation on click (useful inside Link wrappers) */
+  stopPropagation?: boolean;
+  /** Render child element as trigger instead of wrapping in a button */
+  asChild?: boolean;
 }
 
-export function DropdownMenuTrigger({ children, className }: DropdownMenuTriggerProps) {
+export function DropdownMenuTrigger({
+  children,
+  className,
+  stopPropagation = false,
+  asChild = false,
+}: DropdownMenuTriggerProps) {
   const { open, toggle, triggerId, menuId } = useDropdownMenu();
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (stopPropagation) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    toggle();
+  };
+
+  if (asChild) {
+    const child = Children.only(children);
+    if (!isValidElement(child)) return null;
+    const childProps = child.props as {
+      className?: string;
+      onClick?: (e: React.MouseEvent) => void;
+    };
+    return cloneElement(child as React.ReactElement<Record<string, unknown>>, {
+      "aria-haspopup": "menu",
+      "aria-expanded": open,
+      onClick: (e: React.MouseEvent) => {
+        handleClick(e);
+        childProps.onClick?.(e);
+      },
+      className: cn(childProps.className, className),
+    });
+  }
 
   return (
     <button
@@ -112,7 +156,7 @@ export function DropdownMenuTrigger({ children, className }: DropdownMenuTrigger
       aria-haspopup="menu"
       aria-expanded={open}
       aria-controls={menuId}
-      onClick={toggle}
+      onClick={handleClick}
       className={cn("cursor-pointer", className)}
     >
       {children}
@@ -149,12 +193,17 @@ export function DropdownMenuContent({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: yOffset, scale: 0.98 }}
           transition={{ duration: 0.18, ease: "easeOut" }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+          }}
           className={cn(
             "absolute z-50 min-w-40",
             isUp ? "bottom-full mb-1.5" : "top-full mt-1.5",
             align === "right" ? "right-0" : "left-0",
             "rounded-xl border border-earth/12 bg-white-warm shadow-lg shadow-earth/8",
-            "py-1.5 max-h-60 overflow-y-auto overscroll-contain",
+            "overflow-y-auto overscroll-contain",
             className,
           )}
         >
@@ -193,8 +242,8 @@ export function DropdownMenuItem({
     disabled
       ? "text-earth/30 cursor-not-allowed"
       : destructive
-      ? "text-red-600 hover:bg-red-50"
-      : "text-earth/70 hover:bg-earth/4 hover:text-earth",
+        ? "text-red-600 hover:bg-red-50"
+        : "text-earth/70 hover:bg-earth/4 hover:text-earth",
     className,
   );
 
@@ -207,14 +256,17 @@ export function DropdownMenuItem({
   if (asChild) {
     const child = Children.only(children);
     if (!isValidElement(child)) return null;
-    const childProps = child.props as { className?: string; onClick?: (e: React.MouseEvent) => void };
+    const childProps = child.props as {
+      className?: string;
+      onClick?: (e: React.MouseEvent) => void;
+    };
     return (
       <li role="presentation">
         {cloneElement(child as React.ReactElement<Record<string, unknown>>, {
           role: "menuitem",
           "aria-disabled": disabled,
           onClick: (e: React.MouseEvent) => {
-            if (disabled) { e.preventDefault(); return; }
+            if (disabled) return;
             childProps.onClick?.(e);
             close();
           },
@@ -239,9 +291,7 @@ export function DropdownMenuItem({
 // ─── DropdownMenuSeparator ────────────────────────────────────────────────────
 
 export function DropdownMenuSeparator({ className }: { className?: string }) {
-  return (
-    <li role="separator" className={cn("my-1.5 h-px bg-earth/8", className)} />
-  );
+  return <li role="separator" className={cn("h-px bg-earth/8", className)} />;
 }
 
 // ─── DropdownMenuLabel ────────────────────────────────────────────────────────
@@ -251,12 +301,15 @@ interface DropdownMenuLabelProps {
   className?: string;
 }
 
-export function DropdownMenuLabel({ children, className }: DropdownMenuLabelProps) {
+export function DropdownMenuLabel({
+  children,
+  className,
+}: DropdownMenuLabelProps) {
   return (
     <li
       role="presentation"
       className={cn(
-        "block px-4 pt-2 pb-1 font-body font-semibold uppercase tracking-[0.12em] text-xs text-earth/35",
+        "block px-4 py-2  font-body font-semibold uppercase tracking-[0.12em] text-xs text-earth/35",
         className,
       )}
     >

@@ -1,22 +1,22 @@
 import { Suspense } from "react";
 import { Hero, TrustBadges, PhilosophyBlock, PartnershipCTA } from "@/sections";
-import { CategoryFilterProvider } from "@/providers";
 import { Loader } from "@/shared/ui";
+import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvider";
 import { CategoriesSection, ProductsSection } from "@/pages_flow/home";
 
-export default function Home() {
+export default async function Home() {
   return (
     <main className="grow">
       <Hero />
       <TrustBadges />
-      <CategoryFilterProvider>
+      <SearchParamsFilterProvider keys={["category"]}>
         <Suspense fallback={<Loader />}>
           <CategoriesSection />
         </Suspense>
         <Suspense fallback={<Loader />}>
           <ProductsSection />
         </Suspense>
-      </CategoryFilterProvider>
+      </SearchParamsFilterProvider>
       <PhilosophyBlock />
       <PartnershipCTA />
     </main>

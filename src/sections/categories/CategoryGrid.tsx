@@ -1,10 +1,8 @@
 "use client";
 
 import { motion } from "motion/react";
-import { Category } from "@/shared/types";
-import { useCategoryFilter } from "@/providers";
 import { CategoryCard } from "./CategoryCard";
-import { SLUG_TO_CATEGORY, containerVariants } from "./consts";
+import { containerVariants } from "./consts";
 import type { DbCategory, CategoryCard as CategoryCardData } from "./types";
 
 export function CategoryGrid({
@@ -12,16 +10,14 @@ export function CategoryGrid({
 }: {
   categories?: DbCategory[];
 }) {
-  const { setActiveCategory } = useCategoryFilter();
-
   const categories: CategoryCardData[] = (dbCategories ?? []).map((c) => ({
     id: c.id,
-    name: (SLUG_TO_CATEGORY[c.slug] ?? c.name) as Category,
+    name: c.name,
     slug: c.slug,
     audience: c.audience,
     tagline: c.tagline,
     description: c.description,
-    href: "#products",
+    href: `/?category=${c.slug}#products`,
   }));
 
   return (
@@ -55,11 +51,7 @@ export function CategoryGrid({
           viewport={{ once: true, margin: "-60px" }}
         >
           {categories.map((card) => (
-            <CategoryCard
-              key={card.name}
-              {...card}
-              onClick={() => setActiveCategory(card.name)}
-            />
+            <CategoryCard key={card.name} {...card} />
           ))}
         </motion.div>
       </div>

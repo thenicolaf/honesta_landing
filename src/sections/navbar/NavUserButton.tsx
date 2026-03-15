@@ -25,7 +25,7 @@ export function NavUserButton({ user, isAdmin }: NavUserButtonProps) {
   if (user) {
     return (
       <>
-        <DropdownMenu>
+        <DropdownMenu id="nav-user">
           <DropdownMenuTrigger className="p-1">
             <Avatar initial={user.email} size="sm" title={user.email} />
           </DropdownMenuTrigger>
@@ -49,6 +49,9 @@ export function NavUserButton({ user, isAdmin }: NavUserButtonProps) {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/categories">Categories</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/products">Products</Link>
                 </DropdownMenuItem>
               </>
             )}

@@ -1,14 +1,13 @@
 export interface DbProduct {
   id: string;
-  name: string;
   slug: string;
   title: string;
   tagline: string | null;
-  badge: string;
   price: string;
   weight_g: number | null;
   image_url: string | null;
   in_stock: boolean | null;
+  status: "draft" | "published" | "archived";
   nutrition: {
     calories: number;
     carbs: number;
@@ -19,7 +18,7 @@ export interface DbProduct {
     fat: number;
     vitamin_c?: number;
   } | null;
-  categories: { slug: string } | null;
+  categories: { slug: string; name: string } | null;
   product_tags: { tag_options: { label: string } }[];
   product_free_froms: { free_from_options: { label: string } }[];
   product_serving_ideas: { serving_idea_options: { label: string } }[];
@@ -27,6 +26,12 @@ export interface DbProduct {
   product_benefits: { benefits: { name: string; description: string } }[];
 }
 
+export interface CategoryItem {
+  value: string;
+  label: string;
+}
+
 export interface DbProductGridProps {
   rawProducts: DbProduct[];
+  categories?: CategoryItem[];
 }

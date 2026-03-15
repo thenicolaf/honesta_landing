@@ -1,0 +1,48 @@
+import type { AdminDbProduct } from "@/lib/productsDb";
+import type { Benefit, NutritionInfo } from "../types";
+
+export function mapNutrition(
+  raw: AdminDbProduct["nutrition"],
+): NutritionInfo | undefined {
+  if (!raw) return undefined;
+  return {
+    calories: raw.calories,
+    carbs: raw.carbs,
+    naturalSugars: raw.natural_sugars,
+    addedSugars: raw.added_sugars,
+    fiber: raw.fiber,
+    protein: raw.protein,
+    fat: raw.fat,
+    vitaminC: raw.vitamin_c,
+  };
+}
+
+export interface MappedAdminProduct {
+  category: string;
+  tagline: string;
+  tags: string[];
+  freeFrom: string[];
+  benefits: Benefit[];
+  nutrition: NutritionInfo | undefined;
+  servingIdeas: string[];
+  occasions: string[];
+}
+
+export function mapAdminProduct(product: AdminDbProduct): MappedAdminProduct {
+  return {
+    category: product.categories?.name ?? "—",
+    tagline: product.tagline ?? "",
+    tags: product.product_tags.map((pt) => pt.tag_options.label),
+    freeFrom: product.product_free_froms.map(
+      (pf) => pf.free_from_options.label,
+    ),
+    benefits: product.product_benefits.map((pb) => pb.benefits),
+    nutrition: mapNutrition(product.nutrition),
+    servingIdeas: product.product_serving_ideas.map(
+      (ps) => ps.serving_idea_options.label,
+    ),
+    occasions: product.product_occasions.map(
+      (po) => po.occasion_options.label,
+    ),
+  };
+}

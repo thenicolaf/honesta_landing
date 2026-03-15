@@ -22,7 +22,7 @@ export default async function Page() {
           await supabaseAdmin
             .from("products")
             .select(
-              `*, categories(slug),
+              `*, categories(slug, name),
               product_tags(tag_options(label)),
               product_free_froms(free_from_options(label)),
               product_serving_ideas(serving_idea_options(label)),
