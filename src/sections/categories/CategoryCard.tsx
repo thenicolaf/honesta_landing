@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "motion/react";
 import { Badge } from "@/shared/ui";
 import { IconLeaf } from "@/shared/icons";
@@ -13,6 +14,7 @@ export function CategoryCard({
   name,
   tagline,
   description,
+  image_url,
 }: CategoryCardData) {
   const categoryFilter = useFilterBar("category");
 
@@ -34,12 +36,21 @@ export function CategoryCard({
       transition={{ duration: 0.55, ease: "easeOut" }}
       className="group flex flex-col rounded-[16px] overflow-hidden bg-white-warm hover:shadow-lg transition-shadow duration-300 text-left cursor-pointer"
     >
-      {/* Image placeholder */}
+      {/* Image / placeholder */}
       <div
-        className={`relative aspect-4/3 ${placeholderBg} flex items-center justify-center`}
+        className={`relative aspect-4/3 ${image_url ? "" : placeholderBg} flex items-center justify-center`}
       >
-        <Icon className="w-16 h-16 text-earth/20" />
-        {/* TODO: replace with <Image src="..." fill ... /> */}
+        {image_url ? (
+          <Image
+            src={image_url}
+            alt={name}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          />
+        ) : (
+          <Icon className="w-16 h-16 text-earth/20" />
+        )}
       </div>
 
       {/* Content */}

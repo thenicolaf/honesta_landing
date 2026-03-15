@@ -17,6 +17,7 @@ export function CategoryGrid({
     audience: c.audience,
     tagline: c.tagline,
     description: c.description,
+    image_url: c.image_url,
     href: `/?category=${c.slug}#products`,
   }));
 

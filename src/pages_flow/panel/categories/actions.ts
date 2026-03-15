@@ -1,12 +1,15 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase.server";
+import { deleteImage } from "@/lib/storage";
 
 interface CategoryInfo {
   name: string;
   audience: string;
   tagline: string;
   description: string;
+  image_url: string;
 }
 
 export interface CategoryState {
@@ -46,13 +49,14 @@ export async function createCategory(
     audience: values.audience?.trim() || null,
     tagline: values.tagline?.trim() || null,
     description: values.description?.trim() || null,
+    image_url: values.image_url?.trim() || null,
   });
 
   if (error) {
     return { error: "Failed to create category. Please try again.", values };
   }
 
-  return { success: true, values };
+  redirect("/panel/categories");
 }
 
 export async function updateCategory(
@@ -68,6 +72,14 @@ export async function updateCategory(
 
   const name = values.name!.trim();
   const slug = toSlug(name);
+  const newImageUrl = values.image_url?.trim() || null;
+
+  // Fetch old image URL to clean up if changed
+  const { data: existing } = await supabaseAdmin
+    .from("categories")
+    .select("image_url")
+    .eq("id", id)
+    .single();
 
   const { error } = await supabaseAdmin
     .from("categories")
@@ -77,6 +89,7 @@ export async function updateCategory(
       audience: values.audience?.trim() || null,
       tagline: values.tagline?.trim() || null,
       description: values.description?.trim() || null,
+      image_url: newImageUrl,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);
@@ -85,17 +98,34 @@ export async function updateCategory(
     return { error: "Failed to update category. Please try again.", values };
   }
 
-  return { success: true, values };
+  // Delete old image from storage if it changed
+  if (existing?.image_url && existing.image_url !== newImageUrl) {
+    await deleteImage(existing.image_url, "categories");
+  }
+
+  redirect("/panel/categories");
 }
 
 export async function deleteCategory(
   id: string,
 ): Promise<Pick<CategoryState, "success" | "error">> {
+  // Fetch image URL before deleting the row
+  const { data: existing } = await supabaseAdmin
+    .from("categories")
+    .select("image_url")
+    .eq("id", id)
+    .single();
+
   const { error } = await supabaseAdmin
     .from("categories")
     .delete()
     .eq("id", id);
 
   if (error) return { error: "Failed to delete category. Please try again." };
+
+  if (existing?.image_url) {
+    await deleteImage(existing.image_url, "categories");
+  }
+
   return { success: true };
 }

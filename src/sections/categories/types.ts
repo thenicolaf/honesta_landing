@@ -5,6 +5,7 @@ export interface DbCategory {
   audience: string;
   tagline: string;
   description: string;
+  image_url: string | null;
 }
 
 export interface CategoryCard {
@@ -14,5 +15,6 @@ export interface CategoryCard {
   audience: string;
   tagline: string;
   description: string;
+  image_url?: string | null;
   href: string;
 }

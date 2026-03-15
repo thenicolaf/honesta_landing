@@ -15,6 +15,8 @@ type FormUploadZoneProps = UploadMultipleProps & {
   initialUrl?: string;
   /** Slug for naming files in storage */
   slug?: string;
+  /** Storage bucket name (default: "products") */
+  bucket?: string;
 };
 
 export function FormUploadZone(props: FormUploadZoneProps) {
@@ -26,6 +28,7 @@ export function FormUploadZone(props: FormUploadZoneProps) {
     className,
     initialUrl,
     slug = "product",
+    bucket = "products",
     ...multipleProps
   } = props;
 
@@ -49,6 +52,7 @@ export function FormUploadZone(props: FormUploadZoneProps) {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("slug", slug);
+      formData.append("bucket", bucket);
 
       const res = await fetch("/api/storage/upload", {
         method: "POST",
@@ -71,7 +75,7 @@ export function FormUploadZone(props: FormUploadZoneProps) {
       await fetch("/api/storage/delete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: item.url }),
+        body: JSON.stringify({ url: item.url, bucket }),
       });
     } catch {
       // Deletion failure shouldn't block UI

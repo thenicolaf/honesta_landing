@@ -2,11 +2,9 @@
 
 import { createContext, useContext, useState } from "react";
 import type { DbCategory } from "@/sections/categories/types";
-import { CategoryFormDialog } from "./CategoryFormDialog";
 import { DeleteCategoryDialog } from "./DeleteCategoryDialog";
 
 interface CategoryActionsContextValue {
-  openEdit: (category: DbCategory) => void;
   openDelete: (category: DbCategory) => void;
 }
 
@@ -19,20 +17,13 @@ export function useCategoryActions() {
 }
 
 export function CategoryActionsProvider({ children }: { children: React.ReactNode }) {
-  const [editCategory, setEditCategory] = useState<DbCategory | null>(null);
   const [deleteCategory, setDeleteCategory] = useState<DbCategory | null>(null);
 
   return (
     <CategoryActionsContext.Provider
-      value={{ openEdit: setEditCategory, openDelete: setDeleteCategory }}
+      value={{ openDelete: setDeleteCategory }}
     >
       {children}
-
-      <CategoryFormDialog
-        category={editCategory ?? undefined}
-        open={editCategory !== null}
-        onOpenChange={(open) => { if (!open) setEditCategory(null); }}
-      />
 
       <DeleteCategoryDialog
         id={deleteCategory?.id ?? ""}

@@ -11,3 +11,15 @@ export async function getCategories(): Promise<DbCategory[]> {
 
   return data as DbCategory[];
 }
+
+export async function getCategoryById(id: string): Promise<DbCategory | null> {
+  const { data, error } = await supabaseAdmin
+    .from("categories")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error || !data) return null;
+
+  return data as DbCategory;
+}

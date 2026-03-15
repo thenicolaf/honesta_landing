@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase.server";
-import { deleteProductImage } from "@/lib/storage";
+import { deleteImage } from "@/lib/storage";
 import { buildNutrition } from "./product-form/nutrition";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -56,7 +56,6 @@ function parseIds(raw: string | null): number[] {
   }
 }
 
-
 async function insertJunctionRows(
   productId: string,
   values: Partial<ProductValues>,
@@ -78,50 +77,42 @@ async function insertJunctionRows(
 
   if (freeFromIds.length)
     inserts.push(
-      supabaseAdmin
-        .from("product_free_froms")
-        .insert(
-          freeFromIds.map((free_from_id) => ({
-            product_id: productId,
-            free_from_id,
-          })),
-        ),
+      supabaseAdmin.from("product_free_froms").insert(
+        freeFromIds.map((free_from_id) => ({
+          product_id: productId,
+          free_from_id,
+        })),
+      ),
     );
 
   if (occasionIds.length)
     inserts.push(
-      supabaseAdmin
-        .from("product_occasions")
-        .insert(
-          occasionIds.map((occasion_id) => ({
-            product_id: productId,
-            occasion_id,
-          })),
-        ),
+      supabaseAdmin.from("product_occasions").insert(
+        occasionIds.map((occasion_id) => ({
+          product_id: productId,
+          occasion_id,
+        })),
+      ),
     );
 
   if (servingIdeaIds.length)
     inserts.push(
-      supabaseAdmin
-        .from("product_serving_ideas")
-        .insert(
-          servingIdeaIds.map((serving_idea_id) => ({
-            product_id: productId,
-            serving_idea_id,
-          })),
-        ),
+      supabaseAdmin.from("product_serving_ideas").insert(
+        servingIdeaIds.map((serving_idea_id) => ({
+          product_id: productId,
+          serving_idea_id,
+        })),
+      ),
     );
 
   if (benefitIds.length)
     inserts.push(
-      supabaseAdmin
-        .from("product_benefits")
-        .insert(
-          benefitIds.map((benefit_id) => ({
-            product_id: productId,
-            benefit_id,
-          })),
-        ),
+      supabaseAdmin.from("product_benefits").insert(
+        benefitIds.map((benefit_id) => ({
+          product_id: productId,
+          benefit_id,
+        })),
+      ),
     );
 
   await Promise.all(inserts);
@@ -164,7 +155,10 @@ function validateProduct(values: Partial<ProductValues>) {
   return Object.keys(fieldErrors).length > 0 ? fieldErrors : null;
 }
 
-function parseProductValues(values: Partial<ProductValues>, formData: FormData) {
+function parseProductValues(
+  values: Partial<ProductValues>,
+  formData: FormData,
+) {
   const title = values.title!.trim();
 
   return {
@@ -184,10 +178,14 @@ function parseProductValues(values: Partial<ProductValues>, formData: FormData) 
 
 function getAllowedTransitions(current: string): string[] {
   switch (current) {
-    case "draft":     return ["published", "archived"];
-    case "published": return ["archived"];
-    case "archived":  return ["published"];
-    default:          return [];
+    case "draft":
+      return ["published", "archived"];
+    case "published":
+      return ["archived"];
+    case "archived":
+      return ["published"];
+    default:
+      return [];
   }
 }
 
@@ -283,7 +281,7 @@ export async function updateProduct(
 
   // Delete old image from storage if it changed
   if (existing?.image_url && existing.image_url !== productData.image_url) {
-    await deleteProductImage(existing.image_url);
+    await deleteImage(existing.image_url, "products");
   }
 
   await deleteJunctionRows(id);
@@ -308,7 +306,7 @@ export async function deleteProduct(
   }
 
   if (existing?.image_url) {
-    await deleteProductImage(existing.image_url);
+    await deleteImage(existing.image_url, "products");
   }
 
   return { success: true };

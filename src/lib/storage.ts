@@ -1,6 +1,13 @@
 import { supabaseAdmin } from "@/lib/supabase.server";
 
-const BUCKET = "products";
+const ALLOWED_BUCKETS = ["products", "categories"] as const;
+export type StorageBucket = (typeof ALLOWED_BUCKETS)[number];
+
+function assertBucket(bucket: string): asserts bucket is StorageBucket {
+  if (!ALLOWED_BUCKETS.includes(bucket as StorageBucket)) {
+    throw new Error(`Invalid storage bucket: ${bucket}`);
+  }
+}
 
 function getExtension(filename: string): string {
   const ext = filename.split(".").pop()?.toLowerCase();
@@ -9,22 +16,25 @@ function getExtension(filename: string): string {
     : "webp";
 }
 
-function getStoragePath(publicUrl: string): string {
-  const marker = `/object/public/${BUCKET}/`;
+function getStoragePath(publicUrl: string, bucket: StorageBucket): string {
+  const marker = `/object/public/${bucket}/`;
   const idx = publicUrl.indexOf(marker);
   if (idx === -1) return "";
   return decodeURIComponent(publicUrl.slice(idx + marker.length));
 }
 
-export async function uploadProductImage(
+export async function uploadImage(
   file: File,
   slug: string,
+  bucket: StorageBucket = "products",
 ): Promise<string> {
+  assertBucket(bucket);
+
   const ext = getExtension(file.name);
   const path = `${slug}-${crypto.randomUUID()}.${ext}`;
 
   const { error } = await supabaseAdmin.storage
-    .from(BUCKET)
+    .from(bucket)
     .upload(path, file, {
       contentType: file.type,
       upsert: false,
@@ -34,17 +44,23 @@ export async function uploadProductImage(
 
   const {
     data: { publicUrl },
-  } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(path);
+  } = supabaseAdmin.storage.from(bucket).getPublicUrl(path);
 
   return publicUrl;
 }
 
-export async function deleteProductImage(url: string): Promise<void> {
-  const path = getStoragePath(url);
+export async function deleteImage(
+  url: string,
+  bucket: StorageBucket = "products",
+): Promise<void> {
+  assertBucket(bucket);
+
+  const path = getStoragePath(url, bucket);
   if (!path) return;
 
-  const { error } = await supabaseAdmin.storage.from(BUCKET).remove([path]);
+  const { error } = await supabaseAdmin.storage.from(bucket).remove([path]);
   if (error) {
     console.error(`Storage delete failed for ${path}:`, error.message);
   }
 }
+

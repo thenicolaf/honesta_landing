@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
-import { deleteProductImage } from "@/lib/storage";
+import { deleteImage, type StorageBucket } from "@/lib/storage";
 
 export async function POST(request: Request) {
   const supabase = await createSupabaseServerClient();
@@ -14,11 +14,12 @@ export async function POST(request: Request) {
 
   const body = await request.json();
   const url = body?.url as string | undefined;
+  const bucket = ((body?.bucket as string) || "products") as StorageBucket;
 
   if (!url) {
     return NextResponse.json({ error: "URL is required" }, { status: 400 });
   }
 
-  await deleteProductImage(url);
+  await deleteImage(url, bucket);
   return NextResponse.json({ success: true });
 }

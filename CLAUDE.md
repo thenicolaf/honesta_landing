@@ -119,6 +119,8 @@ src/
 | `/panel/favorites` | Saved favourite products |
 | `/panel/orders` | Order history |
 | `/panel/categories` | Category management (admin only) |
+| `/panel/categories/create` | Create new category (admin only) |
+| `/panel/categories/[id]/edit` | Edit category (admin only) |
 | `/panel/products` | Product management (admin only) |
 | `/panel/products/create` | Create new product (admin only) |
 | `/panel/products/[id]/details` | Product detail view (admin only) |

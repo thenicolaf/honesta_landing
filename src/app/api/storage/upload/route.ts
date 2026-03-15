@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
-import { uploadProductImage } from "@/lib/storage";
+import { uploadImage, type StorageBucket } from "@/lib/storage";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 
@@ -16,7 +16,8 @@ export async function POST(request: Request) {
 
   const formData = await request.formData();
   const file = formData.get("file") as File | null;
-  const slug = (formData.get("slug") as string) || "product";
+  const slug = (formData.get("slug") as string) || "image";
+  const bucket = ((formData.get("bucket") as string) || "products") as StorageBucket;
 
   if (!file || !(file instanceof File)) {
     return NextResponse.json({ error: "File is required" }, { status: 400 });
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const url = await uploadProductImage(file, slug);
+    const url = await uploadImage(file, slug, bucket);
     return NextResponse.json({ url });
   } catch {
     return NextResponse.json(

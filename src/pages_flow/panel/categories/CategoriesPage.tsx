@@ -1,5 +1,6 @@
+import { Plus } from "lucide-react";
+import { Button, EmptyState } from "@/shared/ui";
 import { getCategories } from "@/lib/categoriesDb";
-import { CategoryFormDialog } from "./CategoryFormDialog";
 import { CategoryActionsProvider } from "./CategoryActionsProvider";
 import { AdminCategoryCard } from "./AdminCategoryCard";
 
@@ -12,7 +13,15 @@ export async function CategoriesPage() {
         <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-moss">
           Admin Panel
         </p>
-        <CategoryFormDialog />
+        <Button
+          as="a"
+          href="/panel/categories/create"
+          variant="primary"
+          size="sm"
+          startIcon={<Plus size={14} aria-hidden="true" />}
+        >
+          New Category
+        </Button>
       </div>
       <h1
         className="font-display font-bold italic text-heading mb-6 leading-tight"
@@ -22,11 +31,17 @@ export async function CategoriesPage() {
       </h1>
 
       {categories.length === 0 ? (
-        <p className="font-body font-light text-earth/50 text-sm">
-          No categories yet. Create one to get started.
-        </p>
+        <EmptyState
+          label="No categories yet"
+          description="Create one to get started."
+          action={{
+            label: "New Category",
+            href: "/panel/categories/create",
+            variant: "primary",
+          }}
+        />
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 ">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {categories.map((category) => (
             <AdminCategoryCard key={category.id} category={category} />
           ))}
