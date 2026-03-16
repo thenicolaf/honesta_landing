@@ -51,6 +51,15 @@ export async function getProductBySlug(slug: string): Promise<DbProduct | null> 
   return data as DbProduct;
 }
 
+export async function getPublishedSlugs(): Promise<{ slug: string; updated_at: string }[]> {
+  const { data } = await supabase
+    .from("products")
+    .select("slug, updated_at")
+    .eq("status", "published")
+    .order("created_at", { ascending: true });
+  return (data ?? []) as { slug: string; updated_at: string }[];
+}
+
 export async function getAdminProductById(id: string): Promise<AdminDbProduct | null> {
   const { data, error } = await supabaseAdmin
     .from("products")

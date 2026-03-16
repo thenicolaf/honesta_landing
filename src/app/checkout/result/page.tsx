@@ -1,4 +1,9 @@
+import type { Metadata } from "next";
 import { Card, Button } from "@/shared/ui";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 import { IconCheckCircle, IconAlertCircle } from "@/shared/icons";
 import { cn } from "@/shared/utils/cn";
 import { getOrderStatus } from "@/lib/ngenius";

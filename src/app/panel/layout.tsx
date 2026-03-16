@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
 import { AdminSidebar } from "./_components/AdminSidebar";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default async function AdminLayout({
   children,

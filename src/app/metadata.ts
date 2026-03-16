@@ -4,7 +4,10 @@ const siteUrl = process.env.PUBLIC_BASE_URL!;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "HONESTA — Natural Dried Fruits. No Sugar. No Additives.",
+  title: {
+    default: "HONESTA — Natural Dried Fruits. No Sugar. No Additives.",
+    template: "%s — HONESTA",
+  },
   description:
     "Handcrafted dried fruits and pastila. 100% fruit. No sugar. No additives. Small batch production with love.",
   keywords: [

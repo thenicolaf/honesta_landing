@@ -1,4 +1,9 @@
+import type { Metadata } from "next";
 import { Card, Button } from "@/shared/ui";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 import { supabaseAdmin } from "@/lib/supabase.server";
 import { OrderStatus } from "@/shared/types";
 

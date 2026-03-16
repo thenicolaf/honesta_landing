@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
+
+export const metadata: Metadata = {
+  title: "Checkout",
+  description: "Complete your order for natural dried fruits delivery in UAE.",
+};
 import { CheckoutPage } from "@/pages_flow/checkout";
 import { CUSTOMER_COOKIE_KEY } from "@/shared/consts";
 import { CustomerInfo } from "@/shared/types";
