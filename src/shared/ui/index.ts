@@ -1,4 +1,5 @@
 export { Button } from "./Button";
+export { CookieConsent } from "./CookieConsent";
 export { Avatar } from "./Avatar";
 export {
   FormLabel,
@@ -104,6 +105,7 @@ export {
   DataCardGrid,
   DataCardList,
   DataCardEmpty,
+  DataCardPagination,
   useDataCard,
   type FieldDef,
 } from "./DataCard";

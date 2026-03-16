@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import type { CartItem } from "@/sections/products/types/types";
-import { CUSTOMER_COOKIE_KEY, DELIVERY_FEE } from "@/shared/consts";
+import { CUSTOMER_COOKIE_KEY, COOKIE_CONSENT_KEY, DELIVERY_FEE } from "@/shared/consts";
 import type { CustomerInfo } from "@/shared/types";
 import {
   validateCustomer,
@@ -26,23 +26,27 @@ export async function submitCheckout(
 ): Promise<CheckoutState | null> {
   const customer = Object.fromEntries(formData) as Partial<CustomerInfo>;
 
-  // Persist customer info for next visit
   const cookieStore = await cookies();
-  cookieStore.set(CUSTOMER_COOKIE_KEY, JSON.stringify(customer), {
-    maxAge: 60 * 60 * 24 * 30,
-    path: "/",
-  });
+
+  // 1. Check auth — authorized users' data comes from DB, not cookies
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Persist customer info for next visit (skip if guest declined cookies)
+  const consent = cookieStore.get(COOKIE_CONSENT_KEY)?.value;
+  if (user || consent !== "declined") {
+    cookieStore.set(CUSTOMER_COOKIE_KEY, JSON.stringify(customer), {
+      maxAge: 60 * 60 * 24 * 30,
+      path: "/",
+    });
+  }
 
   const fieldErrors = validateCustomer(customer);
   if (fieldErrors) {
     return { fieldErrors };
   }
-
-  // 1. Create order
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const { data: order, error: orderError } = await createOrderWithItems(

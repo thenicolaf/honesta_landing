@@ -18,7 +18,10 @@ interface AdminOrderCardsProps {
   emptyDescription?: string;
 }
 
-export function AdminOrderCards({ orders, emptyDescription }: AdminOrderCardsProps) {
+export function AdminOrderCards({
+  orders,
+  emptyDescription,
+}: AdminOrderCardsProps) {
   if (orders.length === 0) {
     return (
       <DataCardEmpty
@@ -58,7 +61,9 @@ export function AdminOrderCards({ orders, emptyDescription }: AdminOrderCardsPro
                   >
                     <span className="text-sm text-earth">
                       {item.name}
-                      <span className="text-earth/40 ml-1">×{item.quantity}</span>
+                      <span className="text-earth/40 ml-1">
+                        ×{item.quantity}
+                      </span>
                     </span>
                     <span className="text-2xs text-earth/50 whitespace-nowrap">
                       {formatAed(item.price * item.quantity)}
@@ -72,15 +77,23 @@ export function AdminOrderCards({ orders, emptyDescription }: AdminOrderCardsPro
               <div className="flex flex-col gap-0.5">
                 <div className="flex justify-between gap-3">
                   <span className="text-2xs text-earth/50">Subtotal</span>
-                  <span className="text-2xs text-earth/60">{formatAed(order.subtotal)}</span>
+                  <span className="text-2xs text-earth/60">
+                    {formatAed(order.subtotal)}
+                  </span>
                 </div>
                 <div className="flex justify-between gap-3">
                   <span className="text-2xs text-earth/50">Delivery</span>
-                  <span className="text-2xs text-earth/60">{formatAed(order.delivery_fee)}</span>
+                  <span className="text-2xs text-earth/60">
+                    {formatAed(order.delivery_fee)}
+                  </span>
                 </div>
-                <div className="flex justify-between gap-3 pt-0.5 border-t border-earth/8 mt-0.5">
-                  <span className="text-sm font-semibold text-earth">Total</span>
-                  <span className="text-sm font-semibold text-earth">{formatAed(order.total)}</span>
+                <div className="flex justify-between gap-3 pt-2 border-t border-earth/8 mt-0.5">
+                  <span className="text-sm font-semibold text-earth">
+                    Total
+                  </span>
+                  <span className="text-sm font-semibold text-earth">
+                    {formatAed(order.total)}
+                  </span>
                 </div>
               </div>
             </DataCardField>
@@ -91,13 +104,17 @@ export function AdminOrderCards({ orders, emptyDescription }: AdminOrderCardsPro
 
             {order.notes && (
               <DataCardField label="Notes">
-                <span className="text-2xs text-earth/60 italic">{order.notes}</span>
+                <span className="text-2xs text-earth/60 italic">
+                  {order.notes}
+                </span>
               </DataCardField>
             )}
           </DataCardBody>
 
           <DataCardFooter className="flex items-center justify-end">
-            <span className="text-2xs text-earth/50">{formatDateTime(order.created_at)}</span>
+            <span className="text-2xs text-earth/50">
+              {formatDateTime(order.created_at)}
+            </span>
           </DataCardFooter>
         </DataCard>
       ))}

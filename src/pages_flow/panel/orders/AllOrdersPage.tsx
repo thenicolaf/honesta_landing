@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
-import { DataTable } from "@/shared/ui";
+import { DataTable, DataCardPagination } from "@/shared/ui";
 import { IconReceipt } from "@/shared/icons";
 import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvider";
 import { useFilterBar } from "@/providers/FilterProvider";
@@ -49,6 +49,7 @@ function AllOrdersInner({ orders }: { orders: AdminOrder[] }) {
           orders={paginatedData}
           emptyDescription={emptyDescription}
         />
+        <DataCardPagination pagination={pagination} />
       </div>
 
       {/* Desktop: table */}

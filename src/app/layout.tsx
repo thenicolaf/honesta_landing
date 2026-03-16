@@ -5,8 +5,10 @@ import { metadata as siteMetadata } from "./metadata";
 import { structuredData } from "./structured-data";
 import { Footer, Navbar } from "@/sections";
 import { CartProvider, FavoritesProvider, NotificationsProvider } from "@/providers";
-import { ToastProvider } from "@/shared/ui";
+import { ToastProvider, CookieConsent } from "@/shared/ui";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
+import { COOKIE_CONSENT_KEY } from "@/shared/consts";
+import { cookies } from "next/headers";
 
 export { siteMetadata as metadata };
 
@@ -28,7 +30,11 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = await createSupabaseServerClient();
+  const [supabase, cookieStore] = await Promise.all([
+    createSupabaseServerClient(),
+    cookies(),
+  ]);
+  const hasConsent = cookieStore.has(COOKIE_CONSENT_KEY);
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -56,6 +62,7 @@ export default async function RootLayout({
           </FavoritesProvider>
         </CartProvider>
         <ToastProvider />
+        <CookieConsent show={!hasConsent} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}

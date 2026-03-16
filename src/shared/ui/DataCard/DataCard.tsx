@@ -1,9 +1,12 @@
 "use client";
 
 import { cn } from "@/shared/utils/cn";
+import { IconChevron } from "@/shared/icons";
+import { Button } from "../Button";
 import { Card } from "../Card";
 import { EmptyState } from "../EmptyState";
 import { DataCardContext, useDataCard } from "./context";
+import type { PaginationState } from "../Table/hooks";
 import type { FieldDef } from "./types";
 
 // ─── DataCard (root) ────────────────────────────────────────────────────────
@@ -15,7 +18,11 @@ interface DataCardProps {
   dividers?: boolean;
 }
 
-export function DataCard({ children, className, dividers = true }: DataCardProps) {
+export function DataCard({
+  children,
+  className,
+  dividers = true,
+}: DataCardProps) {
   return (
     <DataCardContext.Provider value={{ dividers }}>
       <Card variant="default" padding="none" className={className}>
@@ -34,7 +41,12 @@ interface DataCardHeaderProps {
 
 export function DataCardHeader({ children, className }: DataCardHeaderProps) {
   return (
-    <div className={cn("flex items-center justify-between gap-3 px-4 pt-4 pb-2", className)}>
+    <div
+      className={cn(
+        "flex items-center justify-between border-b border-earth/8 gap-3 px-4 pt-4 pb-2",
+        className,
+      )}
+    >
       {children}
     </div>
   );
@@ -49,9 +61,7 @@ interface DataCardBodyProps {
 
 export function DataCardBody({ children, className }: DataCardBodyProps) {
   return (
-    <div className={cn("flex flex-col px-4 py-2", className)}>
-      {children}
-    </div>
+    <div className={cn("flex flex-col px-4 py-2", className)}>{children}</div>
   );
 }
 
@@ -63,7 +73,11 @@ interface DataCardFieldProps {
   className?: string;
 }
 
-export function DataCardField({ children, label, className }: DataCardFieldProps) {
+export function DataCardField({
+  children,
+  label,
+  className,
+}: DataCardFieldProps) {
   const { dividers } = useDataCard();
 
   return (
@@ -107,11 +121,19 @@ interface DataCardGridProps<T> {
   className?: string;
 }
 
-export function DataCardGrid<T>({ data, fields, className }: DataCardGridProps<T>) {
+export function DataCardGrid<T>({
+  data,
+  fields,
+  className,
+}: DataCardGridProps<T>) {
   return (
     <DataCardBody className={className}>
       {fields.map((field) => (
-        <DataCardField key={field.key} label={field.label} className={field.className}>
+        <DataCardField
+          key={field.key}
+          label={field.label}
+          className={field.className}
+        >
           {field.cell(data)}
         </DataCardField>
       ))}
@@ -128,9 +150,7 @@ interface DataCardListProps {
 
 export function DataCardList({ children, className }: DataCardListProps) {
   return (
-    <div className={cn("grid grid-cols-1 gap-3", className)}>
-      {children}
-    </div>
+    <div className={cn("grid grid-cols-1 gap-3", className)}>{children}</div>
   );
 }
 
@@ -149,6 +169,83 @@ interface DataCardEmptyProps {
   className?: string;
 }
 
-export function DataCardEmpty({ icon, label, description, action, className }: DataCardEmptyProps) {
-  return <EmptyState icon={icon} label={label} description={description} action={action} className={className} />;
+export function DataCardEmpty({
+  icon,
+  label,
+  description,
+  action,
+  className,
+}: DataCardEmptyProps) {
+  return (
+    <EmptyState
+      icon={icon}
+      label={label}
+      description={description}
+      action={action}
+      className={className}
+    />
+  );
+}
+
+// ─── DataCardPagination ────────────────────────────────────────────────────
+
+interface DataCardPaginationProps {
+  pagination: PaginationState;
+  className?: string;
+}
+
+export function DataCardPagination({
+  pagination,
+  className,
+}: DataCardPaginationProps) {
+  const { page, pageCount, total, pageSize, canPrev, canNext } = pagination;
+
+  if (total === 0) return null;
+
+  const from = (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, total);
+
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-between gap-4 mt-3 px-1",
+        className,
+      )}
+    >
+      <span className="font-body text-2xs text-earth/50">
+        {from}–{to} of {total}
+      </span>
+
+      <div className="flex items-center gap-3">
+        <span className="font-body text-2xs text-earth/50">
+          {page} / {pageCount}
+        </span>
+
+        <div className="flex items-center gap-1">
+          <Button
+            as="button"
+            type="button"
+            variant="outline"
+            size="icon"
+            disabled={!canPrev}
+            onClick={pagination.prevPage}
+            aria-label="Previous page"
+          >
+            <IconChevron className="w-3.5 h-3.5 rotate-90" />
+          </Button>
+          <Button
+            as="button"
+            type="button"
+            variant="outline"
+            size="icon"
+            disabled={!canNext}
+            onClick={pagination.nextPage}
+            aria-label="Next page"
+          >
+            <IconChevron className="w-3.5 h-3.5 -rotate-90" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 }

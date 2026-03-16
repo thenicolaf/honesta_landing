@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
-import { DataTable, useTableSort, useTableData, useTablePagination } from "@/shared/ui";
+import { DataTable, DataCardPagination, useTableSort, useTableData, useTablePagination } from "@/shared/ui";
 import { IconReceipt } from "@/shared/icons";
 import { userOrderColumns } from "./columns";
 import { OrderCards } from "./ui/OrderCards";
@@ -19,6 +19,7 @@ export function OrdersPage({ orders }: { orders: Order[] }) {
       {/* Mobile: cards */}
       <div className="xl:hidden">
         <OrderCards orders={paginatedData} />
+        <DataCardPagination pagination={pagination} />
       </div>
 
       {/* Desktop: table */}

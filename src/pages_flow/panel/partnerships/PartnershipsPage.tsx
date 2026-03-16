@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
-import { DataTable } from "@/shared/ui";
+import { DataTable, DataCardPagination } from "@/shared/ui";
 import { Handshake } from "lucide-react";
 import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvider";
 import { useFilterBar } from "@/providers/FilterProvider";
@@ -49,6 +49,7 @@ function PartnershipsInner({ inquiries }: { inquiries: PartnershipInquiry[] }) {
           inquiries={paginatedData}
           emptyDescription={emptyDescription}
         />
+        <DataCardPagination pagination={pagination} />
       </div>
 
       {/* Desktop: table */}

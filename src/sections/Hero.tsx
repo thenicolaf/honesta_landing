@@ -25,7 +25,7 @@ export function Hero() {
           alt="Natural dried orange slices — Honesta"
           fill
           priority
-          className="object-cover max-lg:object-left"
+          className="object-cover max-lg:object-left blur-[2px]"
           sizes="100vw"
         />
       </motion.div>

@@ -1,27 +1,27 @@
 "use client";
 
 import { useScroll, useTransform, motion } from "motion/react";
-import Link from "next/link";
 import { Button } from "@/shared/ui";
 import { IconInstagram } from "@/shared/icons";
 import { NavCartButton } from "./NavCartButton";
 import { NotificationBell } from "./NotificationBell";
 import { NavUserButton } from "./NavUserButton";
 import { NavMobileTabBar } from "./NavMobileTabBar";
+import { HashLink } from "./HashLink";
 import { NAV_LINKS } from "./consts";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function NavLogo() {
   return (
-    <Link href="/#hero" className="flex flex-col leading-none select-none">
+    <HashLink href="/#hero" className="flex flex-col leading-none select-none">
       <span className="font-display font-bold text-2xl lg:text-[1.75rem] text-earth tracking-widest uppercase">
         HONESTA
       </span>
       <span className="font-body font-light text-xs uppercase tracking-[0.22em] text-bark mt-0.5 hidden sm:block">
         Sweetness Before Marketing
       </span>
-    </Link>
+    </HashLink>
   );
 }
 
@@ -30,12 +30,12 @@ function NavDesktopLinks() {
     <ul className="hidden lg:flex items-center gap-8">
       {NAV_LINKS.map((link) => (
         <li key={link.href}>
-          <Link
+          <HashLink
             href={link.href}
             className="font-body font-semibold uppercase text-2xs tracking-[0.14em] text-earth/80 hover:text-orange transition-colors duration-200"
           >
             {link.label}
-          </Link>
+          </HashLink>
         </li>
       ))}
     </ul>

@@ -7,6 +7,7 @@ export {
   DataCardGrid,
   DataCardList,
   DataCardEmpty,
+  DataCardPagination,
 } from "./DataCard";
 
 export { useDataCard } from "./context";
