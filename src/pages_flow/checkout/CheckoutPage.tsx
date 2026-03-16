@@ -46,21 +46,19 @@ export function CheckoutPage({ defaultValues }: CheckoutPageProps) {
   return (
     <main className="grow min-h-160 bg-cream pt-24 pb-16 px-4">
       <div className="mx-auto max-w-5xl">
+        <Button href="/cart" variant="outline" size="sm" className="gap-1.5 mb-4">
+          <IconChevron className="w-3.5 h-3.5 rotate-90" aria-hidden />
+          Back to cart
+        </Button>
         <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-moss mb-3 text-center">
           Checkout
         </p>
-        <div className="relative flex items-center justify-center mb-10">
-          <Button href="/cart" variant="outline" size="sm" className="absolute left-0 gap-1.5">
-            <IconChevron className="w-3.5 h-3.5 rotate-90" aria-hidden />
-            Back to cart
-          </Button>
-          <h1
-            className="font-display font-bold italic text-heading leading-tight"
-            style={{ fontSize: "clamp(2rem, 5vw, 3rem)" }}
-          >
-            Your Details
-          </h1>
-        </div>
+        <h1
+          className="font-display font-bold italic text-heading leading-tight text-center mb-10"
+          style={{ fontSize: "clamp(2rem, 5vw, 3rem)" }}
+        >
+          Your Details
+        </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
           <form action={formAction} className="flex flex-col gap-5">
