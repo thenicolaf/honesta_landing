@@ -10,6 +10,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  toastSuccess,
 } from "@/shared/ui";
 import { IconChevron } from "@/shared/icons";
 import { ProductStatus } from "@/shared/types";
@@ -43,11 +44,18 @@ export function ProductStatusMenu({
   const isPublished = status === ProductStatus.PUBLISHED;
   const isArchived = status === ProductStatus.ARCHIVED;
 
+  const STATUS_LABELS: Record<string, string> = {
+    published: "Product published",
+    archived: "Product archived",
+    draft: "Product moved to draft",
+  };
+
   const handleStatusChange = (
     newStatus: "draft" | "published" | "archived",
   ) => {
     startTransition(async () => {
       await updateProductStatus(productId, newStatus);
+      toastSuccess(STATUS_LABELS[newStatus]);
       router.refresh();
     });
   };

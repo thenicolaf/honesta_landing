@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/shared/ui";
+import { Button, toastSuccess, toastInfo } from "@/shared/ui";
 import { IconHeart } from "@/shared/icons";
 import { useFavorites } from "@/providers";
 import { cn } from "@/shared/utils/cn";
@@ -19,7 +19,13 @@ export function FavoriteButton({ productId, className }: FavoriteButtonProps) {
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
+    const wasActive = isFavorite(productId);
     toggleFavorite(productId);
+    if (wasActive) {
+      toastInfo("Removed from favorites");
+    } else {
+      toastSuccess("Added to favorites");
+    }
   };
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { useCart } from "@/providers";
 import { submitCheckout } from "./actions";
 import { CheckoutForm } from "./ui/CheckoutForm";
@@ -9,7 +9,7 @@ import { DELIVERY_FEE } from "@/shared/consts";
 import { CustomerInfo } from "@/shared/types";
 import { CartEmpty } from "@/shared/ui/CartEmpty";
 import { Loader } from "@/shared/ui/Loader";
-import { Button } from "@/shared/ui";
+import { Button, toastError } from "@/shared/ui";
 import { IconChevron } from "@/shared/icons";
 
 interface CheckoutPageProps {
@@ -23,6 +23,13 @@ export function CheckoutPage({ defaultValues }: CheckoutPageProps) {
     submitCheckout.bind(null, items),
     null,
   );
+
+  const prevState = useRef(state);
+  useEffect(() => {
+    if (state === prevState.current) return;
+    prevState.current = state;
+    if (state?.error) toastError(state.error);
+  }, [state]);
 
   if (!isHydrated) {
     return (
@@ -59,7 +66,6 @@ export function CheckoutPage({ defaultValues }: CheckoutPageProps) {
           <form action={formAction} className="flex flex-col gap-5">
             <CheckoutForm
               defaultValues={defaultValues}
-              error={state?.error ?? null}
               fieldErrors={state?.fieldErrors}
               totalWithDelivery={total + DELIVERY_FEE}
             />

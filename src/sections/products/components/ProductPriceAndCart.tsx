@@ -1,7 +1,7 @@
 "use client";
 
 import { Minus, Plus } from "lucide-react";
-import { Button, Badge } from "@/shared/ui";
+import { Button, Badge, toastSuccess, toastInfo } from "@/shared/ui";
 import { useCart } from "@/providers";
 import type { Product } from "../types";
 
@@ -57,6 +57,7 @@ export function ProductPriceAndCart({ product }: ProductPriceAndCartProps) {
     stop(e);
     if (quantity === 1) {
       removeFromCart(product.id!);
+      toastInfo("Removed from cart");
     } else {
       updateItemQuantity(product.id!, quantity - 1);
     }
@@ -75,6 +76,7 @@ export function ProductPriceAndCart({ product }: ProductPriceAndCartProps) {
       price: product.price!,
       image_url: product.image_url,
     });
+    toastSuccess("Added to cart");
   };
 
   if (quantity > 0) {

@@ -1,9 +1,11 @@
 import { Cormorant_Garamond, Jost } from "next/font/google";
+import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 import { metadata as siteMetadata } from "./metadata";
 import { structuredData } from "./structured-data";
 import { Footer, Navbar } from "@/sections";
 import { CartProvider, FavoritesProvider } from "@/providers";
+import { ToastProvider } from "@/shared/ui";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
 
 export { siteMetadata as metadata };
@@ -51,6 +53,7 @@ export default async function RootLayout({
             <Footer />
           </FavoritesProvider>
         </CartProvider>
+        <ToastProvider />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}

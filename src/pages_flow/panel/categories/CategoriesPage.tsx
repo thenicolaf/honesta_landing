@@ -1,5 +1,5 @@
 import { Plus } from "lucide-react";
-import { Button, EmptyState } from "@/shared/ui";
+import { Button, EmptyState, ToastFromUrl } from "@/shared/ui";
 import { getCategories } from "@/lib/categoriesDb";
 import { CategoryActionsProvider } from "./CategoryActionsProvider";
 import { AdminCategoryCard } from "./AdminCategoryCard";
@@ -9,6 +9,7 @@ export async function CategoriesPage() {
 
   return (
     <CategoryActionsProvider>
+      <ToastFromUrl />
       <div className="flex items-center justify-between gap-4 mb-2">
         <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-moss">
           Admin Panel

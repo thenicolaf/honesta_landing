@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
-import { Button } from "@/shared/ui";
+import { useActionState, useEffect, useRef } from "react";
+import { Button, toastSuccess, toastError } from "@/shared/ui";
 import {
   FormLabel,
   FormInput,
@@ -18,6 +18,14 @@ export function PartnershipForm() {
     PartnershipState | null,
     FormData
   >(submitPartnershipInquiry, null);
+
+  const prevState = useRef(state);
+  useEffect(() => {
+    if (state === prevState.current) return;
+    prevState.current = state;
+    if (state?.success) toastSuccess("Partnership inquiry sent!");
+    if (state?.error) toastError(state.error);
+  }, [state]);
 
   if (state?.success) {
     return (

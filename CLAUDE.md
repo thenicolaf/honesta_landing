@@ -46,10 +46,12 @@ src/
 │   │   └── result/page.tsx     # Payment result (polls N-Genius, updates DB)
 │   ├── panel/                  # Authenticated panel segment (/panel/*) — layout adds AdminSidebar
 │   │   ├── layout.tsx          # Reads user via createSupabaseServerClient(), passes email to sidebar
-│   │   ├── page.tsx            # Admin dashboard (requires admin role)
+│   │   ├── page.tsx            # Admin dashboard with statistics (requires admin role)
 │   │   ├── profile/page.tsx    # /panel/profile
 │   │   ├── favorites/page.tsx  # /panel/favorites
 │   │   ├── orders/page.tsx     # /panel/orders
+│   │   ├── all-orders/page.tsx # /panel/all-orders (admin only)
+│   │   ├── partnerships/page.tsx # /panel/partnerships (admin only)
 │   │   ├── categories/page.tsx # /panel/categories (admin only)
 │   │   └── products/           # /panel/products (admin only)
 │   ├── login/page.tsx          # Google OAuth login page
@@ -77,13 +79,20 @@ src/
 │   ├── favorites/              # FavoritesPage + FavoritesGrid
 │   ├── profile/                # ProfilePage + ProfileForm + SignOutButton
 │   │   └── actions.ts          # updateProfile() server action → upserts to profiles table
-│   ├── orders/                 # OrdersPage + OrderCard + EmptyOrders
+│   ├── orders/                 # OrdersPage + OrderCards (user order history)
+│   │   └── ui/                 # StatusBadge, CopyOrderId, OrderCards
+│   ├── panel/
+│   │   ├── dashboard/          # DashboardPage + types (admin statistics)
+│   │   ├── orders/             # AllOrdersPage + AdminOrderCards + filters + useOrdersTable
+│   │   └── partnerships/       # PartnershipsPage + InquiryCards + filters + useInquiriesTable
 │   └── PageLoader.tsx          # Thin wrapper around <Loader /> for route loading.tsx files
 │
 ├── providers/                  # React context providers + hooks
 │   ├── CartProvider.tsx        # useSyncExternalStore-based cart state (hydration-safe)
 │   ├── FavoritesProvider.tsx   # useSyncExternalStore-based favorites state + useOptimistic
-│   └── CategoryFilterProvider.tsx
+│   ├── CategoryFilterProvider.tsx
+│   ├── FilterProvider.tsx      # Generic filter context — useFilterBar(key) hook
+│   └── SearchParamsFilterProvider.tsx  # Syncs FilterProvider state to URL search params
 │
 ├── sections/                   # Landing-page section components
 │   ├── Navbar.tsx, Hero.tsx, PhilosophyBlock.tsx, PartnershipCTA.tsx, TrustBadges.tsx, Footer.tsx
@@ -114,10 +123,12 @@ src/
 | `POST /api/payment/webhook` | N-Genius webhook — updates `orders.status` in Supabase |
 | `/login` | Google OAuth login page |
 | `/auth/callback` | OAuth PKCE code exchange → session cookie → redirect |
-| `/panel` | Admin dashboard (admin only) |
+| `/panel` | Admin dashboard with statistics (admin only) |
 | `/panel/profile` | User profile form (name, phone, address + map) |
 | `/panel/favorites` | Saved favourite products |
 | `/panel/orders` | Order history |
+| `/panel/all-orders` | All orders management (admin only) |
+| `/panel/partnerships` | Partnership inquiries (admin only) |
 | `/panel/categories` | Category management (admin only) |
 | `/panel/categories/create` | Create new category (admin only) |
 | `/panel/categories/[id]/edit` | Edit category (admin only) |
@@ -134,7 +145,7 @@ All panel routes live under `/panel` and share an authenticated layout:
 - `AdminNav` — client component with route-aware active underline
 - `AdminPageHeader` — reusable header with "My Account" label + dynamic `title` prop
 
-**Protected routes:** `src/proxy.ts` guards all `/panel/*` routes — unauthenticated users are redirected to `/login?next={pathname}`. Admin-only routes (`/panel`, `/panel/categories`, `/panel/products`) require `role=admin`; user routes (`/panel/profile`, `/panel/favorites`, `/panel/orders`) are available to any authenticated user.
+**Protected routes:** `src/proxy.ts` guards all `/panel/*` routes — unauthenticated users are redirected to `/login?next={pathname}`. User routes (`/panel/profile`, `/panel/favorites`, `/panel/orders`) are whitelisted for any authenticated user; all other `/panel/*` routes require `role=admin`.
 
 ## Favorites
 
@@ -244,15 +255,44 @@ All use `class-variance-authority` (cva) for variants + `cn()` for className mer
 Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React context internally; sub-components access it via a `use*` hook. Follow this same pattern when adding new compound components.
 
 - **`Button`** — defaults to `<a>`, pass `as="button"` for `<button>`. Variants: `primary | secondary | ghost`. Sizes: `sm | md | lg`.
-- **`Badge`** — inline label/tag. Variants: `natural` (moss green) | `warm` (sand) | `outline`.
+- **`Badge`** — inline label/tag. Variants: `natural` (moss green) | `warm` (sand) | `outline`. Sizes: `xs | sm | md`.
 - **`Card`** — wrapper with 16px radius. Variants: `default` (white-warm) | `sand` | `outline` | `dark` (earth bg).
 - **`TagToolbar` / `TagToolbarItem`** — single-select pill filter bar (`role="radiogroup"`). Controlled or uncontrolled via `value`/`onValueChange`/`defaultValue`. Empty string `""` means "All".
 - **`Collapsible` / `CollapsibleTrigger` / `CollapsibleChevron` / `CollapsibleContent`** — animated accordion using `motion/react` `AnimatePresence`.
 - **`Select` / `SelectTrigger` / `SelectValue` / `SelectContent` / `SelectItem` / `SelectGroup` / `SelectSeparator`** — custom dropdown, context-based, supports controlled/uncontrolled, `clearable` prop, auto up/down direction.
 - **`Form` components** — `FormLabel`, `FormInput`, `FormSelect`, `FormTextarea`, `FormError` — CVA variants with `default` / `error` states. `FormSelect` wraps the `Select` compound component.
 - **`DropdownMenu` / `DropdownMenuTrigger` / `DropdownMenuContent` / `DropdownMenuItem` / `DropdownMenuSeparator` / `DropdownMenuLabel`** — context-based dropdown menu with auto up/down direction, outside-click and Escape close, `destructive` + `disabled` item variants.
+- **`Table` / `TableHeader` / `TableHeaderRow` / `TableHead` / `TableBody` / `TableRow` / `TableCell` / `TableEmpty` / `TablePagination`** — compound table with sticky header, sort indicators, dividers. Context-based (`useTable`).
+- **`DataTable`** — declarative wrapper: pass `data`, `columns: ColumnDef[]`, `sort`, `pagination` and it renders a full `Table`. Hooks: `useTableSort`, `useTableData`, `useTableSearch`, `useTablePagination`. Helpers: `formatAed`, `formatDate`, `formatDateTime`, `shortId`, comparators (`compareString`, `compareNumber`, `compareDate`).
+- **`DataCard` / `DataCardHeader` / `DataCardBody` / `DataCardField` / `DataCardFooter` / `DataCardGrid` / `DataCardList` / `DataCardEmpty`** — compound card for mobile-friendly data display. Context-based (`useDataCard`). `DataCardList` uses CSS grid (`grid-cols-1` default, pass `className` for responsive cols). `DataCardGrid` is a declarative helper that renders `FieldDef[]`.
 - **`CartEmpty`** — empty cart placeholder screen.
 - **`Loader`** — loading spinner (used during cart hydration).
+
+## Responsive table/cards pattern
+
+Admin data pages (orders, partnerships) use a dual-render approach:
+- `< xl` — `DataCard` cards via `DataCardList` (typically `md:grid-cols-2` for 2 columns from 768px)
+- `xl+` — `DataTable` with full sorting and pagination
+
+Both views share the same `paginatedData` from hooks like `useOrdersTable` / `useInquiriesTable`, which manage sort + pagination state via URL search params (`SearchParamsFilterProvider` + `useFilterBar`).
+
+```tsx
+{/* Mobile: cards */}
+<div className="xl:hidden">
+  <OrderCards orders={paginatedData} />
+</div>
+{/* Desktop: table */}
+<div className="hidden xl:block">
+  <DataTable data={paginatedData} columns={columns} ... />
+</div>
+```
+
+## Filter system
+
+- **`FilterProvider`** (`src/providers/FilterProvider.tsx`) — generic React context for `Record<string, string>` filter state. `useFilterBar(key)` returns `{ value, onValueChange }`.
+- **`SearchParamsFilterProvider`** (`src/providers/SearchParamsFilterProvider.tsx`) — wraps `FilterProvider` and syncs state to URL search params (supports browser back/forward).
+- Filter keys typically: `["search", "status"|"type", "sortKey", "sortDir", "page", "pageSize"]`.
+- Always reset `page` filter when changing search/status filters.
 
 ## Key business logic
 

@@ -1,9 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
-import { FormLabel, FormInput, FormError, Button } from "@/shared/ui";
-import { IconCheckCircle } from "@/shared/icons";
+import { FormLabel, FormInput, FormError, Button, toastSuccess, toastError } from "@/shared/ui";
 import { AddressWithMap } from "@/pages_flow/checkout/ui/AddressWithMap";
 import { updateProfile, type ProfileState } from "./actions";
 
@@ -40,6 +39,14 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
     updateProfile,
     null,
   );
+
+  const prevState = useRef(state);
+  useEffect(() => {
+    if (state === prevState.current) return;
+    prevState.current = state;
+    if (state?.success) toastSuccess("Profile updated");
+    if (state?.error) toastError(state.error);
+  }, [state]);
 
   return (
     <form action={action} className="flex flex-col gap-5">
@@ -111,21 +118,6 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
         }
         error={state?.fieldErrors?.address}
       />
-
-      {/* General error */}
-      {state?.error && (
-        <p className="font-body text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-          {state.error}
-        </p>
-      )}
-
-      {/* Success */}
-      {state?.success && (
-        <div className="flex items-center gap-2 text-moss font-body text-sm bg-moss/10 border border-moss/20 rounded-xl px-4 py-3">
-          <IconCheckCircle className="w-4 h-4 shrink-0" aria-hidden />
-          Profile updated successfully
-        </div>
-      )}
 
       <SubmitButton />
     </form>

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { Minus, Plus } from "lucide-react";
-import { Button, Card } from "@/shared/ui";
+import { Button, Card, toastInfo } from "@/shared/ui";
 import { useCart } from "@/providers";
 
 export function CartItems() {
@@ -42,11 +42,14 @@ export function CartItems() {
                 as="button"
                 variant="outline"
                 size="icon"
-                onClick={() =>
-                  item.quantity === 1
-                    ? removeFromCart(item.id)
-                    : updateItemQuantity(item.id, item.quantity - 1)
-                }
+                onClick={() => {
+                  if (item.quantity === 1) {
+                    removeFromCart(item.id);
+                    toastInfo("Removed from cart");
+                  } else {
+                    updateItemQuantity(item.id, item.quantity - 1);
+                  }
+                }}
                 aria-label="Decrease quantity"
               >
                 <Minus className="w-3.5 h-3.5" />

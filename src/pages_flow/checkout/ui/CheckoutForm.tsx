@@ -13,14 +13,12 @@ import type { CustomerErrors } from "@/shared/utils/validateCustomer";
 
 interface CheckoutFormProps {
   defaultValues?: Partial<CustomerInfo>;
-  error?: string | null;
   fieldErrors?: CustomerErrors;
   totalWithDelivery: number;
 }
 
 export function CheckoutForm({
   defaultValues = {},
-  error,
   fieldErrors,
   totalWithDelivery,
 }: CheckoutFormProps) {
@@ -113,12 +111,6 @@ export function CheckoutForm({
           placeholder="Any special instructions for delivery..."
         />
       </div>
-
-      {error && (
-        <p className="font-body text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-          {error}
-        </p>
-      )}
 
       <SubmitButton totalWithDelivery={totalWithDelivery} />
 

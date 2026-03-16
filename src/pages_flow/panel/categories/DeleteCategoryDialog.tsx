@@ -14,6 +14,7 @@ import {
   DialogClose,
   useDialog,
   Button,
+  toastSuccess,
 } from "@/shared/ui";
 import { deleteCategory } from "./actions";
 
@@ -26,6 +27,7 @@ function DeleteConfirm({ id }: { id: string; name: string }) {
     startTransition(async () => {
       await deleteCategory(id);
       close();
+      toastSuccess("Category deleted");
       router.refresh();
     });
   }

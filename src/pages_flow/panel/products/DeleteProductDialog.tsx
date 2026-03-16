@@ -12,6 +12,7 @@ import {
   DialogClose,
   useDialog,
   Button,
+  toastSuccess,
 } from "@/shared/ui";
 import { deleteProduct } from "./actions";
 
@@ -24,6 +25,7 @@ function DeleteConfirm({ id }: { id: string }) {
     startTransition(async () => {
       await deleteProduct(id);
       close();
+      toastSuccess("Product deleted");
       router.refresh();
     });
   }

@@ -56,7 +56,7 @@ export async function createCategory(
     return { error: "Failed to create category. Please try again.", values };
   }
 
-  redirect("/panel/categories");
+  redirect("/panel/categories?toast=created");
 }
 
 export async function updateCategory(
@@ -103,7 +103,7 @@ export async function updateCategory(
     await deleteImage(existing.image_url, "categories");
   }
 
-  redirect("/panel/categories");
+  redirect("/panel/categories?toast=updated");
 }
 
 export async function deleteCategory(

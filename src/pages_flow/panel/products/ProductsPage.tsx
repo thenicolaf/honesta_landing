@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { Button, FilterBar, EmptyState } from "@/shared/ui";
+import { Button, FilterBar, EmptyState, ToastFromUrl } from "@/shared/ui";
 import { ProductStatus } from "@/shared/types";
 import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvider";
 import { useFilterBar } from "@/providers/FilterProvider";
@@ -85,6 +85,7 @@ interface ProductsPageProps {
 export function ProductsPage({ products, categories }: ProductsPageProps) {
   return (
     <ProductActionsProvider>
+      <ToastFromUrl />
       <div className="flex items-center justify-between gap-4 mb-2">
         <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-moss">
           Admin Panel
