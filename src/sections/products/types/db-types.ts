@@ -24,6 +24,16 @@ export interface DbProduct {
   product_serving_ideas: { serving_idea_options: { label: string } }[];
   product_occasions: { occasion_options: { label: string } }[];
   product_benefits: { benefits: { name: string; description: string } }[];
+  promotion_products: {
+    promotions: {
+      name: string;
+      discount_type: string;
+      discount_value: number;
+      ends_at: string;
+      is_active: boolean;
+      starts_at: string;
+    };
+  }[];
 }
 
 export interface CategoryItem {

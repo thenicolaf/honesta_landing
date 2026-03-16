@@ -1,5 +1,6 @@
 import type { AdminDbProduct } from "@/lib/productsDb";
-import type { Benefit, NutritionInfo } from "../types";
+import type { Benefit, NutritionInfo, Product } from "../types";
+import { calculateDiscountedPrice, findActivePromotion } from "@/shared/utils/calculateDiscount";
 
 export function mapNutrition(
   raw: AdminDbProduct["nutrition"],
@@ -26,9 +27,13 @@ export interface MappedAdminProduct {
   nutrition: NutritionInfo | undefined;
   servingIdeas: string[];
   occasions: string[];
+  promotion: Product["promotion"];
 }
 
 export function mapAdminProduct(product: AdminDbProduct): MappedAdminProduct {
+  const originalPrice = Number(product.price);
+  const activePromo = findActivePromotion(product.promotion_products);
+
   return {
     category: product.categories?.name ?? "—",
     tagline: product.tagline ?? "",
@@ -44,5 +49,18 @@ export function mapAdminProduct(product: AdminDbProduct): MappedAdminProduct {
     occasions: product.product_occasions.map(
       (po) => po.occasion_options.label,
     ),
+    promotion: activePromo
+      ? {
+          name: activePromo.name,
+          discountType: activePromo.discount_type as "percentage" | "fixed",
+          discountValue: Number(activePromo.discount_value),
+          discountedPrice: calculateDiscountedPrice(
+            originalPrice,
+            activePromo.discount_type as "percentage" | "fixed",
+            Number(activePromo.discount_value),
+          ),
+          endsAt: activePromo.ends_at,
+        }
+      : undefined,
   };
 }

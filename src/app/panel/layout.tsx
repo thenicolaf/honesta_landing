@@ -16,7 +16,7 @@ export default async function AdminLayout({
     : { data: null };
 
   return (
-    <main className="grow bg-cream pt-24 pb-12 md:pb-16">
+    <main className="grow min-h-160 bg-cream pt-24 pb-12 md:pb-16">
       <div className="flex flex-col lg:flex-row gap-6 items-start justify-center px-4 md:px-6 lg:px-10">
         <AdminSidebar
           email={user?.email ?? ""}

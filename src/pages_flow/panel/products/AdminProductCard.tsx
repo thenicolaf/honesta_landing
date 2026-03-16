@@ -8,6 +8,7 @@ import {
   ProductHeader,
   ProductTitle,
   ProductWeight,
+  ProductPrice,
   ProductTags,
   ProductFreeFrom,
   ProductDetails,
@@ -27,6 +28,7 @@ export function AdminProductCard({ product }: { product: AdminDbProduct }) {
     nutrition,
     servingIdeas,
     occasions,
+    promotion,
   } = mapAdminProduct(product);
 
   return (
@@ -38,6 +40,7 @@ export function AdminProductCard({ product }: { product: AdminDbProduct }) {
         image_url={product.image_url ?? ""}
         title={product.title}
         tagline={tagline}
+        sale={!!promotion}
       />
 
       <div className="flex-1 p-5 flex flex-col gap-3">
@@ -55,9 +58,7 @@ export function AdminProductCard({ product }: { product: AdminDbProduct }) {
 
         {/* Price + weight */}
         <div className="flex items-center gap-3 text-sm font-body">
-          <span className="font-semibold text-earth">
-            {parseFloat(product.price).toFixed(2)} AED
-          </span>
+          <ProductPrice price={parseFloat(product.price)} promotion={promotion} />
           <ProductWeight weight_g={product.weight_g ?? undefined} />
         </div>
 

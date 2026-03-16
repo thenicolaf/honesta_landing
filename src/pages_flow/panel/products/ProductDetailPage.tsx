@@ -11,6 +11,7 @@ import {
   ProductExpandedDetails,
   ProductDetailImage,
   ProductTagline,
+  ProductPrice,
   ProductStatusMenu,
 } from "@/sections/products/components";
 
@@ -32,6 +33,7 @@ function ProductDetailContent({ product }: ProductDetailPageProps) {
     nutrition,
     servingIdeas,
     occasions,
+    promotion,
   } = mapAdminProduct(product);
 
   return (
@@ -82,9 +84,7 @@ function ProductDetailContent({ product }: ProductDetailPageProps) {
 
           {/* Price + weight */}
           <div className="flex items-center gap-3 text-sm font-body">
-            <span className="font-semibold text-earth">
-              {parseFloat(product.price).toFixed(2)} AED
-            </span>
+            <ProductPrice price={parseFloat(product.price)} promotion={promotion} />
             <ProductWeight weight_g={product.weight_g ?? undefined} />
           </div>
 

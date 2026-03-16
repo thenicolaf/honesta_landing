@@ -4,7 +4,7 @@ import { Button } from "@/shared/ui";
 
 export function CartEmpty() {
   return (
-    <main className="grow bg-cream flex items-center justify-center px-4 py-16">
+    <main className="grow min-h-160 bg-cream flex items-center justify-center px-4 py-16">
       <div className="text-center max-w-sm">
         <p
           className="font-display font-semibold text-heading/10 leading-none select-none mb-6"

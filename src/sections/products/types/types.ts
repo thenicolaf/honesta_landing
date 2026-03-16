@@ -41,6 +41,14 @@ export interface Product {
   nutrition?: NutritionInfo;
   servingIdeas?: string[];
   occasions?: string[];
+  /** Active promotion applied to this product */
+  promotion?: {
+    name: string;
+    discountType: "percentage" | "fixed";
+    discountValue: number;
+    discountedPrice: number;
+    endsAt: string;
+  };
 }
 
 /** Cart item stored in localStorage["cart"] — name maps to Product.title */
@@ -49,6 +57,8 @@ export interface CartItem {
   /** Display name — snapshot of Product.title at time of adding to cart */
   name: string;
   price: number;
+  /** Original price before discount — present only when a promotion is active */
+  originalPrice?: number;
   quantity: number;
   image_url?: string;
 }

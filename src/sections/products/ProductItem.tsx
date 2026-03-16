@@ -32,6 +32,7 @@ export function ProductItem({ product }: ProductItemProps) {
     benefits,
     nutrition,
     servingIdeas,
+    occasions,
   } = product;
 
   const card = (
@@ -40,6 +41,7 @@ export function ProductItem({ product }: ProductItemProps) {
         image_url={image_url}
         title={title}
         tagline={tagline}
+        sale={!!product.promotion}
         topRight={
           product.id ? (
             <FavoriteButton
@@ -60,6 +62,7 @@ export function ProductItem({ product }: ProductItemProps) {
           benefits={benefits}
           nutrition={nutrition}
           servingIdeas={servingIdeas}
+          occasions={occasions}
         />
         <ProductPriceAndCart product={product} />
       </div>

@@ -5,6 +5,7 @@ type CartRow = {
   product_id: string;
   name: string;
   price: number;
+  original_price: number | null;
   quantity: number;
   image_url: string | null;
 };
@@ -14,7 +15,7 @@ export async function getCartFromDb(
 ): Promise<CartItem[]> {
   const { data, error } = await supabase
     .from("cart_items")
-    .select("product_id, name, price, quantity, image_url");
+    .select("product_id, name, price, original_price, quantity, image_url");
 
   if (error || !data) return [];
 
@@ -22,6 +23,7 @@ export async function getCartFromDb(
     id: row.product_id,
     name: row.name,
     price: row.price,
+    originalPrice: row.original_price ?? undefined,
     quantity: row.quantity,
     image_url: row.image_url ?? undefined,
   }));
@@ -38,6 +40,7 @@ export async function upsertItemInDb(
       product_id: item.id,
       name: item.name,
       price: item.price,
+      original_price: item.originalPrice ?? null,
       quantity: item.quantity,
       image_url: item.image_url ?? null,
       updated_at: new Date().toISOString(),

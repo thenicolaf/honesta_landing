@@ -24,6 +24,7 @@ import {
   updateQuantityInDb,
   clearCartInDb,
 } from "@/lib/cartDb";
+import { syncCartPrices } from "@/lib/syncCartPrices";
 
 // ─── External cart store ───────────────────────────────────────────────────────
 
@@ -99,13 +100,19 @@ export function CartProvider({
 
   useEffect(() => {
     resetStore();
+    const supabase = createSupabaseBrowserClient();
+
+    async function loadAndSync(cartItems: CartItem[]) {
+      const { items: synced } = await syncCartPrices(supabase, cartItems);
+      setStore(synced);
+    }
+
     if (userId) {
-      const supabase = createSupabaseBrowserClient();
       supabaseRef.current = supabase;
-      getCartFromDb(supabase).then(setStore);
+      getCartFromDb(supabase).then(loadAndSync);
     } else {
       supabaseRef.current = null;
-      setStore(getCart());
+      loadAndSync(getCart());
     }
   }, [userId]);
 
@@ -125,6 +132,7 @@ export function CartProvider({
         id: item.id,
         name: item.name,
         price: item.price,
+        originalPrice: item.originalPrice,
         quantity: newQty,
         image_url: item.image_url,
       });

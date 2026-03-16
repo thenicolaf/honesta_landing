@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Badge } from "@/shared/ui";
 import { IconInfo } from "@/shared/icons";
 
 interface ProductImageProps {
@@ -7,6 +8,8 @@ interface ProductImageProps {
   tagline: string;
   /** Slot rendered in top-right corner (e.g. FavoriteButton) */
   topRight?: React.ReactNode;
+  /** Show SALE badge in top-left corner */
+  sale?: boolean;
 }
 
 export function ProductImage({
@@ -14,6 +17,7 @@ export function ProductImage({
   title,
   tagline,
   topRight,
+  sale,
 }: ProductImageProps) {
   return (
     <div
@@ -34,6 +38,12 @@ export function ProductImage({
         />
       ) : (
         <div className="w-full h-full bg-sand transition-transform duration-500 group-hover/img:scale-105 group-focus/img:scale-105" />
+      )}
+
+      {sale && (
+        <Badge variant="counter" size="sm" className="absolute top-3 left-3 z-20">
+          SALE
+        </Badge>
       )}
 
       {topRight}

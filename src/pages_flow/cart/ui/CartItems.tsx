@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { Minus, Plus } from "lucide-react";
-import { Button, Card, toastInfo } from "@/shared/ui";
+import { Button, Badge, Card, toastInfo } from "@/shared/ui";
 import { useCart } from "@/providers";
 
 export function CartItems() {
@@ -31,9 +31,23 @@ export function CartItems() {
               <p className="font-body font-semibold text-earth text-sm leading-snug truncate">
                 {item.name}
               </p>
-              <p className="font-body font-light text-earth/55 text-xs mt-0.5">
-                AED {item.price} each
-              </p>
+              {item.originalPrice && item.originalPrice !== item.price ? (
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="font-body font-semibold text-orange text-xs">
+                    AED {item.price} each
+                  </span>
+                  <span className="font-body text-earth/30 text-xs line-through">
+                    AED {item.originalPrice}
+                  </span>
+                  <Badge variant="counter" size="pill">
+                    -{Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)}%
+                  </Badge>
+                </div>
+              ) : (
+                <p className="font-body font-light text-earth/55 text-xs mt-0.5">
+                  AED {item.price} each
+                </p>
+              )}
             </div>
 
             {/* Quantity controls */}
@@ -69,9 +83,16 @@ export function CartItems() {
             </div>
 
             {/* Line total */}
-            <p className="font-body font-semibold text-earth whitespace-nowrap text-sm shrink-0 text-right">
-              AED {(item.price * item.quantity).toFixed(2)}
-            </p>
+            <div className="shrink-0 text-right">
+              <p className="font-body font-semibold text-earth whitespace-nowrap text-sm">
+                AED {(item.price * item.quantity).toFixed(2)}
+              </p>
+              {item.originalPrice && item.originalPrice !== item.price && (
+                <p className="font-body text-earth/30 text-xs line-through whitespace-nowrap">
+                  AED {(item.originalPrice * item.quantity).toFixed(2)}
+                </p>
+              )}
+            </div>
           </div>
         </Card>
       ))}

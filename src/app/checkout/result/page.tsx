@@ -19,7 +19,7 @@ export default async function CheckoutResultPage({
 
   if (!ref) {
     return (
-      <main className="grow bg-cream flex items-center justify-center px-4 py-16">
+      <main className="grow min-h-160 bg-cream flex items-center justify-center px-4 py-16">
         <Card variant="default" padding="lg" className="max-w-md w-full text-center">
           <p className="font-body text-earth mb-6">Missing order reference.</p>
           <Button href="/">Back to Home</Button>
@@ -64,7 +64,7 @@ export default async function CheckoutResultPage({
   }
 
   return (
-    <main className="grow bg-cream flex items-center justify-center px-4 py-16">
+    <main className="grow min-h-160 bg-cream flex items-center justify-center px-4 py-16">
       <ClearCartOnSuccess success={success} />
       <div className="max-w-md w-full">
         <Card variant="default" padding="lg" className="text-center">

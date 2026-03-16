@@ -6,7 +6,7 @@ import { CategoriesSection, ProductsSection } from "@/pages_flow/home";
 
 export default async function Home() {
   return (
-    <main className="grow">
+    <main className="grow min-h-160">
       <Hero />
       <TrustBadges />
       <SearchParamsFilterProvider keys={["category"]}>

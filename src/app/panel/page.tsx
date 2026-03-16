@@ -4,7 +4,7 @@ import { DashboardPage } from "@/pages_flow/panel/dashboard/DashboardPage";
 import type { DashboardStats, ProductSales } from "@/pages_flow/panel/dashboard/types";
 
 export default async function PanelPage() {
-  const [ordersRes, productsRes, categoriesRes, partnershipsRes, profilesRes] =
+  const [ordersRes, productsRes, categoriesRes, partnershipsRes, profilesRes, promotionsRes] =
     await Promise.all([
       supabaseAdmin
         .from("orders")
@@ -19,6 +19,11 @@ export default async function PanelPage() {
       supabaseAdmin
         .from("profiles")
         .select("id", { count: "exact", head: true }),
+      supabaseAdmin
+        .from("promotions")
+        .select("id, name, discount_type, discount_value, ends_at, promotion_products(product_id)")
+        .eq("is_active", true)
+        .gte("ends_at", new Date().toISOString()),
     ]);
 
   // ── Orders aggregation ──────────────────────────────────────────────────
@@ -94,6 +99,14 @@ export default async function PanelPage() {
     users: {
       total: profilesRes.count ?? 0,
     },
+    activePromotions: (promotionsRes.data ?? []).map((p) => ({
+      id: p.id,
+      name: p.name,
+      discount_type: p.discount_type,
+      discount_value: Number(p.discount_value),
+      ends_at: p.ends_at,
+      product_count: (p.promotion_products as { product_id: string }[])?.length ?? 0,
+    })),
   };
 
   return <DashboardPage stats={stats} />;

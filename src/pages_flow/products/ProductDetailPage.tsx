@@ -33,10 +33,11 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
     benefits,
     nutrition,
     servingIdeas,
+    occasions,
   } = product;
 
   return (
-    <main className="grow bg-cream pt-24 pb-16">
+    <main className="grow min-h-160 bg-cream pt-24 pb-16">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         {/* Back link */}
         <Button
@@ -83,6 +84,7 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
               benefits={benefits}
               nutrition={nutrition}
               servingIdeas={servingIdeas}
+              occasions={occasions}
             />
           </div>
         </div>

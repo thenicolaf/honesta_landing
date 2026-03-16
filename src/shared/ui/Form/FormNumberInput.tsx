@@ -9,6 +9,10 @@ interface FormNumberInputProps {
   id?: string;
   name: string;
   defaultValue?: string | number;
+  /** Controlled value (number). When provided, component becomes controlled. */
+  value?: number;
+  /** Called when value changes in controlled mode. */
+  onValueChange?: (value: number) => void;
   placeholder?: string;
   min?: number;
   max?: number;
@@ -21,6 +25,8 @@ export function FormNumberInput({
   id,
   name,
   defaultValue = "",
+  value: controlledValue,
+  onValueChange,
   placeholder = "0",
   min,
   max,
@@ -28,7 +34,15 @@ export function FormNumberInput({
   state,
   className,
 }: FormNumberInputProps) {
-  const [value, setValue] = useState(String(defaultValue));
+  const [internalValue, setInternalValue] = useState(String(defaultValue));
+  const isControlled = controlledValue !== undefined;
+  const value = isControlled ? String(controlledValue) : internalValue;
+
+  const updateValue = (v: string) => {
+    if (!isControlled) setInternalValue(v);
+    const num = parseFloat(v);
+    if (!isNaN(num)) onValueChange?.(num);
+  };
   const inputRef = useRef<HTMLInputElement>(null);
 
   const numValue = parseFloat(value) || 0;
@@ -44,12 +58,12 @@ export function FormNumberInput({
 
   const decrement = () => {
     if (!canDecrement) return;
-    setValue(clamp(numValue - step));
+    updateValue(clamp(numValue - step));
   };
 
   const increment = () => {
     if (!canIncrement) return;
-    setValue(clamp(numValue + step));
+    updateValue(clamp(numValue + step));
   };
 
   return (
@@ -82,7 +96,7 @@ export function FormNumberInput({
         type="number"
         name={name}
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => updateValue(e.target.value)}
         placeholder={placeholder}
         min={min}
         max={max}

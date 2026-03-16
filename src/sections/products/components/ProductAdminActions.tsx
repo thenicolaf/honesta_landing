@@ -40,7 +40,7 @@ export function ProductAdminActions({
         startIcon={<Pencil size={12} aria-hidden="true" />}
         onClick={(e) => {
           stop(e);
-          router.push(`/products/${productId}/edit`);
+          router.push(`/panel/products/${productId}/edit`);
         }}
         aria-label={`Edit ${productTitle}`}
         className="grow"

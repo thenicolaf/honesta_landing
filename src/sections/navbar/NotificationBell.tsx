@@ -8,6 +8,7 @@ import {
   Popover,
   PopoverTrigger,
   PopoverContent,
+  getNotificationStyle,
 } from "@/shared/ui";
 import { formatDateTime } from "@/shared/ui/Table";
 import { useNotifications } from "@/providers";
@@ -15,6 +16,7 @@ import { cn } from "@/shared/utils/cn";
 
 function NotificationItem({
   id,
+  type,
   title,
   message,
   is_read,
@@ -22,12 +24,15 @@ function NotificationItem({
   onRead,
 }: {
   id: string;
+  type: string;
   title: string;
   message: string | null;
   is_read: boolean;
   created_at: string;
   onRead: (id: string) => void;
 }) {
+  const style = getNotificationStyle(type);
+
   return (
     <button
       type="button"
@@ -37,10 +42,10 @@ function NotificationItem({
         is_read ? "opacity-50" : "hover:bg-sand/30",
       )}
     >
-      <div className="flex items-start gap-2">
-        {!is_read && (
-          <span className="mt-1.5 w-2 h-2 rounded-full bg-orange shrink-0" />
-        )}
+      <div className="flex items-start gap-2.5">
+        <div className={cn("rounded-lg p-1.5 shrink-0 mt-0.5", style.bg, style.iconColor)}>
+          {style.icon}
+        </div>
         <div className="min-w-0 flex-1">
           <p className="font-body font-semibold text-sm text-earth truncate">
             {title}
@@ -54,6 +59,9 @@ function NotificationItem({
             {formatDateTime(created_at)}
           </p>
         </div>
+        {!is_read && (
+          <span className={cn("mt-2 w-2 h-2 rounded-full shrink-0", style.dot)} />
+        )}
       </div>
     </button>
   );

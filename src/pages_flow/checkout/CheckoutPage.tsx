@@ -33,7 +33,7 @@ export function CheckoutPage({ defaultValues }: CheckoutPageProps) {
 
   if (!isHydrated) {
     return (
-      <main className="grow">
+      <main className="grow min-h-160">
         <Loader />
       </main>
     );
@@ -44,7 +44,7 @@ export function CheckoutPage({ defaultValues }: CheckoutPageProps) {
   }
 
   return (
-    <main className="grow bg-cream pt-24 pb-16 px-4">
+    <main className="grow min-h-160 bg-cream pt-24 pb-16 px-4">
       <div className="mx-auto max-w-5xl">
         <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-moss mb-3 text-center">
           Checkout

@@ -29,4 +29,12 @@ export type DashboardStats = {
   users: {
     total: number;
   };
+  activePromotions: {
+    id: string;
+    name: string;
+    discount_type: string;
+    discount_value: number;
+    ends_at: string;
+    product_count: number;
+  }[];
 };

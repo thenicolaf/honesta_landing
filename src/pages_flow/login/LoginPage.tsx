@@ -2,7 +2,7 @@ import { GoogleSignInButton } from "./GoogleSignInButton";
 
 export function LoginPage({ next }: { next: string }) {
   return (
-    <main className="grow bg-cream flex items-center justify-center px-4">
+    <main className="grow min-h-160 bg-cream flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-10">
           <h1 className="font-display font-bold italic text-heading text-[2rem] leading-tight mb-2">

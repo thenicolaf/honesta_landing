@@ -108,6 +108,7 @@ export {
   type FieldDef,
 } from "./DataCard";
 export { ToastProvider, toastSuccess, toastError, toastInfo } from "./Toast";
+export { getNotificationStyle } from "./NotificationTypeConfig";
 export { Popover, PopoverTrigger, PopoverContent, usePopover } from "./Popover";
 export { ToastFromUrl } from "./ToastFromUrl";
 export {

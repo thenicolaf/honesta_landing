@@ -7,6 +7,13 @@ import { DELIVERY_FEE } from "@/shared/consts";
 export function OrderSummary() {
   const { items, total } = useCart();
 
+  const totalDiscount = items.reduce((sum, item) => {
+    if (item.originalPrice && item.originalPrice > item.price) {
+      return sum + (item.originalPrice - item.price) * item.quantity;
+    }
+    return sum;
+  }, 0);
+
   return (
     <div className="lg:sticky lg:top-24">
       <Card variant="sand" padding="md">
@@ -44,6 +51,16 @@ export function OrderSummary() {
               AED {total}
             </span>
           </div>
+          {totalDiscount > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="font-body font-light text-moss text-sm">
+                Discount
+              </span>
+              <span className="font-body font-semibold text-moss text-sm">
+                −AED {totalDiscount.toFixed(2)}
+              </span>
+            </div>
+          )}
           <div className="flex justify-between items-center">
             <span className="font-body font-light text-earth/60 text-sm">
               Delivery

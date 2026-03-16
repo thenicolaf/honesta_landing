@@ -28,6 +28,9 @@ export function addItem(
   const existing = cart.find((c) => c.id === item.id);
   if (existing) {
     existing.quantity += item.quantity ?? 1;
+    if (item.originalPrice !== undefined) {
+      existing.originalPrice = item.originalPrice;
+    }
   } else {
     cart.push({ ...item, quantity: item.quantity ?? 1 });
   }

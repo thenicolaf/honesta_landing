@@ -3,10 +3,14 @@
 import { Minus, Plus } from "lucide-react";
 import { Button, Badge, toastSuccess, toastInfo } from "@/shared/ui";
 import { useCart } from "@/providers";
+import { ProductPrice } from "./ProductPrice";
 import type { Product } from "../types";
 
 interface ProductPriceAndCartProps {
-  product: Pick<Product, "id" | "title" | "price" | "image_url" | "in_stock">;
+  product: Pick<
+    Product,
+    "id" | "title" | "price" | "image_url" | "in_stock" | "promotion"
+  >;
 }
 
 function stop(e: React.MouseEvent) {
@@ -19,17 +23,14 @@ export function ProductPriceAndCart({ product }: ProductPriceAndCartProps) {
   const cartItem = items.find((i) => i.id === product.id);
   const quantity = cartItem?.quantity ?? 0;
 
-  const priceLabel =
-    product.price != null ? (
-      <span className="font-body font-semibold text-earth text-sm">
-        AED {product.price}
-      </span>
-    ) : null;
+  const effectivePrice = product.promotion
+    ? product.promotion.discountedPrice
+    : product.price;
 
   if (product.in_stock === false) {
     return (
       <div className="mt-auto flex items-center justify-between gap-3 pt-1">
-        {priceLabel}
+        <ProductPrice price={product.price!} promotion={product.promotion} />
         <Badge variant="outline" size="md">
           Out of Stock
         </Badge>
@@ -73,7 +74,8 @@ export function ProductPriceAndCart({ product }: ProductPriceAndCartProps) {
     addToCart({
       id: product.id!,
       name: product.title,
-      price: product.price!,
+      price: effectivePrice!,
+      originalPrice: product.price!,
       image_url: product.image_url,
     });
     toastSuccess("Added to cart");
@@ -82,7 +84,7 @@ export function ProductPriceAndCart({ product }: ProductPriceAndCartProps) {
   if (quantity > 0) {
     return (
       <div className="mt-auto flex items-center justify-between gap-3 pt-1">
-        {priceLabel}
+        <ProductPrice price={product.price} promotion={product.promotion} />
         <div className="flex items-center gap-2">
           <Button
             as="button"
@@ -112,7 +114,7 @@ export function ProductPriceAndCart({ product }: ProductPriceAndCartProps) {
 
   return (
     <div className="mt-auto flex items-center justify-between gap-3 pt-1">
-      {priceLabel}
+      <ProductPrice price={product.price} promotion={product.promotion} />
       <Button as="button" variant="primary" size="sm" onClick={handleAdd}>
         Add to Cart
       </Button>

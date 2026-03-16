@@ -14,6 +14,7 @@ export {
 } from "./ProductDetails";
 export { ProductDetailImage } from "./ProductDetailImage";
 export { ProductTagline } from "./ProductTagline";
+export { ProductPrice } from "./ProductPrice";
 export { ProductPriceAndCart } from "./ProductPriceAndCart";
 export { FavoriteButton } from "./FavoriteButton";
 export { ProductAdminActions } from "./ProductAdminActions";
