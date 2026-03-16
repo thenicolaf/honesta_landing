@@ -7,3 +7,7 @@ export {
   type FilterValues,
 } from "./FilterProvider";
 export { SearchParamsFilterProvider } from "./SearchParamsFilterProvider";
+export {
+  NotificationsProvider,
+  useNotifications,
+} from "./NotificationsProvider";

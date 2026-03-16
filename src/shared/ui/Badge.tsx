@@ -9,11 +9,13 @@ const badgeVariants = cva(
         natural: "bg-moss/10 text-moss border border-moss/20",
         warm:    "bg-sand text-bark border border-parchment",
         outline: "bg-transparent text-earth border border-parchment",
+        counter: "bg-orange text-white-warm border-0 tracking-normal normal-case",
       },
       size: {
         xs: "px-2 py-0.5 text-xs",
         sm: "px-3 py-1 text-2xs",
         md: "px-4 py-1.5 text-2xs",
+        pill: "min-w-4 h-4 px-1 text-xs leading-none justify-center",
       },
     },
     defaultVariants: {

@@ -1,6 +1,7 @@
 "use server";
 
 import { supabaseAdmin } from "@/lib/supabase.server";
+import { createNotification } from "@/lib/notificationsDb";
 import {
   validatePartnership,
   type PartnershipInquiry,
@@ -49,6 +50,12 @@ export async function submitPartnershipInquiry(
       attempt,
     };
   }
+
+  await createNotification(
+    "new_partnership",
+    "New partnership inquiry",
+    `${data.business_name!.trim()} — ${data.contact_name!.trim()}`,
+  );
 
   return { success: true };
 }

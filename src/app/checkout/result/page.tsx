@@ -4,6 +4,7 @@ import { cn } from "@/shared/utils/cn";
 import { getOrderStatus } from "@/lib/ngenius";
 import { supabaseAdmin } from "@/lib/supabase.server";
 import { OrderStatus } from "@/shared/types";
+import { createNotification } from "@/lib/notificationsDb";
 import { ClearCartOnSuccess } from "./ClearCartOnSuccess";
 
 const SUCCESS_STATES = new Set(["PURCHASED", "CAPTURED"]);
@@ -41,13 +42,25 @@ export default async function CheckoutResultPage({
     : false;
 
   if (settled) {
-    await supabaseAdmin
+    const { data: order } = await supabaseAdmin
       .from("orders")
       .update({
         status: success ? OrderStatus.PAID : OrderStatus.FAILED,
         updated_at: new Date().toISOString(),
       })
-      .eq("ngenius_ref", ref);
+      .eq("ngenius_ref", ref)
+      .neq("status", success ? OrderStatus.PAID : OrderStatus.FAILED)
+      .select("id, total")
+      .single();
+
+    if (order && success) {
+      await createNotification(
+        "order_paid",
+        "Order paid",
+        `AED ${Number(order.total).toFixed(2)}`,
+        order.id,
+      );
+    }
   }
 
   return (

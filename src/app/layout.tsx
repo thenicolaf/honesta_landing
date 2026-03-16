@@ -4,7 +4,7 @@ import "./globals.css";
 import { metadata as siteMetadata } from "./metadata";
 import { structuredData } from "./structured-data";
 import { Footer, Navbar } from "@/sections";
-import { CartProvider, FavoritesProvider } from "@/providers";
+import { CartProvider, FavoritesProvider, NotificationsProvider } from "@/providers";
 import { ToastProvider } from "@/shared/ui";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
 
@@ -45,12 +45,14 @@ export default async function RootLayout({
       >
         <CartProvider userId={user?.id ?? null}>
           <FavoritesProvider userId={user?.id ?? null}>
-            <Navbar
-              user={user ? { email: user.email! } : null}
-              isAdmin={profile?.role === "admin"}
-            />
-            {children}
-            <Footer />
+            <NotificationsProvider isAdmin={profile?.role === "admin"}>
+              <Navbar
+                user={user ? { email: user.email! } : null}
+                isAdmin={profile?.role === "admin"}
+              />
+              {children}
+              <Footer />
+            </NotificationsProvider>
           </FavoritesProvider>
         </CartProvider>
         <ToastProvider />

@@ -34,6 +34,7 @@ import { formatAed } from "@/shared/ui/Table";
 import { OrderStatus } from "@/shared/types";
 import type { DashboardStats } from "./types";
 import { cn } from "@/shared/utils/cn";
+import { RecentNotifications } from "./RecentNotifications";
 
 // ─── Stat Card ──────────────────────────────────────────────────────────────
 
@@ -272,13 +273,17 @@ export function DashboardPage({ stats }: { stats: DashboardStats }) {
 
       {/* ── Partnerships ─────────────────────────────────────────────── */}
       <SectionHeading>Partnerships</SectionHeading>
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <StatCard
           icon={<Handshake className="w-5 h-5" />}
           label="Inquiries"
           value={stats.partnerships.total}
         />
       </section>
+
+      {/* ── Recent Notifications ──────────────────────────────────────── */}
+      <SectionHeading>Recent Notifications</SectionHeading>
+      <RecentNotifications />
     </>
   );
 }

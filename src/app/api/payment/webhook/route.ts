@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase.server";
 import { OrderStatus } from "@/shared/types";
+import { createNotification } from "@/lib/notificationsDb";
 
 const STATUS_MAP: Record<string, OrderStatus> = {
   PURCHASED: OrderStatus.PAID,
@@ -24,10 +25,22 @@ export async function POST(request: NextRequest) {
   const newStatus = STATUS_MAP[eventName];
 
   if (newStatus) {
-    await supabaseAdmin
+    const { data: order } = await supabaseAdmin
       .from("orders")
       .update({ status: newStatus, updated_at: new Date().toISOString() })
-      .eq("ngenius_ref", ngeniusRef);
+      .eq("ngenius_ref", ngeniusRef)
+      .neq("status", newStatus)
+      .select("id, total")
+      .single();
+
+    if (order && newStatus === OrderStatus.PAID) {
+      await createNotification(
+        "order_paid",
+        "Order paid",
+        `AED ${Number(order.total).toFixed(2)}`,
+        order.id,
+      );
+    }
   }
 
   // N-Genius requires 200 within 15 seconds; does not retry failed webhooks

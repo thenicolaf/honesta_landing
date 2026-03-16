@@ -12,6 +12,7 @@ import {
 import { createOrderWithItems } from "@/lib/orders";
 import { createPaymentForOrder } from "@/lib/payments";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
+import { createNotification } from "@/lib/notificationsDb";
 
 export interface CheckoutState {
   error?: string;
@@ -54,6 +55,14 @@ export async function submitCheckout(
   if (orderError || !order) {
     return { error: orderError ?? "Failed to create order" };
   }
+
+  // Notify admin
+  await createNotification(
+    "new_order",
+    "New order",
+    `${customer.firstName} ${customer.lastName} — AED ${order.total}`,
+    order.id,
+  );
 
   // 2. Create payment
   const { paymentUrl, error: paymentError } = await createPaymentForOrder(

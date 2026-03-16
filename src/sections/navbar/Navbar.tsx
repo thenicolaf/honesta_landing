@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/shared/ui";
 import { IconInstagram } from "@/shared/icons";
 import { NavCartButton } from "./NavCartButton";
+import { NotificationBell } from "./NotificationBell";
 import { NavUserButton } from "./NavUserButton";
 import { NavMobileTabBar } from "./NavMobileTabBar";
 import { NAV_LINKS } from "./consts";
@@ -75,6 +76,7 @@ export function Navbar({ user, isAdmin }: NavbarProps) {
             {/* Right actions */}
             <div className="flex items-center gap-3">
               <NavCartButton />
+              {isAdmin && <NotificationBell />}
               <NavUserButton user={user} isAdmin={isAdmin} />
               <Button
                 href={process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL}

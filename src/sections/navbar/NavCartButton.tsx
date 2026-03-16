@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ShoppingCart } from "lucide-react";
+import { Badge } from "@/shared/ui";
 import { useCart } from "@/providers";
 
 export function NavCartButton() {
@@ -15,12 +16,9 @@ export function NavCartButton() {
     >
       <ShoppingCart className="w-5 h-5" strokeWidth={1.5} />
       {itemCount > 0 && (
-        <span
-          className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-orange text-white-warm font-body font-semibold flex items-center justify-center leading-none"
-          style={{ fontSize: "0.5rem" }}
-        >
+        <Badge variant="counter" size="pill" className="absolute -top-0.5 -right-0.5">
           {itemCount > 9 ? "9+" : itemCount}
-        </span>
+        </Badge>
       )}
     </Link>
   );
