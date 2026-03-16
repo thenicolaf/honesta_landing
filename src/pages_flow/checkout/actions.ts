@@ -25,8 +25,6 @@ export async function submitCheckout(
 ): Promise<CheckoutState | null> {
   const customer = Object.fromEntries(formData) as Partial<CustomerInfo>;
 
-  console.log(customer);
-
   // Persist customer info for next visit
   const cookieStore = await cookies();
   cookieStore.set(CUSTOMER_COOKIE_KEY, JSON.stringify(customer), {

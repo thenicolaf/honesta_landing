@@ -12,6 +12,8 @@ const PANEL_NAV: NavItem[] = [
   { href: "/panel", label: "Dashboard" },
   { href: "/panel/categories", label: "Categories" },
   { href: "/panel/products", label: "Products" },
+  { href: "/panel/all-orders", label: "Orders" },
+  { href: "/panel/partnerships", label: "Partnerships" },
 ];
 
 export function AdminSidebar({

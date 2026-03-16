@@ -29,9 +29,11 @@ export async function createOrderWithItems(
       email: customer.email,
       phone: customer.phone,
       address: customer.address,
-      notes: customer.notes,
-      lat: customer.lat ? parseFloat(customer.lat) : null,
-      lng: customer.lng ? parseFloat(customer.lng) : null,
+      notes: customer.notes ?? null,
+      coordinates:
+        customer.lat && customer.lng
+          ? { lat: parseFloat(customer.lat), lng: parseFloat(customer.lng) }
+          : null,
       user_id: userId ?? null,
     })
     .select()

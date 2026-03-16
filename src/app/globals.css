@@ -44,6 +44,56 @@ body {
   font-family: var(--font-body);
 }
 
+/* ─── Custom scrollbar ─── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-parchment) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--color-parchment);
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-bark);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ─── Sticky column shadow (vertical line, only on last sticky cell per row) */
+[data-sticky-last]::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -6px;
+  bottom: 0;
+  width: 6px;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--color-earth) 8%, transparent),
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+[data-scrolled-x] [data-sticky-last]::after {
+  opacity: 1;
+}
+
 /* ─── Grain texture (CSS-only, no heavy PNG) ─── */
 .noise::after {
   content: "";

@@ -11,6 +11,7 @@ const badgeVariants = cva(
         outline: "bg-transparent text-earth border border-parchment",
       },
       size: {
+        xs: "px-2 py-0.5 text-xs",
         sm: "px-3 py-1 text-2xs",
         md: "px-4 py-1.5 text-2xs",
       },

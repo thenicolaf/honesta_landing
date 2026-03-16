@@ -35,8 +35,6 @@ export async function createOrder(params: CreateOrderParams) {
   const accessToken = await getAccessToken();
   const baseUrl = process.env.PUBLIC_BASE_URL!;
 
-  console.log("baseUrl", baseUrl);
-
   const body: Record<string, unknown> = {
     action: "SALE",
     amount: {
