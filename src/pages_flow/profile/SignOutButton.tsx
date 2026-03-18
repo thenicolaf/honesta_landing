@@ -10,6 +10,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogClose,
+  useDialog,
 } from "@/shared/ui";
 import { signOut } from "./actions";
 
@@ -21,7 +22,30 @@ interface SignOutButtonProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-export function SignOutButton({ children, open, onOpenChange }: SignOutButtonProps) {
+function ConfirmSignOutButton() {
+  const { close } = useDialog();
+  return (
+    <Button
+      as="button"
+      type="button"
+      variant="outline"
+      size="sm"
+      className="text-red-500 hover:text-red-600 border-red-200 hover:bg-red-50"
+      onClick={() => {
+        close();
+        signOut();
+      }}
+    >
+      Sign out
+    </Button>
+  );
+}
+
+export function SignOutButton({
+  children,
+  open,
+  onOpenChange,
+}: SignOutButtonProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
@@ -35,16 +59,7 @@ export function SignOutButton({ children, open, onOpenChange }: SignOutButtonPro
         </DialogHeader>
         <DialogFooter>
           <DialogClose>Cancel</DialogClose>
-          <Button
-            as="button"
-            type="button"
-            variant="outline"
-            size="sm"
-            className="text-red-500 hover:text-red-600 border-red-200 hover:bg-red-50"
-            onClick={() => signOut()}
-          >
-            Sign out
-          </Button>
+          <ConfirmSignOutButton />
         </DialogFooter>
       </DialogContent>
     </Dialog>

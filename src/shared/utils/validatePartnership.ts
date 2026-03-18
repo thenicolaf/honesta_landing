@@ -13,6 +13,8 @@ export type PartnershipErrors = Partial<
   Record<keyof PartnershipInquiry, string>
 >;
 
+import { validatePhone } from "./validatePhone";
+
 export function validatePartnership(
   data: Partial<PartnershipInquiry>,
 ): PartnershipErrors | null {
@@ -24,9 +26,8 @@ export function validatePartnership(
   if (!data.contact_name?.trim()) {
     errors.contact_name = "Contact name is required";
   }
-  if (!data.phone?.trim()) {
-    errors.phone = "Phone number is required";
-  }
+  const phoneError = validatePhone(data.phone);
+  if (phoneError) errors.phone = phoneError;
 
   return Object.keys(errors).length > 0 ? errors : null;
 }

@@ -1,4 +1,5 @@
 import type { ProfileInfo } from "@/shared/types";
+import { validatePhone } from "./validatePhone";
 
 export type ProfileErrors = Partial<Record<keyof ProfileInfo, string>>;
 
@@ -13,12 +14,8 @@ export function validateProfile(
   if (!profile.lastName?.trim()) {
     errors.lastName = "Last name is required.";
   }
-  if (!profile.phone?.trim()) {
-    errors.phone = "Phone is required.";
-  } else if (!/^\+971[0-9]{9}$/.test(profile.phone)) {
-    errors.phone =
-      "Phone must start with +971 followed by 9 digits (e.g. +971501234567).";
-  }
+  const phoneError = validatePhone(profile.phone);
+  if (phoneError) errors.phone = phoneError;
   if (!profile.address?.trim()) {
     errors.address = "Address is required.";
   }

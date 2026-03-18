@@ -1,0 +1,49 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { createSupabaseServerClient } from "@/lib/supabase.server";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export interface VerifyState {
+  error?: string;
+  attempt?: number;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function parseOtp(formData: FormData): string {
+  return (formData.get("otp") as string)?.trim();
+}
+
+function isValidOtp(token: string): boolean {
+  return /^\d{6}$/.test(token);
+}
+
+// ─── Actions ──────────────────────────────────────────────────────────────────
+
+export async function verifyOtp(
+  email: string,
+  _prevState: VerifyState | null,
+  formData: FormData,
+): Promise<VerifyState> {
+  const token = parseOtp(formData);
+  const attempt = (_prevState?.attempt ?? 0) + 1;
+
+  if (!token || !isValidOtp(token)) {
+    return { error: "Please enter a valid 6-digit code.", attempt };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: "email",
+  });
+
+  if (error) {
+    return { error: "Invalid or expired code. Please try again.", attempt };
+  }
+
+  redirect("/");
+}

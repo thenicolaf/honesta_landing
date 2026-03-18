@@ -13,5 +13,7 @@ export default async function Page() {
     .eq("id", user!.id)
     .single();
 
-  return <ProfilePage profile={profile} />;
+  const provider = user?.app_metadata?.provider ?? "email";
+
+  return <ProfilePage profile={profile} provider={provider} />;
 }

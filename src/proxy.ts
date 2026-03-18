@@ -56,8 +56,9 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Guard /login — redirect authenticated users away
-  if (user && pathname === "/login") {
+  // Guard auth pages — redirect authenticated users away
+  const guestOnlyRoutes = ["/login", "/signup", "/verify-email", "/forgot-password", "/reset-password"];
+  if (user && guestOnlyRoutes.includes(pathname)) {
     const next = request.nextUrl.searchParams.get("next") ?? "/";
     const url = request.nextUrl.clone();
     url.pathname = next.startsWith("/") ? next : "/";

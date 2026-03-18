@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
-import { FormLabel, FormInput, FormError, Button, toastSuccess, toastError } from "@/shared/ui";
+import { FormLabel, FormInput, FormPhoneInput, FormError, Button, toastSuccess, toastError } from "@/shared/ui";
 import { AddressWithMap } from "@/pages_flow/checkout/ui/AddressWithMap";
 import { updateProfile, type ProfileState } from "./actions";
 
@@ -49,7 +49,7 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
   }, [state]);
 
   return (
-    <form action={action} className="flex flex-col gap-5">
+    <form key={state?.attempt ?? 0} action={action} className="flex flex-col gap-5">
       {/* Name row */}
       <div className="grid grid-cols-1 gap-4 min-[26.25rem]:grid-cols-2">
         <div>
@@ -85,24 +85,15 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
       {/* Phone */}
       <div>
         <FormLabel htmlFor="phone">Phone</FormLabel>
-        <FormInput
+        <FormPhoneInput
           id="phone"
           name="phone"
-          type="tel"
           defaultValue={
             state?.values?.phone ?? defaultValues?.phone ?? undefined
           }
-          placeholder="+971500000000"
-          title="Format: +971XXXXXXXXX"
           state={state?.fieldErrors?.phone ? "error" : "default"}
         />
-        {state?.fieldErrors?.phone ? (
-          <FormError message={state.fieldErrors.phone} />
-        ) : (
-          <p className="font-body font-light text-earth/40 text-xs mt-1">
-            Format: +971XXXXXXXXX
-          </p>
-        )}
+        <FormError message={state?.fieldErrors?.phone} />
       </div>
 
       {/* Address + Map */}

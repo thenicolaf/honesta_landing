@@ -11,6 +11,10 @@ export {
   FormCheckbox,
   FormUploadZone,
   FormError,
+  FormPasswordInput,
+  FormPhoneInput,
+  FormOtpInput,
+  useResendCooldown,
 } from "./Form/index";
 export { Loader } from "./Loader";
 export { PageLoader } from "../../pages_flow/PageLoader";

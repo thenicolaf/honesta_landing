@@ -18,6 +18,7 @@ export interface PromotionState {
     product_ids?: string;
   };
   values?: Record<string, string>;
+  attempt?: number;
 }
 
 function parseForm(formData: FormData) {
@@ -74,8 +75,9 @@ export async function createPromotionAction(
   formData: FormData,
 ): Promise<PromotionState> {
   const values = parseForm(formData);
+  const attempt = (_prevState?.attempt ?? 0) + 1;
   const fieldErrors = validate(values);
-  if (fieldErrors) return { fieldErrors, values: values as unknown as Record<string, string> };
+  if (fieldErrors) return { fieldErrors, values: values as unknown as Record<string, string>, attempt };
 
   const productIds = parseProductIds(values.product_ids_raw);
 
@@ -91,7 +93,7 @@ export async function createPromotionAction(
     productIds,
   );
 
-  if (error) return { error };
+  if (error) return { error, attempt };
 
   redirect("/panel/promotions?toast=created");
 }
@@ -102,8 +104,9 @@ export async function updatePromotionAction(
   formData: FormData,
 ): Promise<PromotionState> {
   const values = parseForm(formData);
+  const attempt = (_prevState?.attempt ?? 0) + 1;
   const fieldErrors = validate(values);
-  if (fieldErrors) return { fieldErrors, values: values as unknown as Record<string, string> };
+  if (fieldErrors) return { fieldErrors, values: values as unknown as Record<string, string>, attempt };
 
   const productIds = parseProductIds(values.product_ids_raw);
 
@@ -120,7 +123,7 @@ export async function updatePromotionAction(
     productIds,
   );
 
-  if (error) return { error };
+  if (error) return { error, attempt };
 
   redirect("/panel/promotions?toast=updated");
 }

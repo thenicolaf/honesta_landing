@@ -71,7 +71,6 @@ export function NavUserButton({ user, isAdmin }: NavUserButtonProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Dialog lives outside DropdownMenu so it isn't unmounted when the dropdown closes */}
         <SignOutButton open={logoutOpen} onOpenChange={setLogoutOpen} />
       </>
     );

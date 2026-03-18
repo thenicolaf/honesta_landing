@@ -33,6 +33,7 @@ export interface ProductState {
     images?: string;
   };
   values?: Partial<ProductValues>;
+  attempt?: number;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -222,10 +223,11 @@ export async function createProduct(
   formData: FormData,
 ): Promise<ProductState> {
   const values = Object.fromEntries(formData) as Partial<ProductValues>;
+  const attempt = (_prevState?.attempt ?? 0) + 1;
 
   const fieldErrors = validateProduct(values);
   if (fieldErrors) {
-    return { fieldErrors, values };
+    return { fieldErrors, values, attempt };
   }
 
   const productData = parseProductValues(values, formData);
@@ -238,7 +240,7 @@ export async function createProduct(
     .single();
 
   if (error || !data) {
-    return { error: "Failed to create product. Please try again.", values };
+    return { error: "Failed to create product. Please try again.", values, attempt };
   }
 
   await insertJunctionRows(data.id, values);
@@ -252,10 +254,11 @@ export async function updateProduct(
   formData: FormData,
 ): Promise<ProductState> {
   const values = Object.fromEntries(formData) as Partial<ProductValues>;
+  const attempt = (_prevState?.attempt ?? 0) + 1;
 
   const fieldErrors = validateProduct(values);
   if (fieldErrors) {
-    return { fieldErrors, values };
+    return { fieldErrors, values, attempt };
   }
 
   const productData = parseProductValues(values, formData);
@@ -276,7 +279,7 @@ export async function updateProduct(
     .eq("id", id);
 
   if (error) {
-    return { error: "Failed to update product. Please try again.", values };
+    return { error: "Failed to update product. Please try again.", values, attempt };
   }
 
   // Delete old image from storage if it changed

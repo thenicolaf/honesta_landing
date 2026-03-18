@@ -2,7 +2,7 @@
 
 import { useCart } from "@/providers";
 import { CartEmpty } from "@/shared/ui/CartEmpty";
-import { CartItems } from "./ui/CartItems";
+import { CartGrid } from "./ui/CartGrid";
 import { CartSummary } from "./ui/CartSummary";
 import { PageLoader } from "@/shared/ui";
 
@@ -30,7 +30,7 @@ export function CartPage() {
           Shopping Cart
         </h1>
 
-        <CartItems />
+        <CartGrid />
         <CartSummary />
       </div>
     </main>

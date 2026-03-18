@@ -24,7 +24,7 @@ export function GoogleSignInButton({ next }: { next: string }) {
       onClick={handleClick}
     >
       <IconGoogle />
-      Войти через Google
+      Continue with Google
     </Button>
   );
 }

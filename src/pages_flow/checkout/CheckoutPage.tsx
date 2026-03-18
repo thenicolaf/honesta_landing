@@ -61,7 +61,7 @@ export function CheckoutPage({ defaultValues }: CheckoutPageProps) {
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
-          <form action={formAction} className="flex flex-col gap-5">
+          <form key={state?.attempt ?? 0} action={formAction} className="flex flex-col gap-5">
             <CheckoutForm
               defaultValues={defaultValues}
               fieldErrors={state?.fieldErrors}

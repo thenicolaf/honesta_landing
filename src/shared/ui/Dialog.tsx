@@ -42,7 +42,11 @@ interface DialogProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-export function Dialog({ children, open: controlledOpen, onOpenChange }: DialogProps) {
+export function Dialog({
+  children,
+  open: controlledOpen,
+  onOpenChange,
+}: DialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const uid = useId();
   const titleId = `dialog-title-${uid}`;
@@ -62,7 +66,9 @@ export function Dialog({ children, open: controlledOpen, onOpenChange }: DialogP
   };
 
   return (
-    <DialogContext.Provider value={{ open, titleId, descriptionId, toggle, close }}>
+    <DialogContext.Provider
+      value={{ open, titleId, descriptionId, toggle, close }}
+    >
       {children}
     </DialogContext.Provider>
   );
@@ -76,17 +82,28 @@ interface DialogTriggerProps {
   asChild?: boolean;
 }
 
-export function DialogTrigger({ children, className, asChild }: DialogTriggerProps) {
+export function DialogTrigger({
+  children,
+  className,
+  asChild,
+}: DialogTriggerProps) {
   const { toggle } = useDialog();
 
   if (asChild && isValidElement(children)) {
-    return cloneElement(children as React.ReactElement<React.HTMLAttributes<HTMLElement>>, {
-      onClick: toggle,
-    });
+    return cloneElement(
+      children as React.ReactElement<React.HTMLAttributes<HTMLElement>>,
+      {
+        onClick: toggle,
+      },
+    );
   }
 
   return (
-    <button type="button" onClick={toggle} className={cn("cursor-pointer", className)}>
+    <button
+      type="button"
+      onClick={toggle}
+      className={cn("cursor-pointer", className)}
+    >
       {children}
     </button>
   );
@@ -103,7 +120,10 @@ export function DialogOverlay({ className }: { className?: string }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className={cn("fixed inset-0 z-50 bg-earth/40 backdrop-blur-sm", className)}
+      className={cn(
+        "fixed inset-0 z-50 bg-earth/40 backdrop-blur-sm",
+        className,
+      )}
       onClick={close}
     />
   );
@@ -224,7 +244,14 @@ interface DialogCloseProps {
 export function DialogClose({ children, className }: DialogCloseProps) {
   const { close } = useDialog();
   return (
-    <Button as="button" type="button" variant="outline" size="sm" onClick={close} className={className}>
+    <Button
+      as="button"
+      type="button"
+      variant="outline"
+      size="sm"
+      onClick={close}
+      className={className}
+    >
       {children}
     </Button>
   );
@@ -240,7 +267,9 @@ export function DialogHeader({
   className?: string;
 }) {
   return (
-    <div className={cn("mb-4 flex flex-col gap-1.5", className)}>{children}</div>
+    <div className={cn("mb-4 flex flex-col gap-1.5", className)}>
+      {children}
+    </div>
   );
 }
 
@@ -257,7 +286,10 @@ export function DialogTitle({
   return (
     <h2
       id={titleId}
-      className={cn("font-display font-semibold text-xl text-heading", className)}
+      className={cn(
+        "font-display font-semibold text-xl text-heading",
+        className,
+      )}
     >
       {children}
     </h2>
@@ -294,7 +326,12 @@ export function DialogFooter({
   className?: string;
 }) {
   return (
-    <div className={cn("mt-6 flex flex-wrap items-center justify-end gap-3", className)}>
+    <div
+      className={cn(
+        "mt-6 flex flex-wrap items-center justify-end gap-3",
+        className,
+      )}
+    >
       {children}
     </div>
   );

@@ -1,5 +1,6 @@
 import { Card } from "@/shared/ui";
 import { ProfileForm } from "./ProfileForm";
+import { ChangePasswordForm } from "./ChangePasswordForm";
 import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
 
 interface ProfileData {
@@ -12,9 +13,10 @@ interface ProfileData {
 
 interface ProfilePageProps {
   profile: ProfileData | null;
+  provider?: string;
 }
 
-export function ProfilePage({ profile }: ProfilePageProps) {
+export function ProfilePage({ profile, provider }: ProfilePageProps) {
   return (
     <>
       <AdminPageHeader title="Profile" />
@@ -25,6 +27,15 @@ export function ProfilePage({ profile }: ProfilePageProps) {
         </p>
         <ProfileForm defaultValues={profile} />
       </Card>
+
+      {provider === "email" && (
+        <Card className="p-4 md:px-6 md:py-4 lg:p-8 mt-6">
+          <p className="font-body font-semibold uppercase tracking-[0.12em] text-2xs text-earth/50 mb-6">
+            Change Password
+          </p>
+          <ChangePasswordForm />
+        </Card>
+      )}
     </>
   );
 }

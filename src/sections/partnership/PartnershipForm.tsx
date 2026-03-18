@@ -5,6 +5,7 @@ import { Button, toastSuccess, toastError } from "@/shared/ui";
 import {
   FormLabel,
   FormInput,
+  FormPhoneInput,
   FormSelect,
   FormTextarea,
   FormError,
@@ -70,11 +71,9 @@ export function PartnershipForm() {
 
       <div>
         <FormLabel htmlFor="phone">WhatsApp / Phone</FormLabel>
-        <FormInput
+        <FormPhoneInput
           id="phone"
           name="phone"
-          type="tel"
-          placeholder="+971 50 000 0000"
           defaultValue={state?.values?.phone}
           state={state?.fieldErrors?.phone ? "error" : "default"}
         />

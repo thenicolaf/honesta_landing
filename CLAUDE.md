@@ -12,7 +12,9 @@ Do not read, display, or reference the contents of `.env.local`, `.env.productio
 ```bash
 pnpm dev       # start dev server (localhost:3000)
 pnpm build     # production build
+pnpm start     # start production server (port 3000)
 pnpm lint      # ESLint check
+pnpm server    # expose localhost:3000 via ngrok (for webhook testing)
 ```
 
 No test suite configured yet.
@@ -26,6 +28,8 @@ No test suite configured yet.
 - **N-Genius** — payment gateway (UAE, amounts in fils: 1 AED = 100 fils)
 - **motion/react** (not `framer-motion`) — animations
 - **lucide-react** — supplemental icon library (prefer custom icons in `src/shared/icons/` first)
+- **react-toastify** — toast notifications (wrapped in `src/shared/ui/Toast.tsx`, configured in root layout)
+- **@react-google-maps/api** — Google Maps for address selection in checkout (`AddressWithMap` component)
 - **pnpm** as package manager
 
 ## Path alias
@@ -37,13 +41,20 @@ No test suite configured yet.
 ```
 src/
 ├── app/                        # Next.js App Router routes
-│   ├── layout.tsx              # Root layout — wraps with CartProvider + FavoritesProvider
+│   ├── layout.tsx              # Root layout — wraps with CartProvider + FavoritesProvider + NotificationsProvider
 │   ├── page.tsx                # Landing page (Hero, Products, Categories)
 │   ├── cart/page.tsx           # Shopping cart route
 │   ├── checkout/
 │   │   ├── page.tsx            # Checkout form (reads customer cookie)
 │   │   ├── cancel/page.tsx     # Payment cancelled fallback
 │   │   └── result/page.tsx     # Payment result (polls N-Genius, updates DB)
+│   ├── (auth)/                 # Auth route group — shared AuthLayout (centered card)
+│   │   ├── login/page.tsx      # Email/password + Google OAuth login
+│   │   ├── signup/page.tsx     # Registration (name, email, password, confirm)
+│   │   ├── verify-email/       # OTP verification after signup
+│   │   ├── forgot-password/    # Request password reset email
+│   │   └── reset-password/     # OTP + new password form
+│   ├── auth/callback/route.ts  # OAuth PKCE code exchange → session cookie → redirect
 │   ├── panel/                  # Authenticated panel segment (/panel/*) — layout adds AdminSidebar
 │   │   ├── layout.tsx          # Reads user via createSupabaseServerClient(), passes email to sidebar
 │   │   ├── page.tsx            # Admin dashboard with statistics (requires admin role)
@@ -51,45 +62,62 @@ src/
 │   │   ├── favorites/page.tsx  # /panel/favorites
 │   │   ├── orders/page.tsx     # /panel/orders
 │   │   ├── all-orders/page.tsx # /panel/all-orders (admin only)
-│   │   ├── partnerships/page.tsx # /panel/partnerships (admin only)
-│   │   ├── categories/page.tsx # /panel/categories (admin only)
-│   │   └── products/           # /panel/products (admin only)
-│   ├── login/page.tsx          # Google OAuth login page
-│   ├── auth/callback/route.ts  # OAuth code → session exchange, then redirect
-│   ├── api/payment/webhook/    # N-Genius webhook → updates order status in Supabase
+│   │   ├── partnerships/       # /panel/partnerships (admin only)
+│   │   ├── categories/         # /panel/categories CRUD (admin only)
+│   │   ├── products/           # /panel/products CRUD (admin only)
+│   │   └── promotions/         # /panel/promotions CRUD (admin only)
+│   ├── api/
+│   │   ├── payment/webhook/    # N-Genius webhook → updates order status in Supabase
+│   │   ├── notifications/      # GET/PATCH notifications for admin bell
+│   │   ├── storage/            # upload/delete images to Supabase Storage
+│   │   └── options/            # Form options (categories, tags, etc.)
 │   └── globals.css, metadata.ts, sitemap.ts, robots.ts, structured-data.ts
 │
 ├── lib/                        # Backend / data-access layer (server-only)
-│   ├── supabase.ts             # Two static clients: `supabase` (anon/RLS) + `supabaseAdmin` (service role)
-│   ├── supabase.server.ts      # `createSupabaseServerClient()` — auth-aware client (reads cookies, use for authed routes)
+│   ├── supabase.ts             # `createSupabaseBrowserClient()` — browser client for Client Components
+│   ├── supabase.server.ts      # `supabase`, `supabaseAdmin`, `createSupabaseServerClient()`
 │   ├── ngenius.ts              # N-Genius payment API (auth, create order, poll status)
 │   ├── payments.ts             # Orchestrates: create payment → update DB with ngenius_ref
 │   ├── orders.ts               # Supabase order creation (orders + order_items tables)
-│   ├── favoritesDb.ts          # getFavoritesFromDb, addFavoriteToDb, removeFavoriteFromDb
-│   └── cart.ts                 # localStorage cart helpers (getCart, addItem, removeItem, etc.)
+│   ├── favoritesDb.ts          # Favorites CRUD
+│   ├── cart.ts                 # localStorage cart helpers
+│   ├── cartDb.ts               # Database-backed cart (cart_items table, per-user sync)
+│   ├── productsDb.ts           # Admin product queries + form options
+│   ├── categoriesDb.ts         # Category data queries
+│   ├── promotionsDb.ts         # Promotions CRUD
+│   ├── notificationsDb.ts      # Notifications CRUD
+│   ├── storage.ts              # Image upload/delete to Supabase Storage
+│   └── syncCartPrices.ts       # Syncs cart prices with active promotions
 │
 ├── proxy.ts                    # Next.js middleware helper — refreshes auth session + protects private routes
 │
 ├── pages_flow/                 # Page-level component trees (co-located with their routes)
-│   ├── cart/                   # CartPage + CartItems + CartSummary
+│   ├── cart/                   # CartPage + CartGrid + CartItem + CartSummary
 │   ├── checkout/               # CheckoutPage + CheckoutForm + OrderSummary + SubmitButton
 │   │   └── actions.ts          # Server action: validate → save to DB → create payment → redirect
 │   ├── home/                   # CategoriesSection, ProductsSection
-│   ├── login/                  # LoginPage + GoogleSignInButton
+│   ├── login/                  # LoginPage + LoginForm + GoogleSignInButton
+│   ├── signup/                 # SignupPage + SignupForm
+│   ├── verify-email/           # VerifyEmailPage (OTP input)
+│   ├── forgot-password/        # ForgotPasswordPage
+│   ├── reset-password/         # ResetPasswordPage (OTP + new password)
 │   ├── favorites/              # FavoritesPage + FavoritesGrid
-│   ├── profile/                # ProfilePage + ProfileForm + SignOutButton
-│   │   └── actions.ts          # updateProfile() server action → upserts to profiles table
+│   ├── profile/                # ProfilePage + ProfileForm + ChangePasswordForm + SignOutButton
+│   │   └── actions.ts          # updateProfile(), changePassword(), signOut()
 │   ├── orders/                 # OrdersPage + OrderCards (user order history)
-│   │   └── ui/                 # StatusBadge, CopyOrderId, OrderCards
 │   ├── panel/
 │   │   ├── dashboard/          # DashboardPage + types (admin statistics)
 │   │   ├── orders/             # AllOrdersPage + AdminOrderCards + filters + useOrdersTable
-│   │   └── partnerships/       # PartnershipsPage + InquiryCards + filters + useInquiriesTable
+│   │   ├── partnerships/       # PartnershipsPage + InquiryCards + filters + useInquiriesTable
+│   │   ├── categories/         # CategoryForm + actions
+│   │   ├── products/           # ProductForm + actions
+│   │   └── promotions/         # PromotionsPage + PromotionForm + actions
 │   └── PageLoader.tsx          # Thin wrapper around <Loader /> for route loading.tsx files
 │
 ├── providers/                  # React context providers + hooks
 │   ├── CartProvider.tsx        # useSyncExternalStore-based cart state (hydration-safe)
 │   ├── FavoritesProvider.tsx   # useSyncExternalStore-based favorites state + useOptimistic
+│   ├── NotificationsProvider.tsx # Supabase Realtime subscription for admin notifications
 │   ├── CategoryFilterProvider.tsx
 │   ├── FilterProvider.tsx      # Generic filter context — useFilterBar(key) hook
 │   └── SearchParamsFilterProvider.tsx  # Syncs FilterProvider state to URL search params
@@ -102,11 +130,11 @@ src/
 │       └── types/              # Product & CartItem types + Supabase db-types
 │
 └── shared/
-    ├── consts.ts               # CUSTOMER_COOKIE_KEY, DELIVERY_FEE
+    ├── consts.ts               # CUSTOMER_COOKIE_KEY, DELIVERY_FEE, COOKIE_CONSENT_KEY
     ├── ui/                     # Reusable primitives (Button, Badge, Card, Form, Collapsible, etc.)
     ├── icons/                  # SVG icon components + index.ts barrel
-    ├── types/                  # Categories enum, CustomerInfo, OrderStatus
-    └── utils/                  # cn.ts, validateCustomer.ts, validatePartnership.ts
+    ├── types/                  # Categories enum, CustomerInfo, OrderStatus, ProfileInfo
+    └── utils/                  # cn.ts, validateCustomer.ts, validatePartnership.ts, validateProfile.ts, validateAuth.ts, validatePhone.ts, calculateDiscount.ts
 ```
 
 **Rule:** backend/data-access → `src/lib/`, page-level component trees → `src/pages_flow/`, landing sections → `src/sections/`, generic primitives → `src/shared/ui/`, SVG icons → `src/shared/icons/`, React context providers → `src/providers/`.
@@ -121,10 +149,15 @@ src/
 | `/checkout/result?ref={orderRef}` | Payment result — polls N-Genius, shows success/failure |
 | `/checkout/cancel` | Payment cancelled screen |
 | `POST /api/payment/webhook` | N-Genius webhook — updates `orders.status` in Supabase |
-| `/login` | Google OAuth login page |
+| `GET/PATCH /api/notifications` | Admin notification endpoints |
+| `/login` | Email/password + Google OAuth login |
+| `/signup` | Registration (name, email, password) |
+| `/verify-email?email={email}` | OTP verification after signup |
+| `/forgot-password` | Request password reset email |
+| `/reset-password?email={email}` | OTP + new password form |
 | `/auth/callback` | OAuth PKCE code exchange → session cookie → redirect |
 | `/panel` | Admin dashboard with statistics (admin only) |
-| `/panel/profile` | User profile form (name, phone, address + map) |
+| `/panel/profile` | User profile + change password |
 | `/panel/favorites` | Saved favourite products |
 | `/panel/orders` | Order history |
 | `/panel/all-orders` | All orders management (admin only) |
@@ -136,6 +169,9 @@ src/
 | `/panel/products/create` | Create new product (admin only) |
 | `/panel/products/[id]/details` | Product detail view (admin only) |
 | `/panel/products/[id]/edit` | Edit product (admin only) |
+| `/panel/promotions` | Promotion management (admin only) |
+| `/panel/promotions/create` | Create new promotion (admin only) |
+| `/panel/promotions/[id]/edit` | Edit promotion (admin only) |
 
 ## Panel Section (`panel` route segment)
 
@@ -187,11 +223,26 @@ Every route segment has a `loading.tsx` that renders:
 - **Hydration:** `isHydrated` flag prevents SSR/client mismatch; server always renders empty cart
 - **Hook:** `useCart()` exposes `items`, `itemCount`, `total`, `addToCart`, `removeFromCart`, `updateItemQuantity`, `clearCart`, `isHydrated`
 
-## Auth (Google OAuth)
+## Auth
 
-Flow: `/login` → `GoogleSignInButton` calls `supabase.auth.signInWithOAuth({ provider: "google" })` → Google redirects to `/auth/callback?code=…` → `createSupabaseServerClient().auth.exchangeCodeForSession(code)` sets a cookie → redirect to `/` (or `next` param).
+Two auth methods: **email/password** and **Google OAuth**.
+
+**Email/password flow:** `/signup` → email + password + confirm → Supabase sends OTP email → `/verify-email` → OTP verified → session created → redirect to `/`.
+
+**Google OAuth flow:** `/login` → `GoogleSignInButton` calls `supabase.auth.signInWithOAuth({ provider: "google" })` → Google redirects to `/auth/callback?code=…` → `createSupabaseServerClient().auth.exchangeCodeForSession(code)` sets a cookie → redirect to `/` (or `next` param). This is a **full page reload** (NextResponse.redirect).
+
+**Email/password login:** `/login` → `LoginForm` submits server action → `signInWithPassword()` → `redirect()`. This is a **client-side navigation** (server action redirect), so React state in layouts persists.
+
+**Password reset flow:** `/forgot-password` → enter email → Supabase sends recovery OTP → `/reset-password?email=…` → enter OTP + new password → `verifyOtp({ type: "recovery" })` + `updateUser({ password })` → redirect.
+
+**Important:** When the `SignOutButton` dialog triggers `signOut()` (server action with redirect), it must call `close()` first to reset the dialog's controlled `open` state — otherwise the stale `true` persists through client-side navigation and reopens on next login.
 
 Session refresh: `src/proxy.ts` exports a middleware helper (`proxy()`) that must be called from `middleware.ts`. It creates an `@supabase/ssr` server client and calls `auth.getUser()` on every request to keep the session cookie fresh.
+
+**Route guards** in `src/proxy.ts`:
+- `/panel/*` → unauthenticated users redirected to `/login?next={pathname}`
+- `/panel/*` (except `/profile`, `/favorites`, `/orders`) → require `role=admin`
+- Guest-only routes (`/login`, `/signup`, `/verify-email`, `/forgot-password`, `/reset-password`) → authenticated users redirected away
 
 **Client selection guide:**
 | Situation | Use |
@@ -209,7 +260,7 @@ Two files, three client instances:
   - `supabaseAdmin` — static service-role client, bypasses RLS (use only in server actions, API routes, and `lib/`)
   - `createSupabaseServerClient()` — async, reads cookies via `@supabase/ssr`; use whenever you need the current user's session
 
-**DB tables:** `orders` (status, subtotal, delivery_fee, total, customer fields, ngenius_ref), `order_items` (order_id, product_id, name, price, quantity), `products` (images in Supabase Storage → `image_url` field; also `weight_g`, `in_stock`, `nutrition` JSON), `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, address, coordinates JSON {lat, lng}).
+**DB tables:** `orders` (status, subtotal, delivery_fee, total, customer fields, ngenius_ref), `order_items` (order_id, product_id, name, price, quantity), `products` (images in Supabase Storage → `image_url` field; also `weight_g`, `in_stock`, `nutrition` JSON), `categories`, `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, address, coordinates JSON {lat, lng}), `cart_items` (user_id, product_id, quantity, price, original_price), `notifications` (type, title, message, related_id, is_read), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id).
 
 ## Design system
 
@@ -260,7 +311,7 @@ Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React conte
 - **`TagToolbar` / `TagToolbarItem`** — single-select pill filter bar (`role="radiogroup"`). Controlled or uncontrolled via `value`/`onValueChange`/`defaultValue`. Empty string `""` means "All".
 - **`Collapsible` / `CollapsibleTrigger` / `CollapsibleChevron` / `CollapsibleContent`** — animated accordion using `motion/react` `AnimatePresence`.
 - **`Select` / `SelectTrigger` / `SelectValue` / `SelectContent` / `SelectItem` / `SelectGroup` / `SelectSeparator`** — custom dropdown, context-based, supports controlled/uncontrolled, `clearable` prop, auto up/down direction.
-- **`Form` components** — `FormLabel`, `FormInput`, `FormSelect`, `FormTextarea`, `FormError` — CVA variants with `default` / `error` states. `FormSelect` wraps the `Select` compound component.
+- **`Form` components** — `FormLabel` (`required` prop adds red `*`), `FormInput`, `FormSelect`, `FormTextarea`, `FormError`, `FormPasswordInput` (visibility toggle), `FormPhoneInput` (UAE format: displays `0XX XXX XXXX`, submits `+971XXXXXXXXX` via hidden input), `FormOtpInput` (6-digit OTP with `defaultValue` + `useResendCooldown` hook), `FormCheckbox`, `FormUploadZone` — CVA variants with `default` / `error` states. `FormSelect` wraps the `Select` compound component.
 - **`DropdownMenu` / `DropdownMenuTrigger` / `DropdownMenuContent` / `DropdownMenuItem` / `DropdownMenuSeparator` / `DropdownMenuLabel`** — context-based dropdown menu with auto up/down direction, outside-click and Escape close, `destructive` + `disabled` item variants.
 - **`Table` / `TableHeader` / `TableHeaderRow` / `TableHead` / `TableBody` / `TableRow` / `TableCell` / `TableEmpty` / `TablePagination`** — compound table with sticky header, sort indicators, dividers. Context-based (`useTable`).
 - **`DataTable`** — declarative wrapper: pass `data`, `columns: ColumnDef[]`, `sort`, `pagination` and it renders a full `Table`. Hooks: `useTableSort`, `useTableData`, `useTableSearch`, `useTablePagination`. Helpers: `formatAed`, `formatDate`, `formatDateTime`, `shortId`, comparators (`compareString`, `compareNumber`, `compareDate`).
@@ -300,6 +351,16 @@ Both views share the same `paginatedData` from hooks like `useOrdersTable` / `us
 - **Product data** loaded from Supabase (with `image_url` from Storage). Static fallback data lives in `src/sections/products/consts.ts`. `mapDbProducts()` converts Supabase rows to the `Product` type.
 - **Delivery fee** is `NEXT_PUBLIC_DELIVERY_FEE` env var (default 25 AED), defined in `src/shared/consts.ts`.
 - **Product fields** `benefits`, `nutrition`, `servingIdeas`, `occasions` are stored for future modal/detail use but not rendered yet.
+- **Promotions** — `src/lib/promotionsDb.ts` handles CRUD. Promotions have `discount_type` (percentage | fixed), `discount_value`, date range, and `is_active` flag. Linked to products via `promotion_products` join table. Status is computed client-side via `getPromotionStatus()` (active | scheduled | expired) based on `is_active` + dates. Promotion list sorts active first.
+
+## Phone validation
+
+All phone fields use `FormPhoneInput` (displays `0XX XXX XXXX`, submits normalized `+971XXXXXXXXX` via hidden input). Shared validation in `src/shared/utils/validatePhone.ts`:
+- `normalizePhone(raw)` — accepts `0501234567`, `501234567`, `+971501234567`, `971501234567` → returns `+971501234567`
+- `formatPhoneDisplay(raw)` — formats for display as `0XX XXX XXXX`
+- `validatePhone(phone, { required })` — validates against `/^\+971[0-9]{9}$/`
+
+Used by `validateCustomer.ts`, `validateProfile.ts`, `validatePartnership.ts`.
 
 ## Server Actions standard
 
@@ -319,7 +380,8 @@ export interface FooState {
   fieldErrors?: {           // per-field validation errors
     name?: string;
   };
-  values?: Partial<FooInfo>; // echo back form values for repopulation (optional)
+  values?: Partial<FooInfo>; // echo back form values for repopulation
+  attempt?: number;          // incremented each submission, used as form key
 }
 
 // 2. Action signature for useActionState: (_prevState, formData) => Promise<State>
@@ -329,16 +391,18 @@ export async function createFoo(
 ): Promise<FooState> {
   const name = (formData.get("name") as string)?.trim();
 
+  const attempt = (_prevState?.attempt ?? 0) + 1;
+
   // 3. Collect field errors into an object, return early if any
   const fieldErrors: FooState["fieldErrors"] = {};
   if (!name) fieldErrors.name = "Name is required";
-  if (Object.keys(fieldErrors).length > 0) return { fieldErrors };
+  if (Object.keys(fieldErrors).length > 0) return { fieldErrors, values: { name }, attempt };
 
   // 4. DB call
   const { error } = await supabaseAdmin.from("foos").insert({ name });
-  if (error) return { error: "Failed to save. Please try again." };
+  if (error) return { error: "Failed to save. Please try again.", values: { name }, attempt };
 
-  return { success: true };
+  return { success: true, attempt };
 }
 
 // 5. For actions bound with .bind(null, id), id comes before _prevState
@@ -354,6 +418,8 @@ export async function updateFoo(
 - State interface exported from the same `actions.ts` file
 - Validation collects all field errors before returning — never throw, always return state
 - Top-level DB errors go in `error`, field-level errors go in `fieldErrors`
+- **Always return `values` on every error path** — forms use `key={state?.attempt ?? 0}` which remounts the form, so `defaultValue={state?.values?.fieldName}` is needed to preserve user input
+- Always return `attempt` (incremented counter) — used as form `key` to reset field states after submission
 - Never use `supabaseAdmin` for auth-identity operations — use `createSupabaseServerClient()` instead
 - Actions that need the current user must call `createSupabaseServerClient()` and redirect to `/login` if no session
 

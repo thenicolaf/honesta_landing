@@ -3,6 +3,7 @@
 import {
   FormLabel,
   FormInput,
+  FormPhoneInput,
   FormTextarea,
   FormError,
 } from "@/shared/ui";
@@ -69,22 +70,13 @@ export function CheckoutForm({
       {/* Phone */}
       <div>
         <FormLabel htmlFor="phone">Phone</FormLabel>
-        <FormInput
+        <FormPhoneInput
           id="phone"
           name="phone"
-          type="tel"
           defaultValue={defaultValues.phone}
-          placeholder="+971500000000"
-          title="Format: +971XXXXXXXXX"
           state={fieldErrors?.phone ? "error" : "default"}
         />
-        {fieldErrors?.phone ? (
-          <FormError message={fieldErrors.phone} />
-        ) : (
-          <p className="font-body font-light text-earth/40 text-xs mt-1">
-            Format: +971XXXXXXXXX
-          </p>
-        )}
+        <FormError message={fieldErrors?.phone} />
       </div>
 
       {/* Address + Map */}

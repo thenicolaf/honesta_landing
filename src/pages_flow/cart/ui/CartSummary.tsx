@@ -61,9 +61,9 @@ export function CartSummary() {
         </Button>
         <Button
           href="/#products"
-          variant="outline"
+          variant="text"
           size="sm"
-          className="border-transparent hover:border-transparent text-earth/50 hover:text-orange hover:bg-transparent"
+          className="text-earth/50 hover:text-orange"
         >
           Continue Shopping
         </Button>

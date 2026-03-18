@@ -6,4 +6,7 @@ export { FormNumberInput } from "./FormNumberInput";
 export { FormTextarea } from "./FormTextarea";
 export { FormCheckbox } from "./FormCheckbox";
 export { FormError } from "./FormError";
+export { FormPasswordInput } from "./FormPasswordInput";
+export { FormPhoneInput } from "./FormPhoneInput";
 export { FormUploadZone } from "./FormUploadZone";
+export { FormOtpInput, useResendCooldown } from "./input-otp";

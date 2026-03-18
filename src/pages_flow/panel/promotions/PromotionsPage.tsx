@@ -138,7 +138,19 @@ function PromotionCard({ promo }: { promo: Promotion }) {
 
 // ─── PromotionsPage ─────────────────────────────────────────────────────────
 
+const STATUS_ORDER: Record<PromotionStatus, number> = {
+  active: 0,
+  scheduled: 1,
+  expired: 2,
+};
+
 export function PromotionsPage({ promotions }: { promotions: Promotion[] }) {
+  const sortedPromotions = [...promotions].sort((a, b) => {
+    const sa = STATUS_ORDER[getPromotionStatus(a.is_active, a.starts_at, a.ends_at)];
+    const sb = STATUS_ORDER[getPromotionStatus(b.is_active, b.starts_at, b.ends_at)];
+    return sa - sb;
+  });
+
   return (
     <>
       <ToastFromUrl />
@@ -176,7 +188,7 @@ export function PromotionsPage({ promotions }: { promotions: Promotion[] }) {
         />
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-          {promotions.map((promo) => (
+          {sortedPromotions.map((promo) => (
             <PromotionCard key={promo.id} promo={promo} />
           ))}
         </div>

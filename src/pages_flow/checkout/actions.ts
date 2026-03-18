@@ -17,6 +17,7 @@ import { createNotification } from "@/lib/notificationsDb";
 export interface CheckoutState {
   error?: string;
   fieldErrors?: CustomerErrors;
+  attempt?: number;
 }
 
 export async function submitCheckout(
@@ -25,6 +26,7 @@ export async function submitCheckout(
   formData: FormData,
 ): Promise<CheckoutState | null> {
   const customer = Object.fromEntries(formData) as Partial<CustomerInfo>;
+  const attempt = (_prevState?.attempt ?? 0) + 1;
 
   const cookieStore = await cookies();
 
@@ -45,7 +47,7 @@ export async function submitCheckout(
 
   const fieldErrors = validateCustomer(customer);
   if (fieldErrors) {
-    return { fieldErrors };
+    return { fieldErrors, attempt };
   }
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
@@ -57,7 +59,7 @@ export async function submitCheckout(
     user?.id,
   );
   if (orderError || !order) {
-    return { error: orderError ?? "Failed to create order" };
+    return { error: orderError ?? "Failed to create order", attempt };
   }
 
   // Notify admin
@@ -75,7 +77,7 @@ export async function submitCheckout(
     customer,
   );
   if (paymentError || !paymentUrl) {
-    return { error: paymentError ?? "Failed to create payment" };
+    return { error: paymentError ?? "Failed to create payment", attempt };
   }
 
   redirect(paymentUrl);

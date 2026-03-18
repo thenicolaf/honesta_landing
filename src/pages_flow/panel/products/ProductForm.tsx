@@ -26,7 +26,7 @@ export function ProductForm({ product, options }: ProductFormProps) {
   const sectionProps = { product, options, state };
 
   return (
-    <form action={dispatch} className="flex flex-col gap-6">
+    <form key={state?.attempt ?? 0} action={dispatch} className="flex flex-col gap-6">
       <BasicInfoSection {...sectionProps} />
       <CategorySection {...sectionProps} />
       <TagsSection {...sectionProps} />

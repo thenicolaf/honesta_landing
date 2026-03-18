@@ -1,4 +1,5 @@
 import type { CustomerInfo } from "@/shared/types";
+import { validatePhone } from "./validatePhone";
 
 export type CustomerErrors = Partial<Record<keyof CustomerInfo, string>>;
 
@@ -18,12 +19,8 @@ export function validateCustomer(
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) {
     errors.email = "Enter a valid email address.";
   }
-  if (!customer.phone?.trim()) {
-    errors.phone = "Phone is required.";
-  } else if (!/^\+971[0-9]{9}$/.test(customer.phone)) {
-    errors.phone =
-      "Phone must start with +971 followed by 9 digits (e.g. +971501234567).";
-  }
+  const phoneError = validatePhone(customer.phone);
+  if (phoneError) errors.phone = phoneError;
   if (!customer.address?.trim()) {
     errors.address = "Delivery address is required.";
   }

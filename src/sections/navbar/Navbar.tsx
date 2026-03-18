@@ -1,8 +1,6 @@
 "use client";
 
 import { useScroll, useTransform, motion } from "motion/react";
-import { Button } from "@/shared/ui";
-import { IconInstagram } from "@/shared/icons";
 import { NavCartButton } from "./NavCartButton";
 import { NotificationBell } from "./NotificationBell";
 import { NavUserButton } from "./NavUserButton";
@@ -78,15 +76,6 @@ export function Navbar({ user, isAdmin }: NavbarProps) {
               <NavCartButton />
               {isAdmin && <NotificationBell />}
               <NavUserButton user={user} isAdmin={isAdmin} />
-              <Button
-                href={process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                size="sm"
-              >
-                <IconInstagram className="w-3.5 h-3.5 shrink-0" />
-                <span className="hidden sm:inline">Order Now</span>
-              </Button>
             </div>
           </nav>
         </div>

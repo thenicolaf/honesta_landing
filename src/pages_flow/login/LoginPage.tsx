@@ -1,22 +1,40 @@
 import { GoogleSignInButton } from "./GoogleSignInButton";
+import { LoginForm } from "./LoginForm";
+import { Button, Card } from "@/shared/ui";
+import { AuthHeader } from "@/app/(auth)/_components/AuthHeader";
 
 export function LoginPage({ next }: { next: string }) {
   return (
-    <main className="grow min-h-160 bg-cream flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-10">
-          <h1 className="font-display font-bold italic text-heading text-[2rem] leading-tight mb-2">
-            Honesta
-          </h1>
-          <p className="font-body font-light text-earth/60 text-sm">
-            Войдите, чтобы продолжить
-          </p>
+    <>
+      <AuthHeader subtitle="Sign in to continue" />
+
+      <Card className="p-8">
+        <LoginForm next={next} />
+
+        {/* Divider */}
+        <div className="flex items-center gap-3 my-6">
+          <div className="flex-1 h-px bg-sand" />
+          <span className="font-body text-2xs text-earth/40 uppercase tracking-[0.12em]">
+            or continue with
+          </span>
+          <div className="flex-1 h-px bg-sand" />
         </div>
 
-        <div className="bg-white-warm rounded-2xl p-8 shadow-sm border border-sand">
-          <GoogleSignInButton next={next} />
-        </div>
-      </div>
-    </main>
+        <GoogleSignInButton next={next} />
+
+        {/* Sign up link */}
+        <p className="text-center mt-6 font-body font-light text-sm text-earth/60">
+          Don&apos;t have an account?{" "}
+          <Button
+            href="/signup"
+            variant="text"
+            size="inline"
+            className="text-orange font-medium"
+          >
+            Sign up
+          </Button>
+        </p>
+      </Card>
+    </>
   );
 }
