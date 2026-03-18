@@ -123,16 +123,26 @@ function AddressDialogForm({
         error={state?.fieldErrors?.address}
       />
 
-      <Button
-        as="button"
-        type="submit"
-        variant="primary"
-        size="md"
-        className="w-full"
-        disabled={isPending}
-      >
-        {isPending ? "Saving..." : isEdit ? "Update Address" : "Save Address"}
-      </Button>
+      <div className="flex items-center justify-end gap-3 pt-2">
+        <Button
+          as="button"
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={close}
+        >
+          Cancel
+        </Button>
+        <Button
+          as="button"
+          type="submit"
+          variant="primary"
+          size="sm"
+          disabled={isPending}
+        >
+          {isPending ? "Saving…" : isEdit ? "Update address" : "Save address"}
+        </Button>
+      </div>
     </form>
   );
 }

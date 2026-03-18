@@ -82,6 +82,8 @@ export async function updateProfile(
     first_name: profile.firstName!.trim(),
     last_name: profile.lastName!.trim(),
     phone: profile.phone!.trim(),
+    gender: profile.gender || null,
+    birthday: profile.birthday || null,
     updated_at: new Date().toISOString(),
   });
 

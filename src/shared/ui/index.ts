@@ -15,6 +15,8 @@ export {
   FormPhoneInput,
   FormOtpInput,
   useResendCooldown,
+  FormTileRadio,
+  FormTileRadioItem,
 } from "./Form/index";
 export { Loader } from "./Loader";
 export { PageLoader } from "../../pages_flow/PageLoader";

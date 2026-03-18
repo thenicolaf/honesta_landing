@@ -2,17 +2,20 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
-import { FormLabel, FormInput, FormPhoneInput, FormError, Button, toastSuccess, toastError } from "@/shared/ui";
+import { FormLabel, FormInput, FormPhoneInput, FormTileRadio, FormTileRadioItem, FormError, Button, toastSuccess, toastError } from "@/shared/ui";
 import { updateProfile, type ProfileState } from "./actions";
 
 interface ProfileData {
   first_name: string | null;
   last_name: string | null;
   phone: string | null;
+  gender: string | null;
+  birthday: string | null;
 }
 
 interface ProfileFormProps {
   defaultValues?: ProfileData | null;
+  onDone?: () => void;
 }
 
 function SubmitButton() {
@@ -22,16 +25,15 @@ function SubmitButton() {
       as="button"
       type="submit"
       variant="primary"
-      size="md"
-      className="w-full"
+      size="sm"
       disabled={pending}
     >
-      {pending ? "Saving..." : "Save changes"}
+      {pending ? "Saving…" : "Save changes"}
     </Button>
   );
 }
 
-export function ProfileForm({ defaultValues }: ProfileFormProps) {
+export function ProfileForm({ defaultValues, onDone }: ProfileFormProps) {
   const [state, action] = useActionState<ProfileState | null, FormData>(
     updateProfile,
     null,
@@ -41,9 +43,12 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
   useEffect(() => {
     if (state === prevState.current) return;
     prevState.current = state;
-    if (state?.success) toastSuccess("Profile updated");
+    if (state?.success) {
+      toastSuccess("Profile updated");
+      onDone?.();
+    }
     if (state?.error) toastError(state.error);
-  }, [state]);
+  }, [state, onDone]);
 
   return (
     <form key={state?.attempt ?? 0} action={action} className="flex flex-col gap-5">
@@ -93,7 +98,47 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
         <FormError message={state?.fieldErrors?.phone} />
       </div>
 
-      <SubmitButton />
+      {/* Gender & Birthday */}
+      <div className="grid grid-cols-1 gap-4 min-[26.25rem]:grid-cols-2">
+        <div>
+          <FormLabel>Gender</FormLabel>
+          <FormTileRadio
+            name="gender"
+            defaultValue={
+              state?.values?.gender ?? defaultValues?.gender ?? ""
+            }
+          >
+            <FormTileRadioItem value="male">Male</FormTileRadioItem>
+            <FormTileRadioItem value="female">Female</FormTileRadioItem>
+          </FormTileRadio>
+        </div>
+        <div>
+          <FormLabel htmlFor="birthday">Birthday</FormLabel>
+          <FormInput
+            id="birthday"
+            name="birthday"
+            type="date"
+            defaultValue={
+              state?.values?.birthday ?? defaultValues?.birthday ?? undefined
+            }
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center justify-end gap-3 pt-2">
+        {onDone && (
+          <Button
+            as="button"
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={onDone}
+          >
+            Cancel
+          </Button>
+        )}
+        <SubmitButton />
+      </div>
     </form>
   );
 }

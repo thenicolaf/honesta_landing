@@ -10,6 +10,7 @@ import {
   toastSuccess,
   toastError,
 } from "@/shared/ui";
+
 import { changePassword, type ChangePasswordState } from "./actions";
 
 function SubmitButton() {
@@ -19,16 +20,19 @@ function SubmitButton() {
       as="button"
       type="submit"
       variant="primary"
-      size="md"
-      className="w-full"
+      size="sm"
       disabled={pending}
     >
-      {pending ? "Updating..." : "Update Password"}
+      {pending ? "Updating…" : "Update password"}
     </Button>
   );
 }
 
-export function ChangePasswordForm() {
+interface ChangePasswordFormProps {
+  onDone?: () => void;
+}
+
+export function ChangePasswordForm({ onDone }: ChangePasswordFormProps) {
   const [state, action] = useActionState<ChangePasswordState | null, FormData>(
     changePassword,
     null,
@@ -43,9 +47,10 @@ export function ChangePasswordForm() {
     if (state?.success) {
       toastSuccess("Password updated");
       formRef.current?.reset();
+      onDone?.();
     }
     if (state?.error) toastError(state.error);
-  }, [state]);
+  }, [state, onDone]);
 
   return (
     <form key={state?.attempt ?? 0} ref={formRef} action={action} className="flex flex-col gap-5">
@@ -93,7 +98,20 @@ export function ChangePasswordForm() {
         <FormError message={state?.fieldErrors?.confirmPassword} />
       </div>
 
-      <SubmitButton />
+      <div className="flex items-center justify-end gap-3 pt-2">
+        {onDone && (
+          <Button
+            as="button"
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={onDone}
+          >
+            Cancel
+          </Button>
+        )}
+        <SubmitButton />
+      </div>
     </form>
   );
 }

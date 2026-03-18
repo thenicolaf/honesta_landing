@@ -130,6 +130,21 @@ export const customerColumn: ColumnDef<AdminOrder, OrderKey> = {
       </span>
       <span className="text-2xs text-earth/50">{o.email}</span>
       <span className="text-2xs text-earth/40">{o.phone}</span>
+      {(o.gender || o.birthday) && (
+        <span className="text-2xs text-earth/30">
+          {o.gender
+            ? o.gender.charAt(0).toUpperCase() + o.gender.slice(1)
+            : null}
+          {o.gender && o.birthday ? " · " : null}
+          {o.birthday
+            ? new Date(o.birthday).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })
+            : null}
+        </span>
+      )}
     </div>
   ),
   sortable: true,

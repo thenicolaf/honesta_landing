@@ -49,6 +49,22 @@ export function AdminOrderCards({
                 </span>
                 <span className="text-2xs text-earth/50">{order.email}</span>
                 <span className="text-2xs text-earth/40">{order.phone}</span>
+                {(order.gender || order.birthday) && (
+                  <span className="text-2xs text-earth/30">
+                    {order.gender
+                      ? order.gender.charAt(0).toUpperCase() +
+                        order.gender.slice(1)
+                      : null}
+                    {order.gender && order.birthday ? " · " : null}
+                    {order.birthday
+                      ? new Date(order.birthday).toLocaleDateString("en-GB", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })
+                      : null}
+                  </span>
+                )}
               </div>
             </DataCardField>
 

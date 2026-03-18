@@ -22,4 +22,6 @@ export type AdminOrder = Order & {
   email: string;
   phone: string;
   notes: string | null;
+  gender: string | null;
+  birthday: string | null;
 };
