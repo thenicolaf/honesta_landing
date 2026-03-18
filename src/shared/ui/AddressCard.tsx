@@ -91,20 +91,18 @@ export function AddressCard({
         </div>
       </div>
 
-      {/* Address — click copies, stopPropagation prevents card select */}
-      <div onClick={(e) => e.stopPropagation()} className="mt-1">
-        <CopyText
-          text={address.address}
-          className="text-sm text-earth hover:text-orange w-auto"
-        >
-          <MapPin className="w-3.5 h-3.5 shrink-0 text-earth/40" />
-          <span className="truncate">
-            {parsed.defaultEmirate && parsed.defaultArea
-              ? `${parsed.defaultArea}, ${parsed.defaultEmirate}`
-              : parsed.defaultEmirate || parsed.defaultArea || address.address}
-          </span>
-        </CopyText>
-      </div>
+      <CopyText
+        text={address.address}
+        className="text-sm text-earth hover:text-orange w-auto mt-1"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <MapPin className="w-3.5 h-3.5 shrink-0 text-earth/40" />
+        <span className="truncate">
+          {parsed.defaultEmirate && parsed.defaultArea
+            ? `${parsed.defaultArea}, ${parsed.defaultEmirate}`
+            : parsed.defaultEmirate || parsed.defaultArea || address.address}
+        </span>
+      </CopyText>
 
       {(parsed.defaultBuildingName || parsed.defaultFlatNumber) && (
         <p className="font-body text-2xs text-earth/50 truncate mt-0.5">

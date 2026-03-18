@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { MouseEventHandler, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Copy, Check } from "lucide-react";
 
@@ -8,15 +8,22 @@ interface CopyTextProps {
   text: string;
   children: React.ReactNode;
   className?: string;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
 }
 
-export function CopyText({ text, children, className = "" }: CopyTextProps) {
+export function CopyText({
+  text,
+  children,
+  className = "",
+  onClick,
+}: CopyTextProps) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = () => {
+  const handleCopy: MouseEventHandler<HTMLButtonElement> = (event) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
+    onClick?.(event);
   };
 
   return (
