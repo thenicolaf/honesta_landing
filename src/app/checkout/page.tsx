@@ -9,6 +9,7 @@ import { CheckoutPage } from "@/pages_flow/checkout";
 import { CUSTOMER_COOKIE_KEY } from "@/shared/consts";
 import { CustomerInfo } from "@/shared/types";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
+import { getUserAddresses } from "@/lib/addressesDb";
 
 export default async function CheckoutRoute() {
   const cookieStore = await cookies();
@@ -28,36 +29,27 @@ export default async function CheckoutRoute() {
   } = await supabase.auth.getUser();
 
   const profileValues: Partial<CustomerInfo> = {};
+  let addresses: Awaited<ReturnType<typeof getUserAddresses>> = [];
+
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("first_name, last_name, phone, address, coordinates")
+      .select("first_name, last_name, phone")
       .eq("id", user.id)
       .single();
 
-    if (profile?.first_name) {
-      profileValues.firstName = profile.first_name;
-    }
-    if (profile?.last_name) {
-      profileValues.lastName = profile.last_name;
-    }
-    if (profile?.phone) {
-      profileValues.phone = profile.phone;
-    }
-    if (profile?.address) {
-      profileValues.address = profile.address;
-    }
+    if (profile?.first_name) profileValues.firstName = profile.first_name;
+    if (profile?.last_name) profileValues.lastName = profile.last_name;
+    if (profile?.phone) profileValues.phone = profile.phone;
+    if (user.email) profileValues.email = user.email;
 
-    const coords = profile?.coordinates as { lat: number; lng: number } | null;
-    if (coords) {
-      profileValues.lat = String(coords.lat);
-      profileValues.lng = String(coords.lng);
-    }
-
-    if (user.email) {
-      profileValues.email = user.email;
-    }
+    addresses = await getUserAddresses(user.id);
   }
 
-  return <CheckoutPage defaultValues={user ? profileValues : cookieValues} />;
+  return (
+    <CheckoutPage
+      defaultValues={user ? profileValues : cookieValues}
+      addresses={addresses}
+    />
+  );
 }

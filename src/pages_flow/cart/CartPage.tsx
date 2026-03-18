@@ -1,7 +1,7 @@
 "use client";
 
 import { useCart } from "@/providers";
-import { CartEmpty } from "@/shared/ui/CartEmpty";
+import { EmptyCart } from "./EmptyCart";
 import { CartGrid } from "./ui/CartGrid";
 import { CartSummary } from "./ui/CartSummary";
 import { PageLoader } from "@/shared/ui";
@@ -14,7 +14,7 @@ export function CartPage() {
   }
 
   if (items.length === 0) {
-    return <CartEmpty />;
+    return <EmptyCart />;
   }
 
   return (

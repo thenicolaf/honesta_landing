@@ -77,16 +77,11 @@ export async function updateProfile(
 
   const { supabase, user } = await requireUser();
 
-  const lat = parseFloat(profile.lat ?? "");
-  const lng = parseFloat(profile.lng ?? "");
-
   const { error } = await supabase.from("profiles").upsert({
     id: user.id,
     first_name: profile.firstName!.trim(),
     last_name: profile.lastName!.trim(),
     phone: profile.phone!.trim(),
-    address: profile.address!.trim(),
-    coordinates: !isNaN(lat) && !isNaN(lng) ? { lat, lng } : null,
     updated_at: new Date().toISOString(),
   });
 

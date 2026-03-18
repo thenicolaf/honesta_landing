@@ -7,16 +7,18 @@ import { CheckoutForm } from "./ui/CheckoutForm";
 import { OrderSummary } from "./ui/OrderSummary";
 import { DELIVERY_FEE } from "@/shared/consts";
 import { CustomerInfo } from "@/shared/types";
-import { CartEmpty } from "@/shared/ui/CartEmpty";
+import { EmptyCart } from "@/pages_flow/cart/EmptyCart";
 import { Loader } from "@/shared/ui/Loader";
 import { Button, toastError } from "@/shared/ui";
 import { IconChevron } from "@/shared/icons";
+import type { UserAddress } from "@/lib/addressesDb";
 
 interface CheckoutPageProps {
   defaultValues?: Partial<CustomerInfo>;
+  addresses?: UserAddress[];
 }
 
-export function CheckoutPage({ defaultValues }: CheckoutPageProps) {
+export function CheckoutPage({ defaultValues, addresses }: CheckoutPageProps) {
   const { items, total, isHydrated } = useCart();
 
   const [state, formAction] = useActionState(
@@ -40,7 +42,7 @@ export function CheckoutPage({ defaultValues }: CheckoutPageProps) {
   }
 
   if (items.length === 0) {
-    return <CartEmpty />;
+    return <EmptyCart />;
   }
 
   return (
@@ -64,6 +66,7 @@ export function CheckoutPage({ defaultValues }: CheckoutPageProps) {
           <form key={state?.attempt ?? 0} action={formAction} className="flex flex-col gap-5">
             <CheckoutForm
               defaultValues={defaultValues}
+              addresses={addresses}
               fieldErrors={state?.fieldErrors}
               totalWithDelivery={total + DELIVERY_FEE}
             />

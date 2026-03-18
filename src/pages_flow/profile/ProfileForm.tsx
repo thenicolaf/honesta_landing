@@ -3,15 +3,12 @@
 import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import { FormLabel, FormInput, FormPhoneInput, FormError, Button, toastSuccess, toastError } from "@/shared/ui";
-import { AddressWithMap } from "@/pages_flow/checkout/ui/AddressWithMap";
 import { updateProfile, type ProfileState } from "./actions";
 
 interface ProfileData {
   first_name: string | null;
   last_name: string | null;
   phone: string | null;
-  address: string | null;
-  coordinates: { lat: number; lng: number } | null;
 }
 
 interface ProfileFormProps {
@@ -95,20 +92,6 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
         />
         <FormError message={state?.fieldErrors?.phone} />
       </div>
-
-      {/* Address + Map */}
-      <AddressWithMap
-        defaultValue={
-          state?.values?.address ?? defaultValues?.address ?? undefined
-        }
-        defaultLat={
-          state?.values?.lat ?? defaultValues?.coordinates?.lat?.toString()
-        }
-        defaultLng={
-          state?.values?.lng ?? defaultValues?.coordinates?.lng?.toString()
-        }
-        error={state?.fieldErrors?.address}
-      />
 
       <SubmitButton />
     </form>

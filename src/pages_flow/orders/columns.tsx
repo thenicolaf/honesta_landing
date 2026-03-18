@@ -6,6 +6,7 @@ import {
   compareDate,
   compareString,
 } from "@/shared/ui/Table";
+import { CopyText } from "@/shared/ui";
 import { StatusBadge } from "./ui/StatusBadge";
 import { CopyOrderId } from "./ui/CopyOrderId";
 import type { Order, AdminOrder } from "./types";
@@ -93,10 +94,15 @@ export const pricingColumn: ColumnDef<Order, OrderKey> = {
 export const addressColumn: ColumnDef<Order, OrderKey> = {
   key: "address",
   header: "Address",
-  cell: (o) => (
-    <span className="text-2xs text-earth/60 line-clamp-2">{o.address}</span>
-  ),
-  headerClassName: "min-w-44",
+  cell: (o) =>
+    o.address ? (
+      <CopyText text={o.address} className="text-2xs text-earth/60">
+        <span>{o.address}</span>
+      </CopyText>
+    ) : (
+      <span className="text-2xs text-earth/20">—</span>
+    ),
+  headerClassName: "min-w-64",
 };
 
 export const dateColumn: ColumnDef<Order, OrderKey> = {

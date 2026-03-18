@@ -6,20 +6,25 @@ import {
   FormPhoneInput,
   FormTextarea,
   FormError,
+  AddressWithMap,
 } from "@/shared/ui";
 import { SubmitButton } from "./SubmitButton";
-import { AddressWithMap } from "./AddressWithMap";
+import { AddressSelector } from "./AddressSelector";
 import { CustomerInfo } from "@/shared/types";
 import type { CustomerErrors } from "@/shared/utils/validateCustomer";
+import { parseAddress } from "@/shared/utils/address";
+import type { UserAddress } from "@/lib/addressesDb";
 
 interface CheckoutFormProps {
   defaultValues?: Partial<CustomerInfo>;
+  addresses?: UserAddress[];
   fieldErrors?: CustomerErrors;
   totalWithDelivery: number;
 }
 
 export function CheckoutForm({
   defaultValues = {},
+  addresses,
   fieldErrors,
   totalWithDelivery,
 }: CheckoutFormProps) {
@@ -80,12 +85,20 @@ export function CheckoutForm({
       </div>
 
       {/* Address + Map */}
-      <AddressWithMap
-        defaultValue={defaultValues.address}
-        defaultLat={defaultValues.lat}
-        defaultLng={defaultValues.lng}
-        error={fieldErrors?.address}
-      />
+      {addresses && addresses.length > 0 ? (
+        <AddressSelector
+          addresses={addresses}
+          defaultValues={defaultValues}
+          error={fieldErrors?.address}
+        />
+      ) : (
+        <AddressWithMap
+          {...parseAddress(defaultValues.address)}
+          defaultLat={defaultValues.lat}
+          defaultLng={defaultValues.lng}
+          error={fieldErrors?.address}
+        />
+      )}
 
       {/* Notes */}
       <div>

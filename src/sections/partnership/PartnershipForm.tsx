@@ -10,9 +10,10 @@ import {
   FormTextarea,
   FormError,
 } from "@/shared/ui";
+import { AddressWithMap } from "@/shared/ui";
+import { parseAddress } from "@/shared/utils/address";
 import { submitPartnershipInquiry, type PartnershipState } from "./actions";
 import { BUSINESS_TYPES } from "./consts";
-import { AddressWithMap } from "@/pages_flow/checkout/ui/AddressWithMap";
 
 export function PartnershipForm() {
   const [state, formAction, isPending] = useActionState<
@@ -81,7 +82,7 @@ export function PartnershipForm() {
       </div>
 
       <AddressWithMap
-        defaultValue={state?.values?.address}
+        {...parseAddress(state?.values?.address)}
         defaultLat={state?.values?.lat}
         defaultLng={state?.values?.lng}
       />

@@ -1,22 +1,23 @@
 import { Card } from "@/shared/ui";
 import { ProfileForm } from "./ProfileForm";
 import { ChangePasswordForm } from "./ChangePasswordForm";
+import { AddressSection } from "./AddressSection";
 import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
+import type { UserAddress } from "@/lib/addressesDb";
 
 interface ProfileData {
   first_name: string | null;
   last_name: string | null;
   phone: string | null;
-  address: string | null;
-  coordinates: { lat: number; lng: number } | null;
 }
 
 interface ProfilePageProps {
   profile: ProfileData | null;
+  addresses: UserAddress[];
   provider?: string;
 }
 
-export function ProfilePage({ profile, provider }: ProfilePageProps) {
+export function ProfilePage({ profile, addresses, provider }: ProfilePageProps) {
   return (
     <>
       <AdminPageHeader title="Profile" />
@@ -26,6 +27,10 @@ export function ProfilePage({ profile, provider }: ProfilePageProps) {
           Personal Information
         </p>
         <ProfileForm defaultValues={profile} />
+      </Card>
+
+      <Card className="p-4 md:px-6 md:py-4 lg:p-8 mt-6">
+        <AddressSection addresses={addresses} />
       </Card>
 
       {provider === "email" && (
