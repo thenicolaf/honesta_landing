@@ -112,7 +112,7 @@ export function NotificationBell() {
               No notifications yet
             </p>
           ) : (
-            notifications.map((n) => (
+            notifications.slice(0, 10).map((n) => (
               <NotificationItem
                 key={n.id}
                 {...n}

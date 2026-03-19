@@ -36,12 +36,13 @@ export function OrderSummary({
         <div className="flex flex-col gap-3 mb-4">
           {items.map((item) => (
             <div
-              key={item.id}
+              key={item.variantId}
               className="flex justify-between items-start gap-2"
             >
               <div className="flex-1 min-w-0">
                 <p className="font-body font-light text-earth text-sm leading-snug">
                   {item.name}
+                  {item.weight_g ? ` (${item.weight_g}g)` : ""}
                 </p>
                 <p className="font-body font-light text-earth/45 text-xs">
                   × {item.quantity}

@@ -27,7 +27,9 @@ export default async function Page() {
               product_free_froms(free_from_options(label)),
               product_serving_ideas(serving_idea_options(label)),
               product_occasions(occasion_options(label)),
-              product_benefits(benefits(name, description))`,
+              product_benefits(benefits(name, description)),
+              promotion_products(promotions(name, discount_type, discount_value, starts_at, ends_at, is_active)),
+              product_variants(id, weight_g, price)`,
             )
             .in("id", productIds)
         ).data ?? []

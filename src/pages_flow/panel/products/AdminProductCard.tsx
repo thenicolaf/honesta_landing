@@ -7,8 +7,6 @@ import {
   ProductImage,
   ProductHeader,
   ProductTitle,
-  ProductWeight,
-  ProductPrice,
   ProductTags,
   ProductFreeFrom,
   ProductDetails,
@@ -16,6 +14,7 @@ import {
 } from "@/sections/products/components";
 import { mapAdminProduct } from "@/sections/products/utils";
 import { useProductActions } from "./ProductActionsProvider";
+import { AdminVariantBadges } from "./AdminVariantBadges";
 
 export function AdminProductCard({ product }: { product: AdminDbProduct }) {
   const { openDelete } = useProductActions();
@@ -56,11 +55,11 @@ export function AdminProductCard({ product }: { product: AdminDbProduct }) {
         />
         <ProductTitle title={product.title} />
 
-        {/* Price + weight */}
-        <div className="flex items-center gap-3 text-sm font-body">
-          <ProductPrice price={parseFloat(product.price)} promotion={promotion} />
-          <ProductWeight weight_g={product.weight_g ?? undefined} />
-        </div>
+        <AdminVariantBadges
+          variants={product.product_variants}
+          promotion={promotion}
+          size="xs"
+        />
 
         <ProductTags tags={tags} />
         <ProductFreeFrom freeFrom={freeFrom} />

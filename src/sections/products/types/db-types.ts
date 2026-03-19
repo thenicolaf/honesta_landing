@@ -3,8 +3,6 @@ export interface DbProduct {
   slug: string;
   title: string;
   tagline: string | null;
-  price: string;
-  weight_g: number | null;
   image_url: string | null;
   in_stock: boolean | null;
   status: "draft" | "published" | "archived";
@@ -33,6 +31,11 @@ export interface DbProduct {
       is_active: boolean;
       starts_at: string;
     };
+  }[];
+  product_variants: {
+    id: string;
+    weight_g: number;
+    price: string;
   }[];
 }
 

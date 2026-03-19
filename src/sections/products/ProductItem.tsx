@@ -1,16 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import type { Product } from "./types";
 import {
   ProductImage,
   ProductHeader,
   ProductTitle,
-  ProductWeight,
   ProductTags,
   ProductFreeFrom,
   ProductDetails,
   ProductPriceAndCart,
+  ProductVariantSelector,
   FavoriteButton,
 } from "./components";
 
@@ -18,6 +19,11 @@ import {
 
 interface ProductItemProps {
   product: Product;
+}
+
+function stop(e: React.MouseEvent) {
+  e.stopPropagation();
+  e.preventDefault();
 }
 
 export function ProductItem({ product }: ProductItemProps) {
@@ -28,12 +34,19 @@ export function ProductItem({ product }: ProductItemProps) {
     tags,
     freeFrom,
     image_url,
-    weight_g,
     benefits,
     nutrition,
     servingIdeas,
     occasions,
   } = product;
+
+  const [selectedVariantId, setSelectedVariantId] = useState(
+    () => product.variants?.[0]?.id ?? "",
+  );
+
+  const selectedVariant =
+    product.variants?.find((v) => v.id === selectedVariantId) ??
+    product.variants?.[0];
 
   const card = (
     <div className="h-full flex flex-col rounded-2xl bg-white-warm border border-parchment/60 hover:shadow-lg hover:border-transparent transition-all duration-300">
@@ -55,7 +68,16 @@ export function ProductItem({ product }: ProductItemProps) {
       <div className="flex-1 p-5 flex flex-col gap-3">
         <ProductHeader category={category} />
         <ProductTitle title={title} />
-        <ProductWeight weight_g={weight_g} />
+        {product.variants.length > 0 && (
+          <div onClick={stop} className="max-w-fit">
+            <ProductVariantSelector
+              variants={product.variants}
+              selectedId={selectedVariantId}
+              onSelect={setSelectedVariantId}
+              size="sm"
+            />
+          </div>
+        )}
         <ProductTags tags={tags} />
         <ProductFreeFrom freeFrom={freeFrom} />
         <ProductDetails
@@ -64,7 +86,10 @@ export function ProductItem({ product }: ProductItemProps) {
           servingIdeas={servingIdeas}
           occasions={occasions}
         />
-        <ProductPriceAndCart product={product} />
+        <ProductPriceAndCart
+          product={product}
+          selectedVariant={selectedVariant}
+        />
       </div>
     </div>
   );

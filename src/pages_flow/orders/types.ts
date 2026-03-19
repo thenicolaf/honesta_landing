@@ -24,4 +24,5 @@ export type AdminOrder = Order & {
   notes: string | null;
   gender: string | null;
   birthday: string | null;
+  is_fulfilled: boolean;
 };

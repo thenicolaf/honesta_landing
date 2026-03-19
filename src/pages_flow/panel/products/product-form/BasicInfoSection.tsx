@@ -5,7 +5,6 @@ import {
   FormLabel,
   FormInput,
   FormTextarea,
-  FormNumberInput,
   FormCheckbox,
   FormUploadZone,
   FormError,
@@ -40,32 +39,6 @@ export function BasicInfoSection({ product, state }: SectionProps) {
             rows={3}
             placeholder="e.g. Crispy, sweet, naturally dried"
             defaultValue={state?.values?.tagline ?? product?.tagline ?? ""}
-          />
-        </div>
-
-        <div>
-          <FormLabel htmlFor="p-price">Price (AED) *</FormLabel>
-          <FormNumberInput
-            id="p-price"
-            name="price"
-            min={0}
-            step={1}
-            placeholder="0"
-            defaultValue={state?.values?.price ?? product?.price ?? ""}
-            state={state?.fieldErrors?.price ? "error" : "default"}
-          />
-          <FormError message={state?.fieldErrors?.price} />
-        </div>
-
-        <div>
-          <FormLabel htmlFor="p-weight">Weight (g)</FormLabel>
-          <FormNumberInput
-            id="p-weight"
-            name="weight_g"
-            min={0}
-            step={1}
-            placeholder="e.g. 250"
-            defaultValue={state?.values?.weight_g ?? product?.weight_g ?? ""}
           />
         </div>
 

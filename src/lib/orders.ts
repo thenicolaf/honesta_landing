@@ -44,10 +44,11 @@ export async function createOrderWithItems(
   await supabaseAdmin.from("order_items").insert(
     items.map((item) => ({
       order_id: order.id,
-      product_id: item.id,
+      variant_id: item.variantId,
       name: item.name,
       price: item.price,
       quantity: item.quantity,
+      weight_g: item.weight_g,
     })),
   );
 

@@ -6,6 +6,7 @@ import {
   DataCardFooter,
   DataCardList,
   DataCardEmpty,
+  CopyText,
 } from "@/shared/ui";
 import { formatAed, formatDateTime } from "@/shared/ui/Table";
 import { IconReceipt } from "@/shared/icons";
@@ -81,7 +82,13 @@ export function OrderCards({ orders }: { orders: Order[] }) {
             </DataCardField>
 
             <DataCardField label="Address">
-              <span className="text-2xs text-earth/60">{order.address}</span>
+              {order.address ? (
+                <CopyText text={order.address} className="text-2xs text-earth/60">
+                  <span>{order.address}</span>
+                </CopyText>
+              ) : (
+                <span className="text-2xs text-earth/20">—</span>
+              )}
             </DataCardField>
           </DataCardBody>
 

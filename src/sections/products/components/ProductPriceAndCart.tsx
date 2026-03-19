@@ -4,13 +4,15 @@ import { Minus, Plus } from "lucide-react";
 import { Button, Badge, toastSuccess, toastInfo } from "@/shared/ui";
 import { useCart } from "@/providers";
 import { ProductPrice } from "./ProductPrice";
-import type { Product } from "../types";
+import { calculateDiscountedPrice } from "@/shared/utils/calculateDiscount";
+import type { Product, ProductVariant } from "../types";
 
 interface ProductPriceAndCartProps {
   product: Pick<
     Product,
     "id" | "title" | "price" | "image_url" | "in_stock" | "promotion"
   >;
+  selectedVariant?: ProductVariant;
 }
 
 function stop(e: React.MouseEvent) {
@@ -18,19 +20,34 @@ function stop(e: React.MouseEvent) {
   e.preventDefault();
 }
 
-export function ProductPriceAndCart({ product }: ProductPriceAndCartProps) {
+export function ProductPriceAndCart({ product, selectedVariant }: ProductPriceAndCartProps) {
   const { items, addToCart, updateItemQuantity, removeFromCart } = useCart();
-  const cartItem = items.find((i) => i.id === product.id);
-  const quantity = cartItem?.quantity ?? 0;
 
-  const effectivePrice = product.promotion
-    ? product.promotion.discountedPrice
-    : product.price;
+  const variantPrice = selectedVariant?.price;
+
+  // Compute promotion for selected variant's price
+  const variantPromotion = product.promotion && variantPrice != null
+    ? {
+        ...product.promotion,
+        discountedPrice: calculateDiscountedPrice(
+          variantPrice,
+          product.promotion.discountType,
+          product.promotion.discountValue,
+        ),
+      }
+    : product.promotion;
+
+  const effectivePrice = variantPromotion?.discountedPrice ?? variantPrice;
+
+  const cartItem = selectedVariant
+    ? items.find((i) => i.variantId === selectedVariant.id)
+    : undefined;
+  const quantity = cartItem?.quantity ?? 0;
 
   if (product.in_stock === false) {
     return (
       <div className="mt-auto flex items-center justify-between gap-3 pt-1">
-        <ProductPrice price={product.price!} promotion={product.promotion} />
+        <ProductPrice price={variantPrice!} promotion={variantPromotion} />
         <Badge variant="outline" size="md">
           Out of Stock
         </Badge>
@@ -38,7 +55,7 @@ export function ProductPriceAndCart({ product }: ProductPriceAndCartProps) {
     );
   }
 
-  if (product.price == null || product.id == null) {
+  if (variantPrice == null || product.id == null || !selectedVariant) {
     return (
       <Button
         href={process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL}
@@ -57,26 +74,28 @@ export function ProductPriceAndCart({ product }: ProductPriceAndCartProps) {
   const handleDecrement = (e: React.MouseEvent) => {
     stop(e);
     if (quantity === 1) {
-      removeFromCart(product.id!);
+      removeFromCart(selectedVariant.id);
       toastInfo("Removed from cart");
     } else {
-      updateItemQuantity(product.id!, quantity - 1);
+      updateItemQuantity(selectedVariant.id, quantity - 1);
     }
   };
 
   const handleIncrement = (e: React.MouseEvent) => {
     stop(e);
-    updateItemQuantity(product.id!, quantity + 1);
+    updateItemQuantity(selectedVariant.id, quantity + 1);
   };
 
   const handleAdd = (e: React.MouseEvent) => {
     stop(e);
     addToCart({
-      id: product.id!,
+      variantId: selectedVariant.id,
+      productId: product.id!,
       name: product.title,
       price: effectivePrice!,
-      originalPrice: product.price!,
+      originalPrice: variantPromotion ? variantPrice! : undefined,
       image_url: product.image_url,
+      weight_g: selectedVariant.weight_g,
     });
     toastSuccess("Added to cart");
   };
@@ -84,7 +103,7 @@ export function ProductPriceAndCart({ product }: ProductPriceAndCartProps) {
   if (quantity > 0) {
     return (
       <div className="mt-auto flex items-center justify-between gap-3 pt-1">
-        <ProductPrice price={product.price} promotion={product.promotion} />
+        <ProductPrice price={variantPrice} promotion={variantPromotion} />
         <div className="flex items-center gap-2">
           <Button
             as="button"
@@ -114,7 +133,7 @@ export function ProductPriceAndCart({ product }: ProductPriceAndCartProps) {
 
   return (
     <div className="mt-auto flex items-center justify-between gap-3 pt-1">
-      <ProductPrice price={product.price} promotion={product.promotion} />
+      <ProductPrice price={variantPrice} promotion={variantPromotion} />
       <Button as="button" variant="primary" size="sm" onClick={handleAdd}>
         Add to Cart
       </Button>

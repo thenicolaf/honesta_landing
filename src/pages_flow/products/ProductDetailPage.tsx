@@ -1,17 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/shared/ui";
 import type { Product } from "@/sections/products/types";
 import {
   ProductHeader,
-  ProductWeight,
   ProductTags,
   ProductFreeFrom,
   ProductPriceAndCart,
   ProductExpandedDetails,
   ProductDetailImage,
   ProductTagline,
+  ProductVariantSelector,
   FavoriteButton,
 } from "@/sections/products/components";
 
@@ -29,12 +30,19 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
     tags,
     freeFrom,
     image_url,
-    weight_g,
     benefits,
     nutrition,
     servingIdeas,
     occasions,
   } = product;
+
+  const [selectedVariantId, setSelectedVariantId] = useState(
+    () => product.variants?.[0]?.id ?? "",
+  );
+
+  const selectedVariant =
+    product.variants?.find((v) => v.id === selectedVariantId) ??
+    product.variants?.[0];
 
   return (
     <main className="grow min-h-160 bg-cream pt-24 pb-16">
@@ -73,9 +81,15 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
 
             <ProductTagline tagline={tagline} />
 
-            <ProductWeight weight_g={weight_g} />
+            {product.variants.length > 0 && (
+              <ProductVariantSelector
+                variants={product.variants}
+                selectedId={selectedVariantId}
+                onSelect={setSelectedVariantId}
+              />
+            )}
 
-            <ProductPriceAndCart product={product} />
+            <ProductPriceAndCart product={product} selectedVariant={selectedVariant} />
 
             <ProductTags tags={tags} />
             <ProductFreeFrom freeFrom={freeFrom} />

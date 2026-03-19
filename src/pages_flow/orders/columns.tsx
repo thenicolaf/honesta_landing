@@ -10,6 +10,7 @@ import { CopyText } from "@/shared/ui";
 import { StatusBadge } from "./ui/StatusBadge";
 import { CopyOrderId } from "./ui/CopyOrderId";
 import type { Order, AdminOrder } from "./types";
+import { FulfilledToggle } from "@/pages_flow/panel/orders/FulfilledToggle";
 
 // ─── Shared columns (used by both user & admin tables) ───────────────────────
 
@@ -21,7 +22,8 @@ type OrderKey =
   | "address"
   | "date"
   | "customer"
-  | "notes";
+  | "notes"
+  | "fulfilled";
 
 export const orderIdColumn: ColumnDef<Order, OrderKey> = {
   key: "id",
@@ -166,6 +168,17 @@ export const notesColumn: ColumnDef<AdminOrder, OrderKey> = {
   headerClassName: "min-w-44",
 };
 
+export const fulfilledColumn: ColumnDef<AdminOrder, OrderKey> = {
+  key: "fulfilled",
+  header: "Fulfilled",
+  cell: (o) => (
+    <div className="flex justify-center">
+      <FulfilledToggle orderId={o.id} defaultChecked={o.is_fulfilled} />
+    </div>
+  ),
+  headerClassName: "min-w-24 text-center",
+};
+
 // ─── Column sets ─────────────────────────────────────────────────────────────
 
 export const userOrderColumns: ColumnDef<Order, OrderKey>[] = [
@@ -178,6 +191,7 @@ export const userOrderColumns: ColumnDef<Order, OrderKey>[] = [
 ];
 
 export const adminOrderColumns: ColumnDef<AdminOrder, OrderKey>[] = [
+  fulfilledColumn,
   orderIdColumn as ColumnDef<AdminOrder, OrderKey>,
   customerColumn,
   statusColumn as ColumnDef<AdminOrder, OrderKey>,

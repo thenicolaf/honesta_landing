@@ -49,7 +49,7 @@ export function NotificationsProvider({
   const fetchNotifications = useCallback(async () => {
     if (!isAdmin) return;
     try {
-      const res = await fetch("/api/notifications?limit=20");
+      const res = await fetch("/api/notifications?limit=100");
       if (!res.ok) return;
       const data = await res.json();
       setNotifications(data.notifications);

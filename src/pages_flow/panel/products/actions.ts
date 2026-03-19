@@ -7,11 +7,15 @@ import { buildNutrition } from "./product-form/nutrition";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+interface VariantInput {
+  weight_g: number;
+  price: number;
+}
+
 interface ProductValues {
   title: string;
   tagline: string;
-  price: string;
-  weight_g: string;
+  variants: string;
   image_url: string;
   in_stock: string;
   category_id: string;
@@ -28,7 +32,7 @@ export interface ProductState {
   error?: string;
   fieldErrors?: {
     title?: string;
-    price?: string;
+    variants?: string;
     category_id?: string;
     images?: string;
   };
@@ -138,6 +142,16 @@ async function deleteJunctionRows(productId: string) {
   ]);
 }
 
+function parseVariants(raw: string | undefined): VariantInput[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 function validateProduct(values: Partial<ProductValues>) {
   const fieldErrors: ProductState["fieldErrors"] = {};
 
@@ -145,8 +159,22 @@ function validateProduct(values: Partial<ProductValues>) {
     fieldErrors.title = "Title is required";
   }
 
-  if (!values.price?.trim() || isNaN(parseFloat(values.price!))) {
-    fieldErrors.price = "Valid price is required";
+  const variants = parseVariants(values.variants);
+  if (variants.length === 0) {
+    fieldErrors.variants = "At least one variant is required";
+  } else {
+    const invalid = variants.some(
+      (v) =>
+        v.weight_g == null ||
+        isNaN(v.weight_g) ||
+        v.weight_g <= 0 ||
+        v.price == null ||
+        isNaN(v.price) ||
+        v.price <= 0,
+    );
+    if (invalid) {
+      fieldErrors.variants = "Each variant must have a valid weight and price";
+    }
   }
 
   if (!values.category_id?.trim()) {
@@ -166,13 +194,28 @@ function parseProductValues(
     slug: toSlug(title),
     title,
     tagline: values.tagline?.trim() || null,
-    price: parseFloat(values.price!),
-    weight_g: values.weight_g ? parseInt(values.weight_g) : null,
     image_url: values.image_url?.trim() || null,
     in_stock: values.in_stock === "true",
     category_id: values.category_id || null,
     nutrition: buildNutrition(formData),
   };
+}
+
+async function syncVariants(productId: string, variants: VariantInput[]) {
+  await supabaseAdmin
+    .from("product_variants")
+    .delete()
+    .eq("product_id", productId);
+
+  if (variants.length > 0) {
+    await supabaseAdmin.from("product_variants").insert(
+      variants.map((v) => ({
+        product_id: productId,
+        weight_g: v.weight_g,
+        price: v.price,
+      })),
+    );
+  }
 }
 
 // ─── Status transitions ──────────────────────────────────────────────────────
@@ -233,6 +276,8 @@ export async function createProduct(
   const productData = parseProductValues(values, formData);
   const status = (formData.get("status") as string) || "draft";
 
+  const variants = parseVariants(values.variants);
+
   const { data, error } = await supabaseAdmin
     .from("products")
     .insert({ ...productData, status })
@@ -243,7 +288,10 @@ export async function createProduct(
     return { error: "Failed to create product. Please try again.", values, attempt };
   }
 
-  await insertJunctionRows(data.id, values);
+  await Promise.all([
+    insertJunctionRows(data.id, values),
+    syncVariants(data.id, variants),
+  ]);
 
   redirect("/panel/products?toast=created");
 }
@@ -287,8 +335,13 @@ export async function updateProduct(
     await deleteImage(existing.image_url, "products");
   }
 
+  const variants = parseVariants(values.variants);
+
   await deleteJunctionRows(id);
-  await insertJunctionRows(id, values);
+  await Promise.all([
+    insertJunctionRows(id, values),
+    syncVariants(id, variants),
+  ]);
 
   redirect("/panel/products?toast=updated");
 }

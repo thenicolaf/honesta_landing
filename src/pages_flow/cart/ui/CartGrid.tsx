@@ -10,7 +10,7 @@ export function CartGrid() {
     <div className="flex flex-col gap-3 mb-6">
       {items.map((item) => (
         <CartItem
-          key={item.id}
+          key={item.variantId}
           item={item}
           onUpdateQuantity={updateItemQuantity}
           onRemove={removeFromCart}

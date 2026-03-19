@@ -15,17 +15,18 @@ import { AdminOrderCards } from "./AdminOrderCards";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const FILTER_KEYS = ["search", "status", "sortKey", "sortDir", "page", "pageSize"];
+const FILTER_KEYS = ["search", "status", "fulfilled", "sortKey", "sortDir", "page", "pageSize"];
 
 // ─── Inner (consumes filter context) ──────────────────────────────────────────
 
 function AllOrdersInner({ orders }: { orders: AdminOrder[] }) {
   const searchFilter = useFilterBar("search");
   const statusFilter = useFilterBar("status");
+  const fulfilledFilter = useFilterBar("fulfilled");
 
   const filtered = useMemo(
-    () => filterOrders(orders, statusFilter.value, searchFilter.value),
-    [orders, statusFilter.value, searchFilter.value],
+    () => filterOrders(orders, statusFilter.value, searchFilter.value, fulfilledFilter.value),
+    [orders, statusFilter.value, searchFilter.value, fulfilledFilter.value],
   );
 
   const { paginatedData, sort, onSort, pagination } = useOrdersTable(
@@ -33,7 +34,7 @@ function AllOrdersInner({ orders }: { orders: AdminOrder[] }) {
     adminOrderColumns,
   );
 
-  const hasFilters = !!(searchFilter.value || statusFilter.value);
+  const hasFilters = !!(searchFilter.value || statusFilter.value || fulfilledFilter.value);
 
   const emptyDescription = hasFilters
     ? "Try adjusting filters to find what you're looking for."

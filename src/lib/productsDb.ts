@@ -9,7 +9,8 @@ const PRODUCTS_SELECT = `
   product_serving_ideas(serving_idea_id, serving_idea_options(id, label)),
   product_occasions(occasion_id, occasion_options(id, label)),
   product_benefits(benefit_id, benefits(id, name, description)),
-  promotion_products(promotions(name, discount_type, discount_value, starts_at, ends_at, is_active))
+  promotion_products(promotions(name, discount_type, discount_value, starts_at, ends_at, is_active)),
+  product_variants(id, weight_g, price)
 `;
 
 export type AdminDbProduct = Omit<
@@ -37,7 +38,8 @@ const PUBLIC_PRODUCTS_SELECT = `
   product_serving_ideas(serving_idea_options(label)),
   product_occasions(occasion_options(label)),
   product_benefits(benefits(name, description)),
-  promotion_products(promotions(name, discount_type, discount_value, starts_at, ends_at, is_active))
+  promotion_products(promotions(name, discount_type, discount_value, starts_at, ends_at, is_active)),
+  product_variants(id, weight_g, price)
 `;
 
 export async function getProductBySlug(slug: string): Promise<DbProduct | null> {

@@ -14,6 +14,12 @@ export interface Benefit {
   description: string;
 }
 
+export interface ProductVariant {
+  id: string;
+  weight_g: number;
+  price: number;
+}
+
 export interface Product {
   /** Supabase UUID — present when loaded from DB, absent for static data */
   id?: string;
@@ -30,10 +36,12 @@ export interface Product {
   freeFrom: string[];
   /** URL to Supabase Storage, e.g. "https://….supabase.co/storage/v1/object/public/…" */
   image_url: string;
-  /** Price in AED — required for cart and checkout */
+  /** Default price (from smallest variant) — required for cart and checkout */
   price?: number;
-  /** Net weight of the package in grams */
+  /** Default weight (from smallest variant) */
   weight_g?: number;
+  /** Weight/price variants, sorted by weight_g ASC */
+  variants: ProductVariant[];
   /** Product availability; treated as true when absent */
   in_stock?: boolean;
   // Rich data — stored for future modal / detail expansion
@@ -51,14 +59,20 @@ export interface Product {
   };
 }
 
-/** Cart item stored in localStorage["cart"] — name maps to Product.title */
+/** Cart item — keyed by variantId (product_variants.id) */
 export interface CartItem {
-  id: string;
-  /** Display name — snapshot of Product.title at time of adding to cart */
+  /** product_variants.id — unique key in cart */
+  variantId: string;
+  /** products.id — for UI links and promotion lookup */
+  productId: string;
+  /** Snapshot of Product.title */
   name: string;
+  /** Variant price (discounted if promotion active) */
   price: number;
-  /** Original price before discount — present only when a promotion is active */
+  /** Variant base price before discount — computed from promotion, not stored in DB */
   originalPrice?: number;
   quantity: number;
   image_url?: string;
+  /** variant.weight_g */
+  weight_g: number;
 }

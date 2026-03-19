@@ -48,7 +48,7 @@ export default async function Page({ params }: Props) {
     brand: { "@type": "Organization", name: "HONESTA" },
     offers: {
       "@type": "Offer",
-      price: dbProduct.price,
+      price: product.price ?? 0,
       priceCurrency: "AED",
       availability:
         dbProduct.in_stock !== false

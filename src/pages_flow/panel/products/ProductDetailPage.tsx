@@ -5,17 +5,16 @@ import { Badge, Button } from "@/shared/ui";
 import type { AdminDbProduct } from "@/lib/productsDb";
 import {
   ProductHeader,
-  ProductWeight,
   ProductTags,
   ProductFreeFrom,
   ProductExpandedDetails,
   ProductDetailImage,
   ProductTagline,
-  ProductPrice,
   ProductStatusMenu,
 } from "@/sections/products/components";
 
 import { mapAdminProduct } from "@/sections/products/utils";
+import { AdminVariantBadges } from "./AdminVariantBadges";
 import { ProductActionsProvider, useProductActions } from "./ProductActionsProvider";
 
 interface ProductDetailPageProps {
@@ -82,11 +81,11 @@ function ProductDetailContent({ product }: ProductDetailPageProps) {
 
           <ProductTagline tagline={tagline} />
 
-          {/* Price + weight */}
-          <div className="flex items-center gap-3 text-sm font-body">
-            <ProductPrice price={parseFloat(product.price)} promotion={promotion} />
-            <ProductWeight weight_g={product.weight_g ?? undefined} />
-          </div>
+          <AdminVariantBadges
+            variants={product.product_variants}
+            promotion={promotion}
+            size="sm"
+          />
 
           <ProductTags tags={tags} />
           <ProductFreeFrom freeFrom={freeFrom} />

@@ -6,12 +6,14 @@ import {
   DataCardFooter,
   DataCardList,
   DataCardEmpty,
+  CopyText,
 } from "@/shared/ui";
 import { formatAed, formatDateTime } from "@/shared/ui/Table";
 import { IconReceipt } from "@/shared/icons";
 import { StatusBadge } from "@/pages_flow/orders/ui/StatusBadge";
 import { CopyOrderId } from "@/pages_flow/orders/ui/CopyOrderId";
 import type { AdminOrder } from "@/pages_flow/orders/types";
+import { FulfilledToggle } from "./FulfilledToggle";
 
 interface AdminOrderCardsProps {
   orders: AdminOrder[];
@@ -37,7 +39,13 @@ export function AdminOrderCards({
       {orders.map((order) => (
         <DataCard key={order.id}>
           <DataCardHeader>
-            <CopyOrderId id={order.id} />
+            <div className="flex items-center gap-2">
+              <FulfilledToggle
+                orderId={order.id}
+                defaultChecked={order.is_fulfilled}
+              />
+              <CopyOrderId id={order.id} />
+            </div>
             <StatusBadge status={order.status} />
           </DataCardHeader>
 
@@ -115,7 +123,16 @@ export function AdminOrderCards({
             </DataCardField>
 
             <DataCardField label="Address">
-              <span className="text-2xs text-earth/60">{order.address}</span>
+              {order.address ? (
+                <CopyText
+                  text={order.address}
+                  className="text-2xs text-earth/60"
+                >
+                  <span>{order.address}</span>
+                </CopyText>
+              ) : (
+                <span className="text-2xs text-earth/20">—</span>
+              )}
             </DataCardField>
 
             {order.notes && (

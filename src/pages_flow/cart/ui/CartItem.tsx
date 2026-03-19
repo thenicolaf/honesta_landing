@@ -3,10 +3,19 @@ import { Minus, Plus } from "lucide-react";
 import { Button, Badge, Card, toastInfo } from "@/shared/ui";
 import type { CartItem as CartItemType } from "@/sections/products/types";
 
+function WeightBadge({ weight_g }: { weight_g?: number }) {
+  if (!weight_g) return null;
+  return (
+    <Badge variant="warm" size="xs">
+      {weight_g}g
+    </Badge>
+  );
+}
+
 interface CartItemProps {
   item: CartItemType;
-  onUpdateQuantity: (id: string, quantity: number) => void;
-  onRemove: (id: string) => void;
+  onUpdateQuantity: (variantId: string, quantity: number) => void;
+  onRemove: (variantId: string) => void;
 }
 
 export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
@@ -20,10 +29,10 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
         size="icon"
         onClick={() => {
           if (item.quantity === 1) {
-            onRemove(item.id);
+            onRemove(item.variantId);
             toastInfo("Removed from cart");
           } else {
-            onUpdateQuantity(item.id, item.quantity - 1);
+            onUpdateQuantity(item.variantId, item.quantity - 1);
           }
         }}
         aria-label="Decrease quantity"
@@ -37,7 +46,7 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
         as="button"
         variant="primary"
         size="icon"
-        onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+        onClick={() => onUpdateQuantity(item.variantId, item.quantity + 1)}
         aria-label="Increase quantity"
       >
         <Plus className="w-3.5 h-3.5" />
@@ -68,16 +77,19 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="font-body font-semibold text-earth text-sm leading-snug truncate">
-            {item.name}
-          </p>
+          <div className="flex items-center gap-1.5">
+            <p className="font-body font-semibold text-earth text-sm leading-snug truncate">
+              {item.name}
+            </p>
+            <WeightBadge weight_g={item.weight_g} />
+          </div>
           {hasDiscount ? (
             <div className="flex items-center gap-2 mt-0.5">
               <span className="font-body font-semibold text-orange text-xs">
-                AED {item.price} each
+                AED {item.price.toFixed(2)} each
               </span>
               <span className="font-body text-earth/30 text-xs line-through">
-                AED {item.originalPrice}
+                AED {item.originalPrice!.toFixed(2)}
               </span>
               <Badge variant="counter" size="pill">
                 -{Math.round(((item.originalPrice! - item.price) / item.originalPrice!) * 100)}%
@@ -85,7 +97,7 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
             </div>
           ) : (
             <p className="font-body font-light text-earth/55 text-xs mt-0.5">
-              AED {item.price} each
+              AED {item.price.toFixed(2)} each
             </p>
           )}
         </div>
@@ -102,16 +114,19 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="font-body font-semibold text-earth text-sm leading-snug line-clamp-2">
-              {item.name}
-            </p>
+            <div className="flex items-center gap-1.5">
+              <p className="font-body font-semibold text-earth text-sm leading-snug line-clamp-2">
+                {item.name}
+              </p>
+              <WeightBadge weight_g={item.weight_g} />
+            </div>
             {hasDiscount ? (
               <div className="flex flex-wrap items-center gap-1.5 mt-1">
                 <span className="font-body font-semibold text-orange text-xs">
-                  AED {item.price}
+                  AED {item.price.toFixed(2)}
                 </span>
                 <span className="font-body text-earth/30 text-xs line-through">
-                  AED {item.originalPrice}
+                  AED {item.originalPrice!.toFixed(2)}
                 </span>
                 <Badge variant="counter" size="pill">
                   -{Math.round(((item.originalPrice! - item.price) / item.originalPrice!) * 100)}%
@@ -119,7 +134,7 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
               </div>
             ) : (
               <p className="font-body font-light text-earth/55 text-xs mt-1">
-                AED {item.price} each
+                AED {item.price.toFixed(2)} each
               </p>
             )}
           </div>

@@ -74,8 +74,8 @@ interface CartContextValue {
   total: number;
   isHydrated: boolean;
   addToCart: (item: Omit<CartItem, "quantity"> & { quantity?: number }) => void;
-  removeFromCart: (id: string) => void;
-  updateItemQuantity: (id: string, quantity: number) => void;
+  removeFromCart: (variantId: string) => void;
+  updateItemQuantity: (variantId: string, quantity: number) => void;
   clearCart: () => void;
 }
 
@@ -122,45 +122,47 @@ export function CartProvider({
   function addToCart(item: Omit<CartItem, "quantity"> & { quantity?: number }) {
     if (userId && supabaseRef.current) {
       const qty = item.quantity ?? 1;
-      const existing = _items.find((i) => i.id === item.id);
+      const existing = _items.find((i) => i.variantId === item.variantId);
       const newQty = existing ? existing.quantity + qty : qty;
       const newItems = existing
-        ? _items.map((i) => (i.id === item.id ? { ...i, quantity: newQty } : i))
+        ? _items.map((i) =>
+            i.variantId === item.variantId ? { ...i, quantity: newQty } : i,
+          )
         : [..._items, { ...item, quantity: qty }];
       setStore(newItems);
       upsertItemInDb(supabaseRef.current, userId, {
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        originalPrice: item.originalPrice,
+        ...item,
         quantity: newQty,
-        image_url: item.image_url,
       });
     } else {
       setStore(addItem(item));
     }
   }
 
-  function removeFromCart(id: string) {
+  function removeFromCart(variantId: string) {
     if (userId && supabaseRef.current) {
-      setStore(_items.filter((i) => i.id !== id));
-      removeItemFromDb(supabaseRef.current, userId, id);
+      setStore(_items.filter((i) => i.variantId !== variantId));
+      removeItemFromDb(supabaseRef.current, userId, variantId);
     } else {
-      setStore(removeItem(id));
+      setStore(removeItem(variantId));
     }
   }
 
-  function updateItemQuantity(id: string, quantity: number) {
+  function updateItemQuantity(variantId: string, quantity: number) {
     if (userId && supabaseRef.current) {
       if (quantity <= 0) {
-        setStore(_items.filter((i) => i.id !== id));
-        removeItemFromDb(supabaseRef.current, userId, id);
+        setStore(_items.filter((i) => i.variantId !== variantId));
+        removeItemFromDb(supabaseRef.current, userId, variantId);
       } else {
-        setStore(_items.map((i) => (i.id === id ? { ...i, quantity } : i)));
-        updateQuantityInDb(supabaseRef.current, userId, id, quantity);
+        setStore(
+          _items.map((i) =>
+            i.variantId === variantId ? { ...i, quantity } : i,
+          ),
+        );
+        updateQuantityInDb(supabaseRef.current, userId, variantId, quantity);
       }
     } else {
-      setStore(updateQuantity(id, quantity));
+      setStore(updateQuantity(variantId, quantity));
     }
   }
 

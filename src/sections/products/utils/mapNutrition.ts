@@ -31,7 +31,10 @@ export interface MappedAdminProduct {
 }
 
 export function mapAdminProduct(product: AdminDbProduct): MappedAdminProduct {
-  const originalPrice = Number(product.price);
+  const variants = (product.product_variants ?? [])
+    .map((v) => Number(v.price))
+    .sort((a, b) => a - b);
+  const basePrice = variants[0] ?? 0;
   const activePromo = findActivePromotion(product.promotion_products);
 
   return {
@@ -55,7 +58,7 @@ export function mapAdminProduct(product: AdminDbProduct): MappedAdminProduct {
           discountType: activePromo.discount_type as "percentage" | "fixed",
           discountValue: Number(activePromo.discount_value),
           discountedPrice: calculateDiscountedPrice(
-            originalPrice,
+            basePrice,
             activePromo.discount_type as "percentage" | "fixed",
             Number(activePromo.discount_value),
           ),

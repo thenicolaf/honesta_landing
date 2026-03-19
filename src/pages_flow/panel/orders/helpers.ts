@@ -24,11 +24,18 @@ export function filterOrders(
   orders: AdminOrder[],
   status: string,
   search: string,
+  fulfilled?: string,
 ): AdminOrder[] {
   let result = orders;
 
   if (status) {
     result = result.filter((o) => o.status === status);
+  }
+
+  if (fulfilled === "yes") {
+    result = result.filter((o) => o.is_fulfilled);
+  } else if (fulfilled === "no") {
+    result = result.filter((o) => !o.is_fulfilled);
   }
 
   const trimmed = search.trim().toLowerCase();
