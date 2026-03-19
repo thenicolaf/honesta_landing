@@ -10,7 +10,9 @@ import {
   SelectItem,
 } from "../Select";
 
-type FormSelectOption = string | { value: string; label: string };
+type FormSelectOption =
+  | string
+  | { value: string; label: string; disabled?: boolean };
 
 interface FormSelectProps {
   id?: string;
@@ -52,7 +54,7 @@ export function FormSelect({
   };
 
   const normalized = options.map((o) =>
-    typeof o === "string" ? { value: o, label: o } : o,
+    typeof o === "string" ? { value: o, label: o, disabled: false } : o,
   );
 
   return (
@@ -78,7 +80,7 @@ export function FormSelect({
         <SelectContent>
           {(opts) =>
             opts.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
+              <SelectItem key={o.value} value={o.value} disabled={o.disabled}>
                 {o.label}
               </SelectItem>
             ))

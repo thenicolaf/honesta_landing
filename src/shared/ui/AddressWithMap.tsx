@@ -29,6 +29,8 @@ interface Props {
   defaultLat?: string;
   defaultLng?: string;
   error?: string | null;
+  onEmirateChange?: (emirate: string) => void;
+  disabledEmirates?: string[];
 }
 
 function extractAddressParts(
@@ -73,6 +75,8 @@ export function AddressWithMap({
   defaultLat,
   defaultLng,
   error,
+  onEmirateChange,
+  disabledEmirates,
 }: Props) {
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "",
@@ -90,7 +94,11 @@ export function AddressWithMap({
     initPos,
   );
 
-  const [emirate, setEmirate] = useState(defaultEmirate);
+  const [emirate, setEmirateRaw] = useState(defaultEmirate);
+  function setEmirate(value: string) {
+    setEmirateRaw(value);
+    onEmirateChange?.(value);
+  }
   const [area, setArea] = useState(defaultArea);
   const [buildingName, setBuildingName] = useState(defaultBuildingName);
   const [flatNumber, setFlatNumber] = useState(defaultFlatNumber);
@@ -200,7 +208,10 @@ export function AddressWithMap({
             name="_emirate"
             value={emirate}
             onValueChange={setEmirate}
-            options={[...UAE_EMIRATES]}
+            options={UAE_EMIRATES.map((e) => ({
+              ...e,
+              disabled: disabledEmirates?.includes(e.value),
+            }))}
             placeholder="Emirate"
             state={hasError ? "error" : "default"}
           />
@@ -253,6 +264,7 @@ export function AddressWithMap({
       </div>
 
       {/* Hidden inputs for form submission */}
+      <input type="hidden" name="emirate" value={emirate} />
       <input type="hidden" name="address" value={composed} />
       <input type="hidden" name="lat" value={markerPos.lat} />
       <input type="hidden" name="lng" value={markerPos.lng} />

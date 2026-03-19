@@ -5,8 +5,13 @@ import { EmptyCart } from "./EmptyCart";
 import { CartGrid } from "./ui/CartGrid";
 import { CartSummary } from "./ui/CartSummary";
 import { PageLoader } from "@/shared/ui";
+import type { DeliverySetting } from "@/lib/deliveryDb";
 
-export function CartPage() {
+interface CartPageProps {
+  deliverySettings: DeliverySetting[];
+}
+
+export function CartPage({ deliverySettings }: CartPageProps) {
   const { items, isHydrated } = useCart();
 
   if (!isHydrated) {
@@ -31,7 +36,7 @@ export function CartPage() {
         </h1>
 
         <CartGrid />
-        <CartSummary />
+        <CartSummary deliverySettings={deliverySettings} />
       </div>
     </main>
   );

@@ -20,6 +20,10 @@ interface CheckoutFormProps {
   addresses?: UserAddress[];
   fieldErrors?: CustomerErrors;
   totalWithDelivery: number;
+  onEmirateChange?: (emirate: string) => void;
+  belowMinimum?: boolean;
+  minimumOrder?: number | null;
+  disabledEmirates?: string[];
 }
 
 export function CheckoutForm({
@@ -27,6 +31,10 @@ export function CheckoutForm({
   addresses,
   fieldErrors,
   totalWithDelivery,
+  onEmirateChange,
+  belowMinimum,
+  minimumOrder,
+  disabledEmirates,
 }: CheckoutFormProps) {
   return (
     <>
@@ -90,6 +98,8 @@ export function CheckoutForm({
           addresses={addresses}
           defaultValues={defaultValues}
           error={fieldErrors?.address}
+          onEmirateChange={onEmirateChange}
+          disabledEmirates={disabledEmirates}
         />
       ) : (
         <AddressWithMap
@@ -97,6 +107,8 @@ export function CheckoutForm({
           defaultLat={defaultValues.lat}
           defaultLng={defaultValues.lng}
           error={fieldErrors?.address}
+          onEmirateChange={onEmirateChange}
+          disabledEmirates={disabledEmirates}
         />
       )}
 
@@ -117,7 +129,11 @@ export function CheckoutForm({
         />
       </div>
 
-      <SubmitButton totalWithDelivery={totalWithDelivery} />
+      <SubmitButton
+        totalWithDelivery={totalWithDelivery}
+        belowMinimum={belowMinimum}
+        minimumOrder={minimumOrder}
+      />
 
       <p className="font-body font-light text-earth/40 text-xs text-center">
         Payments secured by N-Genius

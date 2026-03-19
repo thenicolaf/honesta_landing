@@ -1,10 +1,18 @@
 "use client";
 
-import { Button, Card } from "@/shared/ui";
+import { Button, Card, DeliveryInfo } from "@/shared/ui";
 import { useCart } from "@/providers";
-import { DELIVERY_FEE } from "@/shared/consts";
+import {
+  getDeliveryFeeRange,
+  formatDeliveryDaysRange,
+} from "@/shared/utils/calculateDelivery";
+import type { DeliverySetting } from "@/lib/deliveryDb";
 
-export function CartSummary() {
+interface CartSummaryProps {
+  deliverySettings: DeliverySetting[];
+}
+
+export function CartSummary({ deliverySettings }: CartSummaryProps) {
   const { items, total } = useCart();
 
   const totalDiscount = items.reduce((sum, item) => {
@@ -13,6 +21,11 @@ export function CartSummary() {
     }
     return sum;
   }, 0);
+
+  const { min, max } = getDeliveryFeeRange(deliverySettings);
+  const freeThreshold = deliverySettings.find(
+    (s) => s.emirate === "Dubai",
+  )?.free_delivery_threshold;
 
   return (
     <>
@@ -41,7 +54,7 @@ export function CartSummary() {
               Delivery
             </span>
             <span className="font-body font-semibold text-earth text-sm">
-              AED {DELIVERY_FEE}
+              {min === max ? `AED ${min}` : `AED ${min}–${max}`}
             </span>
           </div>
           <div className="border-t border-parchment/60 pt-2 mt-1 flex justify-between items-center">
@@ -49,9 +62,15 @@ export function CartSummary() {
               Total
             </span>
             <span className="font-body font-semibold text-orange text-lg">
-              AED {(total + DELIVERY_FEE).toFixed(2)}
+              {min === max
+                ? `AED ${(total + min).toFixed(2)}`
+                : `AED ${(total + min).toFixed(2)}–${(total + max).toFixed(2)}`}
             </span>
           </div>
+
+          <DeliveryInfo
+            label={`${formatDeliveryDaysRange(deliverySettings)}${freeThreshold ? ` · Free in Dubai from AED ${freeThreshold}` : ""}`}
+          />
         </div>
       </Card>
 

@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import type { CartItem } from "@/sections/products/types/types";
-import { CUSTOMER_COOKIE_KEY, COOKIE_CONSENT_KEY, DELIVERY_FEE } from "@/shared/consts";
+import { CUSTOMER_COOKIE_KEY, COOKIE_CONSENT_KEY } from "@/shared/consts";
 import type { CustomerInfo } from "@/shared/types";
 import {
   validateCustomer,
@@ -13,6 +13,8 @@ import { createOrderWithItems } from "@/lib/orders";
 import { createPaymentForOrder } from "@/lib/payments";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
 import { createNotification } from "@/lib/notificationsDb";
+import { getDeliverySettingByEmirate } from "@/lib/deliveryDb";
+import { calculateDelivery } from "@/shared/utils/calculateDelivery";
 
 export interface CheckoutState {
   error?: string;
@@ -50,12 +52,37 @@ export async function submitCheckout(
     return { fieldErrors, attempt };
   }
 
+  // 2. Calculate delivery fee server-side (authoritative)
+  const emirate = (formData.get("emirate") as string)?.trim() || "Dubai";
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+
+  const setting = await getDeliverySettingByEmirate(emirate);
+
+  if (setting && !setting.is_active) {
+    return {
+      error: `Delivery to ${emirate} is currently unavailable`,
+      attempt,
+    };
+  }
+
+  const delivery = calculateDelivery(
+    subtotal,
+    emirate,
+    setting ? [setting] : [],
+  );
+
+  if (delivery.belowMinimum) {
+    return {
+      error: `Minimum order of AED ${delivery.minimumOrder} is required for ${emirate}`,
+      attempt,
+    };
+  }
+
   const { data: order, error: orderError } = await createOrderWithItems(
     items,
     customer,
     subtotal,
-    DELIVERY_FEE,
+    delivery.fee,
     user?.id,
   );
   if (orderError || !order) {
@@ -70,7 +97,7 @@ export async function submitCheckout(
     order.id,
   );
 
-  // 2. Create payment
+  // 3. Create payment
   const { paymentUrl, error: paymentError } = await createPaymentForOrder(
     order.id,
     order.total,

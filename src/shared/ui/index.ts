@@ -22,6 +22,7 @@ export { Loader } from "./Loader";
 export { PageLoader } from "../../pages_flow/PageLoader";
 export { Badge } from "./Badge";
 export { Card } from "./Card";
+export { DeliveryInfo } from "./DeliveryInfo";
 export { TagToolbar, TagToolbarItem, useTagToolbar } from "./TagToolbar";
 export {
   Collapsible,

@@ -19,6 +19,7 @@ const DROPDOWN_MAX_H = 240; // max-h-60 = 240px
 export interface SelectOption {
   value: string;
   label: string;
+  disabled?: boolean;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -273,10 +274,11 @@ export function SelectContent({ children, className }: SelectContentProps) {
 interface SelectItemProps {
   children: React.ReactNode;
   value: string;
+  disabled?: boolean;
   className?: string;
 }
 
-export function SelectItem({ children, value, className }: SelectItemProps) {
+export function SelectItem({ children, value, disabled, className }: SelectItemProps) {
   const { value: selected, select } = useSelect();
   const isSelected = selected === value;
 
@@ -284,14 +286,18 @@ export function SelectItem({ children, value, className }: SelectItemProps) {
     <li
       role="option"
       aria-selected={isSelected}
-      onClick={() => select(value)}
+      aria-disabled={disabled || undefined}
+      onClick={disabled ? undefined : () => select(value)}
       className={cn(
         "flex items-center justify-between gap-2 px-4 py-2.5",
-        "font-body text-sm cursor-pointer select-none",
+        "font-body text-sm select-none",
         "transition-colors duration-150",
-        isSelected
+        disabled
+          ? "opacity-40 pointer-events-none"
+          : "cursor-pointer",
+        !disabled && (isSelected
           ? "bg-earth/6 text-earth font-medium"
-          : "text-earth/70 hover:bg-earth/4 hover:text-earth",
+          : "text-earth/70 hover:bg-earth/4 hover:text-earth"),
         className,
       )}
     >

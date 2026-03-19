@@ -13,6 +13,7 @@ import {
   DropdownMenuLabel,
 } from "@/shared/ui";
 import { SignOutButton } from "@/pages_flow/profile/SignOutButton";
+import { USER_ROUTES, ADMIN_ROUTES } from "@/shared/consts/routes";
 
 interface NavUserButtonProps {
   user: { email: string } | null;
@@ -32,36 +33,19 @@ export function NavUserButton({ user, isAdmin }: NavUserButtonProps) {
           <DropdownMenuContent align="right">
             <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/panel/profile">Profile</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/panel/favorites">Favorites</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/panel/orders">Orders</Link>
-            </DropdownMenuItem>
+            {USER_ROUTES.map((route) => (
+              <DropdownMenuItem key={route.href} asChild>
+                <Link href={route.href}>{route.label}</Link>
+              </DropdownMenuItem>
+            ))}
             {isAdmin && (
               <>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/panel">Admin Panel</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/panel/categories">Categories</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/panel/products">Products</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/panel/all-orders">All Orders</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/panel/partnerships">Partnerships</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/panel/promotions">Promotions</Link>
-                </DropdownMenuItem>
+                {ADMIN_ROUTES.map((route) => (
+                  <DropdownMenuItem key={route.href} asChild>
+                    <Link href={route.href}>{route.label}</Link>
+                  </DropdownMenuItem>
+                ))}
               </>
             )}
             <DropdownMenuSeparator />

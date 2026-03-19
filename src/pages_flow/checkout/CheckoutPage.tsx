@@ -1,25 +1,42 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useCart } from "@/providers";
 import { submitCheckout } from "./actions";
 import { CheckoutForm } from "./ui/CheckoutForm";
 import { OrderSummary } from "./ui/OrderSummary";
-import { DELIVERY_FEE } from "@/shared/consts";
 import { CustomerInfo } from "@/shared/types";
 import { EmptyCart } from "@/pages_flow/cart/EmptyCart";
 import { Loader } from "@/shared/ui/Loader";
 import { Button, toastError } from "@/shared/ui";
 import { IconChevron } from "@/shared/icons";
 import type { UserAddress } from "@/lib/addressesDb";
+import type { DeliverySetting } from "@/lib/deliveryDb";
+import { calculateDelivery } from "@/shared/utils/calculateDelivery";
+import { parseAddress } from "@/shared/utils/address";
 
 interface CheckoutPageProps {
   defaultValues?: Partial<CustomerInfo>;
   addresses?: UserAddress[];
+  deliverySettings: DeliverySetting[];
 }
 
-export function CheckoutPage({ defaultValues, addresses }: CheckoutPageProps) {
+export function CheckoutPage({
+  defaultValues,
+  addresses,
+  deliverySettings,
+}: CheckoutPageProps) {
   const { items, total, isHydrated } = useCart();
+  const [emirate, setEmirate] = useState(
+    defaultValues?.address
+      ? extractEmirateFromAddress(defaultValues.address, addresses)
+      : "Dubai",
+  );
+
+  const delivery = calculateDelivery(total, emirate, deliverySettings);
+  const disabledEmirates = deliverySettings
+    .filter((s) => !s.is_active)
+    .map((s) => s.emirate);
 
   const [state, formAction] = useActionState(
     submitCheckout.bind(null, items),
@@ -68,12 +85,35 @@ export function CheckoutPage({ defaultValues, addresses }: CheckoutPageProps) {
               defaultValues={defaultValues}
               addresses={addresses}
               fieldErrors={state?.fieldErrors}
-              totalWithDelivery={total + DELIVERY_FEE}
+              totalWithDelivery={total + delivery.fee}
+              onEmirateChange={setEmirate}
+              belowMinimum={delivery.belowMinimum}
+              minimumOrder={delivery.minimumOrder}
+              disabledEmirates={disabledEmirates}
             />
           </form>
-          <OrderSummary />
+          <OrderSummary
+            deliveryFee={delivery.fee}
+            isFreeDelivery={delivery.isFreeDelivery}
+            deliveryDays={delivery.deliveryDays}
+            originalFee={
+              deliverySettings.find(
+                (s) => s.emirate.toLowerCase() === emirate.toLowerCase(),
+              )?.delivery_fee
+            }
+          />
         </div>
       </div>
     </main>
   );
+}
+
+function extractEmirateFromAddress(
+  address: string,
+  addresses?: UserAddress[],
+): string {
+  const defaultAddr = addresses?.find((a) => a.is_default) ?? addresses?.[0];
+  const addrStr = defaultAddr?.address ?? address;
+  const parsed = parseAddress(addrStr);
+  return parsed.defaultEmirate || "Dubai";
 }

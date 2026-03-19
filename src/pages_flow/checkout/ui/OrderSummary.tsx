@@ -1,10 +1,22 @@
 "use client";
 
-import { Card } from "@/shared/ui";
+import { Card, DeliveryInfo } from "@/shared/ui";
 import { useCart } from "@/providers";
-import { DELIVERY_FEE } from "@/shared/consts";
+import { formatDeliveryDays } from "@/shared/utils/calculateDelivery";
 
-export function OrderSummary() {
+interface OrderSummaryProps {
+  deliveryFee: number;
+  isFreeDelivery: boolean;
+  originalFee?: number;
+  deliveryDays: number;
+}
+
+export function OrderSummary({
+  deliveryFee,
+  isFreeDelivery,
+  originalFee,
+  deliveryDays,
+}: OrderSummaryProps) {
   const { items, total } = useCart();
 
   const totalDiscount = items.reduce((sum, item) => {
@@ -65,18 +77,33 @@ export function OrderSummary() {
             <span className="font-body font-light text-earth/60 text-sm">
               Delivery
             </span>
-            <span className="font-body font-semibold text-earth text-sm">
-              AED {DELIVERY_FEE}
-            </span>
+            {isFreeDelivery ? (
+              <span className="flex items-center gap-1.5">
+                <span className="font-body text-earth/40 text-sm line-through">
+                  AED {originalFee}
+                </span>
+                <span className="font-body font-semibold text-moss text-sm">
+                  FREE
+                </span>
+              </span>
+            ) : (
+              <span className="font-body font-semibold text-earth text-sm">
+                AED {deliveryFee}
+              </span>
+            )}
           </div>
           <div className="flex justify-between items-center pt-1">
             <span className="font-body font-semibold text-earth text-base">
               Total
             </span>
             <span className="font-body font-semibold text-orange text-lg">
-              AED {(total + DELIVERY_FEE).toFixed(2)}
+              AED {(total + deliveryFee).toFixed(2)}
             </span>
           </div>
+        </div>
+
+        <div className="mt-3 pt-3 border-t border-parchment/60">
+          <DeliveryInfo label={formatDeliveryDays(deliveryDays)} />
         </div>
       </Card>
     </div>

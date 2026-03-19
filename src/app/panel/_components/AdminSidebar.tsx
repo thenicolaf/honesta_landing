@@ -1,21 +1,7 @@
 import { Card, Avatar, Button } from "@/shared/ui";
-import { AdminNav, NavItem } from "./AdminNav";
+import { AdminNav } from "./AdminNav";
 import { SignOutButton } from "@/pages_flow/profile/SignOutButton";
-
-const USER_NAV: NavItem[] = [
-  { href: "/panel/profile", label: "Personal Info" },
-  { href: "/panel/favorites", label: "Favorites" },
-  { href: "/panel/orders", label: "Orders" },
-];
-
-const PANEL_NAV: NavItem[] = [
-  { href: "/panel", label: "Dashboard" },
-  { href: "/panel/categories", label: "Categories" },
-  { href: "/panel/products", label: "Products" },
-  { href: "/panel/all-orders", label: "Orders" },
-  { href: "/panel/partnerships", label: "Partnerships" },
-  { href: "/panel/promotions", label: "Promotions" },
-];
+import { USER_ROUTES, ADMIN_ROUTES } from "@/shared/consts/routes";
 
 export function AdminSidebar({
   email,
@@ -54,12 +40,12 @@ export function AdminSidebar({
           </p>
         </div>
 
-        <AdminNav items={USER_NAV} />
+        <AdminNav items={USER_ROUTES} />
 
         {isAdmin && (
           <>
             <div className="block border-t border-sand lg:mx-3" />
-            <AdminNav items={PANEL_NAV} className="lg:pt-3" />
+            <AdminNav items={ADMIN_ROUTES} className="lg:pt-3" />
           </>
         )}
 

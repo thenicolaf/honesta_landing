@@ -10,6 +10,7 @@ import { CUSTOMER_COOKIE_KEY } from "@/shared/consts";
 import { CustomerInfo } from "@/shared/types";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
 import { getUserAddresses } from "@/lib/addressesDb";
+import { getDeliverySettings } from "@/lib/deliveryDb";
 
 export default async function CheckoutRoute() {
   const cookieStore = await cookies();
@@ -46,10 +47,13 @@ export default async function CheckoutRoute() {
     addresses = await getUserAddresses(user.id);
   }
 
+  const deliverySettings = await getDeliverySettings();
+
   return (
     <CheckoutPage
       defaultValues={user ? profileValues : cookieValues}
       addresses={addresses}
+      deliverySettings={deliverySettings}
     />
   );
 }
