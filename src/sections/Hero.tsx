@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useScroll, useTransform, motion } from "motion/react";
 import { Button } from "@/shared/ui";
-import { IconInstagram, IconNaturalBadge } from "@/shared/icons";
+import { IconInstagram } from "@/shared/icons";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -17,27 +17,42 @@ export function Hero() {
   const imageY = useTransform(scrollY, [0, 600], [0, 120]);
 
   return (
-    <section id="hero" className="relative h-screen min-h-160 overflow-hidden">
-      {/* Background image with parallax */}
-      <motion.div className="absolute inset-0" style={{ y: imageY }}>
+    <section
+      id="hero"
+      className="relative h-screen min-h-160 overflow-hidden bg-cream"
+    >
+      {/* Left hero image */}
+      <motion.div
+        className="absolute inset-y-0 left-0 w-1/4 max-xl:w-1/3 max-md:w-[40%]"
+        style={{ y: imageY, aspectRatio: "759 / 1536" }}
+      >
         <Image
-          src={"/images/sections/Hero.webp"}
-          alt="Natural dried orange slices — Honesta"
+          src="/honesta_left_hero.png"
+          alt=""
           fill
           priority
-          className="object-cover max-lg:object-left blur-[2px]"
-          sizes="100vw"
+          className="object-cover object-right"
+          sizes="(max-width: 640px) 28vw, (max-width: 1024px) 25vw, 30vw"
         />
       </motion.div>
 
-      {/* Cool blue-slate overlay on mobile/tablet for text legibility */}
-      <div className="absolute inset-0 bg-sand/30 lg:hidden" />
-      {/* Warm amber wash */}
-      <div className="absolute inset-0 bg-orange/10" />
-      {/* Subtle center softening for text legibility */}
-      <div className="absolute inset-0 bg-sand/15" />
-      {/* Bottom fade for smooth transition to next section */}
-      <div className="absolute inset-x-0 bottom-0 h-32 bg-linear-to-t from-sand/55 to-transparent" />
+      {/* Right hero image */}
+      <motion.div
+        className="absolute inset-y-0 right-0 w-1/4 max-xl:w-1/3 max-md:w-[40%]"
+        style={{ y: imageY, aspectRatio: "708 / 1536" }}
+      >
+        <Image
+          src="/honesta_right_hero.png"
+          alt=""
+          fill
+          priority
+          className="object-cover object-left"
+          sizes="(max-width: 640px) 28vw, (max-width: 1024px) 25vw, 30vw"
+        />
+      </motion.div>
+
+      {/* Soft overlay — warm fade from center */}
+      <div className="absolute inset-0 bg-radial-[ellipse_60%_80%_at_center] from-sand/70 via-sand/30 to-transparent max-md:from-sand/85 max-md:via-sand/50" />
 
       {/* Content */}
       <div className="relative h-full mx-auto max-w-7xl px-6 lg:px-10 flex items-center justify-center">
@@ -51,66 +66,67 @@ export function Hero() {
             },
           }}
         >
-          {/* Stamp badge — absolute, bottom edge fades and tucks under text block */}
+          {/* Logo */}
           <motion.div
             variants={fadeUp}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="absolute top-8 left-1/2 -translate-x-1/2 z-0 pointer-events-none"
-            style={{
-              maskImage:
-                "linear-gradient(to bottom, black 48%, transparent 78%)",
-              WebkitMaskImage:
-                "linear-gradient(to bottom, black 48%, transparent 78%)",
-            }}
           >
-            <IconNaturalBadge className="size-52 sm:size-64 text-bark" />
+            <Image
+              src="/honesta_logo.svg"
+              alt="Honesta logo"
+              width={256}
+              height={256}
+              className="size-52 sm:size-64 mx-auto"
+            />
           </motion.div>
 
-          {/* Text block sits on top, covering the faded bottom of the badge */}
-          <div className="relative z-10 pt-23 sm:pt-30">
-            {/* H1 */}
-            <motion.h1
-              variants={fadeUp}
-              transition={{ duration: 0.7, ease: "easeOut" }}
-              className="font-display font-bold italic text-heading leading-[1.1] mb-6"
-              style={{ fontSize: "clamp(2.6rem, 6.5vw, 4.5rem)" }}
-            >
-              Natural sweetness
-              <br />
-              invented by nature.
-            </motion.h1>
+          {/* Brand name */}
+          <motion.h1
+            variants={fadeUp}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="font-display font-bold text-heading leading-none mt-6"
+            style={{ fontSize: "clamp(3rem, 8vw, 6rem)" }}
+          >
+            HONESTA
+          </motion.h1>
 
-            {/* Subtitle */}
-            <motion.p
-              variants={fadeUp}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="font-body font-light text-earth/75 text-lg leading-relaxed mb-10"
-            >
-              Honest. Simple. No additives.
-              <br />
-              Small Batch &amp; Handcrafted.
-            </motion.p>
+          {/* Tagline */}
+          <motion.p
+            variants={fadeUp}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="font-body font-semibold uppercase tracking-[0.2em] text-heading text-sm sm:text-base mt-6 mb-2"
+          >
+            Natural. Healthy. Family.
+          </motion.p>
 
-            {/* CTA */}
-            <motion.div
-              variants={fadeUp}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="flex flex-col items-center gap-4"
+          {/* Subtitle */}
+          <motion.p
+            variants={fadeUp}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="font-display italic text-earth/60 text-lg sm:text-xl mb-10"
+          >
+            Embracing a healthy life together
+          </motion.p>
+
+          {/* CTA */}
+          <motion.div
+            variants={fadeUp}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="flex flex-col items-center gap-4"
+          >
+            <Button href="#products" size="lg">
+              Explore Honest Sweets
+            </Button>
+            <a
+              href={process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 font-body font-semibold uppercase text-2xs tracking-[0.14em] text-earth/60 hover:text-orange transition-colors duration-200"
             >
-              <Button href="#products" size="lg">
-                Explore Honest Sweets
-              </Button>
-              <a
-                href={process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 font-body font-semibold uppercase text-2xs tracking-[0.14em] text-earth/60 hover:text-orange transition-colors duration-200"
-              >
-                <IconInstagram className="w-4 h-4" />
-                Write us on Instagram
-              </a>
-            </motion.div>
-          </div>
+              <IconInstagram className="w-4 h-4" />
+              Write us on Instagram
+            </a>
+          </motion.div>
         </motion.div>
       </div>
 

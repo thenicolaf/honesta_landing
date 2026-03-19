@@ -50,12 +50,18 @@ interface NavbarProps {
 export function Navbar({ user, isAdmin }: NavbarProps) {
   const { scrollY } = useScroll();
 
-  const bgOpacity = useTransform(scrollY, [0, 80], [0, 1]);
-  const shadowOpacity = useTransform(scrollY, [0, 80], [0, 1]);
+  const initialBlurOpacity = useTransform(scrollY, [0, 80], [1, 0]);
+  const bgOpacity = useTransform(scrollY, [40, 120], [0, 1]);
+  const shadowOpacity = useTransform(scrollY, [40, 120], [0, 1]);
 
   return (
     <>
       <motion.header className="fixed top-0 inset-x-0 z-50">
+        {/* Initial soft blur — visible at top, fades out on scroll */}
+        <motion.div
+          className="absolute inset-0 backdrop-blur-sm pointer-events-none"
+          style={{ opacity: initialBlurOpacity }}
+        />
         {/* Animated backdrop — fades in on scroll */}
         <motion.div
           className="absolute inset-0 bg-cream/92 backdrop-blur-md border-b border-parchment/40 pointer-events-none"

@@ -203,7 +203,7 @@ Every route segment has a `loading.tsx` that renders:
 **Checkout server action** (`src/pages_flow/checkout/actions.ts`):
 1. Validates `CustomerInfo` (phone must match `^\+971[0-9]{9}$`, UAE format)
 2. Saves customer to `CUSTOMER_COOKIE_KEY` cookie (30 days) for form repopulation
-3. Creates order in Supabase (`orders` + `order_items` tables)
+3. Creates order in Supabase (`orders` + `order_items` with variant_id + price/name/weight_g snapshots)
 4. Calls N-Genius to create a payment, gets back payment URL
 5. Updates order with `ngenius_ref`, then `redirect()` to N-Genius hosted page
 
@@ -218,10 +218,14 @@ Every route segment has a `loading.tsx` that renders:
 
 ## Cart System
 
-- **Storage:** localStorage under key `"honesta_cart"`
+- **Identity:** Cart items are keyed by `variantId` (product_variants.id), not product_id. Same product with different variants = separate cart entries.
+- **Storage:** localStorage under key `"honesta_cart"`, DB table `cart_items` stores only `(user_id, variant_id, quantity)` — prices computed via join
 - **Provider:** `CartProvider` uses `useSyncExternalStore` — no Zustand/Redux
 - **Hydration:** `isHydrated` flag prevents SSR/client mismatch; server always renders empty cart
-- **Hook:** `useCart()` exposes `items`, `itemCount`, `total`, `addToCart`, `removeFromCart`, `updateItemQuantity`, `clearCart`, `isHydrated`
+- **Hook:** `useCart()` exposes `items`, `itemCount`, `total`, `addToCart(item)`, `removeFromCart(variantId)`, `updateItemQuantity(variantId, qty)`, `clearCart`, `isHydrated`
+- **CartItem type:** `{ variantId, productId, name, price, originalPrice?, quantity, image_url?, weight_g }`
+- **Price sync:** `syncCartPrices` queries products with variants + promotions, recalculates prices. `originalPrice` is computed from promotions on the fly, never stored in DB.
+- **DB cart (`cartDb.ts`):** `getCartFromDb` does a join: `cart_items → product_variants → products` (with promotions) to build full CartItem objects. `upsertItemInDb` stores only `(user_id, variant_id, quantity)`.
 
 ## Auth
 
@@ -260,7 +264,7 @@ Two files, three client instances:
   - `supabaseAdmin` — static service-role client, bypasses RLS (use only in server actions, API routes, and `lib/`)
   - `createSupabaseServerClient()` — async, reads cookies via `@supabase/ssr`; use whenever you need the current user's session
 
-**DB tables:** `orders` (status, subtotal, delivery_fee, total, customer fields, ngenius_ref), `order_items` (order_id, product_id, name, price, quantity), `products` (images in Supabase Storage → `image_url` field; also `weight_g`, `in_stock`, `nutrition` JSON), `categories`, `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, address, coordinates JSON {lat, lng}), `cart_items` (user_id, product_id, quantity, price, original_price), `notifications` (type, title, message, related_id, is_read), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id).
+**DB tables:** `orders` (status, is_fulfilled, subtotal, delivery_fee, total, customer fields, ngenius_ref), `order_items` (order_id, variant_id, name, price, weight_g, quantity — snapshots at order time), `products` (image_url, in_stock, nutrition JSON, status — **no price/weight_g columns**, these live in `product_variants`), `product_variants` (product_id, weight_g, price — one-to-many with products), `categories`, `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, address, coordinates JSON {lat, lng}), `cart_items` (user_id, variant_id, quantity — minimal, prices via join), `notifications` (type, title, message, related_id, is_read), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id).
 
 ## Design system
 
@@ -311,7 +315,8 @@ Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React conte
 - **`TagToolbar` / `TagToolbarItem`** — single-select pill filter bar (`role="radiogroup"`). Controlled or uncontrolled via `value`/`onValueChange`/`defaultValue`. Empty string `""` means "All".
 - **`Collapsible` / `CollapsibleTrigger` / `CollapsibleChevron` / `CollapsibleContent`** — animated accordion using `motion/react` `AnimatePresence`.
 - **`Select` / `SelectTrigger` / `SelectValue` / `SelectContent` / `SelectItem` / `SelectGroup` / `SelectSeparator`** — custom dropdown, context-based, supports controlled/uncontrolled, `clearable` prop, auto up/down direction.
-- **`Form` components** — `FormLabel` (`required` prop adds red `*`), `FormInput`, `FormSelect`, `FormTextarea`, `FormError`, `FormPasswordInput` (visibility toggle), `FormPhoneInput` (UAE format: displays `0XX XXX XXXX`, submits `+971XXXXXXXXX` via hidden input), `FormOtpInput` (6-digit OTP with `defaultValue` + `useResendCooldown` hook), `FormCheckbox`, `FormUploadZone` — CVA variants with `default` / `error` states. `FormSelect` wraps the `Select` compound component.
+- **`FormTileRadio` / `FormTileRadioItem`** — single-select tile radio group. Sizes: `sm` (compact, for product cards) | `md` (default). Context-based compound component with controlled/uncontrolled support.
+- **`Form` components** — `FormLabel` (`required` prop adds red `*`), `FormInput`, `FormSelect`, `FormTextarea`, `FormError`, `FormPasswordInput` (visibility toggle), `FormPhoneInput` (UAE format: displays `0XX XXX XXXX`, submits `+971XXXXXXXXX` via hidden input), `FormOtpInput` (6-digit OTP with `defaultValue` + `useResendCooldown` hook), `FormCheckbox`, `FormNumberInput` (stepper with +/- buttons, controlled via `value`/`onValueChange`), `FormUploadZone` — CVA variants with `default` / `error` states. `FormSelect` wraps the `Select` compound component.
 - **`DropdownMenu` / `DropdownMenuTrigger` / `DropdownMenuContent` / `DropdownMenuItem` / `DropdownMenuSeparator` / `DropdownMenuLabel`** — context-based dropdown menu with auto up/down direction, outside-click and Escape close, `destructive` + `disabled` item variants.
 - **`Table` / `TableHeader` / `TableHeaderRow` / `TableHead` / `TableBody` / `TableRow` / `TableCell` / `TableEmpty` / `TablePagination`** — compound table with sticky header, sort indicators, dividers. Context-based (`useTable`).
 - **`DataTable`** — declarative wrapper: pass `data`, `columns: ColumnDef[]`, `sort`, `pagination` and it renders a full `Table`. Hooks: `useTableSort`, `useTableData`, `useTableSearch`, `useTablePagination`. Helpers: `formatAed`, `formatDate`, `formatDateTime`, `shortId`, comparators (`compareString`, `compareNumber`, `compareDate`).
@@ -345,13 +350,28 @@ Both views share the same `paginatedData` from hooks like `useOrdersTable` / `us
 - Filter keys typically: `["search", "status"|"type", "sortKey", "sortDir", "page", "pageSize"]`.
 - Always reset `page` filter when changing search/status filters.
 
+## Product Variants
+
+Products use a **variant-based pricing model**. Prices and weights live in `product_variants` table, not on `products` directly.
+
+- **Table:** `product_variants` (id, product_id, weight_g, price) — one-to-many with products
+- **Types:** `ProductVariant { id, weight_g, price }`, `Product.variants: ProductVariant[]`
+- `Product.price` and `Product.weight_g` are computed from `variants[0]` (smallest) in `mapDbProducts()`
+- **Admin form:** `VariantsSection` (`src/pages_flow/panel/products/product-form/VariantsSection.tsx`) — dynamic rows with `FormNumberInput`, serialized as JSON hidden input. Logic in `variants.ts`.
+- **Admin display:** `AdminVariantBadges` (`src/pages_flow/panel/products/AdminVariantBadges.tsx`) — Badge components showing `{weight}g — AED {price}` with promotion support
+- **Public UI:** `ProductVariantSelector` (`src/sections/products/components/ProductVariantSelector.tsx`) — uses `FormTileRadio` with `size="sm"` for cards, `size="md"` for detail pages. Shows even for single variant.
+- **Variant selection state** lives in `ProductItem` (cards) and `ProductDetailPage` (public detail) — passed down as `selectedVariant` prop to `ProductPriceAndCart`
+- **Promotions** apply to all variants of a product equally — discount computed per-variant price via `calculateDiscountedPrice()`
+- **Supabase queries** must include `product_variants(id, weight_g, price)` in SELECT — see `PUBLIC_PRODUCTS_SELECT` / `PRODUCTS_SELECT` in `productsDb.ts`
+
 ## Key business logic
 
 - **PartnershipCTA** section (`src/sections/PartnershipCTA.tsx`) replaces the old InstagramCTA. It offers two contact channels: Instagram DM button (uses `NEXT_PUBLIC_INSTAGRAM_DM_URL` + `NEXT_PUBLIC_INSTAGRAM_BRAND_URL`) and an inline partnership inquiry form that submits via `useActionState` to a server action saving to `partnership_inquiries`. Always use `target="_blank" rel="noopener noreferrer"` for Instagram links. See `.env.example` for all Instagram env vars.
-- **Product data** loaded from Supabase (with `image_url` from Storage). Static fallback data lives in `src/sections/products/consts.ts`. `mapDbProducts()` converts Supabase rows to the `Product` type.
+- **Product data** loaded from Supabase (with `image_url` from Storage). `mapDbProducts()` converts Supabase rows to the `Product` type, including variant mapping and promotion calculation.
 - **Delivery fee** is `NEXT_PUBLIC_DELIVERY_FEE` env var (default 25 AED), defined in `src/shared/consts.ts`.
 - **Product fields** `benefits`, `nutrition`, `servingIdeas`, `occasions` are stored for future modal/detail use but not rendered yet.
 - **Promotions** — `src/lib/promotionsDb.ts` handles CRUD. Promotions have `discount_type` (percentage | fixed), `discount_value`, date range, and `is_active` flag. Linked to products via `promotion_products` join table. Status is computed client-side via `getPromotionStatus()` (active | scheduled | expired) based on `is_active` + dates. Promotion list sorts active first.
+- **Order fulfillment** — `orders.is_fulfilled` boolean field. Admin toggles via `FulfilledToggle` checkbox component (`src/pages_flow/panel/orders/FulfilledToggle.tsx`) with server action. Filterable in admin orders view (Fulfilled / Unfulfilled).
 
 ## Phone validation
 
