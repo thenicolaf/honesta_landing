@@ -52,7 +52,7 @@ export function CopyText({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.15 }}
-            className="inline-flex items-center gap-1.5 cursor-pointer"
+            className="inline-flex items-center gap-1.5 cursor-pointer min-w-0"
           >
             {children}
             <Copy className="w-3 h-3 shrink-0 text-earth/40" strokeWidth={2} />

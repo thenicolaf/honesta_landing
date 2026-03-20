@@ -44,10 +44,20 @@ interface DropdownMenuProps {
   children: React.ReactNode;
   className?: string;
   id?: string;
+  /** Controlled open state */
+  open?: boolean;
+  /** Called when open state should change (controlled mode) */
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function DropdownMenu({ children, className, id }: DropdownMenuProps) {
-  const [open, setOpen] = useState(false);
+export function DropdownMenu({
+  children,
+  className,
+  id,
+  open: controlledOpen,
+  onOpenChange,
+}: DropdownMenuProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [direction, setDirection] = useState<"down" | "up">("down");
   const rootRef = useRef<HTMLDivElement>(null);
   const uid = useId();
@@ -55,10 +65,10 @@ export function DropdownMenu({ children, className, id }: DropdownMenuProps) {
   const triggerId = `dropdown-trigger-${stableId}`;
   const menuId = `dropdown-menu-${stableId}`;
 
-  const close = () => setOpen(false);
+  const open = controlledOpen ?? internalOpen;
 
-  const toggle = () => {
-    if (!open && rootRef.current) {
+  const setOpen = (next: boolean) => {
+    if (next && !open && rootRef.current) {
       const rect = rootRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
@@ -68,8 +78,13 @@ export function DropdownMenu({ children, className, id }: DropdownMenuProps) {
           : "up",
       );
     }
-    setOpen((v) => !v);
+    if (controlledOpen === undefined) setInternalOpen(next);
+    onOpenChange?.(next);
   };
+
+  const close = () => setOpen(false);
+
+  const toggle = () => setOpen(!open);
 
   // Close on outside click
   useEffect(() => {

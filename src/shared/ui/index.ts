@@ -117,6 +117,7 @@ export {
   type FieldDef,
 } from "./DataCard";
 export { AddressWithMap } from "./AddressWithMap";
+export { AddressSuggestInput } from "./AddressSuggestInput";
 export { AddressCard } from "./AddressCard";
 export { CopyText } from "./CopyText";
 export { ToastProvider, toastSuccess, toastError, toastInfo } from "./Toast";

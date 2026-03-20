@@ -4,6 +4,7 @@ const EMIRATE_VALUES = new Set<string>(UAE_EMIRATES.map((e) => e.value));
 
 interface AddressParts {
   emirate: string;
+  city: string;
   area: string;
   buildingName: string;
   flatNumber: string;
@@ -11,6 +12,7 @@ interface AddressParts {
 
 interface ParsedAddressProps {
   defaultEmirate?: string;
+  defaultCity?: string;
   defaultArea?: string;
   defaultBuildingName?: string;
   defaultFlatNumber?: string;
@@ -21,12 +23,15 @@ export function composeAddress(parts: Partial<AddressParts>): string {
   if (parts.flatNumber?.trim()) segments.push(`Flat ${parts.flatNumber.trim()}`);
   if (parts.buildingName?.trim()) segments.push(parts.buildingName.trim());
   if (parts.area?.trim()) segments.push(parts.area.trim());
-  if (parts.emirate?.trim()) segments.push(parts.emirate.trim());
+  const city = parts.city?.trim();
+  const emirate = parts.emirate?.trim();
+  if (city && city.toLowerCase() !== emirate?.toLowerCase()) segments.push(city);
+  if (emirate) segments.push(emirate);
   return segments.join(", ");
 }
 
 export function parseAddress(address: string | undefined | null): ParsedAddressProps {
-  const result: AddressParts = { emirate: "", area: "", buildingName: "", flatNumber: "" };
+  const result: AddressParts = { emirate: "", city: "", area: "", buildingName: "", flatNumber: "" };
   if (!address?.trim()) return toProps(result);
 
   const parts = address.split(", ").map((s) => s.trim()).filter(Boolean);
@@ -45,7 +50,12 @@ export function parseAddress(address: string | undefined | null): ParsedAddressP
     parts.shift();
   }
 
-  // Last remaining segment is area
+  // Last remaining segment is city
+  if (parts.length > 0) {
+    result.city = parts.pop()!;
+  }
+
+  // Next last remaining segment is area
   if (parts.length > 0) {
     result.area = parts.pop()!;
   }
@@ -61,6 +71,7 @@ export function parseAddress(address: string | undefined | null): ParsedAddressP
 function toProps(p: AddressParts): ParsedAddressProps {
   return {
     defaultEmirate: p.emirate || undefined,
+    defaultCity: p.city || undefined,
     defaultArea: p.area || undefined,
     defaultBuildingName: p.buildingName || undefined,
     defaultFlatNumber: p.flatNumber || undefined,

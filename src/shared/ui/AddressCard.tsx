@@ -93,19 +93,20 @@ export function AddressCard({
 
       <CopyText
         text={address.address}
-        className="text-sm text-earth hover:text-orange w-auto mt-1"
+        className="text-sm text-earth hover:text-orange mt-1 w-full min-w-0"
         onClick={(e) => e.stopPropagation()}
       >
         <MapPin className="w-3.5 h-3.5 shrink-0 text-earth/40" />
-        <span className="truncate">
-          {parsed.defaultEmirate && parsed.defaultArea
-            ? `${parsed.defaultArea}, ${parsed.defaultEmirate}`
-            : parsed.defaultEmirate || parsed.defaultArea || address.address}
+        <span className="truncate min-w-0">
+          {(() => {
+            const parts = [parsed.defaultArea, parsed.defaultCity, parsed.defaultEmirate].filter(Boolean);
+            return parts.length > 0 ? parts.join(", ") : address.address;
+          })()}
         </span>
       </CopyText>
 
       {(parsed.defaultBuildingName || parsed.defaultFlatNumber) && (
-        <p className="font-body text-2xs text-earth/50 truncate mt-0.5">
+        <p className="font-body text-2xs text-earth/50 truncate min-w-0 mt-0.5">
           {[
             parsed.defaultBuildingName,
             parsed.defaultFlatNumber && `Flat ${parsed.defaultFlatNumber}`,
