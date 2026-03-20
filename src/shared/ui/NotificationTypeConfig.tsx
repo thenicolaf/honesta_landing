@@ -1,4 +1,4 @@
-import { ShoppingBag, CreditCard, Handshake, Bell } from "lucide-react";
+import { ShoppingBag, CreditCard, Handshake, Bell, Tag, Package, LayoutGrid, CircleX, Ban } from "lucide-react";
 
 interface NotificationTypeStyle {
   icon: React.ReactNode;
@@ -25,6 +25,36 @@ const TYPE_STYLES: Record<string, NotificationTypeStyle> = {
     dot: "bg-bark",
     bg: "bg-bark/8",
     iconColor: "text-bark",
+  },
+  new_promotion: {
+    icon: <Tag className="w-3.5 h-3.5" />,
+    dot: "bg-orange",
+    bg: "bg-orange/8",
+    iconColor: "text-orange",
+  },
+  new_product: {
+    icon: <Package className="w-3.5 h-3.5" />,
+    dot: "bg-moss",
+    bg: "bg-moss/8",
+    iconColor: "text-moss",
+  },
+  new_category: {
+    icon: <LayoutGrid className="w-3.5 h-3.5" />,
+    dot: "bg-bark",
+    bg: "bg-bark/8",
+    iconColor: "text-bark",
+  },
+  order_failed: {
+    icon: <CircleX className="w-3.5 h-3.5" />,
+    dot: "bg-red-500",
+    bg: "bg-red-500/8",
+    iconColor: "text-red-500",
+  },
+  order_cancelled: {
+    icon: <Ban className="w-3.5 h-3.5" />,
+    dot: "bg-earth/40",
+    bg: "bg-earth/6",
+    iconColor: "text-earth/40",
   },
 };
 

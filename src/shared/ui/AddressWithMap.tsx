@@ -140,7 +140,7 @@ export function AddressWithMap({
     const service = getPlacesService();
     if (!service) return;
     service.getDetails(
-      { placeId: prediction.place_id, fields: ["geometry"] },
+      { placeId: prediction.place_id, fields: ["geometry", "address_components"] },
       (place, status) => {
         if (
           status === google.maps.places.PlacesServiceStatus.OK &&
@@ -150,6 +150,13 @@ export function AddressWithMap({
             lat: place.geometry.location.lat(),
             lng: place.geometry.location.lng(),
           };
+
+          if (place.address_components) {
+            const extracted = extractAddressParts(place.address_components);
+            const matched = matchEmirate(extracted.emirate);
+            if (matched) setEmirate(matched);
+          }
+
           callback(pos);
         }
       },

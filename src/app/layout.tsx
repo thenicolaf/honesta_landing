@@ -40,7 +40,7 @@ export default async function RootLayout({
   } = await supabase.auth.getUser();
 
   const { data: profile } = user
-    ? await supabase.from("profiles").select("role").eq("id", user.id).single()
+    ? await supabase.from("profiles").select("role, allow_notifications").eq("id", user.id).single()
     : { data: null };
 
   return (
@@ -51,7 +51,7 @@ export default async function RootLayout({
       >
         <CartProvider userId={user?.id ?? null}>
           <FavoritesProvider userId={user?.id ?? null}>
-            <NotificationsProvider isAdmin={profile?.role === "admin"}>
+            <NotificationsProvider role={profile?.role ?? null} userId={user?.id} allowNotifications={profile?.allow_notifications ?? true}>
               <Navbar
                 user={user ? { email: user.email! } : null}
                 isAdmin={profile?.role === "admin"}

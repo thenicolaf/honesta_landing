@@ -80,7 +80,7 @@ export function Navbar({ user, isAdmin }: NavbarProps) {
             {/* Right actions */}
             <div className="flex items-center gap-3">
               <NavCartButton />
-              {isAdmin && <NotificationBell />}
+              {user && <NotificationBell isAdmin={isAdmin} />}
               <NavUserButton user={user} isAdmin={isAdmin} />
             </div>
           </nav>

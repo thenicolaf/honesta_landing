@@ -34,30 +34,44 @@ export function useNotifications() {
   return ctx;
 }
 
+interface NotificationsProviderProps {
+  children: React.ReactNode;
+  role?: string | null;
+  userId?: string;
+  allowNotifications?: boolean;
+}
+
 export function NotificationsProvider({
   children,
-  isAdmin = false,
-}: {
-  children: React.ReactNode;
-  isAdmin?: boolean;
-}) {
+  role = null,
+  userId,
+  allowNotifications = true,
+}: NotificationsProviderProps) {
+  const active = !!role && !!userId;
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(isAdmin);
+  const [isLoading, setIsLoading] = useState(active);
   const supabaseRef = useRef(createSupabaseBrowserClient());
 
   const fetchNotifications = useCallback(async () => {
-    if (!isAdmin) return;
+    if (!active) return;
     try {
       const res = await fetch("/api/notifications?limit=100");
       if (!res.ok) return;
       const data = await res.json();
-      setNotifications(data.notifications);
-      setUnreadCount(data.unreadCount);
+      const all: Notification[] = data.notifications;
+      if (allowNotifications) {
+        setNotifications(all);
+        setUnreadCount(data.unreadCount);
+      } else {
+        const personal = all.filter((n) => n.user_id !== null);
+        setNotifications(personal);
+        setUnreadCount(personal.filter((n) => !n.is_read).length);
+      }
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [active]);
 
   // Initial load
   useEffect(() => {
@@ -66,22 +80,34 @@ export function NotificationsProvider({
 
   // Realtime subscription
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!active) return;
     const supabase = supabaseRef.current;
 
     const channel = supabase
-      .channel("admin-notifications")
+      .channel("notifications")
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications" },
         (payload) => {
-          const newNotification = payload.new as Notification;
-          setNotifications((prev) => [newNotification, ...prev]);
+          const n = payload.new as Notification;
+
+          // Client-side filter: only show notifications meant for this user
+          // audience === null means "all roles"
+          const isBroadcast = n.user_id === null;
+          const isForMe =
+            n.user_id === userId ||
+            (isBroadcast &&
+              (n.audience === null || n.audience === role));
+
+          if (!isForMe) return;
+          if (isBroadcast && !allowNotifications) return;
+
+          setNotifications((prev) => [{ ...n, is_read: false }, ...prev]);
           setUnreadCount((prev) => prev + 1);
 
-          const message = newNotification.message
-            ? `${newNotification.title}: ${newNotification.message}`
-            : newNotification.title;
+          const message = n.message
+            ? `${n.title}: ${n.message}`
+            : n.title;
           toastInfo(message);
         },
       )
@@ -90,7 +116,7 @@ export function NotificationsProvider({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [active, role, userId]);
 
   const markAsRead = useCallback(
     async (id: string) => {

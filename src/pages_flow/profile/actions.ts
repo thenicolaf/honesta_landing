@@ -127,3 +127,13 @@ export async function changePassword(
 
   return { success: true, attempt };
 }
+
+// ─── Notification Settings ───────────────────────────────────────────────────
+
+export async function toggleNotifications(allow: boolean) {
+  const { supabase, user } = await requireUser();
+  await supabase
+    .from("profiles")
+    .update({ allow_notifications: allow })
+    .eq("id", user.id);
+}

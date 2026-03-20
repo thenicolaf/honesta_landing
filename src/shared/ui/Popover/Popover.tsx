@@ -42,9 +42,7 @@ export function Popover({ children, className, id }: PopoverProps) {
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
       setDirection(
-        spaceBelow >= POPOVER_MAX_H || spaceBelow >= spaceAbove
-          ? "down"
-          : "up",
+        spaceBelow >= POPOVER_MAX_H || spaceBelow >= spaceAbove ? "down" : "up",
       );
     }
     setOpen((v) => !v);
@@ -163,41 +161,30 @@ export function PopoverContent({
 }: PopoverContentProps) {
   const { open, direction, contentId, triggerId } = usePopover();
   const contentRef = useRef<HTMLDivElement>(null);
-  const [adjustedRight, setAdjustedRight] = useState<number | undefined>(
-    undefined,
-  );
 
-  // Clamp to viewport on open / resize
-  useEffect(() => {
-    if (!open || !contentRef.current) {
-      setAdjustedRight(undefined);
-      return;
-    }
+  // Clamp to viewport after mount / resize — no state, direct DOM mutation
+  const clamp = useCallback(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
 
-    const clamp = () => {
-      const el = contentRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-
-      if (rect.left < VIEWPORT_PAD) {
-        // content overflows left — shift right value so left edge = VIEWPORT_PAD
-        const parentRect = el.offsetParent?.getBoundingClientRect();
-        if (parentRect) {
-          const currentRight = parentRect.right - rect.right;
-          const shift = VIEWPORT_PAD - rect.left;
-          setAdjustedRight(currentRight - shift);
-        }
-      } else {
-        setAdjustedRight(undefined);
+    if (rect.left < VIEWPORT_PAD) {
+      const parentRect = el.offsetParent?.getBoundingClientRect();
+      if (parentRect) {
+        const currentRight = parentRect.right - rect.right;
+        const shift = VIEWPORT_PAD - rect.left;
+        el.style.right = `${currentRight - shift}px`;
+        el.classList.remove("right-0", "left-0");
       }
-    };
+    }
+  }, []);
 
-    // Run after paint
+  useEffect(() => {
+    if (!open) return;
     requestAnimationFrame(clamp);
-
     window.addEventListener("resize", clamp);
     return () => window.removeEventListener("resize", clamp);
-  }, [open]);
+  }, [open, clamp]);
 
   const isUp = direction === "up";
   const yOffset = isUp ? 6 : -6;
@@ -215,13 +202,11 @@ export function PopoverContent({
           exit={{ opacity: 0, y: yOffset, scale: 0.97 }}
           transition={{ duration: 0.18, ease: "easeOut" }}
           onMouseDown={(e) => e.stopPropagation()}
-          style={adjustedRight !== undefined ? { right: adjustedRight } : undefined}
           className={cn(
             "absolute z-50",
             width,
             isUp ? "bottom-full mb-1.5" : "top-full mt-1.5",
-            adjustedRight === undefined &&
-              (align === "right" ? "right-0" : "left-0"),
+            align === "right" ? "right-0" : "left-0",
             "rounded-[16px] border border-earth/8 bg-white-warm shadow-lg shadow-earth/8",
             "overflow-hidden",
             className,

@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase.server";
 import { deleteImage } from "@/lib/storage";
+import { createNotification } from "@/lib/notificationsDb";
 import { buildNutrition } from "./product-form/nutrition";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -256,6 +257,22 @@ export async function updateProductStatus(
     .eq("id", id);
 
   if (error) return { error: "Failed to update status." };
+
+  if (newStatus === "published") {
+    const { data: product } = await supabaseAdmin
+      .from("products")
+      .select("name")
+      .eq("id", id)
+      .single();
+    await createNotification({
+      type: "new_product",
+      title: "New product available",
+      message: product?.name ?? "",
+      relatedId: id,
+      audience: null,
+    });
+  }
+
   return { success: true };
 }
 
@@ -292,6 +309,16 @@ export async function createProduct(
     insertJunctionRows(data.id, values),
     syncVariants(data.id, variants),
   ]);
+
+  if (status === "published") {
+    await createNotification({
+      type: "new_product",
+      title: "New product",
+      message: productData.title,
+      relatedId: data.id,
+      audience: null,
+    });
+  }
 
   redirect("/panel/products?toast=created");
 }

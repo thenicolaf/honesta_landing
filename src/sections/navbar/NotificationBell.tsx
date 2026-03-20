@@ -10,6 +10,7 @@ import {
   PopoverContent,
   getNotificationStyle,
 } from "@/shared/ui";
+import { usePopover } from "@/shared/ui/Popover";
 import { formatDateTime } from "@/shared/ui/Table";
 import { useNotifications } from "@/providers";
 import { cn } from "@/shared/utils/cn";
@@ -43,7 +44,13 @@ function NotificationItem({
       )}
     >
       <div className="flex items-start gap-2.5">
-        <div className={cn("rounded-lg p-1.5 shrink-0 mt-0.5", style.bg, style.iconColor)}>
+        <div
+          className={cn(
+            "rounded-lg p-1.5 shrink-0 mt-0.5",
+            style.bg,
+            style.iconColor,
+          )}
+        >
           {style.icon}
         </div>
         <div className="min-w-0 flex-1">
@@ -60,19 +67,36 @@ function NotificationItem({
           </p>
         </div>
         {!is_read && (
-          <span className={cn("mt-2 w-2 h-2 rounded-full shrink-0", style.dot)} />
+          <span
+            className={cn("mt-2 w-2 h-2 rounded-full shrink-0", style.dot)}
+          />
         )}
       </div>
     </button>
   );
 }
 
-export function NotificationBell() {
+function DashboardLink() {
+  const { close } = usePopover();
+  return (
+    <div className="border-t border-earth/6 px-4 py-2.5">
+      <Link
+        href="/panel"
+        onClick={close}
+        className="font-body text-2xs text-earth/50 hover:text-earth transition-colors duration-150"
+      >
+        View all on Dashboard
+      </Link>
+    </div>
+  );
+}
+
+export function NotificationBell({ isAdmin = false }: { isAdmin?: boolean }) {
   const { notifications, unreadCount, markAsRead, markAllAsRead } =
     useNotifications();
 
   return (
-    <Popover>
+    <Popover id="notification-bell">
       <PopoverTrigger className="relative p-2 text-earth/60 hover:text-earth transition-colors duration-200">
         <Bell className="w-5 h-5" strokeWidth={1.5} />
         {unreadCount > 0 && (
@@ -112,25 +136,16 @@ export function NotificationBell() {
               No notifications yet
             </p>
           ) : (
-            notifications.slice(0, 10).map((n) => (
-              <NotificationItem
-                key={n.id}
-                {...n}
-                onRead={markAsRead}
-              />
-            ))
+            notifications
+              .slice(0, 10)
+              .map((n) => (
+                <NotificationItem key={n.id} {...n} onRead={markAsRead} />
+              ))
           )}
         </div>
 
-        {/* Footer */}
-        <div className="border-t border-earth/6 px-4 py-2.5">
-          <Link
-            href="/panel"
-            className="font-body text-2xs text-earth/50 hover:text-earth transition-colors duration-150"
-          >
-            View all on Dashboard
-          </Link>
-        </div>
+        {/* Footer — admin only */}
+        {isAdmin && <DashboardLink />}
       </PopoverContent>
     </Popover>
   );

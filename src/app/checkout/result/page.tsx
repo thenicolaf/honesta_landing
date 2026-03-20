@@ -58,13 +58,14 @@ export default async function CheckoutResultPage({
       .select("id, total")
       .single();
 
-    if (order && success) {
-      await createNotification(
-        "order_paid",
-        "Order paid",
-        `AED ${Number(order.total).toFixed(2)}`,
-        order.id,
-      );
+    if (order) {
+      const total = `AED ${Number(order.total).toFixed(2)}`;
+      await createNotification({
+        type: success ? "order_paid" : "order_failed",
+        title: success ? "Order paid" : "Payment failed",
+        message: total,
+        relatedId: order.id,
+      });
     }
   }
 

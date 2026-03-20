@@ -6,6 +6,7 @@ export const metadata: Metadata = {
 };
 import { supabaseAdmin } from "@/lib/supabase.server";
 import { OrderStatus } from "@/shared/types";
+import { createNotification } from "@/lib/notificationsDb";
 
 export default async function CheckoutCancelPage({
   searchParams,
@@ -15,13 +16,25 @@ export default async function CheckoutCancelPage({
   const { ref } = await searchParams;
 
   if (ref) {
-    await supabaseAdmin
+    const { data: order } = await supabaseAdmin
       .from("orders")
       .update({
         status: OrderStatus.CANCELLED,
         updated_at: new Date().toISOString(),
       })
-      .eq("ngenius_ref", ref);
+      .eq("ngenius_ref", ref)
+      .neq("status", OrderStatus.CANCELLED)
+      .select("id, total")
+      .single();
+
+    if (order) {
+      await createNotification({
+        type: "order_cancelled",
+        title: "Order cancelled",
+        message: `AED ${Number(order.total).toFixed(2)}`,
+        relatedId: order.id,
+      });
+    }
   }
 
   return (

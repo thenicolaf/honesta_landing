@@ -90,12 +90,12 @@ export async function submitCheckout(
   }
 
   // Notify admin
-  await createNotification(
-    "new_order",
-    "New order",
-    `${customer.firstName} ${customer.lastName} — AED ${order.total}`,
-    order.id,
-  );
+  await createNotification({
+    type: "new_order",
+    title: "New order",
+    message: `${customer.firstName} ${customer.lastName} — AED ${order.total}`,
+    relatedId: order.id,
+  });
 
   // 3. Create payment
   const { paymentUrl, error: paymentError } = await createPaymentForOrder(

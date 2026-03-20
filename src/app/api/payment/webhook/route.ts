@@ -33,13 +33,30 @@ export async function POST(request: NextRequest) {
       .select("id, total")
       .single();
 
-    if (order && newStatus === OrderStatus.PAID) {
-      await createNotification(
-        "order_paid",
-        "Order paid",
-        `AED ${Number(order.total).toFixed(2)}`,
-        order.id,
-      );
+    if (order) {
+      const total = `AED ${Number(order.total).toFixed(2)}`;
+      if (newStatus === OrderStatus.PAID) {
+        await createNotification({
+          type: "order_paid",
+          title: "Order paid",
+          message: total,
+          relatedId: order.id,
+        });
+      } else if (newStatus === OrderStatus.FAILED) {
+        await createNotification({
+          type: "order_failed",
+          title: "Payment failed",
+          message: total,
+          relatedId: order.id,
+        });
+      } else if (newStatus === OrderStatus.CANCELLED) {
+        await createNotification({
+          type: "order_cancelled",
+          title: "Order cancelled",
+          message: total,
+          relatedId: order.id,
+        });
+      }
     }
   }
 

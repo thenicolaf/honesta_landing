@@ -10,12 +10,20 @@ export default async function Page() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("first_name, last_name, phone, gender, birthday")
+    .select("first_name, last_name, phone, gender, birthday, role, allow_notifications")
     .eq("id", user!.id)
     .single();
 
   const addresses = await getUserAddresses(user!.id);
   const provider = user?.app_metadata?.provider ?? "email";
 
-  return <ProfilePage profile={profile} addresses={addresses} provider={provider} />;
+  return (
+    <ProfilePage
+      profile={profile}
+      addresses={addresses}
+      provider={provider}
+      role={profile?.role}
+      allowNotifications={profile?.allow_notifications ?? true}
+    />
+  );
 }

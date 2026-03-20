@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase.server";
 import { deleteImage } from "@/lib/storage";
+import { createNotification } from "@/lib/notificationsDb";
 
 interface CategoryInfo {
   name: string;
@@ -57,6 +58,13 @@ export async function createCategory(
   if (error) {
     return { error: "Failed to create category. Please try again.", values, attempt };
   }
+
+  await createNotification({
+    type: "new_category",
+    title: "New category",
+    message: name,
+    audience: null,
+  });
 
   redirect("/panel/categories?toast=created");
 }

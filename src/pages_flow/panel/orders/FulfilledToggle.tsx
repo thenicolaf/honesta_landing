@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Checkbox } from "@/shared/ui";
+import { Checkbox, shortId, toastInfo } from "@/shared/ui";
 import { toggleFulfilled } from "./actions";
 
 interface FulfilledToggleProps {
@@ -27,6 +27,10 @@ export function FulfilledToggle({
         startTransition(() => {
           toggleFulfilled(orderId, next);
         });
+        const id = shortId(orderId);
+        toastInfo(
+          next ? `Order #${id} marked as fulfilled` : `Order #${id} marked as unfulfilled`,
+        );
       }}
       aria-label="Mark as fulfilled"
     />

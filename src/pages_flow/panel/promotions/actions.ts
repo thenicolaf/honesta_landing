@@ -6,6 +6,8 @@ import {
   updatePromotion,
   deletePromotion as deletePromotionDb,
 } from "@/lib/promotionsDb";
+import { supabaseAdmin } from "@/lib/supabase.server";
+import { createNotification } from "@/lib/notificationsDb";
 
 export interface PromotionState {
   success?: boolean;
@@ -95,6 +97,15 @@ export async function createPromotionAction(
 
   if (error) return { error, attempt };
 
+  if (values.is_active) {
+    await createNotification({
+      type: "new_promotion",
+      title: "New promotion",
+      message: `${values.name} — ${values.discount_value}${values.discount_type === "percentage" ? "%" : " AED"} off`,
+      audience: null,
+    });
+  }
+
   redirect("/panel/promotions?toast=created");
 }
 
@@ -110,6 +121,12 @@ export async function updatePromotionAction(
 
   const productIds = parseProductIds(values.product_ids_raw);
 
+  const { data: current } = await supabaseAdmin
+    .from("promotions")
+    .select("is_active")
+    .eq("id", id)
+    .single();
+
   const { error } = await updatePromotion(
     id,
     {
@@ -124,6 +141,15 @@ export async function updatePromotionAction(
   );
 
   if (error) return { error, attempt };
+
+  if (values.is_active && !current?.is_active) {
+    await createNotification({
+      type: "new_promotion",
+      title: "New promotion",
+      message: `${values.name} — ${values.discount_value}${values.discount_type === "percentage" ? "%" : " AED"} off`,
+      audience: null,
+    });
+  }
 
   redirect("/panel/promotions?toast=updated");
 }

@@ -51,11 +51,11 @@ export async function submitPartnershipInquiry(
     };
   }
 
-  await createNotification(
-    "new_partnership",
-    "New partnership inquiry",
-    `${data.business_name!.trim()} — ${data.contact_name!.trim()}`,
-  );
+  await createNotification({
+    type: "new_partnership",
+    title: "New partnership inquiry",
+    message: `${data.business_name!.trim()} — ${data.contact_name!.trim()}`,
+  });
 
   return { success: true };
 }
