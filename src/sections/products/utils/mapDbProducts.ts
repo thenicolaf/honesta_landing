@@ -35,6 +35,7 @@ export function mapDbProducts(raw: DbProduct[]): Product[] {
       weight_g: defaultVariant?.weight_g,
       variants,
       image_url: p.image_url ?? "",
+      images: (p.images as string[] | null) ?? [],
       in_stock: p.in_stock ?? true,
       category: p.categories?.name ?? "",
       tags: p.product_tags.map((pt) => pt.tag_options.label),

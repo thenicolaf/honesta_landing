@@ -61,7 +61,7 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
 
         {/* Two-column layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-14">
-          <ProductDetailImage image_url={image_url} title={title} />
+          <ProductDetailImage image_url={image_url} images={product.images} title={title} />
 
           {/* Content column */}
           <div className="flex flex-col gap-5">

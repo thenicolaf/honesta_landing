@@ -11,6 +11,14 @@ import {
 } from "@/shared/ui";
 import { SectionCard, SectionLabel, type SectionProps } from "./shared";
 
+function getInitialUrls(product?: SectionProps["product"]): string[] | undefined {
+  if (!product) return undefined;
+  const urls = [product.image_url, ...(product.images ?? [])].filter(
+    (url): url is string => !!url,
+  );
+  return urls.length > 0 ? urls : undefined;
+}
+
 export function BasicInfoSection({ product, state }: SectionProps) {
   const [inStock, setInStock] = useState(product?.in_stock !== false);
 
@@ -55,11 +63,12 @@ export function BasicInfoSection({ product, state }: SectionProps) {
         </div>
 
         <div className="sm:col-span-2">
-          <FormLabel>Image</FormLabel>
+          <FormLabel>Images</FormLabel>
           <FormUploadZone
-            name="image_url"
-            multiple={false}
-            initialUrl={product?.image_url ?? undefined}
+            name="images"
+            multiple={true}
+            maxFiles={8}
+            initialUrls={getInitialUrls(product)}
             slug="product"
             state={state?.fieldErrors?.images ? "error" : "default"}
           />

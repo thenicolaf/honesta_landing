@@ -30,6 +30,8 @@ No test suite configured yet.
 - **lucide-react** — supplemental icon library (prefer custom icons in `src/shared/icons/` first)
 - **react-toastify** — toast notifications (wrapped in `src/shared/ui/Toast.tsx`, configured in root layout)
 - **@react-google-maps/api** — Google Maps for address selection in checkout (`AddressWithMap` component)
+- **yet-another-react-lightbox** — fullscreen image viewer with zoom/thumbnails (wrapped in `src/shared/ui/Lightbox.tsx`)
+- **@dnd-kit/react** — drag-and-drop for sortable image thumbnails in upload zones
 - **pnpm** as package manager
 
 ## Path alias
@@ -117,7 +119,7 @@ src/
 ├── providers/                  # React context providers + hooks
 │   ├── CartProvider.tsx        # useSyncExternalStore-based cart state (hydration-safe)
 │   ├── FavoritesProvider.tsx   # useSyncExternalStore-based favorites state + useOptimistic
-│   ├── NotificationsProvider.tsx # Supabase Realtime subscription for admin notifications
+│   ├── NotificationsProvider.tsx # Supabase Realtime subscription for notifications (all roles)
 │   ├── CategoryFilterProvider.tsx
 │   ├── FilterProvider.tsx      # Generic filter context — useFilterBar(key) hook
 │   └── SearchParamsFilterProvider.tsx  # Syncs FilterProvider state to URL search params
@@ -133,7 +135,7 @@ src/
     ├── consts.ts               # CUSTOMER_COOKIE_KEY, DELIVERY_FEE, COOKIE_CONSENT_KEY
     ├── ui/                     # Reusable primitives (Button, Badge, Card, Form, Collapsible, etc.)
     ├── icons/                  # SVG icon components + index.ts barrel
-    ├── types/                  # Categories enum, CustomerInfo, OrderStatus, ProfileInfo
+    ├── types/                  # Categories enum, CustomerInfo, OrderStatus, ProfileInfo, UserRole
     └── utils/                  # cn.ts, validateCustomer.ts, validatePartnership.ts, validateProfile.ts, validateAuth.ts, validatePhone.ts, calculateDiscount.ts
 ```
 
@@ -149,7 +151,7 @@ src/
 | `/checkout/result?ref={orderRef}` | Payment result — polls N-Genius, shows success/failure |
 | `/checkout/cancel` | Payment cancelled screen |
 | `POST /api/payment/webhook` | N-Genius webhook — updates `orders.status` in Supabase |
-| `GET/PATCH /api/notifications` | Admin notification endpoints |
+| `GET/PATCH /api/notifications` | Notification endpoints (any authenticated user) |
 | `/login` | Email/password + Google OAuth login |
 | `/signup` | Registration (name, email, password) |
 | `/verify-email?email={email}` | OTP verification after signup |
@@ -264,7 +266,7 @@ Two files, three client instances:
   - `supabaseAdmin` — static service-role client, bypasses RLS (use only in server actions, API routes, and `lib/`)
   - `createSupabaseServerClient()` — async, reads cookies via `@supabase/ssr`; use whenever you need the current user's session
 
-**DB tables:** `orders` (status, is_fulfilled, subtotal, delivery_fee, total, customer fields, ngenius_ref), `order_items` (order_id, variant_id, name, price, weight_g, quantity — snapshots at order time), `products` (image_url, in_stock, nutrition JSON, status — **no price/weight_g columns**, these live in `product_variants`), `product_variants` (product_id, weight_g, price — one-to-many with products), `categories`, `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, address, coordinates JSON {lat, lng}), `cart_items` (user_id, variant_id, quantity — minimal, prices via join), `notifications` (type, title, message, related_id, is_read), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id).
+**DB tables:** `orders` (status, is_fulfilled, subtotal, delivery_fee, total, customer fields, ngenius_ref), `order_items` (order_id, variant_id, name, price, weight_g, quantity — snapshots at order time), `products` (image_url, images JSONB `[]`, in_stock, nutrition JSON, status — **no price/weight_g columns**, these live in `product_variants`), `product_variants` (product_id, weight_g, price — one-to-many with products), `categories`, `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, role `user_role`, gender, birthday, allow_notifications), `cart_items` (user_id, variant_id, quantity — minimal, prices via join), `notifications` (type, title, message, related_id, user_id, audience `user_role` — nullable, NULL = all roles), `notification_reads` (notification_id, user_id, read_at — tracks per-user read status), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id).
 
 ## Design system
 
@@ -316,7 +318,7 @@ Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React conte
 - **`Collapsible` / `CollapsibleTrigger` / `CollapsibleChevron` / `CollapsibleContent`** — animated accordion using `motion/react` `AnimatePresence`.
 - **`Select` / `SelectTrigger` / `SelectValue` / `SelectContent` / `SelectItem` / `SelectGroup` / `SelectSeparator`** — custom dropdown, context-based, supports controlled/uncontrolled, `clearable` prop, auto up/down direction.
 - **`FormTileRadio` / `FormTileRadioItem`** — single-select tile radio group. Sizes: `sm` (compact, for product cards) | `md` (default). Context-based compound component with controlled/uncontrolled support.
-- **`Form` components** — `FormLabel` (`required` prop adds red `*`), `FormInput`, `FormSelect`, `FormTextarea`, `FormError`, `FormPasswordInput` (visibility toggle), `FormPhoneInput` (UAE format: displays `0XX XXX XXXX`, submits `+971XXXXXXXXX` via hidden input), `FormOtpInput` (6-digit OTP with `defaultValue` + `useResendCooldown` hook), `FormCheckbox`, `FormNumberInput` (stepper with +/- buttons, controlled via `value`/`onValueChange`), `FormUploadZone` — CVA variants with `default` / `error` states. `FormSelect` wraps the `Select` compound component.
+- **`Form` components** — `FormLabel` (`required` prop adds red `*`), `FormInput`, `FormSelect`, `FormTextarea`, `FormError`, `FormPasswordInput` (visibility toggle), `FormPhoneInput` (UAE format: displays `0XX XXX XXXX`, submits `+971XXXXXXXXX` via hidden input), `FormOtpInput` (6-digit OTP with `defaultValue` + `useResendCooldown` hook), `FormCheckbox`, `FormNumberInput` (stepper with +/- buttons, controlled via `value`/`onValueChange`), `FormUploadZone` (supports `initialUrl` for single image edit mode, `initialUrls` for multi-image; integrated Lightbox preview + sortable thumbnails) — CVA variants with `default` / `error` states. `FormSelect` wraps the `Select` compound component.
 - **`DropdownMenu` / `DropdownMenuTrigger` / `DropdownMenuContent` / `DropdownMenuItem` / `DropdownMenuSeparator` / `DropdownMenuLabel`** — context-based dropdown menu with auto up/down direction, outside-click and Escape close, `destructive` + `disabled` item variants.
 - **`Table` / `TableHeader` / `TableHeaderRow` / `TableHead` / `TableBody` / `TableRow` / `TableCell` / `TableEmpty` / `TablePagination`** — compound table with sticky header, sort indicators, dividers. Context-based (`useTable`).
 - **`DataTable`** — declarative wrapper: pass `data`, `columns: ColumnDef[]`, `sort`, `pagination` and it renders a full `Table`. Hooks: `useTableSort`, `useTableData`, `useTableSearch`, `useTablePagination`. Helpers: `formatAed`, `formatDate`, `formatDateTime`, `shortId`, comparators (`compareString`, `compareNumber`, `compareDate`).
@@ -364,14 +366,79 @@ Products use a **variant-based pricing model**. Prices and weights live in `prod
 - **Promotions** apply to all variants of a product equally — discount computed per-variant price via `calculateDiscountedPrice()`
 - **Supabase queries** must include `product_variants(id, weight_g, price)` in SELECT — see `PUBLIC_PRODUCTS_SELECT` / `PRODUCTS_SELECT` in `productsDb.ts`
 
+## Product Images
+
+Products have a **main image** (`image_url`) and an optional **gallery** (`images` JSONB array). These are independent fields in the DB but managed through a single `FormUploadZone` in the admin form.
+
+- **DB columns:** `products.image_url` (main, single URL), `products.images` (JSONB `[]`, gallery URLs ordered by position)
+- **Admin form:** One `FormUploadZone` with `name="images"`, `multiple={true}`, `maxFiles={8}`. First uploaded image = `image_url`, rest = `images`. Drag-and-drop reordering via `@dnd-kit/react` — first position always gets "Main" badge.
+- **Server action parsing:** `parseUploads(formData)` splits `formData.getAll("images")` → `image_url` (index 0) + `images` (index 1+). Helper `cleanupRemovedImages(oldUrls, newUrls)` deletes removed files from Supabase Storage on update/delete.
+- **Edit mode initialization:** `getInitialUrls(product)` merges `[image_url, ...images]` back into a single array for the upload zone.
+- **Public display:** `ProductDetailImage` combines `[image_url, ...images]`, shows main image + thumbnail strip + `Lightbox` for fullscreen zoom.
+- **Cards:** `ProductImage` continues to use only `image_url` for card thumbnails.
+- **Types:** `Product.images: string[]`, `DbProduct.images: string[] | null`
+- **Mapper:** `mapDbProducts` sets `images: p.images ?? []` (independent from `image_url`)
+
+## Lightbox
+
+`Lightbox` (`src/shared/ui/Lightbox.tsx`) wraps `yet-another-react-lightbox` with brand theming.
+
+- **API:** `<Lightbox open onClose slides={LightboxSlide[]} index? />`
+- **Plugins:** Zoom always; Counter + Thumbnails when `slides.length > 1`
+- **Theming:** CSS variables inline — earth backdrop, white-warm buttons, orange active/thumbnail border
+- **Single image:** hides prev/next buttons, disables carousel loop
+- Replaces the old custom `ImagePreview` + `Dialog` pattern everywhere
+
+## Sortable Upload Thumbnails
+
+`SortableThumbnails` (`src/shared/ui/UploadZone/SortableThumbnails.tsx`) provides drag-and-drop reordering for uploaded images.
+
+- **Library:** `@dnd-kit/react` v0.3 — `DragDropProvider` + `useSortable` from `@dnd-kit/react/sortable`
+- **Components:** `SortableThumbnails` (container with `DragDropProvider`) → `SortableThumbnail` (individual draggable item)
+- **Features:** "Main" badge on first item, grab cursor, 40% opacity while dragging, remove button on hover
+- **Reorder detection:** `isSortable(source)` in `onDragEnd`, reads `source.initialIndex` / `source.index`, applies via `moveItem()` utility
+- **Integration:** `UploadZone` always renders `SortableThumbnails` for both URL and file modes. Old `Thumbnail.tsx` was removed.
+
 ## Key business logic
 
 - **PartnershipCTA** section (`src/sections/PartnershipCTA.tsx`) replaces the old InstagramCTA. It offers two contact channels: Instagram DM button (uses `NEXT_PUBLIC_INSTAGRAM_DM_URL` + `NEXT_PUBLIC_INSTAGRAM_BRAND_URL`) and an inline partnership inquiry form that submits via `useActionState` to a server action saving to `partnership_inquiries`. Always use `target="_blank" rel="noopener noreferrer"` for Instagram links. See `.env.example` for all Instagram env vars.
-- **Product data** loaded from Supabase (with `image_url` from Storage). `mapDbProducts()` converts Supabase rows to the `Product` type, including variant mapping and promotion calculation.
+- **Product data** loaded from Supabase (with `image_url` + `images` from Storage). `mapDbProducts()` converts Supabase rows to the `Product` type, including variant mapping, image arrays, and promotion calculation.
 - **Delivery fee** is `NEXT_PUBLIC_DELIVERY_FEE` env var (default 25 AED), defined in `src/shared/consts.ts`.
 - **Product fields** `benefits`, `nutrition`, `servingIdeas`, `occasions` are stored for future modal/detail use but not rendered yet.
 - **Promotions** — `src/lib/promotionsDb.ts` handles CRUD. Promotions have `discount_type` (percentage | fixed), `discount_value`, date range, and `is_active` flag. Linked to products via `promotion_products` join table. Status is computed client-side via `getPromotionStatus()` (active | scheduled | expired) based on `is_active` + dates. Promotion list sorts active first.
 - **Order fulfillment** — `orders.is_fulfilled` boolean field. Admin toggles via `FulfilledToggle` checkbox component (`src/pages_flow/panel/orders/FulfilledToggle.tsx`) with server action. Filterable in admin orders view (Fulfilled / Unfulfilled).
+
+## Notifications
+
+Multi-role notification system with Supabase Realtime.
+
+**Tables:**
+- `notifications` — `user_id` (UUID, nullable) + `audience` (`user_role` enum, nullable). `user_id` set = personal notification. `user_id` NULL = broadcast. `audience` NULL = all roles, specific role = only that role.
+- `notification_reads` — `(notification_id, user_id)` PK. Presence of row = read. Used for both personal and broadcast notifications.
+- RLS enabled on both tables — users only see notifications targeted to them.
+
+**Notification types:** `new_order`, `order_paid`, `order_failed`, `order_cancelled` (admin), `new_partnership` (admin), `new_promotion`, `new_product`, `new_category` (broadcast to all). Styles in `src/shared/ui/NotificationTypeConfig.tsx`.
+
+**DB layer:** `src/lib/notificationsDb.ts` — `createNotification({ type, title, message?, relatedId?, audience?, userId? })`. Default `audience = "admin"`. Queries use left join on `notification_reads` to compute `is_read`.
+
+**Provider:** `NotificationsProvider` (`src/providers/NotificationsProvider.tsx`) — accepts `role`, `userId`, `allowNotifications` props. Subscribes to Supabase Realtime `INSERT` on `notifications` table. Client-side filters by role/audience. When `allowNotifications = false`, broadcast notifications are hidden (personal still shown).
+
+**User preferences:** `profiles.allow_notifications` boolean (default `true`). Toggle via `toggleNotifications()` server action in `src/pages_flow/profile/actions.ts`. UI: `NotificationSettingsSection` on profile page (non-admin only).
+
+**Broadcast triggers:** Promotions (on activation), Products (on publish), Categories (on creation) — all send `audience: null` (all roles).
+
+**UI:** `NotificationBell` in navbar (all logged-in users). `RecentNotifications` on admin dashboard. Bell shows stable `id="notification-bell"` on Popover to avoid hydration mismatch.
+
+## Address system
+
+`AddressWithMap` (`src/shared/ui/AddressWithMap.tsx`) — 5 fields: Emirate (select), City, Area, Building (all with `AddressSuggestInput` for Google Places suggestions), Flat/Villa. Bidirectional sync with Google Maps:
+- **Fields → Map:** debounced forward geocoding on manual input (700ms)
+- **Map → Fields:** reverse geocoding on map click
+- **Suggestion select → Map:** `PlacesService.getDetails` for coordinates + `extractAddressParts` for emirate
+
+`AddressSuggestInput` (`src/shared/ui/AddressSuggestInput.tsx`) — wraps `DropdownMenu` (controlled mode) + `FormInput`. Uses `AutocompleteService.getPlacePredictions` with `types` and `locationBias` per field.
+
+Address utilities in `src/shared/utils/address.ts`: `composeAddress({ emirate, city, area, buildingName, flatNumber })` → string (skips city if equals emirate), `parseAddress(string)` → `ParsedAddressProps`.
 
 ## Phone validation
 

@@ -18,6 +18,7 @@ interface ProductValues {
   tagline: string;
   variants: string;
   image_url: string;
+  images: string;
   in_stock: string;
   category_id: string;
   tagIds: string;
@@ -185,17 +186,48 @@ function validateProduct(values: Partial<ProductValues>) {
   return Object.keys(fieldErrors).length > 0 ? fieldErrors : null;
 }
 
+function parseUploads(formData: FormData): { image_url: string | null; images: string[] } {
+  const all = formData
+    .getAll("images")
+    .map((v) => (v as string).trim())
+    .filter(Boolean);
+  return { image_url: all[0] || null, images: all.slice(1) };
+}
+
+function collectAllUrls(
+  imageUrl: string | null | undefined,
+  images: string[] | null | undefined,
+): string[] {
+  return [
+    ...(imageUrl ? [imageUrl] : []),
+    ...((images as string[] | null) ?? []),
+  ];
+}
+
+async function cleanupRemovedImages(
+  oldUrls: string[],
+  newUrls: string[],
+) {
+  const keep = new Set(newUrls);
+  const removed = oldUrls.filter((url) => !keep.has(url));
+  if (removed.length > 0) {
+    await Promise.all(removed.map((url) => deleteImage(url, "products")));
+  }
+}
+
 function parseProductValues(
   values: Partial<ProductValues>,
   formData: FormData,
 ) {
   const title = values.title!.trim();
+  const { image_url, images } = parseUploads(formData);
 
   return {
     slug: toSlug(title),
     title,
     tagline: values.tagline?.trim() || null,
-    image_url: values.image_url?.trim() || null,
+    image_url,
+    images,
     in_stock: values.in_stock === "true",
     category_id: values.category_id || null,
     nutrition: buildNutrition(formData),
@@ -338,10 +370,10 @@ export async function updateProduct(
 
   const productData = parseProductValues(values, formData);
 
-  // Fetch old image URL to clean up if changed
+  // Fetch old images to clean up removed ones
   const { data: existing } = await supabaseAdmin
     .from("products")
-    .select("image_url")
+    .select("image_url, images")
     .eq("id", id)
     .single();
 
@@ -357,10 +389,11 @@ export async function updateProduct(
     return { error: "Failed to update product. Please try again.", values, attempt };
   }
 
-  // Delete old image from storage if it changed
-  if (existing?.image_url && existing.image_url !== productData.image_url) {
-    await deleteImage(existing.image_url, "products");
-  }
+  // Delete removed images from storage
+  await cleanupRemovedImages(
+    collectAllUrls(existing?.image_url, existing?.images as string[] | null),
+    collectAllUrls(productData.image_url, productData.images),
+  );
 
   const variants = parseVariants(values.variants);
 
@@ -376,10 +409,10 @@ export async function updateProduct(
 export async function deleteProduct(
   id: string,
 ): Promise<Pick<ProductState, "success" | "error">> {
-  // Fetch image URL before deleting the row
+  // Fetch images before deleting the row
   const { data: existing } = await supabaseAdmin
     .from("products")
-    .select("image_url")
+    .select("image_url, images")
     .eq("id", id)
     .single();
 
@@ -388,9 +421,11 @@ export async function deleteProduct(
     return { error: "Failed to delete product. Please try again." };
   }
 
-  if (existing?.image_url) {
-    await deleteImage(existing.image_url, "products");
-  }
+  // Delete all images from storage
+  await cleanupRemovedImages(
+    collectAllUrls(existing?.image_url, existing?.images as string[] | null),
+    [],
+  );
 
   return { success: true };
 }

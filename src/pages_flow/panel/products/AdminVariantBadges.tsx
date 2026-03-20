@@ -32,14 +32,15 @@ export function AdminVariantBadges({
 
           return (
             <Badge key={v.id} variant="warm" size={size}>
-              {v.weight_g}g —{" "}
+              <span className="text-earth/60">{v.weight_g}g</span>
+              <span className="text-earth/25 mx-0.5">—</span>
               {discounted && discounted !== base ? (
                 <>
-                  <span className="line-through opacity-50">AED {base}</span>{" "}
-                  <span className="text-orange">AED {discounted.toFixed(2)}</span>
+                  <span className="line-through text-earth/30">AED {base}</span>{" "}
+                  <span className="text-orange font-semibold">AED {discounted.toFixed(2)}</span>
                 </>
               ) : (
-                <>AED {base}</>
+                <span className="text-earth font-semibold">AED {base}</span>
               )}
             </Badge>
           );

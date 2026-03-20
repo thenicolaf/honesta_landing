@@ -56,5 +56,5 @@ export function useFilesMode(
     [files, updateFiles],
   );
 
-  return { files, addFiles, removeFile };
+  return { files, addFiles, removeFile, reorder: updateFiles };
 }

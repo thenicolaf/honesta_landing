@@ -35,7 +35,7 @@ export function AdminCategoryCard({ category }: { category: DbCategory }) {
         )}
       </div>
 
-      <div className="flex flex-col p-6 gap-4">
+      <div className="flex flex-col p-6 gap-4 grow">
         <div className="flex items-start justify-between gap-2">
           <p className="font-body font-semibold uppercase tracking-[0.14em] text-2xs text-earth/50">
             {category.audience}
@@ -61,7 +61,7 @@ export function AdminCategoryCard({ category }: { category: DbCategory }) {
           {category.description}
         </p>
 
-        <div className="flex items-center gap-2 [&>a]:grow [&>button]:grow ">
+        <div className="flex items-center gap-2 [&>a]:grow [&>button]:grow mt-auto">
           <Button
             as="a"
             href={`/panel/categories/${category.id}/edit`}

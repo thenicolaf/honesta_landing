@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { UploadZone, type UploadItem, type UploadMultipleProps } from "../UploadZone";
-import { Dialog, DialogContent } from "../Dialog";
-import { ImagePreview } from "../ImagePreview";
+import { Lightbox } from "../Lightbox";
 
 type FormUploadZoneProps = UploadMultipleProps & {
   name: string;
@@ -11,13 +10,32 @@ type FormUploadZoneProps = UploadMultipleProps & {
   maxSizeMb?: number;
   state?: "default" | "error";
   className?: string;
-  /** Existing image URL (edit mode) */
+  /** Existing image URL (edit mode, single) */
   initialUrl?: string;
+  /** Existing image URLs (edit mode, multiple) */
+  initialUrls?: string[];
   /** Slug for naming files in storage */
   slug?: string;
   /** Storage bucket name (default: "products") */
   bucket?: string;
 };
+
+function buildInitialItems(
+  initialUrls?: string[],
+  initialUrl?: string,
+): UploadItem[] {
+  if (initialUrls?.length) {
+    return initialUrls.map((url, i) => ({
+      id: crypto.randomUUID(),
+      url,
+      name: `Image ${i + 1}`,
+    }));
+  }
+  if (initialUrl) {
+    return [{ id: crypto.randomUUID(), url: initialUrl, name: "Current image" }];
+  }
+  return [];
+}
 
 export function FormUploadZone(props: FormUploadZoneProps) {
   const {
@@ -27,15 +45,14 @@ export function FormUploadZone(props: FormUploadZoneProps) {
     state,
     className,
     initialUrl,
+    initialUrls,
     slug = "product",
     bucket = "products",
     ...multipleProps
   } = props;
 
   const [items, setItems] = useState<UploadItem[]>(() =>
-    initialUrl
-      ? [{ id: crypto.randomUUID(), url: initialUrl, name: "Current image" }]
-      : [],
+    buildInitialItems(initialUrls, initialUrl),
   );
   const [uploading, setUploading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -99,15 +116,12 @@ export function FormUploadZone(props: FormUploadZoneProps) {
         {...multipleProps}
       />
 
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent size="full" className="p-0 overflow-hidden">
-          <ImagePreview
-            images={items.map((i) => i.url)}
-            defaultIndex={previewIndex}
-            className="rounded-2xl"
-          />
-        </DialogContent>
-      </Dialog>
+      <Lightbox
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        slides={items.map((i) => ({ src: i.url, alt: i.name }))}
+        index={previewIndex}
+      />
     </>
   );
 }

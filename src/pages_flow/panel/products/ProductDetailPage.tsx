@@ -63,6 +63,7 @@ function ProductDetailContent({ product }: ProductDetailPageProps) {
         {/* Image column */}
         <ProductDetailImage
           image_url={product.image_url ?? ""}
+          images={(product.images as string[] | null) ?? []}
           title={product.title}
         />
 

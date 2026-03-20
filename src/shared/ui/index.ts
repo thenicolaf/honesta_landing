@@ -70,7 +70,7 @@ export {
   type UploadItem,
   type UploadMultipleProps,
 } from "./UploadZone";
-export { ImagePreview } from "./ImagePreview";
+export { Lightbox, type LightboxSlide } from "./Lightbox";
 export { EmptyState } from "./EmptyState";
 export { FilterBar, type FilterBarItem } from "./FilterBar";
 export {

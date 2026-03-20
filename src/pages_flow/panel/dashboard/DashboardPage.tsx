@@ -15,27 +15,13 @@ import {
   Tag,
 } from "lucide-react";
 import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
-import {
-  Card,
-  Badge,
-  Table,
-  TableHeader,
-  TableHeaderRow,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-  DataCard,
-  DataCardHeader,
-  DataCardBody,
-  DataCardField,
-  DataCardList,
-} from "@/shared/ui";
+import { Card, Badge } from "@/shared/ui";
 import { formatAed, formatDateTime } from "@/shared/ui/Table";
 import { OrderStatus } from "@/shared/types";
 import type { DashboardStats } from "./types";
 import { cn } from "@/shared/utils/cn";
 import { RecentNotifications } from "./RecentNotifications";
+import { ProductSalesSection } from "./ProductSalesSection";
 
 // ─── Stat Card ──────────────────────────────────────────────────────────────
 
@@ -177,57 +163,7 @@ export function DashboardPage({ stats }: { stats: DashboardStats }) {
       {stats.orders.productSales.length > 0 && (
         <>
           <SectionHeading>Product Sales</SectionHeading>
-
-          {/* Mobile: cards */}
-          <div className="md:hidden mb-8">
-            <DataCardList className="min-[30rem]:grid-cols-2">
-              {stats.orders.productSales.map((p) => (
-                <DataCard key={p.name}>
-                  <DataCardHeader>
-                    <span className="font-body font-semibold text-sm text-earth">
-                      {p.name}
-                    </span>
-                  </DataCardHeader>
-                  <DataCardBody>
-                    <DataCardField label="Quantity">
-                      <span className="tabular-nums">{p.quantity}</span>
-                    </DataCardField>
-                    <DataCardField label="Revenue">
-                      <span className="font-semibold tabular-nums">
-                        {formatAed(p.revenue)}
-                      </span>
-                    </DataCardField>
-                  </DataCardBody>
-                </DataCard>
-              ))}
-            </DataCardList>
-          </div>
-
-          {/* Desktop: table */}
-          <div className="hidden md:block mb-8">
-            <Table>
-              <TableHeader>
-                <TableHeaderRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead className="text-right">Qty</TableHead>
-                  <TableHead className="text-right">Revenue</TableHead>
-                </TableHeaderRow>
-              </TableHeader>
-              <TableBody>
-                {stats.orders.productSales.map((p) => (
-                  <TableRow key={p.name}>
-                    <TableCell>{p.name}</TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {p.quantity}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums font-semibold">
-                      {formatAed(p.revenue)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <ProductSalesSection sales={stats.orders.productSales} />
         </>
       )}
 

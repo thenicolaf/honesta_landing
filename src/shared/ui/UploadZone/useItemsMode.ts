@@ -30,6 +30,7 @@ export function useItemsMode(
       if (remaining <= 0) return;
 
       const list = Array.from(incoming).slice(0, remaining);
+      let accumulated = [...currentItems];
 
       for (const file of list) {
         if (!file.type.startsWith("image/")) continue;
@@ -37,7 +38,8 @@ export function useItemsMode(
 
         const result = await onUpload(file);
         if (result) {
-          updateItems([...currentItems, result]);
+          accumulated = [...accumulated, result];
+          updateItems(accumulated);
         }
       }
     },
@@ -52,5 +54,5 @@ export function useItemsMode(
     [currentItems, updateItems, onRemove],
   );
 
-  return { items: currentItems, addFiles, removeItem };
+  return { items: currentItems, addFiles, removeItem, reorder: updateItems };
 }

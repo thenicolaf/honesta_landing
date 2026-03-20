@@ -36,6 +36,8 @@ export interface Product {
   freeFrom: string[];
   /** URL to Supabase Storage, e.g. "https://….supabase.co/storage/v1/object/public/…" */
   image_url: string;
+  /** All product images (ordered), image_url = images[0] */
+  images: string[];
   /** Default price (from smallest variant) — required for cart and checkout */
   price?: number;
   /** Default weight (from smallest variant) */

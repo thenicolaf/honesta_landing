@@ -3,7 +3,7 @@
 import { cn } from "@/shared/utils/cn";
 import type { UploadFile, UploadItem, UploadMultipleProps } from "./types";
 import { DropZone } from "./DropZone";
-import { Thumbnail } from "./Thumbnail";
+import { SortableThumbnails } from "./SortableThumbnails";
 import { DataTransferInputs } from "./DataTransferInputs";
 import { useFilesMode } from "./useFilesMode";
 import { useItemsMode } from "./useItemsMode";
@@ -99,33 +99,28 @@ export function UploadZone(props: UploadZoneProps) {
       }
 
       {/* Thumbnails — URL mode */}
-      {isUrlMode && itemsMode.items.length > 0 && (
-        <ul className="flex flex-wrap gap-3">
-          {itemsMode.items.map((item, idx) => (
-            <Thumbnail
-              key={item.id}
-              src={item.url}
-              alt={item.name}
-              onRemove={() => itemsMode.removeItem(item)}
-              onPreview={onPreview ? () => onPreview(idx) : undefined}
-            />
-          ))}
-        </ul>
+      {isUrlMode && (
+        <SortableThumbnails
+          items={itemsMode.items}
+          onReorder={(reordered) => itemsMode.reorder(reordered)}
+          onRemove={(item) => itemsMode.removeItem(item)}
+          onPreview={onPreview}
+        />
       )}
 
       {/* Thumbnails — Legacy file mode */}
-      {!isUrlMode && filesMode.files.length > 0 && (
-        <ul className="flex flex-wrap gap-3">
-          {filesMode.files.map((f, idx) => (
-            <Thumbnail
-              key={f.id}
-              src={f.preview}
-              alt={f.file.name}
-              onRemove={() => filesMode.removeFile(f.id)}
-              onPreview={onPreview ? () => onPreview(idx) : undefined}
-            />
-          ))}
-        </ul>
+      {!isUrlMode && (
+        <SortableThumbnails
+          items={filesMode.files.map((f) => ({ id: f.id, url: f.preview, name: f.file.name }))}
+          onReorder={(reordered) => {
+            const reorderedFiles = reordered
+              .map((item) => filesMode.files.find((f) => f.id === item.id))
+              .filter(Boolean) as typeof filesMode.files;
+            filesMode.reorder(reorderedFiles);
+          }}
+          onRemove={(item) => filesMode.removeFile(item.id)}
+          onPreview={onPreview}
+        />
       )}
     </div>
   );
