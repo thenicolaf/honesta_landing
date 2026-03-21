@@ -66,7 +66,7 @@ export function ProductItem({ product }: ProductItemProps) {
       />
 
       <div className="flex-1 p-5 flex flex-col gap-3">
-        <ProductHeader category={category} />
+        <ProductHeader category={category} badge={product.badge} />
         <ProductTitle title={title} />
         {product.variants.length > 0 && (
           <div onClick={stop} className="max-w-fit">

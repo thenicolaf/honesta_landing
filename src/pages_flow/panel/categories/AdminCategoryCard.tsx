@@ -60,9 +60,11 @@ export function AdminCategoryCard({
           <p className="font-body font-semibold uppercase tracking-[0.14em] text-2xs text-earth/50">
             {category.audience}
           </p>
-          <Badge variant="natural" className="shrink-0">
-            Natural
-          </Badge>
+          {category.badge && (
+            <Badge variant="natural" className="shrink-0">
+              {category.badge}
+            </Badge>
+          )}
         </div>
 
         <div>

@@ -37,6 +37,7 @@ export function mapDbProducts(raw: DbProduct[]): Product[] {
       image_url: p.image_url ?? "",
       images: (p.images as string[] | null) ?? [],
       in_stock: p.in_stock ?? true,
+      badge: p.badge ?? undefined,
       category: p.categories?.name ?? "",
       tags: p.product_tags.map((pt) => pt.tag_options.label),
       freeFrom: p.product_free_froms.map((pf) => pf.free_from_options.label),

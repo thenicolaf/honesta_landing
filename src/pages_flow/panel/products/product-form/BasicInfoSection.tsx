@@ -50,6 +50,16 @@ export function BasicInfoSection({ product, state }: SectionProps) {
           />
         </div>
 
+        <div>
+          <FormLabel htmlFor="p-badge">Badge</FormLabel>
+          <FormInput
+            id="p-badge"
+            name="badge"
+            placeholder="e.g. Natural"
+            defaultValue={state?.values?.badge ?? product?.badge ?? ""}
+          />
+        </div>
+
         <div className="flex flex-col justify-end">
           <FormLabel htmlFor="p-instock">In stock</FormLabel>
           <FormCheckbox

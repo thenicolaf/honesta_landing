@@ -10,6 +10,7 @@ import { getMaxSortOrder, updateCategoryOrder } from "@/lib/categoriesDb";
 interface CategoryInfo {
   name: string;
   audience: string;
+  badge: string;
   tagline: string;
   description: string;
   image_url: string;
@@ -54,6 +55,7 @@ export async function createCategory(
     name,
     slug,
     audience: values.audience?.trim() || null,
+    badge: values.badge?.trim() || null,
     tagline: values.tagline?.trim() || null,
     description: values.description?.trim() || null,
     image_url: values.image_url?.trim() || null,
@@ -103,6 +105,7 @@ export async function updateCategory(
       name,
       slug,
       audience: values.audience?.trim() || null,
+      badge: values.badge?.trim() || null,
       tagline: values.tagline?.trim() || null,
       description: values.description?.trim() || null,
       image_url: newImageUrl,

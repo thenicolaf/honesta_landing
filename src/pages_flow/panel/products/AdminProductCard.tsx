@@ -19,6 +19,7 @@ import { AdminVariantBadges } from "./AdminVariantBadges";
 export function AdminProductCard({ product }: { product: AdminDbProduct }) {
   const { openDelete } = useProductActions();
   const {
+    badge,
     category,
     tagline,
     tags,
@@ -45,6 +46,7 @@ export function AdminProductCard({ product }: { product: AdminDbProduct }) {
       <div className="flex-1 p-5 flex flex-col gap-3">
         <ProductHeader
           category={category}
+          badge={badge}
           extraBadges={
             product.in_stock === false ? (
               <Badge variant="outline" size="sm">

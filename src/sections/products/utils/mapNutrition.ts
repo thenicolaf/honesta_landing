@@ -10,6 +10,7 @@ export function mapNutrition(
 }
 
 export interface MappedAdminProduct {
+  badge?: string;
   category: string;
   tagline: string;
   tags: string[];
@@ -29,6 +30,7 @@ export function mapAdminProduct(product: AdminDbProduct): MappedAdminProduct {
   const activePromo = findActivePromotion(product.promotion_products);
 
   return {
+    badge: product.badge ?? undefined,
     category: product.categories?.name ?? "—",
     tagline: product.tagline ?? "",
     tags: product.product_tags.map((pt) => pt.tag_options.label),

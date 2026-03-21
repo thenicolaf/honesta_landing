@@ -226,6 +226,7 @@ function parseProductValues(
     slug: toSlug(title),
     title,
     tagline: values.tagline?.trim() || null,
+    badge: values.badge?.trim() || null,
     image_url,
     images,
     in_stock: values.in_stock === "true",

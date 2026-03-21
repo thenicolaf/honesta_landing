@@ -59,6 +59,18 @@ export function CategoryForm({ category }: CategoryFormProps) {
           </div>
 
           <div>
+            <FormLabel htmlFor="cat-badge">Badge</FormLabel>
+            <FormInput
+              id="cat-badge"
+              name="badge"
+              placeholder="e.g. Natural"
+              defaultValue={
+                state?.values?.badge ?? category?.badge ?? ""
+              }
+            />
+          </div>
+
+          <div>
             <FormLabel htmlFor="cat-tagline">Tagline</FormLabel>
             <FormInput
               id="cat-tagline"

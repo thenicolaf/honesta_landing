@@ -266,7 +266,7 @@ Two files, three client instances:
   - `supabaseAdmin` — static service-role client, bypasses RLS (use only in server actions, API routes, and `lib/`)
   - `createSupabaseServerClient()` — async, reads cookies via `@supabase/ssr`; use whenever you need the current user's session
 
-**DB tables:** `orders` (status, is_fulfilled, subtotal, delivery_fee, total, customer fields, ngenius_ref), `order_items` (order_id, variant_id, name, price, weight_g, quantity — snapshots at order time), `products` (image_url, images JSONB `[]`, in_stock, nutrition JSON, status — **no price/weight_g columns**, these live in `product_variants`), `product_variants` (product_id, weight_g, price — one-to-many with products), `categories`, `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, role `user_role`, gender, birthday, allow_notifications), `cart_items` (user_id, variant_id, quantity — minimal, prices via join), `notifications` (type, title, message, related_id, user_id, audience `user_role` — nullable, NULL = all roles), `notification_reads` (notification_id, user_id, read_at — tracks per-user read status), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id).
+**DB tables:** `orders` (status, is_fulfilled, subtotal, delivery_fee, total, customer fields, ngenius_ref), `order_items` (order_id, variant_id, name, price, weight_g, quantity — snapshots at order time), `products` (image_url, images JSONB `[]`, in_stock, badge, nutrition JSONB, status — **no price/weight_g columns**, these live in `product_variants`), `product_variants` (product_id, weight_g, price — one-to-many with products), `categories` (name, slug, audience, tagline, description, image_url, badge, sort_order), `benefits` (id, name, description — unique on name+description), `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, role `user_role`, gender, birthday, allow_notifications), `cart_items` (user_id, variant_id, quantity — minimal, prices via join), `notifications` (type, title, message, related_id, user_id, audience `user_role` — nullable, NULL = all roles), `notification_reads` (notification_id, user_id, read_at — tracks per-user read status), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id).
 
 ## Design system
 
@@ -311,7 +311,7 @@ All use `class-variance-authority` (cva) for variants + `cn()` for className mer
 
 Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React context internally; sub-components access it via a `use*` hook. Follow this same pattern when adding new compound components.
 
-- **`Button`** — defaults to `<a>`, pass `as="button"` for `<button>`. Variants: `primary | secondary | ghost`. Sizes: `sm | md | lg`.
+- **`Button`** — defaults to `<a>`, pass `as="button"` for `<button>`. Supports `ref` prop (React 19 ref-as-prop) for both variants. Variants: `primary | secondary | outline | text`. Colors: `primary | error | warning | default`. Sizes: `icon | inline | sm | md | lg`.
 - **`Badge`** — inline label/tag. Variants: `natural` (moss green) | `warm` (sand) | `outline`. Sizes: `xs | sm | md`.
 - **`Card`** — wrapper with 16px radius. Variants: `default` (white-warm) | `sand` | `outline` | `dark` (earth bg).
 - **`TagToolbar` / `TagToolbarItem`** — single-select pill filter bar (`role="radiogroup"`). Controlled or uncontrolled via `value`/`onValueChange`/`defaultValue`. Empty string `""` means "All".
@@ -323,6 +323,9 @@ Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React conte
 - **`Table` / `TableHeader` / `TableHeaderRow` / `TableHead` / `TableBody` / `TableRow` / `TableCell` / `TableEmpty` / `TablePagination`** — compound table with sticky header, sort indicators, dividers. Context-based (`useTable`).
 - **`DataTable`** — declarative wrapper: pass `data`, `columns: ColumnDef[]`, `sort`, `pagination` and it renders a full `Table`. Hooks: `useTableSort`, `useTableData`, `useTableSearch`, `useTablePagination`. Helpers: `formatAed`, `formatDate`, `formatDateTime`, `shortId`, comparators (`compareString`, `compareNumber`, `compareDate`).
 - **`DataCard` / `DataCardHeader` / `DataCardBody` / `DataCardField` / `DataCardFooter` / `DataCardGrid` / `DataCardList` / `DataCardEmpty`** — compound card for mobile-friendly data display. Context-based (`useDataCard`). `DataCardList` uses CSS grid (`grid-cols-1` default, pass `className` for responsive cols). `DataCardGrid` is a declarative helper that renders `FieldDef[]`.
+- **`Thumbnail`** — reusable image thumbnail. Props: `src`, `alt`, `selected?` (orange border), `softDeleted?` (dimmed + grayscale), `showLabel?` (alt text below, default true), `onClick?`, `children?` (overlay buttons). Used by `SortableThumbnail` and `ProductDetailImage`.
+- **`Popover` / `PopoverTrigger` / `PopoverContent`** — context-based popover with auto up/down direction, outside-click close, viewport clamping. Supports **controlled mode** via `open`/`onOpenChange` props (used by `BenefitsSection`, `NutritionSection`). `usePopover()` hook for child components.
+- **`MultiSelect` / `MultiSelectTrigger` / `MultiSelectContent` / `MultiSelectItem` / `MultiSelectEmpty` / `MultiSelectCreate` / `MultiSelectDelete`** — compound multi-select with search, selected-items-first sorting, scroll preservation. Context-based (`useMultiSelect`). `MultiSelectCreate` for inline option creation, `MultiSelectDelete` for inline deletion.
 - **`CartEmpty`** — empty cart placeholder screen.
 - **`Loader`** — loading spinner (used during cart hydration).
 
@@ -395,18 +398,34 @@ Products have a **main image** (`image_url`) and an optional **gallery** (`image
 
 - **Library:** `@dnd-kit/react` v0.3 — `DragDropProvider` + `useSortable` from `@dnd-kit/react/sortable`
 - **Components:** `SortableThumbnails` (container with `DragDropProvider`) → `SortableThumbnail` (individual draggable item)
-- **Features:** "Main" badge on first item, grab cursor, 40% opacity while dragging, remove button on hover
+- **Features:** "Main" badge on first item, 40% opacity while dragging, remove button on hover, drag handle button (GripVertical icon, bottom-left corner)
+- **Drag handle:** Uses `useSortable({ handle: ref })` with `PointerSensor` and `activationConstraints: () => undefined` for instant activation. Drag only via handle button — prevents conflict with Lightbox click on image.
 - **Reorder detection:** `isSortable(source)` in `onDragEnd`, reads `source.initialIndex` / `source.index`, applies via `moveItem()` utility
-- **Integration:** `UploadZone` always renders `SortableThumbnails` for both URL and file modes. Old `Thumbnail.tsx` was removed.
+- **Integration:** `UploadZone` always renders `SortableThumbnails` for both URL and file modes. `SortableThumbnail` wraps the shared `Thumbnail` component.
+- **Single item:** When only 1 image, `sortable={false}` hides drag handle and disables dnd via `disabled: true` on `useSortable`.
 
 ## Key business logic
 
 - **PartnershipCTA** section (`src/sections/PartnershipCTA.tsx`) replaces the old InstagramCTA. It offers two contact channels: Instagram DM button (uses `NEXT_PUBLIC_INSTAGRAM_DM_URL` + `NEXT_PUBLIC_INSTAGRAM_BRAND_URL`) and an inline partnership inquiry form that submits via `useActionState` to a server action saving to `partnership_inquiries`. Always use `target="_blank" rel="noopener noreferrer"` for Instagram links. See `.env.example` for all Instagram env vars.
 - **Product data** loaded from Supabase (with `image_url` + `images` from Storage). `mapDbProducts()` converts Supabase rows to the `Product` type, including variant mapping, image arrays, and promotion calculation.
 - **Delivery fee** is `NEXT_PUBLIC_DELIVERY_FEE` env var (default 25 AED), defined in `src/shared/consts.ts`.
-- **Product fields** `benefits`, `nutrition`, `servingIdeas`, `occasions` are stored for future modal/detail use but not rendered yet.
+- **Product badge** — optional `badge` text field on both `products` and `categories` tables. Displayed via `Badge` component in `ProductHeader` and category cards. If empty/null, badge is hidden.
+- **Nutrition** — dynamic fields stored as `Record<string, { name: string; value: number }>` in `products.nutrition` JSONB. Admin form (`NutritionSection`) allows adding/removing fields via Popover form. Default 8 fields (Calories, Carbs, etc.) pre-populated for new products. `NutritionTable` in public UI iterates `Object.values(nutrition)`.
+- **Benefits** — managed via `BenefitsSection` with `MultiSelect` compound component. Supports inline creation (Popover form with name + description) and deletion. API: `POST/DELETE /api/options` with `entityType: "benefits"`. Benefits table: `benefits(id, name, description)`.
+- **Product fields** `servingIdeas`, `occasions` are rendered in collapsible detail sections on product cards and detail pages.
 - **Promotions** — `src/lib/promotionsDb.ts` handles CRUD. Promotions have `discount_type` (percentage | fixed), `discount_value`, date range, and `is_active` flag. Linked to products via `promotion_products` join table. Status is computed client-side via `getPromotionStatus()` (active | scheduled | expired) based on `is_active` + dates. Promotion list sorts active first.
 - **Order fulfillment** — `orders.is_fulfilled` boolean field. Admin toggles via `FulfilledToggle` checkbox component (`src/pages_flow/panel/orders/FulfilledToggle.tsx`) with server action. Filterable in admin orders view (Fulfilled / Unfulfilled).
+
+## Category Sorting
+
+Categories have a `sort_order` integer column. Order is controlled via drag-and-drop in admin `/panel/categories`.
+
+- **DB:** `categories.sort_order` — new categories get `max(sort_order) + 1`
+- **Admin UI:** `SortableCategoryGrid` (`src/pages_flow/panel/categories/SortableCategoryGrid.tsx`) — uses `@dnd-kit/react` with `useSortable({ handle })` for drag via GripVertical button only
+- **Optimistic updates:** `useOptimistic` for instant reorder + `useTransition` for server action
+- **Server action:** `reorderCategories(orderedIds)` → batch updates `sort_order` → `revalidatePath`
+- **Everywhere sorted:** `getCategories()` uses `.order("sort_order")` — affects landing page categories, product filter bar, admin categories, product form dropdown
+- **Touch support:** `PointerSensor` with `activationConstraints: () => undefined` removes 250ms touch delay
 
 ## Notifications
 
@@ -438,7 +457,11 @@ Multi-role notification system with Supabase Realtime.
 
 `AddressSuggestInput` (`src/shared/ui/AddressSuggestInput.tsx`) — wraps `DropdownMenu` (controlled mode) + `FormInput`. Uses `AutocompleteService.getPlacePredictions` with `types` and `locationBias` per field.
 
-Address utilities in `src/shared/utils/address.ts`: `composeAddress({ emirate, city, area, buildingName, flatNumber })` → string (skips city if equals emirate), `parseAddress(string)` → `ParsedAddressProps`.
+Address utilities in `src/shared/utils/address.ts`:
+- `composeAddress({ emirate, city, area, buildingName, flatNumber })` → string (always includes city for correct round-trip parsing)
+- `parseAddress(string)` → `ParsedAddressProps` (extracts fields from composed string)
+- `displayAddress(address)` → string (like composeAddress but skips city when equals emirate — for UI display)
+- `shortAddress(address)` → string (area + city? + emirate — compact display for cards)
 
 ## Phone validation
 

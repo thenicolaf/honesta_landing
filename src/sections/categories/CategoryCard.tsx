@@ -15,6 +15,7 @@ export function CategoryCard({
   tagline,
   description,
   image_url,
+  badge,
 }: CategoryCardData) {
   const categoryFilter = useFilterBar("category");
 
@@ -60,9 +61,11 @@ export function CategoryCard({
           <p className="font-body font-semibold uppercase tracking-[0.14em] text-2xs text-earth/65">
             {audience}
           </p>
-          <Badge variant="natural" className="shrink-0">
-            Natural
-          </Badge>
+          {badge && (
+            <Badge variant="natural" className="shrink-0">
+              {badge}
+            </Badge>
+          )}
         </div>
 
         {/* Name + tagline */}

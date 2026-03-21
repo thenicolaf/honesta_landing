@@ -44,6 +44,7 @@ export interface Product {
   in_stock?: boolean;
   // Rich data — stored for future modal / detail expansion
   benefits?: Benefit[];
+  badge?: string;
   nutrition?: NutritionInfo;
   servingIdeas?: string[];
   occasions?: string[];

@@ -5,7 +5,7 @@ export const fadeUp = {
 
 export const BUSINESS_TYPES = [
   "Restaurant",
-  "Cafe",
+  "Coffee Shop",
   "Gym",
   "Spa",
   "Hotel",
