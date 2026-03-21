@@ -40,4 +40,5 @@ export interface CategoryItem {
 export interface DbProductGridProps {
   rawProducts: DbProduct[];
   categories?: CategoryItem[];
+  salesMap?: Record<string, number>;
 }

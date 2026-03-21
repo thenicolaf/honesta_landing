@@ -1,6 +1,7 @@
 import { ProductGrid } from "@/sections";
 import { supabase } from "@/lib/supabase.server";
 import { getCategories } from "@/lib/categoriesDb";
+import { getProductSalesMap } from "@/lib/productsDb";
 import type { DbProduct } from "@/sections/products/types/db-types";
 
 const RELATIONS = `product_tags(tag_options(label)),
@@ -12,19 +13,21 @@ const RELATIONS = `product_tags(tag_options(label)),
     product_variants(id, weight_g, price)`;
 
 export async function ProductsSection() {
-  const [{ data }, categories] = await Promise.all([
+  const [{ data }, categories, salesMap] = await Promise.all([
     supabase
       .from("products")
       .select(`*, categories(slug, name), ${RELATIONS}`)
       .eq("status", "published")
       .order("created_at"),
     getCategories(),
+    getProductSalesMap(),
   ]);
 
   return (
     <ProductGrid
       rawProducts={(data as DbProduct[] | null) ?? []}
       categories={categories.map((c) => ({ value: c.slug, label: c.name }))}
+      salesMap={salesMap}
     />
   );
 }

@@ -48,6 +48,8 @@ export interface Product {
   nutrition?: NutritionInfo;
   servingIdeas?: string[];
   occasions?: string[];
+  /** Total units sold (from paid orders) */
+  totalSold?: number;
   /** Active promotion applied to this product */
   promotion?: {
     name: string;

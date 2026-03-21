@@ -1,7 +1,10 @@
 import type { DbProduct, Product, ProductVariant } from "../types";
 import { calculateDiscountedPrice, findActivePromotion } from "@/shared/utils/calculateDiscount";
 
-export function mapDbProducts(raw: DbProduct[]): Product[] {
+export function mapDbProducts(
+  raw: DbProduct[],
+  salesMap?: Record<string, number>,
+): Product[] {
   return raw.map((p) => {
     const variants: ProductVariant[] = (p.product_variants ?? [])
       .map((v) => ({ id: v.id, weight_g: v.weight_g, price: Number(v.price) }))
@@ -50,6 +53,7 @@ export function mapDbProducts(raw: DbProduct[]): Product[] {
         ? p.nutrition
         : undefined,
       promotion,
+      totalSold: salesMap?.[p.id] ?? 0,
     };
   });
 }

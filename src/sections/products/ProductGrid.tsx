@@ -1,11 +1,21 @@
 "use client";
 
+import { useMemo } from "react";
 import { motion } from "motion/react";
-import { FilterBar, EmptyState } from "@/shared/ui";
+import { ArrowUpDown } from "lucide-react";
+import {
+  FilterBar,
+  EmptyState,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/shared/ui";
 import { useFilterBar } from "@/providers/FilterProvider";
 import { ProductItem } from "./ProductItem";
 import type { DbProduct, DbProductGridProps, Product } from "./types";
-import { mapDbProducts } from "./utils";
+import { mapDbProducts, sortProducts, type ProductSortKey } from "./utils";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -79,18 +89,47 @@ function ProductList({ products }: { products: Product[] }) {
 
 // ─── ProductGridInner ────────────────────────────────────────────────────────
 
-function ProductGridInner({ rawProducts, categories }: { rawProducts: DbProduct[]; categories: DbProductGridProps["categories"] }) {
+const SORT_OPTIONS: {
+  value: ProductSortKey;
+  label: string;
+  promoOnly?: boolean;
+}[] = [
+  { value: "", label: "Recommended" },
+  { value: "promotions", label: "On Sale", promoOnly: true },
+  { value: "best-sellers", label: "Best Sellers" },
+  { value: "category", label: "By Category" },
+];
+
+function ProductGridInner({
+  rawProducts,
+  categories,
+  salesMap,
+}: {
+  rawProducts: DbProduct[];
+  categories: DbProductGridProps["categories"];
+  salesMap?: Record<string, number>;
+}) {
   const categoryFilter = useFilterBar("category");
+  const sortFilter = useFilterBar("sort");
 
   const filtered = categoryFilter.value
     ? rawProducts.filter((p) => p.categories?.slug === categoryFilter.value)
     : rawProducts;
-  const products = mapDbProducts(filtered);
+  const products = mapDbProducts(filtered, salesMap);
+  const sorted = useMemo(
+    () => sortProducts(products, (sortFilter.value || "") as ProductSortKey),
+    [products, sortFilter.value],
+  );
+
+  const hasPromo = products.some((p) => p.promotion);
+  const visibleSortOptions = SORT_OPTIONS.filter(
+    (o) => !o.promoOnly || hasPromo,
+  );
 
   return (
     <>
       <motion.div
-        className="mb-10 flex justify-center"
+        className="mb-10 flex flex-col sm:flex-row items-center justify-center gap-4"
         initial={{ opacity: 0, y: 12 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-40px" }}
@@ -101,11 +140,27 @@ function ProductGridInner({ rawProducts, categories }: { rawProducts: DbProduct[
           items={categories ?? []}
           className="justify-center"
         />
+        <Select
+          value={sortFilter.value || ""}
+          onValueChange={sortFilter.onValueChange}
+        >
+          <SelectTrigger className="w-48 h-9 text-2xs font-body font-semibold uppercase tracking-widest">
+            <ArrowUpDown size={12} className="shrink-0 mr-1.5 text-earth/40" />
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            {visibleSortOptions.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </motion.div>
-      {products.length === 0 ? (
+      {sorted.length === 0 ? (
         <ProductEmptyState />
       ) : (
-        <ProductList products={products} />
+        <ProductList products={sorted} />
       )}
     </>
   );
@@ -113,12 +168,20 @@ function ProductGridInner({ rawProducts, categories }: { rawProducts: DbProduct[
 
 // ─── ProductGrid ──────────────────────────────────────────────────────────────
 
-export function ProductGrid({ rawProducts, categories }: DbProductGridProps) {
+export function ProductGrid({
+  rawProducts,
+  categories,
+  salesMap,
+}: DbProductGridProps) {
   return (
     <section id="products" className="bg-white-warm py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <ProductHeader />
-        <ProductGridInner rawProducts={rawProducts} categories={categories} />
+        <ProductGridInner
+          rawProducts={rawProducts}
+          categories={categories}
+          salesMap={salesMap}
+        />
       </div>
     </section>
   );

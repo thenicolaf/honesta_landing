@@ -9,7 +9,7 @@ export default async function Home() {
     <main className="grow min-h-160">
       <Hero />
       <TrustBadges />
-      <SearchParamsFilterProvider keys={["category"]}>
+      <SearchParamsFilterProvider keys={["category", "sort"]}>
         <Suspense fallback={<Loader />}>
           <CategoriesSection />
         </Suspense>

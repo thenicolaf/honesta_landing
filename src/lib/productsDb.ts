@@ -114,6 +114,23 @@ export interface ProductFormOptions {
   benefits: { id: number; name: string; description: string }[];
 }
 
+export async function getProductSalesMap(): Promise<Record<string, number>> {
+  const { data } = await supabaseAdmin
+    .from("order_items")
+    .select("quantity, variant_id, orders!inner(status), product_variants!inner(product_id)")
+    .eq("orders.status", "PAID");
+
+  const map: Record<string, number> = {};
+  if (data) {
+    for (const row of data as { quantity: number; product_variants: { product_id: string }[] }[]) {
+      const pid = row.product_variants[0]?.product_id;
+      if (!pid) continue;
+      map[pid] = (map[pid] ?? 0) + row.quantity;
+    }
+  }
+  return map;
+}
+
 export async function getProductFormOptions(): Promise<ProductFormOptions> {
   const [categories, tagOptions, freeFromOptions, occasionOptions, servingIdeaOptions, benefits] =
     await Promise.all([
