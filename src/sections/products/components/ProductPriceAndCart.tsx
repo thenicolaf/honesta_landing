@@ -94,6 +94,7 @@ export function ProductPriceAndCart({ product, selectedVariant }: ProductPriceAn
       name: product.title,
       price: effectivePrice!,
       originalPrice: variantPromotion ? variantPrice! : undefined,
+      promotionEndsAt: variantPromotion ? product.promotion?.endsAt : undefined,
       image_url: product.image_url,
       weight_g: selectedVariant.weight_g,
     });

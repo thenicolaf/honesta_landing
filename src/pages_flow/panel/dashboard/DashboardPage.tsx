@@ -15,6 +15,7 @@ import {
   Tag,
 } from "lucide-react";
 import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
+import { RefreshButton } from "@/app/panel/_components/RefreshButton";
 import { Card, Badge } from "@/shared/ui";
 import { formatAed, formatDateTime } from "@/shared/ui/Table";
 import { OrderStatus } from "@/shared/types";
@@ -104,7 +105,7 @@ const STATUS_CONFIG = [
 export function DashboardPage({ stats }: { stats: DashboardStats }) {
   return (
     <>
-      <AdminPageHeader title="Dashboard" />
+      <AdminPageHeader title="Dashboard" actions={<RefreshButton />} />
 
       {/* ── Overview ─────────────────────────────────────────────────── */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

@@ -124,6 +124,7 @@ export { CopyText } from "./CopyText";
 export { ToastProvider, toastSuccess, toastError, toastInfo } from "./Toast";
 export { getNotificationStyle } from "./NotificationTypeConfig";
 export { Popover, PopoverTrigger, PopoverContent, usePopover } from "./Popover";
+export { Tooltip, TooltipTrigger, TooltipContent, useTooltip, type TooltipSide } from "./Tooltip";
 export { ToastFromUrl } from "./ToastFromUrl";
 export {
   MultiSelect,

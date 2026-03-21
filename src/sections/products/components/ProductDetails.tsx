@@ -3,6 +3,9 @@ import {
   CollapsibleTrigger,
   CollapsibleChevron,
   CollapsibleContent,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
 } from "@/shared/ui";
 import type { Benefit, NutritionInfo } from "../types";
 
@@ -136,9 +139,7 @@ function DetailsContent({
 }: DetailsContentProps) {
   return (
     <>
-      {benefits && benefits.length > 0 && (
-        <BenefitsList benefits={benefits} />
-      )}
+      {benefits && benefits.length > 0 && <BenefitsList benefits={benefits} />}
       {nutrition && <NutritionTable nutrition={nutrition} />}
       {((servingIdeas && servingIdeas.length > 0) ||
         (occasions && occasions.length > 0)) && (
@@ -174,16 +175,21 @@ export function ProductDetails(props: DetailsContentProps) {
 
   return (
     <Collapsible className="border-t border-parchment/50 pt-3">
-      <CollapsibleTrigger
-        onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-        }}
-        className="flex w-full items-center justify-between gap-2 font-body font-semibold uppercase tracking-[0.12em] text-2xs text-earth/55 hover:text-orange transition-colors duration-200"
-      >
-        <span>Details</span>
-        <CollapsibleChevron />
-      </CollapsibleTrigger>
+      <Tooltip side="top" className="block">
+        <TooltipTrigger className="block">
+          <CollapsibleTrigger
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+            }}
+            className="flex w-full items-center justify-between gap-2 font-body font-semibold uppercase tracking-[0.12em] text-2xs text-earth/55 hover:text-orange transition-colors duration-200"
+          >
+            <span>Details</span>
+            <CollapsibleChevron />
+          </CollapsibleTrigger>
+        </TooltipTrigger>
+        <TooltipContent>Benefits, nutrition & more</TooltipContent>
+      </Tooltip>
       <CollapsibleContent>
         <div className="pt-4 flex flex-col gap-5">
           <DetailsContent {...props} />

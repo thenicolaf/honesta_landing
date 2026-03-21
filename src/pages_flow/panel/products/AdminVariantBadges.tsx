@@ -37,11 +37,11 @@ export function AdminVariantBadges({
               <span className="text-earth/25 mx-0.5">—</span>
               {discounted && discounted !== base ? (
                 <>
-                  <span className="line-through text-earth/30">AED {base}</span>{" "}
+                  <span className="line-through text-earth/30">AED {base.toFixed(2)}</span>{" "}
                   <span className="text-orange font-semibold">AED {discounted.toFixed(2)}</span>
                 </>
               ) : (
-                <span className="text-earth font-semibold">AED {base}</span>
+                <span className="text-earth font-semibold">AED {base.toFixed(2)}</span>
               )}
             </Badge>
           );

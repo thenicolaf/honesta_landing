@@ -59,7 +59,8 @@ export function ProductItem({ product }: ProductItemProps) {
           product.id ? (
             <FavoriteButton
               productId={product.id}
-              className="absolute top-3 right-3 z-20 bg-white-warm/80 backdrop-blur-sm hover:bg-white-warm"
+              tooltipSide="left"
+              className="absolute top-3 right-3 z-20 rounded-full bg-white-warm/80 backdrop-blur-sm hover:bg-white-warm"
             />
           ) : undefined
         }

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Badge, Button } from "@/shared/ui";
+import { Badge, Button, Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui";
 import { IconInfo } from "@/shared/icons";
 import { cn } from "@/shared/utils/cn";
 
@@ -54,24 +54,32 @@ export function ProductImage({
       {topRight}
 
       {/* Info button — fades out when overlay is visible */}
-      <Button
-        as="button"
-        type="button"
-        variant="text"
-        size="icon"
+      <Tooltip
+        side="left"
         className={cn(
-          "absolute bottom-3 right-3 z-20 rounded-full bg-earth/30 p-1.5! text-white-warm! backdrop-blur-sm hover:bg-earth/50 transition-all duration-300",
+          "absolute bottom-3 right-3 z-20",
           showTagline && "opacity-0 pointer-events-none",
         )}
-        onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          setShowTagline(true);
-        }}
-        aria-label="Show description"
       >
-        <IconInfo className="w-3.5 h-3.5" />
-      </Button>
+        <TooltipTrigger asChild>
+          <Button
+            as="button"
+            type="button"
+            variant="text"
+            size="icon"
+            className="rounded-full bg-earth/30 p-1.5! text-white-warm! backdrop-blur-sm hover:bg-earth/50 transition-all duration-300"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              setShowTagline(true);
+            }}
+            aria-label="Show description"
+          >
+            <IconInfo className="w-3.5 h-3.5" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Show description</TooltipContent>
+      </Tooltip>
 
       {/* Tagline overlay — click to dismiss */}
       <div

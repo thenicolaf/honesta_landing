@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
+import { RefreshButton } from "@/app/panel/_components/RefreshButton";
 import { DataTable, DataCardPagination } from "@/shared/ui";
 import { Handshake } from "lucide-react";
 import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvider";
@@ -76,7 +77,7 @@ function PartnershipsInner({ inquiries }: { inquiries: PartnershipInquiry[] }) {
 export function PartnershipsPage({ inquiries }: { inquiries: PartnershipInquiry[] }) {
   return (
     <>
-      <AdminPageHeader title="Partnerships" />
+      <AdminPageHeader title="Partnerships" actions={<RefreshButton />} />
 
       <SearchParamsFilterProvider keys={FILTER_KEYS}>
         <PartnershipsInner inquiries={inquiries} />

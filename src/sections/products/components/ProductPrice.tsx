@@ -12,7 +12,7 @@ export function ProductPrice({ price, promotion, className }: ProductPriceProps)
   if (!promotion) {
     return (
       <span className={`font-body font-semibold text-earth text-sm ${className ?? ""}`}>
-        AED {price}
+        AED {price.toFixed(2)}
       </span>
     );
   }
@@ -33,7 +33,7 @@ export function ProductPrice({ price, promotion, className }: ProductPriceProps)
         </Badge>
       </div>
       <span className="font-body text-earth/40 text-xs line-through">
-        AED {price}
+        AED {price.toFixed(2)}
       </span>
       {promotion.endsAt && (
         <span className="font-body text-2xs text-earth/40">

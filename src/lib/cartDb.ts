@@ -59,6 +59,7 @@ export async function getCartFromDb(
       name: product.title,
       price,
       originalPrice: activePromo ? originalPrice : undefined,
+      promotionEndsAt: activePromo?.ends_at ?? undefined,
       quantity: row.quantity,
       image_url: product.image_url ?? undefined,
       weight_g: v.weight_g,

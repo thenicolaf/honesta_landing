@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/shared/ui";
+import { HashLink } from "@/sections/navbar";
 import type { Product } from "@/sections/products/types";
 import {
   ProductHeader,
@@ -49,16 +50,18 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
     <main className="grow min-h-160 bg-cream pt-24 pb-16">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         {/* Back link */}
-        <Button
-          as="a"
-          href="/#products"
-          variant="outline"
-          size="sm"
-          startIcon={<ArrowLeft size={14} />}
-          className="mb-5"
-        >
-          Back to products
-        </Button>
+        <HashLink href="/#products">
+          <Button
+            as="button"
+            type="button"
+            variant="outline"
+            size="sm"
+            startIcon={<ArrowLeft size={14} />}
+            className="mb-5"
+          >
+            Back to products
+          </Button>
+        </HashLink>
 
         {/* Two-column layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-14">

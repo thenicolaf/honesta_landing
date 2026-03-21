@@ -64,10 +64,12 @@ export async function syncCartPrices(
       : basePrice;
 
     const correctOriginalPrice = activePromo ? basePrice : undefined;
+    const correctEndsAt = activePromo?.ends_at ?? undefined;
 
     if (
       item.price !== correctPrice ||
       item.originalPrice !== correctOriginalPrice ||
+      item.promotionEndsAt !== correctEndsAt ||
       item.weight_g !== variant.weight_g
     ) {
       changed = true;
@@ -75,6 +77,7 @@ export async function syncCartPrices(
         ...item,
         price: correctPrice,
         originalPrice: correctOriginalPrice,
+        promotionEndsAt: correctEndsAt,
         weight_g: variant.weight_g,
       };
     }

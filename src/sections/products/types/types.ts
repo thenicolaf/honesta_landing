@@ -70,6 +70,8 @@ export interface CartItem {
   price: number;
   /** Variant base price before discount — computed from promotion, not stored in DB */
   originalPrice?: number;
+  /** ISO date string — when the active promotion ends */
+  promotionEndsAt?: string;
   quantity: number;
   image_url?: string;
   /** variant.weight_g */

@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
+import { RefreshButton } from "@/app/panel/_components/RefreshButton";
 import { DataTable, DataCardPagination } from "@/shared/ui";
 import { IconReceipt } from "@/shared/icons";
 import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvider";
@@ -77,7 +78,7 @@ function AllOrdersInner({ orders }: { orders: AdminOrder[] }) {
 export function AllOrdersPage({ orders }: { orders: AdminOrder[] }) {
   return (
     <>
-      <AdminPageHeader title="All Orders" />
+      <AdminPageHeader title="All Orders" actions={<RefreshButton />} />
 
       <SearchParamsFilterProvider keys={FILTER_KEYS}>
         <AllOrdersInner orders={orders} />

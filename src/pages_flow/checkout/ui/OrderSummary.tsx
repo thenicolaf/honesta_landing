@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, DeliveryInfo } from "@/shared/ui";
+import { formatDateTime } from "@/shared/ui/Table";
 import { useCart } from "@/providers";
 import { formatDeliveryDays } from "@/shared/utils/calculateDelivery";
 
@@ -47,10 +48,22 @@ export function OrderSummary({
                 <p className="font-body font-light text-earth/45 text-xs">
                   × {item.quantity}
                 </p>
+                {item.promotionEndsAt && (
+                  <p className="font-body text-2xs text-earth/40">
+                    Until {formatDateTime(item.promotionEndsAt)}
+                  </p>
+                )}
               </div>
-              <span className="font-body font-semibold text-earth text-sm shrink-0">
-                AED {item.price * item.quantity}
-              </span>
+              <div className="shrink-0 text-right">
+                <span className="font-body font-semibold text-earth text-sm">
+                  AED {(item.price * item.quantity).toFixed(2)}
+                </span>
+                {item.originalPrice && item.originalPrice !== item.price && (
+                  <p className="font-body text-earth/30 text-xs line-through">
+                    AED {(item.originalPrice * item.quantity).toFixed(2)}
+                  </p>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -61,7 +74,7 @@ export function OrderSummary({
               Subtotal
             </span>
             <span className="font-body font-semibold text-earth text-sm">
-              AED {total}
+              AED {total.toFixed(2)}
             </span>
           </div>
           {totalDiscount > 0 && (

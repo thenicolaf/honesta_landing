@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Minus, Plus } from "lucide-react";
 import { Button, Badge, Card, toastInfo } from "@/shared/ui";
+import { formatDateTime } from "@/shared/ui/Table";
 import type { CartItem as CartItemType } from "@/sections/products/types";
 
 function WeightBadge({ weight_g }: { weight_g?: number }) {
@@ -84,16 +85,23 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
             <WeightBadge weight_g={item.weight_g} />
           </div>
           {hasDiscount ? (
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="font-body font-semibold text-orange text-xs">
-                AED {item.price.toFixed(2)} each
-              </span>
-              <span className="font-body text-earth/30 text-xs line-through">
-                AED {item.originalPrice!.toFixed(2)}
-              </span>
-              <Badge variant="counter" size="pill">
-                -{Math.round(((item.originalPrice! - item.price) / item.originalPrice!) * 100)}%
-              </Badge>
+            <div className="flex flex-col gap-0.5 mt-0.5">
+              <div className="flex items-center gap-2">
+                <span className="font-body font-semibold text-orange text-xs">
+                  AED {item.price.toFixed(2)} each
+                </span>
+                <span className="font-body text-earth/30 text-xs line-through">
+                  AED {item.originalPrice!.toFixed(2)}
+                </span>
+                <Badge variant="counter" size="pill">
+                  -{Math.round(((item.originalPrice! - item.price) / item.originalPrice!) * 100)}%
+                </Badge>
+              </div>
+              {item.promotionEndsAt && (
+                <span className="font-body text-2xs text-earth/40">
+                  Until {formatDateTime(item.promotionEndsAt)}
+                </span>
+              )}
             </div>
           ) : (
             <p className="font-body font-light text-earth/55 text-xs mt-0.5">
@@ -121,16 +129,23 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
               <WeightBadge weight_g={item.weight_g} />
             </div>
             {hasDiscount ? (
-              <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                <span className="font-body font-semibold text-orange text-xs">
-                  AED {item.price.toFixed(2)}
-                </span>
-                <span className="font-body text-earth/30 text-xs line-through">
-                  AED {item.originalPrice!.toFixed(2)}
-                </span>
-                <Badge variant="counter" size="pill">
-                  -{Math.round(((item.originalPrice! - item.price) / item.originalPrice!) * 100)}%
-                </Badge>
+              <div className="flex flex-col gap-0.5 mt-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="font-body font-semibold text-orange text-xs">
+                    AED {item.price.toFixed(2)}
+                  </span>
+                  <span className="font-body text-earth/30 text-xs line-through">
+                    AED {item.originalPrice!.toFixed(2)}
+                  </span>
+                  <Badge variant="counter" size="pill">
+                    -{Math.round(((item.originalPrice! - item.price) / item.originalPrice!) * 100)}%
+                  </Badge>
+                </div>
+                {item.promotionEndsAt && (
+                  <span className="font-body text-2xs text-earth/40">
+                    Until {formatDateTime(item.promotionEndsAt)}
+                  </span>
+                )}
               </div>
             ) : (
               <p className="font-body font-light text-earth/55 text-xs mt-1">

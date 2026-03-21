@@ -1,10 +1,12 @@
 "use client";
 
+import { ArrowLeft } from "lucide-react";
 import { useCart } from "@/providers";
 import { EmptyCart } from "./EmptyCart";
 import { CartGrid } from "./ui/CartGrid";
 import { CartSummary } from "./ui/CartSummary";
-import { PageLoader } from "@/shared/ui";
+import { Button, PageLoader } from "@/shared/ui";
+import { HashLink } from "@/sections/navbar";
 import type { DeliverySetting } from "@/lib/deliveryDb";
 
 interface CartPageProps {
@@ -25,6 +27,19 @@ export function CartPage({ deliverySettings }: CartPageProps) {
   return (
     <main className="grow min-h-160 bg-cream pt-24 pb-16 px-4">
       <div className="mx-auto max-w-2xl">
+        <HashLink href="/#products">
+          <Button
+            as="button"
+            type="button"
+            variant="outline"
+            size="sm"
+            startIcon={<ArrowLeft size={14} />}
+            className="mb-5"
+          >
+            Back to products
+          </Button>
+        </HashLink>
+
         <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-moss mb-3 text-center">
           Your Order
         </p>
