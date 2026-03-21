@@ -13,6 +13,7 @@ export {
 } from "./ProductDetails";
 export { ProductDetailImage } from "./ProductDetailImage";
 export { ProductTagline } from "./ProductTagline";
+export { ProductNote } from "./ProductNote";
 export { ProductPrice } from "./ProductPrice";
 export { ProductPriceAndCart } from "./ProductPriceAndCart";
 export { ProductVariantSelector } from "./ProductVariantSelector";

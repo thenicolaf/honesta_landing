@@ -11,6 +11,7 @@ export interface TooltipContextValue {
   contentId: string;
   show: () => void;
   hide: () => void;
+  toggle: () => void;
 }
 
 export const TooltipContext = createContext<TooltipContextValue | null>(null);

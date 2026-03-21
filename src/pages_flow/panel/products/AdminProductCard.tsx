@@ -10,6 +10,7 @@ import {
   ProductTags,
   ProductFreeFrom,
   ProductDetails,
+  ProductNote,
   ProductAdminActions,
 } from "@/sections/products/components";
 import { mapAdminProduct } from "@/sections/products/utils";
@@ -65,6 +66,7 @@ export function AdminProductCard({ product }: { product: AdminDbProduct }) {
 
         <ProductTags tags={tags} />
         <ProductFreeFrom freeFrom={freeFrom} />
+        <ProductNote note={product.note ?? undefined} truncate />
         <ProductDetails
           benefits={benefits}
           nutrition={nutrition}

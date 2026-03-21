@@ -12,6 +12,7 @@ import {
   ProductDetails,
   ProductPriceAndCart,
   ProductVariantSelector,
+  ProductNote,
   FavoriteButton,
 } from "./components";
 
@@ -81,6 +82,7 @@ export function ProductItem({ product }: ProductItemProps) {
         )}
         <ProductTags tags={tags} />
         <ProductFreeFrom freeFrom={freeFrom} />
+        <ProductNote note={product.note} truncate />
         <ProductDetails
           benefits={benefits}
           nutrition={nutrition}

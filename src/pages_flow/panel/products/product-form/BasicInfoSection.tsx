@@ -50,6 +50,17 @@ export function BasicInfoSection({ product, state }: SectionProps) {
           />
         </div>
 
+        <div className="sm:col-span-2">
+          <FormLabel htmlFor="p-note">Note</FormLabel>
+          <FormTextarea
+            id="p-note"
+            name="note"
+            rows={2}
+            placeholder="e.g. Store in a cool, dry place. Ships within 2-3 business days."
+            defaultValue={state?.values?.note ?? product?.note ?? ""}
+          />
+        </div>
+
         <div>
           <FormLabel htmlFor="p-badge">Badge</FormLabel>
           <FormInput

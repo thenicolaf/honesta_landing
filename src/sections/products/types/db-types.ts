@@ -8,6 +8,7 @@ export interface DbProduct {
   in_stock: boolean | null;
   status: "draft" | "published" | "archived";
   badge: string | null;
+  note: string | null;
   nutrition: Record<string, { name: string; value: number }> | null;
   categories: { slug: string; name: string } | null;
   product_tags: { tag_options: { label: string } }[];

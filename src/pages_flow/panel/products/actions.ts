@@ -16,6 +16,7 @@ interface VariantInput {
 interface ProductValues {
   title: string;
   tagline: string;
+  note: string;
   variants: string;
   image_url: string;
   images: string;
@@ -226,6 +227,7 @@ function parseProductValues(
     slug: toSlug(title),
     title,
     tagline: values.tagline?.trim() || null,
+    note: values.note?.trim() || null,
     badge: values.badge?.trim() || null,
     image_url,
     images,

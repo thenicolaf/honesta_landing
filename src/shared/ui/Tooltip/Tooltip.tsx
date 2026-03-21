@@ -79,9 +79,20 @@ export function Tooltip({
     setOpen(false);
   }, []);
 
+  const toggle = useCallback(() => {
+    if (open) {
+      hide();
+    } else {
+      if (rootRef.current) {
+        setResolvedSide(resolveSide(rootRef.current.getBoundingClientRect(), side));
+      }
+      setOpen(true);
+    }
+  }, [open, hide, side]);
+
   return (
     <TooltipContext.Provider
-      value={{ open, resolvedSide, triggerId, contentId, show, hide }}
+      value={{ open, resolvedSide, triggerId, contentId, show, hide, toggle }}
     >
       <div ref={rootRef} className={cn("relative inline-block", className)}>
         {children}
@@ -97,20 +108,29 @@ interface TooltipTriggerProps {
   className?: string;
   /** Render child element as trigger instead of wrapping in a span */
   asChild?: boolean;
+  /** Click handler (e.g. stopPropagation to prevent parent Link navigation) */
+  onClick?: (e: React.MouseEvent) => void;
 }
 
 export function TooltipTrigger({
   children,
   className,
   asChild = false,
+  onClick,
 }: TooltipTriggerProps) {
-  const { open, show, hide, triggerId, contentId } = useTooltip();
+  const { open, show, hide, toggle, triggerId, contentId } = useTooltip();
+
+  const handleClick = (e: React.MouseEvent) => {
+    onClick?.(e);
+    toggle();
+  };
 
   const handlers = {
     onMouseEnter: show,
     onMouseLeave: hide,
     onFocus: show,
     onBlur: hide,
+    onClick: handleClick,
   };
 
   if (asChild) {
@@ -163,8 +183,14 @@ export function TooltipContent({
   children,
   className,
 }: TooltipContentProps) {
-  const { open, resolvedSide, contentId } = useTooltip();
+  const { open, hide, resolvedSide, contentId } = useTooltip();
   const offset = initialOffset[resolvedSide];
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    hide();
+  };
 
   return (
     <AnimatePresence initial={false}>
@@ -172,12 +198,13 @@ export function TooltipContent({
         <motion.div
           id={contentId}
           role="tooltip"
+          onClick={handleClick}
           initial={{ opacity: 0, x: offset.x, y: offset.y, scale: 0.95 }}
           animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
           exit={{ opacity: 0, x: offset.x, y: offset.y, scale: 0.95 }}
           transition={{ duration: 0.15, ease: "easeOut" }}
           className={cn(
-            "absolute z-50 pointer-events-none",
+            "absolute z-50",
             positionStyles[resolvedSide],
             "rounded-lg px-2.5 py-1.5 bg-earth text-white-warm text-2xs font-body whitespace-nowrap shadow-md",
             className,

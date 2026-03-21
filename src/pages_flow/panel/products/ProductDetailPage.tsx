@@ -10,6 +10,7 @@ import {
   ProductExpandedDetails,
   ProductDetailImage,
   ProductTagline,
+  ProductNote,
   ProductStatusMenu,
 } from "@/sections/products/components";
 
@@ -92,6 +93,7 @@ function ProductDetailContent({ product }: ProductDetailPageProps) {
 
           <ProductTags tags={tags} />
           <ProductFreeFrom freeFrom={freeFrom} />
+          <ProductNote note={product.note ?? undefined} />
 
           <ProductExpandedDetails
             benefits={benefits}

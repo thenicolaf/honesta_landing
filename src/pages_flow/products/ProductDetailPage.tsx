@@ -13,6 +13,7 @@ import {
   ProductExpandedDetails,
   ProductDetailImage,
   ProductTagline,
+  ProductNote,
   ProductVariantSelector,
   FavoriteButton,
 } from "@/sections/products/components";
@@ -105,6 +106,7 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
 
             <ProductTags tags={tags} />
             <ProductFreeFrom freeFrom={freeFrom} />
+            <ProductNote note={product.note} />
 
             <ProductExpandedDetails
               benefits={benefits}
