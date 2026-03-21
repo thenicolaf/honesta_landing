@@ -7,6 +7,7 @@ import {
   compareString,
 } from "@/shared/ui/Table";
 import { CopyText } from "@/shared/ui";
+import { displayAddress } from "@/shared/utils/address";
 import { StatusBadge } from "./ui/StatusBadge";
 import { CopyOrderId } from "./ui/CopyOrderId";
 import type { Order, AdminOrder } from "./types";
@@ -98,8 +99,8 @@ export const addressColumn: ColumnDef<Order, OrderKey> = {
   header: "Address",
   cell: (o) =>
     o.address ? (
-      <CopyText text={o.address} className="text-2xs text-earth/60">
-        <span>{o.address}</span>
+      <CopyText text={displayAddress(o.address)} className="text-2xs text-earth/60">
+        <span>{displayAddress(o.address)}</span>
       </CopyText>
     ) : (
       <span className="text-2xs text-earth/20">—</span>

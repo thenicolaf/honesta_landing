@@ -8,6 +8,7 @@ import {
   DataCardList,
   DataCardEmpty,
 } from "@/shared/ui";
+import { displayAddress } from "@/shared/utils/address";
 import { formatDateTime } from "@/shared/ui/Table";
 import { Handshake } from "lucide-react";
 import type { PartnershipInquiry } from "./types";
@@ -59,7 +60,7 @@ export function InquiryCards({ inquiries, emptyDescription }: InquiryCardsProps)
 
             {inquiry.address && (
               <DataCardField label="Address">
-                <span className="text-2xs text-earth/60">{inquiry.address}</span>
+                <span className="text-2xs text-earth/60">{displayAddress(inquiry.address)}</span>
               </DataCardField>
             )}
           </DataCardBody>

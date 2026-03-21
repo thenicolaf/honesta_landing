@@ -8,6 +8,7 @@ import {
   DataCardEmpty,
   CopyText,
 } from "@/shared/ui";
+import { displayAddress } from "@/shared/utils/address";
 import { formatAed, formatDateTime } from "@/shared/ui/Table";
 import { IconReceipt } from "@/shared/icons";
 import { StatusBadge } from "@/pages_flow/orders/ui/StatusBadge";
@@ -125,10 +126,10 @@ export function AdminOrderCards({
             <DataCardField label="Address">
               {order.address ? (
                 <CopyText
-                  text={order.address}
+                  text={displayAddress(order.address)}
                   className="text-2xs text-earth/60"
                 >
-                  <span>{order.address}</span>
+                  <span>{displayAddress(order.address)}</span>
                 </CopyText>
               ) : (
                 <span className="text-2xs text-earth/20">—</span>

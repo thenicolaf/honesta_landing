@@ -5,7 +5,7 @@ export const labelVariants = cva(
 );
 
 export const fieldVariants = cva(
-  "w-full border rounded-xl px-4 font-body font-light text-earth bg-cream placeholder:text-earth/30 focus:outline-none transition-colors text-sm",
+  "w-full border rounded-xl px-4 font-body font-light text-earth bg-cream placeholder:text-earth/30 focus:outline-none transition-colors text-sm disabled:cursor-not-allowed disabled:opacity-40 disabled:bg-sand/30",
   {
     variants: {
       state: {

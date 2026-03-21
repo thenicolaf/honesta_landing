@@ -1,11 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import {
-  useJsApiLoader,
-  GoogleMap,
-  Marker,
-} from "@react-google-maps/api";
+import { useJsApiLoader, GoogleMap, Marker } from "@react-google-maps/api";
 import {
   FormLabel,
   FormError,
@@ -15,7 +11,7 @@ import {
 } from "@/shared/ui";
 import { AddressSuggestInput } from "@/shared/ui/AddressSuggestInput";
 import { UAE_EMIRATES } from "@/shared/consts";
-import { composeAddress } from "@/shared/utils/address";
+import { composeAddress, displayAddress } from "@/shared/utils/address";
 
 const DUBAI_CENTER = { lat: 25.2048, lng: 55.2708 };
 const LIBRARIES: ["places"] = ["places"];
@@ -100,15 +96,58 @@ export function AddressWithMap({
     initPos,
   );
 
-  const [emirate, setEmirateRaw] = useState(defaultEmirate);
+  // --- Raw state setters (no cascade) ---
+  const [emirate, setEmirateState] = useState(defaultEmirate);
+  const [city, setCityState] = useState(defaultCity);
+  const [area, setAreaState] = useState(defaultArea);
+  const [buildingName, setBuildingNameState] = useState(defaultBuildingName);
+  const [flatNumber, setFlatNumber] = useState(defaultFlatNumber);
+
+  // Set emirate + notify parent (no cascade, used by resolvePlace & onMapClick)
   function setEmirate(value: string) {
-    setEmirateRaw(value);
+    setEmirateState(value);
     onEmirateChange?.(value);
   }
-  const [city, setCity] = useState(defaultCity);
-  const [area, setArea] = useState(defaultArea);
-  const [buildingName, setBuildingName] = useState(defaultBuildingName);
-  const [flatNumber, setFlatNumber] = useState(defaultFlatNumber);
+
+  // --- Cascade handlers (user-initiated changes) ---
+
+  function handleEmirateChange(value: string) {
+    setEmirate(value);
+    setCityState("");
+    setAreaState("");
+    setBuildingNameState("");
+
+    // Geocode to emirate center for visual feedback
+    if (isLoaded) {
+      skipForwardGeocodeRef.current = true;
+      getGeocoder().geocode(
+        { address: `${value}, UAE`, region: "ae" },
+        (results, status) => {
+          if (status === "OK" && results?.[0]?.geometry?.location) {
+            const pos = {
+              lat: results[0].geometry.location.lat(),
+              lng: results[0].geometry.location.lng(),
+            };
+            setCenter(pos);
+            setMarkerPos(pos);
+          }
+        },
+      );
+    }
+  }
+
+  function handleCityChange(value: string) {
+    setCityState(value);
+    setAreaState("");
+    setBuildingNameState("");
+  }
+
+  function handleAreaChange(value: string) {
+    setAreaState(value);
+    setBuildingNameState("");
+  }
+
+  // --- Refs ---
 
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
   const placesServiceRef = useRef<google.maps.places.PlacesService | null>(
@@ -140,7 +179,10 @@ export function AddressWithMap({
     const service = getPlacesService();
     if (!service) return;
     service.getDetails(
-      { placeId: prediction.place_id, fields: ["geometry", "address_components"] },
+      {
+        placeId: prediction.place_id,
+        fields: ["geometry", "address_components"],
+      },
       (place, status) => {
         if (
           status === google.maps.places.PlacesServiceStatus.OK &&
@@ -152,9 +194,12 @@ export function AddressWithMap({
           };
 
           if (place.address_components) {
+            skipForwardGeocodeRef.current = true;
             const extracted = extractAddressParts(place.address_components);
             const matched = matchEmirate(extracted.emirate);
             if (matched) setEmirate(matched);
+            if (extracted.city) setCityState(extracted.city);
+            if (extracted.area) setAreaState(extracted.area);
           }
 
           callback(pos);
@@ -163,9 +208,7 @@ export function AddressWithMap({
     );
   }
 
-  function onCitySelect(
-    prediction: google.maps.places.AutocompletePrediction,
-  ) {
+  function onCitySelect(prediction: google.maps.places.AutocompletePrediction) {
     skipForwardGeocodeRef.current = true;
     resolvePlace(prediction, (pos) => {
       setCenter(pos);
@@ -173,9 +216,7 @@ export function AddressWithMap({
     });
   }
 
-  function onAreaSelect(
-    prediction: google.maps.places.AutocompletePrediction,
-  ) {
+  function onAreaSelect(prediction: google.maps.places.AutocompletePrediction) {
     skipForwardGeocodeRef.current = true;
     resolvePlace(prediction, (pos) => {
       setCenter(pos);
@@ -204,12 +245,14 @@ export function AddressWithMap({
 
     getGeocoder().geocode({ location: pos }, (results, status) => {
       if (status === "OK" && results?.[0]?.address_components) {
+        skipForwardGeocodeRef.current = true;
         const extracted = extractAddressParts(results[0].address_components);
         const matched = matchEmirate(extracted.emirate);
         if (matched) setEmirate(matched);
-        if (extracted.city) setCity(extracted.city);
-        if (extracted.area) setArea(extracted.area);
-        if (extracted.buildingName) setBuildingName(extracted.buildingName);
+        if (extracted.city) setCityState(extracted.city);
+        if (extracted.area) setAreaState(extracted.area);
+        if (extracted.buildingName)
+          setBuildingNameState(extracted.buildingName);
       }
     });
   }
@@ -249,7 +292,13 @@ export function AddressWithMap({
   }, [emirate, city, area, buildingName, isLoaded]);
 
   const hasError = !!error;
-  const composed = composeAddress({ emirate, city, area, buildingName, flatNumber });
+  const composed = composeAddress({
+    emirate,
+    city,
+    area,
+    buildingName,
+    flatNumber,
+  });
 
   // Location bias for suggestions based on current marker position
   const locationBias: google.maps.LatLngBoundsLiteral = {
@@ -263,13 +312,13 @@ export function AddressWithMap({
     <div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {/* Emirate */}
-        <div>
+        <div className="sm:col-span-2">
           <FormLabel htmlFor="address-emirate-select">Emirate</FormLabel>
           <FormSelect
             id="address-emirate-select"
             name="_emirate"
             value={emirate}
-            onValueChange={setEmirate}
+            onValueChange={handleEmirateChange}
             options={UAE_EMIRATES.map((e) => ({
               ...e,
               disabled: disabledEmirates?.includes(e.value),
@@ -286,7 +335,7 @@ export function AddressWithMap({
             <AddressSuggestInput
               id="address-city"
               value={city}
-              onChange={setCity}
+              onChange={handleCityChange}
               onSelect={onCitySelect}
               placeholder="City"
               state={hasError ? "error" : "default"}
@@ -298,7 +347,7 @@ export function AddressWithMap({
               id="address-city"
               type="text"
               value={city}
-              onChange={(e) => setCity(e.target.value)}
+              onChange={(e) => handleCityChange(e.target.value)}
               placeholder="City"
               state={hasError ? "error" : "default"}
             />
@@ -312,7 +361,7 @@ export function AddressWithMap({
             <AddressSuggestInput
               id="address-area"
               value={area}
-              onChange={setArea}
+              onChange={handleAreaChange}
               onSelect={onAreaSelect}
               placeholder="Area / district"
               state={hasError ? "error" : "default"}
@@ -324,7 +373,7 @@ export function AddressWithMap({
               id="address-area"
               type="text"
               value={area}
-              onChange={(e) => setArea(e.target.value)}
+              onChange={(e) => handleAreaChange(e.target.value)}
               placeholder="Area / district"
               state={hasError ? "error" : "default"}
             />
@@ -338,7 +387,7 @@ export function AddressWithMap({
             <AddressSuggestInput
               id="address-building"
               value={buildingName}
-              onChange={setBuildingName}
+              onChange={setBuildingNameState}
               onSelect={onBuildingSelect}
               placeholder="Building name"
               state={hasError ? "error" : "default"}
@@ -350,7 +399,7 @@ export function AddressWithMap({
               id="address-building"
               type="text"
               value={buildingName}
-              onChange={(e) => setBuildingName(e.target.value)}
+              onChange={(e) => setBuildingNameState(e.target.value)}
               placeholder="Building name"
               state={hasError ? "error" : "default"}
             />
@@ -384,10 +433,10 @@ export function AddressWithMap({
           {composed && (
             <div className="flex items-center justify-between bg-sand/50 px-3 py-2">
               <CopyText
-                text={composed}
+                text={displayAddress(composed)}
                 className="font-body text-2xs text-earth/70 truncate"
               >
-                <span className="truncate">{composed}</span>
+                <span className="truncate">{displayAddress(composed)}</span>
               </CopyText>
             </div>
           )}

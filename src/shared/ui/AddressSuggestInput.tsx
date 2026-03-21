@@ -86,6 +86,12 @@ export function AddressSuggestInput({
     timerRef.current = setTimeout(() => fetchSuggestions(val), DEBOUNCE_MS);
   }
 
+  function handleClear() {
+    onChange("");
+    setSuggestions([]);
+    setOpen(false);
+  }
+
   function handleSelect(
     prediction: google.maps.places.AutocompletePrediction,
   ) {
@@ -116,6 +122,8 @@ export function AddressSuggestInput({
         state={state}
         disabled={disabled}
         autoComplete="off"
+        clearable={!disabled && !!value}
+        onClear={handleClear}
       />
 
       <DropdownMenuContent className="left-0 right-0 max-h-60">

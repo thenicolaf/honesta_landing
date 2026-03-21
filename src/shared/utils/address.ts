@@ -20,21 +20,31 @@ interface ParsedAddressProps {
 
 export function composeAddress(parts: Partial<AddressParts>): string {
   const segments: string[] = [];
-  if (parts.flatNumber?.trim()) segments.push(`Flat ${parts.flatNumber.trim()}`);
+  if (parts.flatNumber?.trim())
+    segments.push(`Flat ${parts.flatNumber.trim()}`);
   if (parts.buildingName?.trim()) segments.push(parts.buildingName.trim());
   if (parts.area?.trim()) segments.push(parts.area.trim());
-  const city = parts.city?.trim();
-  const emirate = parts.emirate?.trim();
-  if (city && city.toLowerCase() !== emirate?.toLowerCase()) segments.push(city);
-  if (emirate) segments.push(emirate);
+  if (parts.city?.trim()) segments.push(parts.city.trim());
+  if (parts.emirate?.trim()) segments.push(parts.emirate.trim());
   return segments.join(", ");
 }
 
-export function parseAddress(address: string | undefined | null): ParsedAddressProps {
-  const result: AddressParts = { emirate: "", city: "", area: "", buildingName: "", flatNumber: "" };
+export function parseAddress(
+  address: string | undefined | null,
+): ParsedAddressProps {
+  const result: AddressParts = {
+    emirate: "",
+    city: "",
+    area: "",
+    buildingName: "",
+    flatNumber: "",
+  };
   if (!address?.trim()) return toProps(result);
 
-  const parts = address.split(", ").map((s) => s.trim()).filter(Boolean);
+  const parts = address
+    .split(", ")
+    .map((s) => s.trim())
+    .filter(Boolean);
   if (parts.length === 0) return toProps(result);
 
   // Check last segment for emirate
@@ -66,6 +76,37 @@ export function parseAddress(address: string | undefined | null): ParsedAddressP
   }
 
   return toProps(result);
+}
+
+export function displayAddress(address: string): string {
+  const {
+    defaultEmirate,
+    defaultCity,
+    defaultArea,
+    defaultBuildingName,
+    defaultFlatNumber,
+  } = parseAddress(address);
+  const segments: string[] = [];
+  if (defaultFlatNumber) segments.push(`Flat ${defaultFlatNumber}`);
+  if (defaultBuildingName) segments.push(defaultBuildingName);
+  if (defaultArea) segments.push(defaultArea);
+  if (isCityDistinct(defaultCity, defaultEmirate)) segments.push(defaultCity!);
+  if (defaultEmirate) segments.push(defaultEmirate);
+  return segments.join(", ");
+}
+
+export function shortAddress(address: string): string {
+  const { defaultEmirate, defaultCity, defaultArea } = parseAddress(address);
+  const parts = [
+    defaultArea,
+    isCityDistinct(defaultCity, defaultEmirate) ? defaultCity : undefined,
+    defaultEmirate,
+  ].filter(Boolean);
+  return parts.join(", ");
+}
+
+function isCityDistinct(city?: string, emirate?: string): boolean {
+  return !!city && city.toLowerCase() !== emirate?.toLowerCase();
 }
 
 function toProps(p: AddressParts): ParsedAddressProps {

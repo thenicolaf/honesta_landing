@@ -4,6 +4,7 @@ import {
   compareDate,
   compareString,
 } from "@/shared/ui/Table";
+import { displayAddress } from "@/shared/utils/address";
 import type { PartnershipInquiry } from "./types";
 
 type InquiryKey =
@@ -62,7 +63,7 @@ export const addressColumn: ColumnDef<PartnershipInquiry, InquiryKey> = {
   header: "Address",
   cell: (i) =>
     i.address ? (
-      <span className="text-2xs text-earth/60 line-clamp-2">{i.address}</span>
+      <span className="text-2xs text-earth/60 line-clamp-2">{displayAddress(i.address)}</span>
     ) : (
       <span className="text-2xs text-earth/20">—</span>
     ),
