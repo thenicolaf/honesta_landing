@@ -24,6 +24,7 @@ interface ProductDetailPageProps {
 function ProductDetailContent({ product }: ProductDetailPageProps) {
   const { openDelete } = useProductActions();
   const {
+    badge,
     category,
     tagline,
     tags,
@@ -71,6 +72,7 @@ function ProductDetailContent({ product }: ProductDetailPageProps) {
         <div className="flex flex-col gap-5">
           <ProductHeader
             category={category}
+            badge={badge}
             extraBadges={
               product.in_stock === false ? (
                 <Badge variant="outline" size="sm">

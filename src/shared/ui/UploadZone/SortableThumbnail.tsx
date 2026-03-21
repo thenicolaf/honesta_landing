@@ -47,13 +47,7 @@ export function SortableThumbnail({
   });
 
   return (
-    <li
-      ref={ref}
-      className={cn(
-        "relative",
-        isDragging && "opacity-40",
-      )}
-    >
+    <li ref={ref} className={cn("relative", isDragging && "opacity-40")}>
       {isMain && (
         <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 z-10 bg-orange text-white text-2xs font-body font-semibold px-1.5 py-0.5 rounded-full leading-none">
           Main
@@ -74,19 +68,18 @@ export function SortableThumbnail({
             <GripVertical size={12} className="pointer-events-none" />
           </Button>
         )}
+        <Button
+          as="button"
+          type="button"
+          onClick={onRemove}
+          variant="primary"
+          color="error"
+          size="icon"
+          className="absolute -top-1.5 -right-1.5 w-5! h-5! rounded-full opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity"
+        >
+          <IconX className="w-3 h-3" />
+        </Button>
       </Thumbnail>
-
-      <Button
-        as="button"
-        type="button"
-        onClick={onRemove}
-        variant="primary"
-        color="error"
-        size="icon"
-        className="absolute -top-1.5 -right-1.5 w-5! h-5! rounded-full opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity"
-      >
-        <IconX className="w-3 h-3" />
-      </Button>
     </li>
   );
 }

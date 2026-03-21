@@ -1,6 +1,13 @@
 "use client";
 
-import { useScroll, useTransform, motion } from "motion/react";
+import { useSyncExternalStore } from "react";
+import { usePathname } from "next/navigation";
+import {
+  useScroll,
+  useTransform,
+  motion,
+  type MotionValue,
+} from "motion/react";
 import { NavCartButton } from "./NavCartButton";
 import { NotificationBell } from "./NotificationBell";
 import { NavUserButton } from "./NavUserButton";
@@ -10,15 +17,74 @@ import { NAV_LINKS } from "./consts";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function NavLogo() {
+const LOGO_SIZE = 36;
+const LOGO_SIZE_LG = 43;
+
+function subscribeToResize(cb: () => void) {
+  window.addEventListener("resize", cb);
+  return () => window.removeEventListener("resize", cb);
+}
+
+function getInnerHeight() {
+  return window.innerHeight;
+}
+
+function subscribeToMediaQuery(cb: () => void) {
+  const mq = window.matchMedia("(min-width: 1024px)");
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+}
+
+function getIsLg() {
+  return window.matchMedia("(min-width: 1024px)").matches;
+}
+
+function NavLogo({
+  scrollY,
+  isHomePage,
+}: {
+  scrollY: MotionValue<number>;
+  isHomePage: boolean;
+}) {
+  const heroHeight = useSyncExternalStore(subscribeToResize, getInnerHeight, () => 0);
+  const isLg = useSyncExternalStore(subscribeToMediaQuery, getIsLg, () => false);
+
+  const start = heroHeight - 200;
+  const end = heroHeight;
+  const animate = isHomePage && heroHeight > 0;
+  const logoSize = isLg ? LOGO_SIZE_LG : LOGO_SIZE;
+
+  const logoOpacity = useTransform(scrollY, [start, end], animate ? [0, 1] : [1, 1]);
+  const logoWidth = useTransform(scrollY, [start, end], animate ? [0, logoSize] : [logoSize, logoSize]);
+  const logoGap = useTransform(scrollY, [start, end], animate ? [0, 8] : [8, 8]);
+
   return (
-    <HashLink href="/#hero" className="flex flex-col leading-none select-none">
-      <span className="font-display font-bold text-2xl lg:text-[1.75rem] text-earth tracking-widest uppercase">
-        HONESTA
-      </span>
-      <span className="font-body font-light text-xs uppercase tracking-[0.22em] text-bark mt-0.5 hidden sm:block">
-        Sweetness Before Marketing
-      </span>
+    <HashLink
+      href="/#hero"
+      className="flex flex-row items-center leading-none select-none"
+    >
+      <motion.div
+        className="shrink-0 overflow-hidden"
+        style={{ width: logoWidth, opacity: logoOpacity, marginRight: logoGap }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/honesta_logo.svg"
+          alt="Honesta logo"
+          width={LOGO_SIZE_LG}
+          height={LOGO_SIZE_LG}
+          className="h-9 lg:h-[2.7rem] w-auto"
+        />
+      </motion.div>
+
+      <div className="flex flex-col">
+        <span className="font-display font-bold text-2xl lg:text-[1.75rem] text-earth tracking-widest uppercase">
+          HONESTA
+        </span>
+        <span className="font-body font-light text-xs uppercase tracking-[0.22em] text-bark mt-0.5 hidden sm:block">
+          Sweetness Before Marketing
+        </span>
+      </div>
     </HashLink>
   );
 }
@@ -48,6 +114,8 @@ interface NavbarProps {
 }
 
 export function Navbar({ user, isAdmin }: NavbarProps) {
+  const pathname = usePathname();
+  const isHomePage = pathname === "/";
   const { scrollY } = useScroll();
 
   const initialBlurOpacity = useTransform(scrollY, [0, 80], [1, 0]);
@@ -74,7 +142,7 @@ export function Navbar({ user, isAdmin }: NavbarProps) {
 
         <div className="relative mx-auto max-w-7xl px-6 lg:px-10">
           <nav className="flex items-center justify-between h-16 lg:h-20">
-            <NavLogo />
+            <NavLogo scrollY={scrollY} isHomePage={isHomePage} />
             <NavDesktopLinks />
 
             {/* Right actions */}

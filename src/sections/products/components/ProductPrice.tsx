@@ -1,4 +1,5 @@
 import { Badge } from "@/shared/ui";
+import { formatDateTime } from "@/shared/ui/Table";
 import type { Product } from "../types";
 
 interface ProductPriceProps {
@@ -34,6 +35,11 @@ export function ProductPrice({ price, promotion, className }: ProductPriceProps)
       <span className="font-body text-earth/40 text-xs line-through">
         AED {price}
       </span>
+      {promotion.endsAt && (
+        <span className="font-body text-2xs text-earth/40">
+          Until {formatDateTime(promotion.endsAt)}
+        </span>
+      )}
     </div>
   );
 }

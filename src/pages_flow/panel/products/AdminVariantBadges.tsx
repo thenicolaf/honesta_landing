@@ -1,4 +1,5 @@
 import { Badge } from "@/shared/ui";
+import { formatDateTime } from "@/shared/ui/Table";
 import { calculateDiscountedPrice } from "@/shared/utils/calculateDiscount";
 import type { Product } from "@/sections/products/types";
 
@@ -45,6 +46,11 @@ export function AdminVariantBadges({
             </Badge>
           );
         })}
+      {promotion?.endsAt && (
+        <span className="basis-full text-2xs text-earth/40 font-body">
+          Until {formatDateTime(promotion.endsAt)}
+        </span>
+      )}
     </div>
   );
 }

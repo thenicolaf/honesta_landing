@@ -14,6 +14,7 @@ import {
   DataCardBody,
   DataCardField,
   DataCardList,
+  DataCardPagination,
   useTablePagination,
 } from "@/shared/ui";
 import { formatAed } from "@/shared/ui/Table";
@@ -51,15 +52,13 @@ export function ProductSalesSection({ sales }: { sales: ProductSales[] }) {
         </DataCardList>
 
         {pagination.pageCount > 1 && (
-          <div className="mt-4">
-            <TablePagination pagination={pagination} />
-          </div>
+          <DataCardPagination pagination={pagination} className="mt-4" />
         )}
       </div>
 
       {/* Desktop: table */}
       <div className="hidden md:block mb-8">
-        <Table>
+        <Table wrapperClassName="overscroll-auto">
           <TableHeader>
             <TableHeaderRow>
               <TableHead>Product</TableHead>
