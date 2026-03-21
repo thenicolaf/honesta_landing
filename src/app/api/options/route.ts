@@ -26,10 +26,40 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { entityType, label } = body as {
-    entityType: string;
-    label: string;
-  };
+  const { entityType } = body as { entityType: string };
+
+  // Benefits have name + description instead of a single label
+  if (entityType === "benefits") {
+    const { name, description } = body as { name: string; description: string };
+    const trimmedName = name?.trim();
+    const trimmedDesc = description?.trim();
+    if (!trimmedName || !trimmedDesc) {
+      return NextResponse.json(
+        { error: "Name and description are required" },
+        { status: 400 },
+      );
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("benefits")
+      .insert({ name: trimmedName, description: trimmedDesc })
+      .select("id, name, description")
+      .single<{ id: number; name: string; description: string }>();
+
+    if (error) {
+      if (error.code === "23505") {
+        return NextResponse.json(
+          { error: "Benefit already exists" },
+          { status: 409 },
+        );
+      }
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(data, { status: 201 });
+  }
+
+  const { label } = body as { label: string };
 
   const entity = ENTITY_MAP[entityType];
   if (!entity) {
@@ -74,17 +104,21 @@ export async function DELETE(request: Request) {
   const body = await request.json();
   const { entityType, id } = body as { entityType: string; id: number };
 
-  const entity = ENTITY_MAP[entityType];
-  if (!entity) {
-    return NextResponse.json({ error: "Invalid entity type" }, { status: 400 });
-  }
-
   if (!id || typeof id !== "number") {
     return NextResponse.json({ error: "Valid id is required" }, { status: 400 });
   }
 
+  const table =
+    entityType === "benefits"
+      ? "benefits"
+      : ENTITY_MAP[entityType]?.table;
+
+  if (!table) {
+    return NextResponse.json({ error: "Invalid entity type" }, { status: 400 });
+  }
+
   const { error } = await supabaseAdmin
-    .from(entity.table)
+    .from(table)
     .delete()
     .eq("id", id);
 

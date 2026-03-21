@@ -23,10 +23,20 @@ interface PopoverProps {
   children: React.ReactNode;
   className?: string;
   id?: string;
+  /** Controlled open state */
+  open?: boolean;
+  /** Callback when open state changes (controlled mode) */
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function Popover({ children, className, id }: PopoverProps) {
-  const [open, setOpen] = useState(false);
+export function Popover({
+  children,
+  className,
+  id,
+  open: controlledOpen,
+  onOpenChange,
+}: PopoverProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [direction, setDirection] = useState<"down" | "up">("down");
   const rootRef = useRef<HTMLDivElement>(null);
   const uid = useId();
@@ -34,7 +44,18 @@ export function Popover({ children, className, id }: PopoverProps) {
   const triggerId = `popover-trigger-${stableId}`;
   const contentId = `popover-content-${stableId}`;
 
-  const close = useCallback(() => setOpen(false), []);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+
+  const setOpen = useCallback(
+    (value: boolean) => {
+      if (!isControlled) setInternalOpen(value);
+      onOpenChange?.(value);
+    },
+    [isControlled, onOpenChange],
+  );
+
+  const close = useCallback(() => setOpen(false), [setOpen]);
 
   const toggle = useCallback(() => {
     if (!open && rootRef.current) {
@@ -45,8 +66,8 @@ export function Popover({ children, className, id }: PopoverProps) {
         spaceBelow >= POPOVER_MAX_H || spaceBelow >= spaceAbove ? "down" : "up",
       );
     }
-    setOpen((v) => !v);
-  }, [open]);
+    setOpen(!open);
+  }, [open, setOpen]);
 
   // Close on outside click
   useEffect(() => {
