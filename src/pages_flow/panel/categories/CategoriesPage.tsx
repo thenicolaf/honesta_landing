@@ -2,7 +2,7 @@ import { Plus } from "lucide-react";
 import { Button, EmptyState, ToastFromUrl } from "@/shared/ui";
 import { getCategories } from "@/lib/categoriesDb";
 import { CategoryActionsProvider } from "./CategoryActionsProvider";
-import { AdminCategoryCard } from "./AdminCategoryCard";
+import { SortableCategoryGrid } from "./SortableCategoryGrid";
 
 export async function CategoriesPage() {
   const categories = await getCategories();
@@ -42,11 +42,7 @@ export async function CategoriesPage() {
           }}
         />
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-          {categories.map((category) => (
-            <AdminCategoryCard key={category.id} category={category} />
-          ))}
-        </div>
+        <SortableCategoryGrid categories={categories} />
       )}
     </CategoryActionsProvider>
   );

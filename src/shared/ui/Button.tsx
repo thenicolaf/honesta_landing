@@ -141,6 +141,7 @@ interface ButtonAsAnchor
     Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "color">,
     ButtonBaseProps {
   as?: "a";
+  ref?: React.Ref<HTMLAnchorElement>;
 }
 
 interface ButtonAsButton
@@ -148,6 +149,7 @@ interface ButtonAsButton
     Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "color">,
     ButtonBaseProps {
   as: "button";
+  ref?: React.Ref<HTMLButtonElement>;
 }
 
 type ButtonProps = ButtonAsAnchor | ButtonAsButton;
@@ -161,6 +163,7 @@ export function Button({
   startIcon,
   endIcon,
   children,
+  ref,
   ...props
 }: ButtonProps) {
   const classes = cn(
@@ -189,6 +192,7 @@ export function Button({
   if (as === "button") {
     return (
       <button
+        ref={ref as React.Ref<HTMLButtonElement>}
         className={classes}
         {...(props as React.ButtonHTMLAttributes<HTMLButtonElement>)}
       >
@@ -199,6 +203,7 @@ export function Button({
 
   return (
     <a
+      ref={ref as React.Ref<HTMLAnchorElement>}
       className={classes}
       {...(props as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
     >

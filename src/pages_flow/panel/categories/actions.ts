@@ -1,9 +1,11 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase.server";
 import { deleteImage } from "@/lib/storage";
 import { createNotification } from "@/lib/notificationsDb";
+import { getMaxSortOrder, updateCategoryOrder } from "@/lib/categoriesDb";
 
 interface CategoryInfo {
   name: string;
@@ -46,6 +48,8 @@ export async function createCategory(
   const name = values.name!.trim();
   const slug = toSlug(name);
 
+  const maxOrder = await getMaxSortOrder();
+
   const { error } = await supabaseAdmin.from("categories").insert({
     name,
     slug,
@@ -53,6 +57,7 @@ export async function createCategory(
     tagline: values.tagline?.trim() || null,
     description: values.description?.trim() || null,
     image_url: values.image_url?.trim() || null,
+    sort_order: maxOrder + 1,
   });
 
   if (error) {
@@ -138,5 +143,14 @@ export async function deleteCategory(
     await deleteImage(existing.image_url, "categories");
   }
 
+  return { success: true };
+}
+
+export async function reorderCategories(
+  orderedIds: string[],
+): Promise<{ success?: boolean; error?: string }> {
+  const ok = await updateCategoryOrder(orderedIds);
+  if (!ok) return { error: "Failed to reorder categories." };
+  revalidatePath("/panel/categories");
   return { success: true };
 }

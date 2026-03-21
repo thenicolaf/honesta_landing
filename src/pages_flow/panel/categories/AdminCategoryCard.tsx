@@ -1,14 +1,20 @@
 "use client";
 
 import Image from "next/image";
-import { Pencil, Trash2 } from "lucide-react";
+import { GripVertical, Pencil, Trash2 } from "lucide-react";
 import { Badge, Button } from "@/shared/ui";
 import { IconLeaf } from "@/shared/icons";
 import { CATEGORY_UI_MAP } from "@/sections/categories/consts";
 import type { DbCategory } from "@/sections/categories/types";
 import { useCategoryActions } from "./CategoryActionsProvider";
 
-export function AdminCategoryCard({ category }: { category: DbCategory }) {
+export function AdminCategoryCard({
+  category,
+  dragHandleRef,
+}: {
+  category: DbCategory;
+  dragHandleRef?: React.RefObject<HTMLButtonElement | null>;
+}) {
   const { openDelete } = useCategoryActions();
 
   const { Icon, placeholderBg } = CATEGORY_UI_MAP[category.slug] ?? {
@@ -17,7 +23,20 @@ export function AdminCategoryCard({ category }: { category: DbCategory }) {
   };
 
   return (
-    <div className="flex flex-col rounded-[16px] bg-white-warm border border-earth/8 overflow-hidden">
+    <div className="relative flex flex-col h-full rounded-[16px] bg-white-warm border border-earth/8 overflow-hidden">
+      {/* Drag handle */}
+      {dragHandleRef && (
+        <Button
+          as="button"
+          type="button"
+          ref={dragHandleRef}
+          variant="primary"
+          size="icon"
+          className="absolute top-2 right-2 z-10 w-7! h-7! rounded-lg cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity duration-150 touch-none"
+        >
+          <GripVertical size={14} className="pointer-events-none" />
+        </Button>
+      )}
       {/* Image / placeholder */}
       <div
         className={`relative aspect-4/3 ${category.image_url ? "" : placeholderBg} flex items-center justify-center`}
@@ -27,7 +46,8 @@ export function AdminCategoryCard({ category }: { category: DbCategory }) {
             src={category.image_url}
             alt={category.name}
             fill
-            className="object-cover"
+            className="object-cover pointer-events-none"
+            draggable={false}
             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
           />
         ) : (

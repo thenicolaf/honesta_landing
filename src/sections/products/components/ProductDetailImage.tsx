@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Lightbox } from "@/shared/ui";
-import { cn } from "@/shared/utils/cn";
+import { Lightbox, Thumbnail } from "@/shared/ui";
 
 interface ProductDetailImageProps {
   image_url: string;
@@ -46,27 +45,16 @@ export function ProductDetailImage({
 
       {/* Thumbnail strip */}
       {allImages.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto">
+        <div className="flex gap-3 overflow-x-auto">
           {allImages.map((src, idx) => (
-            <button
+            <Thumbnail
               key={src}
-              type="button"
+              src={src}
+              alt={`${title} ${idx + 1}`}
+              selected={idx === selectedIndex}
+              showLabel={false}
               onClick={() => setSelectedIndex(idx)}
-              className={cn(
-                "relative w-16 h-16 shrink-0 rounded-lg overflow-hidden border-2 transition-colors",
-                idx === selectedIndex
-                  ? "border-orange"
-                  : "border-transparent hover:border-parchment",
-              )}
-            >
-              <Image
-                src={src}
-                alt={`${title} ${idx + 1}`}
-                fill
-                className="object-cover"
-                sizes="64px"
-              />
-            </button>
+            />
           ))}
         </div>
       )}

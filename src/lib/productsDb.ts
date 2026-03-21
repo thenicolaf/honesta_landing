@@ -117,7 +117,7 @@ export interface ProductFormOptions {
 export async function getProductFormOptions(): Promise<ProductFormOptions> {
   const [categories, tagOptions, freeFromOptions, occasionOptions, servingIdeaOptions, benefits] =
     await Promise.all([
-      supabaseAdmin.from("categories").select("id, name, slug").order("name"),
+      supabaseAdmin.from("categories").select("id, name, slug").order("sort_order"),
       supabaseAdmin.from("tag_options").select("id, label").order("label"),
       supabaseAdmin.from("free_from_options").select("id, label").order("label"),
       supabaseAdmin.from("occasion_options").select("id, label").order("label"),

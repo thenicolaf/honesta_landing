@@ -64,6 +64,7 @@ export {
 } from "./Select";
 export { Checkbox } from "./Checkbox";
 export { Tag } from "./Tag";
+export { Thumbnail } from "./Thumbnail";
 export {
   UploadZone,
   type UploadFile,

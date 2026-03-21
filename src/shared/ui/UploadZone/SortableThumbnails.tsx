@@ -51,6 +51,7 @@ export function SortableThumbnails({
             src={item.url}
             alt={item.name}
             isMain={idx === 0}
+            sortable={items.length > 1}
             onRemove={() => onRemove(item)}
             onPreview={onPreview ? () => onPreview(idx) : undefined}
           />

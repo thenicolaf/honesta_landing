@@ -6,6 +6,7 @@ export interface DbCategory {
   tagline: string;
   description: string;
   image_url: string | null;
+  sort_order: number;
 }
 
 export interface CategoryCard {

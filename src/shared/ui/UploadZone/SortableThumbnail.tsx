@@ -1,9 +1,13 @@
 "use client";
 
+import { useRef } from "react";
+import { PointerSensor } from "@dnd-kit/react";
 import { useSortable } from "@dnd-kit/react/sortable";
+import { GripVertical } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { IconX } from "@/shared/icons";
 import { Button } from "../Button";
+import { Thumbnail } from "../Thumbnail";
 
 interface SortableThumbnailProps {
   id: string;
@@ -11,6 +15,7 @@ interface SortableThumbnailProps {
   alt: string;
   index: number;
   isMain?: boolean;
+  sortable?: boolean;
   onRemove: () => void;
   onPreview?: () => void;
 }
@@ -21,17 +26,31 @@ export function SortableThumbnail({
   alt,
   index,
   isMain,
+  sortable = true,
   onRemove,
   onPreview,
 }: SortableThumbnailProps) {
-  const { ref, isDragging } = useSortable({ id, index });
+  const handleRef = useRef<HTMLButtonElement>(null);
+  const { ref, isDragging } = useSortable({
+    id,
+    index,
+    disabled: !sortable,
+    handle: handleRef,
+    sensors: [
+      {
+        plugin: PointerSensor,
+        options: {
+          activationConstraints: () => undefined,
+        },
+      },
+    ],
+  });
 
   return (
     <li
       ref={ref}
-      onClick={onPreview}
       className={cn(
-        "relative group cursor-grab active:cursor-grabbing",
+        "relative",
         isDragging && "opacity-40",
       )}
     >
@@ -41,13 +60,21 @@ export function SortableThumbnail({
         </span>
       )}
 
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt={alt}
-        className="w-20 h-20 rounded-lg object-cover border border-parchment pointer-events-none"
-        draggable={false}
-      />
+      <Thumbnail src={src} alt={alt} onClick={onPreview}>
+        {/* Drag handle */}
+        {sortable && (
+          <Button
+            as="button"
+            type="button"
+            ref={handleRef}
+            variant="primary"
+            size="icon"
+            className="absolute -bottom-1.5 -left-1.5 w-5! h-5! rounded-full cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity touch-none"
+          >
+            <GripVertical size={12} className="pointer-events-none" />
+          </Button>
+        )}
+      </Thumbnail>
 
       <Button
         as="button"
@@ -60,10 +87,6 @@ export function SortableThumbnail({
       >
         <IconX className="w-3 h-3" />
       </Button>
-
-      <span className="block mt-1 text-2xs text-earth/40 truncate max-w-20 text-center">
-        {alt}
-      </span>
     </li>
   );
 }
