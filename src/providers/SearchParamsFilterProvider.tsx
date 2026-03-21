@@ -45,7 +45,9 @@ function SearchParamsSync({ keys }: { keys: string[] }) {
       }
 
       const qs = params.toString();
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+      const hash = window.location.hash;
+      const url = qs ? `${pathname}?${qs}${hash}` : `${pathname}${hash}`;
+      router.replace(url, { scroll: false });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);

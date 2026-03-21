@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { Plus, ArrowUpDown } from "lucide-react";
-import { useLoadMore } from "@/shared/hooks/useLoadMore";
+
 import {
   Button,
   FilterBar,
@@ -45,18 +45,13 @@ const SORT_OPTIONS: {
   { value: "category", label: "By Category" },
 ];
 
-function AdminProductGrid({ products }: { products: { id: string }[] }) {
-  const { visibleItems, hasMore, sentinelRef } = useLoadMore(products, 10);
-
+function AdminProductGrid({ products }: { products: AdminDbProduct[] }) {
   return (
-    <>
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-        {visibleItems.map((product) => (
-          <AdminProductCard key={product.id} product={product as AdminDbProduct} />
-        ))}
-      </div>
-      {hasMore && <div ref={sentinelRef} />}
-    </>
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      {products.map((product) => (
+        <AdminProductCard key={product.id} product={product} />
+      ))}
+    </div>
   );
 }
 
@@ -77,14 +72,14 @@ function ProductsPageInner({
   const categoryFilter = useFilterBar("category");
   const sortFilter = useFilterBar("sort");
 
-  const filtered = products.filter((p) => {
-    if (statusFilter.value && p.status !== statusFilter.value) return false;
-    if (categoryFilter.value && p.categories?.slug !== categoryFilter.value)
-      return false;
-    return true;
-  });
-
   const sorted = useMemo(() => {
+    const filtered = products.filter((p) => {
+      if (statusFilter.value && p.status !== statusFilter.value) return false;
+      if (categoryFilter.value && p.categories?.slug !== categoryFilter.value)
+        return false;
+      return true;
+    });
+
     const sortKey = (sortFilter.value || "") as ProductSortKey;
     const withSortFields = filtered.map((p) => ({
       ...p,
@@ -93,11 +88,9 @@ function ProductsPageInner({
       category: p.categories?.name ?? "",
     }));
     return sortBySortKey(withSortFields, sortKey);
-  }, [filtered, sortFilter.value, salesMap]);
+  }, [products, statusFilter.value, categoryFilter.value, sortFilter.value, salesMap]);
 
-  const hasPromo = filtered.some((p) =>
-    findActivePromotion(p.promotion_products),
-  );
+  const hasPromo = sorted.some((p) => p.promotion);
   const visibleSortOptions = SORT_OPTIONS.filter(
     (o) => !o.promoOnly || hasPromo,
   );

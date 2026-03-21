@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { useScroll, useMotionValueEvent, motion } from "motion/react";
+import { cn } from "@/shared/utils/cn";
 import { HashLink } from "./HashLink";
+import { useActiveHash } from "./useActiveHash";
 import { TAB_LINKS } from "./consts";
 
 export function NavMobileTabBar() {
   const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
+  const activeHash = useActiveHash();
 
   useMotionValueEvent(scrollY, "change", (current) => {
     const prev = scrollY.getPrevious() ?? 0;
@@ -26,18 +29,28 @@ export function NavMobileTabBar() {
         aria-label="Mobile navigation"
         className="flex items-center gap-1 bg-white-warm/95 backdrop-blur-md rounded-full px-3 py-2.5 ring-1 ring-parchment/40 shadow-[0_8px_40px_rgba(61,43,31,0.16)]"
       >
-        {TAB_LINKS.map(({ href, label, Icon }) => (
-          <HashLink
-            key={href}
-            href={href}
-            className="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-full text-earth/50 hover:text-orange hover:bg-sand/50 active:bg-sand transition-colors duration-200"
-          >
-            <Icon className="w-5 h-5" strokeWidth={1.5} />
-            <span className="font-body font-semibold uppercase text-[0.5rem] tracking-widest">
-              {label}
-            </span>
-          </HashLink>
-        ))}
+        {TAB_LINKS.map(({ href, label, Icon }) => {
+          const hash = href.split("#")[1];
+          const isActive = hash ? activeHash === `#${hash}` : false;
+
+          return (
+            <HashLink
+              key={href}
+              href={href}
+              className={cn(
+                "flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-full transition-colors duration-200",
+                isActive
+                  ? "text-orange bg-sand/50"
+                  : "text-earth/50 hover:text-orange hover:bg-sand/50 active:bg-sand",
+              )}
+            >
+              <Icon className="w-5 h-5" strokeWidth={1.5} />
+              <span className="font-body font-semibold uppercase text-[0.5rem] tracking-widest">
+                {label}
+              </span>
+            </HashLink>
+          );
+        })}
       </nav>
     </motion.div>
   );

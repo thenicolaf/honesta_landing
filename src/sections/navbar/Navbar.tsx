@@ -8,11 +8,13 @@ import {
   motion,
   type MotionValue,
 } from "motion/react";
+import { cn } from "@/shared/utils/cn";
 import { NavCartButton } from "./NavCartButton";
 import { NotificationBell } from "./NotificationBell";
 import { NavUserButton } from "./NavUserButton";
 import { NavMobileTabBar } from "./NavMobileTabBar";
 import { HashLink } from "./HashLink";
+import { useActiveHash } from "./useActiveHash";
 import { NAV_LINKS } from "./consts";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -90,18 +92,30 @@ function NavLogo({
 }
 
 function NavDesktopLinks() {
+  const activeHash = useActiveHash();
+
   return (
     <ul className="hidden lg:flex items-center gap-8">
-      {NAV_LINKS.map((link) => (
-        <li key={link.href}>
-          <HashLink
-            href={link.href}
-            className="font-body font-semibold uppercase text-2xs tracking-[0.14em] text-earth/80 hover:text-orange transition-colors duration-200"
-          >
-            {link.label}
-          </HashLink>
-        </li>
-      ))}
+      {NAV_LINKS.map((link) => {
+        const hash = link.href.split("#")[1];
+        const isActive = hash ? activeHash === `#${hash}` : false;
+
+        return (
+          <li key={link.href}>
+            <HashLink
+              href={link.href}
+              className={cn(
+                "font-body font-semibold uppercase text-2xs tracking-[0.14em] transition-colors duration-200",
+                isActive
+                  ? "text-orange"
+                  : "text-earth/80 hover:text-orange",
+              )}
+            >
+              {link.label}
+            </HashLink>
+          </li>
+        );
+      })}
     </ul>
   );
 }

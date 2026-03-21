@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { UserCircle } from "lucide-react";
 import { Avatar } from "@/shared/ui";
 import {
@@ -22,6 +23,10 @@ interface NavUserButtonProps {
 
 export function NavUserButton({ user, isAdmin }: NavUserButtonProps) {
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const pathname = usePathname();
+
+  const isActive = (href: string) =>
+    href === "/panel" ? pathname === "/panel" : pathname.startsWith(href);
 
   if (user) {
     return (
@@ -34,7 +39,7 @@ export function NavUserButton({ user, isAdmin }: NavUserButtonProps) {
             <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {USER_ROUTES.map((route) => (
-              <DropdownMenuItem key={route.href} asChild>
+              <DropdownMenuItem key={route.href} asChild className={isActive(route.href) ? "text-orange!" : ""}>
                 <Link href={route.href}>{route.label}</Link>
               </DropdownMenuItem>
             ))}
@@ -42,7 +47,7 @@ export function NavUserButton({ user, isAdmin }: NavUserButtonProps) {
               <>
                 <DropdownMenuSeparator />
                 {ADMIN_ROUTES.map((route) => (
-                  <DropdownMenuItem key={route.href} asChild>
+                  <DropdownMenuItem key={route.href} asChild className={isActive(route.href) ? "text-orange!" : ""}>
                     <Link href={route.href}>{route.label}</Link>
                   </DropdownMenuItem>
                 ))}

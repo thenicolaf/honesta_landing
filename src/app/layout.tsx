@@ -10,6 +10,7 @@ import {
   NotificationsProvider,
 } from "@/providers";
 import { ToastProvider, CookieConsent } from "@/shared/ui";
+import { ScrollToTop } from "./_components/ScrollToTop";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
 import { COOKIE_CONSENT_KEY } from "@/shared/consts";
 import { cookies } from "next/headers";
@@ -73,6 +74,7 @@ export default async function RootLayout({
             </NotificationsProvider>
           </FavoritesProvider>
         </CartProvider>
+        <ScrollToTop />
         <ToastProvider />
         <CookieConsent show={!hasConsent} />
         <script

@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { motion } from "motion/react";
 import { ArrowUpDown } from "lucide-react";
-import { useLoadMore } from "@/shared/hooks/useLoadMore";
+
 import {
   FilterBar,
   EmptyState,
@@ -69,27 +69,22 @@ function ProductEmptyState() {
   );
 }
 
-function LoadMoreProducts({ products }: { products: Product[] }) {
-  const { visibleItems, hasMore, sentinelRef } = useLoadMore(products, 10);
-
+function ProductList({ products }: { products: Product[] }) {
   return (
-    <>
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {visibleItems.map((product, i) => (
-          <motion.div
-            key={product.id ?? product.title}
-            initial={{ opacity: 0, y: 28 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-40px" }}
-            transition={{ duration: 0.5, ease: "easeOut", delay: i * 0.07 }}
-            className="h-full"
-          >
-            <ProductItem product={product} />
-          </motion.div>
-        ))}
-      </div>
-      {hasMore && <div ref={sentinelRef} />}
-    </>
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {products.map((product, i) => (
+        <motion.div
+          key={product.id ?? product.title}
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: 0.5, ease: "easeOut", delay: i * 0.07 }}
+          className="h-full"
+        >
+          <ProductItem product={product} />
+        </motion.div>
+      ))}
+    </div>
   );
 }
 
@@ -118,14 +113,15 @@ function ProductGridInner({
   const categoryFilter = useFilterBar("category");
   const sortFilter = useFilterBar("sort");
 
-  const filtered = categoryFilter.value
-    ? rawProducts.filter((p) => p.categories?.slug === categoryFilter.value)
-    : rawProducts;
-  const products = mapDbProducts(filtered, salesMap);
-  const sorted = useMemo(
-    () => sortProducts(products, (sortFilter.value || "") as ProductSortKey),
-    [products, sortFilter.value],
-  );
+  const sorted = useMemo(() => {
+    const filtered = categoryFilter.value
+      ? rawProducts.filter((p) => p.categories?.slug === categoryFilter.value)
+      : rawProducts;
+    const products = mapDbProducts(filtered, salesMap);
+    return sortProducts(products, (sortFilter.value || "") as ProductSortKey);
+  }, [rawProducts, salesMap, categoryFilter.value, sortFilter.value]);
+
+  const products = sorted;
 
   const hasPromo = products.some((p) => p.promotion);
   const visibleSortOptions = SORT_OPTIONS.filter(
@@ -166,7 +162,7 @@ function ProductGridInner({
       {sorted.length === 0 ? (
         <ProductEmptyState />
       ) : (
-        <LoadMoreProducts products={sorted} />
+        <ProductList products={sorted} />
       )}
     </>
   );
