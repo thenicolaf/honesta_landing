@@ -72,6 +72,7 @@ export {
   type UploadMultipleProps,
 } from "./UploadZone";
 export { Lightbox, type LightboxSlide } from "./Lightbox";
+export { Gallery, type GalleryImage } from "./Gallery";
 export { EmptyState } from "./EmptyState";
 export { FilterBar, type FilterBarItem } from "./FilterBar";
 export {

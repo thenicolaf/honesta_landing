@@ -44,79 +44,88 @@ export function PartnershipForm() {
 
   return (
     <form key={state?.attempt ?? 0} action={formAction} className="flex flex-col gap-4">
-      <div>
-        <FormLabel htmlFor="business_name">Business name</FormLabel>
-        <FormInput
-          id="business_name"
-          name="business_name"
-          type="text"
-          placeholder="Bloom Café"
-          defaultValue={state?.values?.business_name}
-          state={state?.fieldErrors?.business_name ? "error" : "default"}
-        />
-        <FormError message={state?.fieldErrors?.business_name} />
-      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+        {/* Left column: fields + message */}
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <FormLabel htmlFor="business_name">Business name</FormLabel>
+              <FormInput
+                id="business_name"
+                name="business_name"
+                type="text"
+                placeholder="Bloom Café"
+                defaultValue={state?.values?.business_name}
+                state={state?.fieldErrors?.business_name ? "error" : "default"}
+              />
+              <FormError message={state?.fieldErrors?.business_name} />
+            </div>
 
-      <div>
-        <FormLabel htmlFor="contact_name">Contact person</FormLabel>
-        <FormInput
-          id="contact_name"
-          name="contact_name"
-          type="text"
-          placeholder="Sara Al Mansoori"
-          defaultValue={state?.values?.contact_name}
-          state={state?.fieldErrors?.contact_name ? "error" : "default"}
-        />
-        <FormError message={state?.fieldErrors?.contact_name} />
-      </div>
+            <div>
+              <FormLabel htmlFor="contact_name">Contact person</FormLabel>
+              <FormInput
+                id="contact_name"
+                name="contact_name"
+                type="text"
+                placeholder="Sara Al Mansoori"
+                defaultValue={state?.values?.contact_name}
+                state={state?.fieldErrors?.contact_name ? "error" : "default"}
+              />
+              <FormError message={state?.fieldErrors?.contact_name} />
+            </div>
 
-      <div>
-        <FormLabel htmlFor="phone">WhatsApp / Phone</FormLabel>
-        <FormPhoneInput
-          id="phone"
-          name="phone"
-          defaultValue={state?.values?.phone}
-          state={state?.fieldErrors?.phone ? "error" : "default"}
-        />
-        <FormError message={state?.fieldErrors?.phone} />
-      </div>
+            <div>
+              <FormLabel htmlFor="phone">WhatsApp / Phone</FormLabel>
+              <FormPhoneInput
+                id="phone"
+                name="phone"
+                defaultValue={state?.values?.phone}
+                state={state?.fieldErrors?.phone ? "error" : "default"}
+              />
+              <FormError message={state?.fieldErrors?.phone} />
+            </div>
 
-      <AddressWithMap
-        {...parseAddress(state?.values?.address)}
-        defaultLat={state?.values?.lat}
-        defaultLng={state?.values?.lng}
-      />
+            <div>
+              <FormLabel htmlFor="business_type">
+                Business type{" "}
+                <span className="normal-case tracking-normal font-light text-earth/40">
+                  (optional)
+                </span>
+              </FormLabel>
+              <FormSelect
+                id="business_type"
+                name="business_type"
+                defaultValue={state?.values?.business_type ?? ""}
+                placeholder="Select type"
+                options={BUSINESS_TYPES}
+                clearable
+              />
+            </div>
+          </div>
 
-      <div>
-        <FormLabel htmlFor="business_type">
-          Business type{" "}
-          <span className="normal-case tracking-normal font-light text-earth/40">
-            (optional)
-          </span>
-        </FormLabel>
-        <FormSelect
-          id="business_type"
-          name="business_type"
-          defaultValue={state?.values?.business_type ?? ""}
-          placeholder="Select type"
-          options={BUSINESS_TYPES}
-          clearable
-        />
-      </div>
+          <div className="flex-1 flex flex-col">
+            <FormLabel htmlFor="message">
+              Message{" "}
+              <span className="normal-case tracking-normal font-light text-earth/40">
+                (optional)
+              </span>
+            </FormLabel>
+            <FormTextarea
+              id="message"
+              name="message"
+              rows={3}
+              placeholder="Tell us about your volumes, delivery area, or any questions..."
+              defaultValue={state?.values?.message}
+              className="flex-1"
+            />
+          </div>
+        </div>
 
-      <div>
-        <FormLabel htmlFor="message">
-          Message{" "}
-          <span className="normal-case tracking-normal font-light text-earth/40">
-            (optional)
-          </span>
-        </FormLabel>
-        <FormTextarea
-          id="message"
-          name="message"
-          rows={3}
-          placeholder="Tell us about your volumes, delivery area, or any questions..."
-          defaultValue={state?.values?.message}
+        {/* Right column: address with map */}
+        <AddressWithMap
+          {...parseAddress(state?.values?.address)}
+          defaultLat={state?.values?.lat}
+          defaultLng={state?.values?.lng}
         />
       </div>
 

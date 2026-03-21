@@ -4,7 +4,11 @@ import "./globals.css";
 import { metadata as siteMetadata } from "./metadata";
 import { structuredData } from "./structured-data";
 import { Footer, Navbar } from "@/sections";
-import { CartProvider, FavoritesProvider, NotificationsProvider } from "@/providers";
+import {
+  CartProvider,
+  FavoritesProvider,
+  NotificationsProvider,
+} from "@/providers";
 import { ToastProvider, CookieConsent } from "@/shared/ui";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
 import { COOKIE_CONSENT_KEY } from "@/shared/consts";
@@ -40,7 +44,11 @@ export default async function RootLayout({
   } = await supabase.auth.getUser();
 
   const { data: profile } = user
-    ? await supabase.from("profiles").select("role, allow_notifications").eq("id", user.id).single()
+    ? await supabase
+        .from("profiles")
+        .select("role, allow_notifications")
+        .eq("id", user.id)
+        .single()
     : { data: null };
 
   return (
@@ -51,7 +59,11 @@ export default async function RootLayout({
       >
         <CartProvider userId={user?.id ?? null}>
           <FavoritesProvider userId={user?.id ?? null}>
-            <NotificationsProvider role={profile?.role ?? null} userId={user?.id} allowNotifications={profile?.allow_notifications ?? true}>
+            <NotificationsProvider
+              role={profile?.role ?? null}
+              userId={user?.id}
+              allowNotifications={profile?.allow_notifications ?? true}
+            >
               <Navbar
                 user={user ? { email: user.email! } : null}
                 isAdmin={profile?.role === "admin"}

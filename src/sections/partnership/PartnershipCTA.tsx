@@ -77,7 +77,7 @@ export function PartnershipCTA() {
       {/* Orange tint overlay */}
       <div className="absolute inset-0 bg-orange/60" />
 
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
+      <div className="relative mx-auto max-w-7xl px-5 sm:px-6 lg:px-10">
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -118,13 +118,20 @@ export function PartnershipCTA() {
             Personal service.
           </motion.p>
 
-          {/* Two-channel contact block */}
+          {/* Instagram card */}
           <motion.div
             variants={fadeUp}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="grid md:grid-cols-2 gap-6 items-start"
+            className="mb-5"
           >
             <PartnershipInstagramCard />
+          </motion.div>
+
+          {/* Partnership form */}
+          <motion.div
+            variants={fadeUp}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+          >
             <PartnershipFormCard />
           </motion.div>
         </motion.div>

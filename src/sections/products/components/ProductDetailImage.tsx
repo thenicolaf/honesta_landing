@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Lightbox, Thumbnail } from "@/shared/ui";
+import { Gallery, Lightbox } from "@/shared/ui";
 
 interface ProductDetailImageProps {
   image_url: string;
@@ -16,54 +16,49 @@ export function ProductDetailImage({
   title,
 }: ProductDetailImageProps) {
   const allImages = [image_url, ...images].filter(Boolean);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [previewOpen, setPreviewOpen] = useState(false);
+  const restImages = allImages.slice(1);
+  const [lightboxIndex, setLightboxIndex] = useState(-1);
 
-  const currentImage = allImages[selectedIndex] ?? image_url;
+  if (allImages.length === 0) {
+    return (
+      <div className="md:sticky md:top-20 lg:top-25 md:self-start">
+        <div className="aspect-3/2 w-full rounded-[16px] bg-sand" />
+      </div>
+    );
+  }
 
   return (
-    <div className="md:sticky md:top-20 lg:top-25 md:self-start flex flex-col gap-3">
+    <div className="md:sticky md:top-20 lg:top-25 md:self-start flex flex-col gap-2">
       {/* Main image */}
       <button
         type="button"
-        onClick={() => currentImage && setPreviewOpen(true)}
+        onClick={() => setLightboxIndex(0)}
         className="relative aspect-3/2 w-full rounded-[16px] overflow-hidden bg-sand cursor-zoom-in"
       >
-        {currentImage ? (
-          <Image
-            src={currentImage}
-            alt={`${title} ${selectedIndex + 1}`}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 50vw"
-            priority
-          />
-        ) : (
-          <div className="w-full h-full bg-sand" />
-        )}
+        <Image
+          src={allImages[0]}
+          alt={`${title} 1`}
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, 50vw"
+          priority
+        />
       </button>
 
-      {/* Thumbnail strip */}
-      {allImages.length > 1 && (
-        <div className="flex gap-3 overflow-x-auto">
-          {allImages.map((src, idx) => (
-            <Thumbnail
-              key={src}
-              src={src}
-              alt={`${title} ${idx + 1}`}
-              selected={idx === selectedIndex}
-              showLabel={false}
-              onClick={() => setSelectedIndex(idx)}
-            />
-          ))}
-        </div>
+      {/* Rest of images in gallery */}
+      {restImages.length > 0 && (
+        <Gallery
+          images={restImages.map((src, i) => ({ src, alt: `${title} ${i + 2}` }))}
+          onClick={(index) => setLightboxIndex(index + 1)}
+        />
       )}
 
+      {/* Shared lightbox for all images */}
       <Lightbox
-        open={previewOpen}
-        onClose={() => setPreviewOpen(false)}
+        open={lightboxIndex >= 0}
+        onClose={() => setLightboxIndex(-1)}
         slides={allImages.map((src, i) => ({ src, alt: `${title} ${i + 1}` }))}
-        index={selectedIndex}
+        index={lightboxIndex}
       />
     </div>
   );

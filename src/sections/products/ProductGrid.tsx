@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { motion } from "motion/react";
 import { ArrowUpDown } from "lucide-react";
+import { useLoadMore } from "@/shared/hooks/useLoadMore";
 import {
   FilterBar,
   EmptyState,
@@ -68,22 +69,27 @@ function ProductEmptyState() {
   );
 }
 
-function ProductList({ products }: { products: Product[] }) {
+function LoadMoreProducts({ products }: { products: Product[] }) {
+  const { visibleItems, hasMore, sentinelRef } = useLoadMore(products, 10);
+
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {products.map((product, i) => (
-        <motion.div
-          key={product.id ?? product.title}
-          initial={{ opacity: 0, y: 28 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-40px" }}
-          transition={{ duration: 0.5, ease: "easeOut", delay: i * 0.07 }}
-          className="h-full"
-        >
-          <ProductItem product={product} />
-        </motion.div>
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {visibleItems.map((product, i) => (
+          <motion.div
+            key={product.id ?? product.title}
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.5, ease: "easeOut", delay: i * 0.07 }}
+            className="h-full"
+          >
+            <ProductItem product={product} />
+          </motion.div>
+        ))}
+      </div>
+      {hasMore && <div ref={sentinelRef} />}
+    </>
   );
 }
 
@@ -160,7 +166,7 @@ function ProductGridInner({
       {sorted.length === 0 ? (
         <ProductEmptyState />
       ) : (
-        <ProductList products={sorted} />
+        <LoadMoreProducts products={sorted} />
       )}
     </>
   );

@@ -21,6 +21,7 @@
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "react-photo-album": "^3.5.1",
     "react-toastify": "^11.0.5",
     "tailwind-merge": "^3.4.1",
     "yet-another-react-lightbox": "^3.29.1"

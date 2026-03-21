@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Plus, ArrowUpDown } from "lucide-react";
+import { useLoadMore } from "@/shared/hooks/useLoadMore";
 import {
   Button,
   FilterBar,
@@ -43,6 +44,21 @@ const SORT_OPTIONS: {
   { value: "best-sellers", label: "Best Sellers" },
   { value: "category", label: "By Category" },
 ];
+
+function AdminProductGrid({ products }: { products: { id: string }[] }) {
+  const { visibleItems, hasMore, sentinelRef } = useLoadMore(products, 10);
+
+  return (
+    <>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        {visibleItems.map((product) => (
+          <AdminProductCard key={product.id} product={product as AdminDbProduct} />
+        ))}
+      </div>
+      {hasMore && <div ref={sentinelRef} />}
+    </>
+  );
+}
 
 // ─── ProductsPageInner ──────────────────────────────────────────────────────
 
@@ -127,11 +143,7 @@ function ProductsPageInner({
           }}
         />
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-          {sorted.map((product) => (
-            <AdminProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        <AdminProductGrid products={sorted} />
       )}
     </>
   );
