@@ -1,32 +1,48 @@
-export enum NutritionKey {
-  Calories = "calories",
-  Carbs = "carbs",
-  NaturalSugars = "natural_sugars",
-  AddedSugars = "added_sugars",
-  Fiber = "fiber",
-  Protein = "protein",
-  Fat = "fat",
-  VitaminC = "vitamin_c",
+export interface NutritionEntry {
+  key: string;
+  name: string;
+  value: number;
 }
 
-export const NUTRITION_FIELDS: { key: NutritionKey; label: string }[] = [
-  { key: NutritionKey.Calories, label: "Calories" },
-  { key: NutritionKey.Carbs, label: "Carbs (g)" },
-  { key: NutritionKey.NaturalSugars, label: "Natural sugars (g)" },
-  { key: NutritionKey.AddedSugars, label: "Added sugars (g)" },
-  { key: NutritionKey.Fiber, label: "Fiber (g)" },
-  { key: NutritionKey.Protein, label: "Protein (g)" },
-  { key: NutritionKey.Fat, label: "Fat (g)" },
-  { key: NutritionKey.VitaminC, label: "Vitamin C (mg)" },
+export const DEFAULT_NUTRITION_FIELDS: { key: string; name: string }[] = [
+  { key: "calories", name: "Calories" },
+  { key: "carbs", name: "Carbs (g)" },
+  { key: "natural_sugars", name: "Natural sugars (g)" },
+  { key: "added_sugars", name: "Added sugars (g)" },
+  { key: "fiber", name: "Fiber (g)" },
+  { key: "protein", name: "Protein (g)" },
+  { key: "fat", name: "Fat (g)" },
+  { key: "vitamin_c", name: "Vitamin C (mg)" },
 ];
 
-export type Nutrition = Record<NutritionKey, number>;
+export type NutritionJson = Record<string, { name: string; value: number }>;
 
-export function buildNutrition(formData: FormData): Nutrition {
-  const result = {} as Nutrition;
-  for (const key of Object.values(NutritionKey)) {
-    const raw = formData.get(key) as string | null;
-    result[key] = parseFloat(raw ?? "") || 0;
+export function buildNutrition(entries: NutritionEntry[]): NutritionJson {
+  const result: NutritionJson = {};
+  for (const { key, name, value } of entries) {
+    if (key) result[key] = { name, value };
   }
   return result;
+}
+
+export function parseNutritionEntries(
+  nutrition: NutritionJson | null | undefined,
+): NutritionEntry[] {
+  if (!nutrition) {
+    return DEFAULT_NUTRITION_FIELDS.map((f) => ({ ...f, value: 0 }));
+  }
+  return Object.entries(nutrition).map(([key, { name, value }]) => ({
+    key,
+    name,
+    value,
+  }));
+}
+
+export function slugifyKey(name: string): string {
+  return name
+    .replace(/\(.*?\)/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_|_$/g, "");
 }

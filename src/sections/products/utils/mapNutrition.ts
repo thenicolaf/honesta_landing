@@ -5,17 +5,8 @@ import { calculateDiscountedPrice, findActivePromotion } from "@/shared/utils/ca
 export function mapNutrition(
   raw: AdminDbProduct["nutrition"],
 ): NutritionInfo | undefined {
-  if (!raw) return undefined;
-  return {
-    calories: raw.calories,
-    carbs: raw.carbs,
-    naturalSugars: raw.natural_sugars,
-    addedSugars: raw.added_sugars,
-    fiber: raw.fiber,
-    protein: raw.protein,
-    fat: raw.fat,
-    vitaminC: raw.vitamin_c,
-  };
+  if (!raw || Object.keys(raw).length === 0) return undefined;
+  return raw;
 }
 
 export interface MappedAdminProduct {

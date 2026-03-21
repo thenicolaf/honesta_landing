@@ -7,16 +7,7 @@ export interface DbProduct {
   images: string[] | null;
   in_stock: boolean | null;
   status: "draft" | "published" | "archived";
-  nutrition: {
-    calories: number;
-    carbs: number;
-    natural_sugars: number;
-    added_sugars: number;
-    fiber: number;
-    protein: number;
-    fat: number;
-    vitamin_c?: number;
-  } | null;
+  nutrition: Record<string, { name: string; value: number }> | null;
   categories: { slug: string; name: string } | null;
   product_tags: { tag_options: { label: string } }[];
   product_free_froms: { free_from_options: { label: string } }[];

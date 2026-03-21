@@ -33,18 +33,10 @@ export function BenefitsList({ benefits }: { benefits: Benefit[] }) {
 // ─── NutritionTable ───────────────────────────────────────────────────────────
 
 export function NutritionTable({ nutrition }: { nutrition: NutritionInfo }) {
-  const rows = [
-    { label: "Calories", value: `${nutrition.calories} kcal` },
-    { label: "Carbs", value: `${nutrition.carbs} g` },
-    { label: "Natural Sugars", value: `${nutrition.naturalSugars} g` },
-    { label: "Added Sugars", value: `${nutrition.addedSugars} g` },
-    { label: "Fiber", value: `${nutrition.fiber} g` },
-    { label: "Protein", value: `${nutrition.protein} g` },
-    { label: "Fat", value: `${nutrition.fat} g` },
-    ...(nutrition.vitaminC !== undefined
-      ? [{ label: "Vitamin C", value: `${nutrition.vitaminC} mg` }]
-      : []),
-  ];
+  const rows = Object.values(nutrition).map((field) => ({
+    label: field.name,
+    value: String(field.value),
+  }));
 
   return (
     <div>

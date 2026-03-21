@@ -1,13 +1,9 @@
-export interface NutritionInfo {
-  calories: number;
-  carbs: number;
-  naturalSugars: number;
-  addedSugars: number;
-  fiber: number;
-  protein: number;
-  fat: number;
-  vitaminC?: number;
+export interface NutritionField {
+  name: string;
+  value: number;
 }
+
+export type NutritionInfo = Record<string, NutritionField>;
 
 export interface Benefit {
   name: string;

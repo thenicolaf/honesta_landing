@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase.server";
 import { deleteImage } from "@/lib/storage";
 import { createNotification } from "@/lib/notificationsDb";
-import { buildNutrition } from "./product-form/nutrition";
+import type { NutritionJson } from "./product-form/nutrition";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -230,7 +230,7 @@ function parseProductValues(
     images,
     in_stock: values.in_stock === "true",
     category_id: values.category_id || null,
-    nutrition: buildNutrition(formData),
+    nutrition: JSON.parse((formData.get("nutrition") as string) || "{}") as NutritionJson,
   };
 }
 

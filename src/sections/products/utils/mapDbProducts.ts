@@ -45,17 +45,8 @@ export function mapDbProducts(raw: DbProduct[]): Product[] {
       ),
       occasions: p.product_occasions.map((po) => po.occasion_options.label),
       benefits: p.product_benefits.map((pb) => pb.benefits),
-      nutrition: p.nutrition
-        ? {
-            calories: p.nutrition.calories,
-            carbs: p.nutrition.carbs,
-            naturalSugars: p.nutrition.natural_sugars,
-            addedSugars: p.nutrition.added_sugars,
-            fiber: p.nutrition.fiber,
-            protein: p.nutrition.protein,
-            fat: p.nutrition.fat,
-            vitaminC: p.nutrition.vitamin_c,
-          }
+      nutrition: p.nutrition && Object.keys(p.nutrition).length > 0
+        ? p.nutrition
         : undefined,
       promotion,
     };
