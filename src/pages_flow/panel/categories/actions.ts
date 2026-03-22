@@ -23,7 +23,6 @@ export interface CategoryState {
     name?: string;
   };
   values?: Partial<CategoryInfo>;
-  attempt?: number;
 }
 
 function toSlug(name: string): string {
@@ -40,11 +39,9 @@ export async function createCategory(
   formData: FormData,
 ): Promise<CategoryState> {
   const values = Object.fromEntries(formData) as Partial<CategoryInfo>;
-  const attempt = (_prevState?.attempt ?? 0) + 1;
-
   const fieldErrors: CategoryState["fieldErrors"] = {};
   if (!values.name?.trim()) fieldErrors.name = "Name is required";
-  if (Object.keys(fieldErrors).length > 0) return { fieldErrors, values, attempt };
+  if (Object.keys(fieldErrors).length > 0) return { fieldErrors, values };
 
   const name = values.name!.trim();
   const slug = toSlug(name);
@@ -63,7 +60,7 @@ export async function createCategory(
   });
 
   if (error) {
-    return { error: "Failed to create category. Please try again.", values, attempt };
+    return { error: "Failed to create category. Please try again.", values };
   }
 
   await createNotification({
@@ -82,11 +79,9 @@ export async function updateCategory(
   formData: FormData,
 ): Promise<CategoryState> {
   const values = Object.fromEntries(formData) as Partial<CategoryInfo>;
-  const attempt = (_prevState?.attempt ?? 0) + 1;
-
   const fieldErrors: CategoryState["fieldErrors"] = {};
   if (!values.name?.trim()) fieldErrors.name = "Name is required";
-  if (Object.keys(fieldErrors).length > 0) return { fieldErrors, values, attempt };
+  if (Object.keys(fieldErrors).length > 0) return { fieldErrors, values };
 
   const name = values.name!.trim();
   const slug = toSlug(name);
@@ -114,7 +109,7 @@ export async function updateCategory(
     .eq("id", id);
 
   if (error) {
-    return { error: "Failed to update category. Please try again.", values, attempt };
+    return { error: "Failed to update category. Please try again.", values };
   }
 
   // Delete old image from storage if it changed

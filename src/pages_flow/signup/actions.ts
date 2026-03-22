@@ -18,7 +18,6 @@ export interface SignupState {
   error?: string;
   fieldErrors?: SignupErrors;
   values?: Partial<SignupValues>;
-  attempt?: number;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -62,7 +61,6 @@ export async function signUp(
 ): Promise<SignupState> {
   const values = parseSignupValues(formData);
   const { firstName, lastName, email, password, confirmPassword } = values;
-  const attempt = (_prevState?.attempt ?? 0) + 1;
 
   const fieldErrors = validateSignup({
     firstName,
@@ -72,7 +70,7 @@ export async function signUp(
     confirmPassword,
   });
   if (fieldErrors) {
-    return { fieldErrors, values, attempt };
+    return { fieldErrors, values };
   }
 
   const { data, error } = await supabase.auth.signUp({
@@ -84,7 +82,7 @@ export async function signUp(
   });
 
   if (error) {
-    return { error: mapSignupError(error.message), values, attempt };
+    return { error: mapSignupError(error.message), values };
   }
 
   if (data.user) {
@@ -94,7 +92,6 @@ export async function signUp(
         error:
           "Account created but profile setup failed. Please update your profile later.",
         values,
-        attempt,
       };
     }
   }

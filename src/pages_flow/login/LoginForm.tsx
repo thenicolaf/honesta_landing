@@ -35,7 +35,7 @@ export function LoginForm({ next }: { next: string }) {
   }, [state]);
 
   return (
-    <form key={state?.attempt ?? 0} action={action} noValidate className="flex flex-col gap-4">
+    <form action={action} noValidate className="flex flex-col gap-4">
       <div>
         <FormLabel htmlFor="email">Email</FormLabel>
         <FormInput

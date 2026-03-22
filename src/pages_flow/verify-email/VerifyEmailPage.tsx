@@ -67,7 +67,7 @@ export function VerifyEmailPage({ email }: { email: string }) {
         <span className="font-medium">{email}</span>
       </p>
 
-      <form key={state?.attempt ?? 0} action={action} className="flex flex-col gap-5">
+      <form action={action} className="flex flex-col gap-5">
         <input type="hidden" name="otp" value={otpValue} />
         <FormOtpInput onComplete={setOtpValue} />
         <SubmitButton />

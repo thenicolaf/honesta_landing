@@ -40,7 +40,6 @@ export interface ProductState {
     images?: string;
   };
   values?: Partial<ProductValues>;
-  attempt?: number;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -296,13 +295,13 @@ export async function updateProductStatus(
   if (newStatus === "published") {
     const { data: product } = await supabaseAdmin
       .from("products")
-      .select("name")
+      .select("title")
       .eq("id", id)
       .single();
     await createNotification({
       type: "new_product",
       title: "New product available",
-      message: product?.name ?? "",
+      message: product?.title ?? "",
       relatedId: id,
       audience: null,
     });
@@ -318,11 +317,10 @@ export async function createProduct(
   formData: FormData,
 ): Promise<ProductState> {
   const values = Object.fromEntries(formData) as Partial<ProductValues>;
-  const attempt = (_prevState?.attempt ?? 0) + 1;
 
   const fieldErrors = validateProduct(values);
   if (fieldErrors) {
-    return { fieldErrors, values, attempt };
+    return { fieldErrors, values };
   }
 
   const productData = parseProductValues(values, formData);
@@ -337,7 +335,7 @@ export async function createProduct(
     .single();
 
   if (error || !data) {
-    return { error: "Failed to create product. Please try again.", values, attempt };
+    return { error: "Failed to create product. Please try again.", values };
   }
 
   await Promise.all([
@@ -364,11 +362,10 @@ export async function updateProduct(
   formData: FormData,
 ): Promise<ProductState> {
   const values = Object.fromEntries(formData) as Partial<ProductValues>;
-  const attempt = (_prevState?.attempt ?? 0) + 1;
 
   const fieldErrors = validateProduct(values);
   if (fieldErrors) {
-    return { fieldErrors, values, attempt };
+    return { fieldErrors, values };
   }
 
   const productData = parseProductValues(values, formData);
@@ -389,7 +386,7 @@ export async function updateProduct(
     .eq("id", id);
 
   if (error) {
-    return { error: "Failed to update product. Please try again.", values, attempt };
+    return { error: "Failed to update product. Please try again.", values };
   }
 
   // Delete removed images from storage

@@ -18,7 +18,6 @@ export interface EmirateSettingState {
   error?: string;
   fieldErrors?: Record<string, string>;
   values?: EmirateSettingValues;
-  attempt?: number;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -76,13 +75,11 @@ export async function saveEmirateSetting(
   _prevState: EmirateSettingState | null,
   formData: FormData,
 ): Promise<EmirateSettingState> {
-  const attempt = (_prevState?.attempt ?? 0) + 1;
-
   const values = parseFormValues(formData);
 
   const fieldErrors = validate(values.fee, values.threshold, values.minimum, values.days);
   if (fieldErrors) {
-    return { fieldErrors, values, attempt };
+    return { fieldErrors, values };
   }
 
   const { error } = await updateDeliverySetting(id, {
@@ -94,12 +91,12 @@ export async function saveEmirateSetting(
   });
 
   if (error) {
-    return { error: `Failed to save: ${error}`, values, attempt };
+    return { error: `Failed to save: ${error}`, values };
   }
 
   revalidatePath("/panel/delivery");
   revalidatePath("/cart");
   revalidatePath("/checkout");
 
-  return { success: true, attempt };
+  return { success: true };
 }

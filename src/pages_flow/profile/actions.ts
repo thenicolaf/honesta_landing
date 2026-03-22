@@ -19,7 +19,6 @@ export interface ProfileState {
   error?: string;
   fieldErrors?: ProfileErrors;
   values?: Partial<ProfileInfo>;
-  attempt?: number;
 }
 
 export interface ChangePasswordState {
@@ -27,7 +26,6 @@ export interface ChangePasswordState {
   error?: string;
   fieldErrors?: ChangePasswordErrors;
   values?: Partial<ChangePasswordValues>;
-  attempt?: number;
 }
 
 interface ChangePasswordValues {
@@ -68,11 +66,10 @@ export async function updateProfile(
   formData: FormData,
 ): Promise<ProfileState> {
   const profile = Object.fromEntries(formData) as Partial<ProfileInfo>;
-  const attempt = (_prevState?.attempt ?? 0) + 1;
 
   const fieldErrors = validateProfile(profile);
   if (fieldErrors) {
-    return { fieldErrors, values: profile, attempt };
+    return { fieldErrors, values: profile };
   }
 
   const { supabase, user } = await requireUser();
@@ -88,10 +85,10 @@ export async function updateProfile(
   });
 
   if (error) {
-    return { error: "Failed to save profile. Please try again.", values: profile, attempt };
+    return { error: "Failed to save profile. Please try again.", values: profile };
   }
 
-  return { success: true, values: profile, attempt };
+  return { success: true, values: profile };
 }
 
 export async function changePassword(
@@ -99,11 +96,10 @@ export async function changePassword(
   formData: FormData,
 ): Promise<ChangePasswordState> {
   const values = parseChangePasswordValues(formData);
-  const attempt = (_prevState?.attempt ?? 0) + 1;
 
   const fieldErrors = validateChangePassword(values);
   if (fieldErrors) {
-    return { fieldErrors, values, attempt };
+    return { fieldErrors, values };
   }
 
   const { supabase, user } = await requireUser();
@@ -114,7 +110,7 @@ export async function changePassword(
     password: values.currentPassword,
   });
   if (signInError) {
-    return { error: "Current password is incorrect.", values, attempt };
+    return { error: "Current password is incorrect.", values };
   }
 
   // Update password
@@ -122,10 +118,10 @@ export async function changePassword(
     password: values.newPassword,
   });
   if (updateError) {
-    return { error: "Failed to update password. Please try again.", values, attempt };
+    return { error: "Failed to update password. Please try again.", values };
   }
 
-  return { success: true, attempt };
+  return { success: true };
 }
 
 // ─── Notification Settings ───────────────────────────────────────────────────

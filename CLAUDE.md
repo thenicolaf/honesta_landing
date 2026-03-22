@@ -226,7 +226,7 @@ Every route segment has a `loading.tsx` that renders:
 - **Provider:** `CartProvider` uses `useSyncExternalStore` — no Zustand/Redux
 - **Hydration:** `isHydrated` flag prevents SSR/client mismatch; server always renders empty cart
 - **Hook:** `useCart()` exposes `items`, `itemCount`, `total`, `addToCart(item)`, `removeFromCart(variantId)`, `updateItemQuantity(variantId, qty)`, `clearCart`, `isHydrated`
-- **CartItem type:** `{ variantId, productId, name, price, originalPrice?, quantity, image_url?, weight_g }`
+- **CartItem type:** `{ variantId, productId, slug?, name, price, originalPrice?, quantity, image_url?, weight_g }`
 - **Price sync:** `syncCartPrices` queries products with variants + promotions, recalculates prices. `originalPrice` is computed from promotions on the fly, never stored in DB.
 - **DB cart (`cartDb.ts`):** `getCartFromDb` does a join: `cart_items → product_variants → products` (with promotions) to build full CartItem objects. `upsertItemInDb` stores only `(user_id, variant_id, quantity)`.
 
@@ -312,7 +312,7 @@ All use `class-variance-authority` (cva) for variants + `cn()` for className mer
 
 Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React context internally; sub-components access it via a `use*` hook. Follow this same pattern when adding new compound components.
 
-- **`Button`** — defaults to `<a>`, pass `as="button"` for `<button>`. Supports `ref` prop (React 19 ref-as-prop) for both variants. Variants: `primary | secondary | outline | text`. Colors: `primary | error | warning | default`. Sizes: `icon | inline | sm | md | lg`.
+- **`Button`** — defaults to `<a>`, pass `as="button"` for `<button>`. Internal links (starting with `/`, no `#`) automatically use `next/link` `Link` for client-side navigation. Hash links fall back to `<a>`. Supports `ref` prop (React 19 ref-as-prop). Variants: `primary | secondary | outline | text`. Colors: `primary | error | warning | default`. Sizes: `icon | inline | sm | md | lg`. `buttonVariants` is also exported for applying Button styles to non-Button elements (e.g. `HashLink`).
 - **`Badge`** — inline label/tag. Variants: `natural` (moss green) | `warm` (sand) | `outline`. Sizes: `xs | sm | md`.
 - **`Card`** — wrapper with 16px radius. Variants: `default` (white-warm) | `sand` | `outline` | `dark` (earth bg).
 - **`TagToolbar` / `TagToolbarItem`** — single-select pill filter bar (`role="radiogroup"`). Controlled or uncontrolled via `value`/`onValueChange`/`defaultValue`. Empty string `""` means "All".
@@ -327,7 +327,7 @@ Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React conte
 - **`Thumbnail`** — reusable image thumbnail. Props: `src`, `alt`, `selected?` (orange border), `softDeleted?` (dimmed + grayscale), `showLabel?` (alt text below, default true), `onClick?`, `children?` (overlay buttons). Used by `SortableThumbnail` and `ProductDetailImage`.
 - **`Popover` / `PopoverTrigger` / `PopoverContent`** — context-based popover with auto up/down direction, outside-click close, viewport clamping. Supports **controlled mode** via `open`/`onOpenChange` props (used by `BenefitsSection`, `NutritionSection`). `usePopover()` hook for child components.
 - **`MultiSelect` / `MultiSelectTrigger` / `MultiSelectContent` / `MultiSelectItem` / `MultiSelectEmpty` / `MultiSelectCreate` / `MultiSelectDelete`** — compound multi-select with search, selected-items-first sorting, scroll preservation. Context-based (`useMultiSelect`). `MultiSelectCreate` for inline option creation, `MultiSelectDelete` for inline deletion.
-- **`Tooltip` / `TooltipTrigger` / `TooltipContent`** — hover/focus tooltip with 4-direction support (`side` prop: `top | bottom | left | right`), auto-fallback to opposite side if no space. `delay` prop (default 200ms). Toggle on click for touch devices. `onClick` prop on `TooltipTrigger` for stopPropagation. No `useId()` — safe inside Suspense boundaries.
+- **`Tooltip` / `TooltipTrigger` / `TooltipContent`** — hover/focus tooltip with 4-direction support (`side` prop: `top | bottom | left | right`), auto-fallback to opposite side if no space. `delay` prop (default 200ms). Toggle on click for touch devices. **Always use `asChild`** on `TooltipTrigger` — it merges all handlers (onClick, onMouseEnter, etc.) with the child element's handlers via `cloneElement`. No `useId()` — safe inside Suspense boundaries.
 - **`Gallery`** — rows-based image gallery using `react-photo-album`. Props: `images: GalleryImage[]`, `rowHeight`, `maxPerRow`, `spacing`, `onClick(index)`. No built-in Lightbox — compose with `<Lightbox>` externally.
 - **`CartEmpty`** — empty cart placeholder screen.
 - **`Loader`** — loading spinner (used during cart hydration).
@@ -354,7 +354,7 @@ Both views share the same `paginatedData` from hooks like `useOrdersTable` / `us
 ## Filter system
 
 - **`FilterProvider`** (`src/providers/FilterProvider.tsx`) — generic React context for `Record<string, string>` filter state. `useFilterBar(key)` returns `{ value, onValueChange }`.
-- **`SearchParamsFilterProvider`** (`src/providers/SearchParamsFilterProvider.tsx`) — wraps `FilterProvider` and syncs state to URL search params (supports browser back/forward).
+- **`SearchParamsFilterProvider`** (`src/providers/SearchParamsFilterProvider.tsx`) — wraps `FilterProvider` and syncs state to URL search params (supports browser back/forward). Uses bidirectional sync with race-condition protection: state → URL effect runs FIRST (sets `updatingUrl` flag), URL → state effect runs SECOND (skips when flag is set). URL is updated synchronously via `history.replaceState` + async via `router.replace` to ensure `window.location.search` is current for other code (e.g. HashTracker).
 - Filter keys typically: `["search", "status"|"type", "sortKey", "sortDir", "page", "pageSize"]`.
 - Always reset `page` filter when changing search/status filters.
 
@@ -557,7 +557,7 @@ Any section that uses `motion` hooks (`useScroll`, `useTransform`) must add `"us
 - **`HashLink`** (`src/sections/navbar/HashLink.tsx`) — custom `<a>` that handles smooth scroll for hash links. Same-page: `scrollIntoView({ behavior: "smooth" })`. Cross-page: `router.push()` + `MutationObserver` to wait for target element.
 - **`ScrollToTop`** (`src/app/_components/ScrollToTop.tsx`) — scrolls to top on pathname change (skips hash navigation and initial render).
 - **`RestoreScroll`** (`src/app/_components/RestoreScroll.tsx`) — restores scroll position after page reload. Works with `beforeunload` script in `<head>` that saves `scrollY` to sessionStorage.
-- **`HashTracker`** (`src/app/_components/HashTracker.tsx`) — only on home page, updates URL hash based on which section is in viewport via `IntersectionObserver` with `rootMargin: "-30% 0px -70% 0px"`.
+- **`HashTracker`** (`src/app/_components/HashTracker.tsx`) — rendered in home page `page.tsx` (not root layout), updates URL hash based on which section is in viewport via `IntersectionObserver` with `rootMargin: "-30% 0px -70% 0px"`. On initial load with hash (e.g. `/#products`), suppresses hash updates and scrolls to the target section via `scrollIntoView({ behavior: "instant" })`. Uses retry polling (200ms) to find Suspense-deferred sections.
 - **Active nav links** — `useActiveHash()` hook (`src/sections/navbar/useActiveHash.ts`) polls `window.location.hash` for desktop/mobile nav highlighting.
 - **Navigation links** — shared source of truth in `src/shared/consts/navLinks.ts` (`NAV_LINKS`, `TAB_LINKS`). Used by Navbar, NavMobileTabBar, and Footer.
 
@@ -568,12 +568,24 @@ Any section that uses `motion` hooks (`useScroll`, `useTransform`) must add `"us
 - **Sales data** — `getProductSalesMap()` in `productsDb.ts` aggregates `order_items` quantities by product_id for paid orders.
 - **`totalSold`** field on `Product` type — populated by `mapDbProducts(raw, salesMap)`.
 
-## Product SEO
+## SEO
 
-Product detail pages (`src/app/products/[id]/page.tsx`) include two JSON-LD blocks:
+**Root structured data** (`src/app/structured-data.ts`) — injected in root layout:
+- `Organization` + `LocalBusiness` (Dubai, UAE, AED)
+- `WebSite` with `SearchAction` (sitelinks search box)
+- `WebPage` (root)
+
+**Home page** (`src/app/page.tsx`):
+- `generateMetadata()` — dynamic title/description when `?category=slug` is present (reads category data from DB)
+- `CollectionPage` JSON-LD (`src/app/home-structured-data.ts`) — ItemList of categories with BreadcrumbList
+
+**Product detail pages** (`src/app/products/[id]/page.tsx`):
 - **Product schema** — with `AggregateOffer` for multi-variant pricing, promotion `priceValidUntil`, `additionalProperty` for tags/freeFrom, all images.
 - **BreadcrumbList** — Home → Category → Product.
 - Structured data builders in `src/app/products/[id]/structured-data.ts`.
+- **Back navigation** — `FROM_MAP` maps `?from=` param to back button href/label (e.g. `?from=favorites` → "Back to favorites", `?from=cart` → "Back to cart"). Default: "Back to products" → `/#products`.
+
+**Indexing** — private routes have `robots: { index: false }`: `(auth)/*`, `/cart`, `/checkout/*`, `/panel/*`. `robots.ts` disallows these paths for crawlers. Sitemap includes only `/` and `/products/*`.
 
 ## Error pages
 

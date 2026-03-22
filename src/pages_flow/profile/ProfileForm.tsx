@@ -51,7 +51,7 @@ export function ProfileForm({ defaultValues, onDone }: ProfileFormProps) {
   }, [state, onDone]);
 
   return (
-    <form key={state?.attempt ?? 0} action={action} className="flex flex-col gap-5">
+    <form action={action} className="flex flex-col gap-5">
       {/* Name row */}
       <div className="grid grid-cols-1 gap-4 min-[26.25rem]:grid-cols-2">
         <div>

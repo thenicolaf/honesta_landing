@@ -19,7 +19,7 @@ import { calculateDelivery } from "@/shared/utils/calculateDelivery";
 export interface CheckoutState {
   error?: string;
   fieldErrors?: CustomerErrors;
-  attempt?: number;
+  values?: Partial<CustomerInfo>;
 }
 
 export async function submitCheckout(
@@ -28,7 +28,6 @@ export async function submitCheckout(
   formData: FormData,
 ): Promise<CheckoutState | null> {
   const customer = Object.fromEntries(formData) as Partial<CustomerInfo>;
-  const attempt = (_prevState?.attempt ?? 0) + 1;
 
   const cookieStore = await cookies();
 
@@ -49,7 +48,7 @@ export async function submitCheckout(
 
   const fieldErrors = validateCustomer(customer);
   if (fieldErrors) {
-    return { fieldErrors, attempt };
+    return { fieldErrors, values: customer };
   }
 
   // 2. Calculate delivery fee server-side (authoritative)
@@ -61,7 +60,7 @@ export async function submitCheckout(
   if (setting && !setting.is_active) {
     return {
       error: `Delivery to ${emirate} is currently unavailable`,
-      attempt,
+      values: customer,
     };
   }
 
@@ -74,7 +73,7 @@ export async function submitCheckout(
   if (delivery.belowMinimum) {
     return {
       error: `Minimum order of AED ${delivery.minimumOrder} is required for ${emirate}`,
-      attempt,
+      values: customer,
     };
   }
 
@@ -86,7 +85,7 @@ export async function submitCheckout(
     user?.id,
   );
   if (orderError || !order) {
-    return { error: orderError ?? "Failed to create order", attempt };
+    return { error: orderError ?? "Failed to create order", values: customer };
   }
 
   // Notify admin
@@ -104,7 +103,7 @@ export async function submitCheckout(
     customer,
   );
   if (paymentError || !paymentUrl) {
-    return { error: paymentError ?? "Failed to create payment", attempt };
+    return { error: paymentError ?? "Failed to create payment", values: customer };
   }
 
   redirect(paymentUrl);

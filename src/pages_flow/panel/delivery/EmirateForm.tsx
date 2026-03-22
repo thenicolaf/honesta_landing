@@ -53,7 +53,7 @@ export function EmirateForm({ setting, onDone, onCancel }: EmirateFormProps) {
   }, [state, setting.emirate, onDone]);
 
   return (
-    <form key={state?.attempt ?? 0} action={dispatch}>
+    <form action={dispatch}>
       <div className="flex flex-col gap-3">
         <div>
           <FormLabel htmlFor={`fee_${setting.id}`}>

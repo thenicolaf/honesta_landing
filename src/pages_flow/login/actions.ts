@@ -18,7 +18,6 @@ export interface LoginState {
   error?: string;
   fieldErrors?: LoginErrors;
   values?: { email: string; password: string };
-  attempt?: number;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -45,13 +44,11 @@ export async function signIn(
   formData: FormData,
 ): Promise<LoginState> {
   const { email, password } = parseLoginValues(formData);
-  const attempt = (_prevState?.attempt ?? 0) + 1;
-
   const values = { email, password };
 
   const fieldErrors = validateLogin({ email, password });
   if (fieldErrors) {
-    return { fieldErrors, values, attempt };
+    return { fieldErrors, values };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -61,7 +58,7 @@ export async function signIn(
   });
 
   if (error) {
-    return { error: mapAuthError(error.message), values, attempt };
+    return { error: mapAuthError(error.message), values };
   }
 
   redirect(next.startsWith("/") ? next : "/");

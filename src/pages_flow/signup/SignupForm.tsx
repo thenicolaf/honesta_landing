@@ -35,7 +35,7 @@ export function SignupForm() {
   }, [state]);
 
   return (
-    <form key={state?.attempt ?? 0} action={action} noValidate className="flex flex-col gap-4">
+    <form action={action} noValidate className="flex flex-col gap-4">
       {/* Name row */}
       <div className="grid grid-cols-1 gap-4 min-[26.25rem]:grid-cols-2">
         <div>

@@ -96,7 +96,6 @@ function AddressDialogForm({
 
   return (
     <form
-      key={state?.attempt ?? 0}
       action={action}
       className="flex flex-col gap-4 max-h-[70vh] overflow-y-auto"
     >

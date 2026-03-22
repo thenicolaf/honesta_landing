@@ -43,7 +43,7 @@ export function PartnershipForm() {
   }
 
   return (
-    <form key={state?.attempt ?? 0} action={formAction} className="flex flex-col gap-4">
+    <form action={formAction} className="flex flex-col gap-4">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         {/* Left column: fields + message */}
         <div className="flex flex-col gap-4">

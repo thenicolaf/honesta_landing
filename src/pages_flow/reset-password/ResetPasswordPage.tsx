@@ -68,7 +68,7 @@ export function ResetPasswordPage({ email }: { email: string }) {
         and choose a new password.
       </p>
 
-      <form key={state?.attempt ?? 0} action={action} className="flex flex-col gap-4">
+      <form action={action} className="flex flex-col gap-4">
         <input type="hidden" name="otp" value={otpValue} />
 
         <div>

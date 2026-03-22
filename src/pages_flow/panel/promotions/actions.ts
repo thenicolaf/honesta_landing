@@ -8,6 +8,17 @@ import {
 } from "@/lib/promotionsDb";
 import { supabaseAdmin } from "@/lib/supabase.server";
 import { createNotification } from "@/lib/notificationsDb";
+import { getPromotionStatus } from "./types";
+
+interface PromotionValues {
+  name: string;
+  discount_type: string;
+  discount_value: string;
+  starts_at: string;
+  ends_at: string;
+  is_active: boolean;
+  product_ids_raw: string;
+}
 
 export interface PromotionState {
   success?: boolean;
@@ -19,8 +30,7 @@ export interface PromotionState {
     ends_at?: string;
     product_ids?: string;
   };
-  values?: Record<string, string>;
-  attempt?: number;
+  values?: PromotionValues;
 }
 
 function parseForm(formData: FormData) {
@@ -51,7 +61,11 @@ function validate(values: ReturnType<typeof parseForm>) {
   if (!values.starts_at) fieldErrors.starts_at = "Start date is required";
   if (!values.ends_at) fieldErrors.ends_at = "End date is required";
 
-  if (values.starts_at && values.ends_at && values.ends_at <= values.starts_at) {
+  if (
+    values.starts_at &&
+    values.ends_at &&
+    values.ends_at <= values.starts_at
+  ) {
     fieldErrors.ends_at = "End date must be after start date";
   }
 
@@ -77,9 +91,9 @@ export async function createPromotionAction(
   formData: FormData,
 ): Promise<PromotionState> {
   const values = parseForm(formData);
-  const attempt = (_prevState?.attempt ?? 0) + 1;
+
   const fieldErrors = validate(values);
-  if (fieldErrors) return { fieldErrors, values: values as unknown as Record<string, string>, attempt };
+  if (fieldErrors) return { fieldErrors, values };
 
   const productIds = parseProductIds(values.product_ids_raw);
 
@@ -95,9 +109,17 @@ export async function createPromotionAction(
     productIds,
   );
 
-  if (error) return { error, attempt };
+  if (error) return { error, values };
 
-  if (values.is_active) {
+  const startsAtIso = new Date(values.starts_at).toISOString();
+  const endsAtIso = new Date(values.ends_at).toISOString();
+  const newStatus = getPromotionStatus(
+    values.is_active,
+    startsAtIso,
+    endsAtIso,
+  );
+
+  if (newStatus === "active") {
     await createNotification({
       type: "new_promotion",
       title: "New promotion",
@@ -115,15 +137,14 @@ export async function updatePromotionAction(
   formData: FormData,
 ): Promise<PromotionState> {
   const values = parseForm(formData);
-  const attempt = (_prevState?.attempt ?? 0) + 1;
   const fieldErrors = validate(values);
-  if (fieldErrors) return { fieldErrors, values: values as unknown as Record<string, string>, attempt };
+  if (fieldErrors) return { fieldErrors, values };
 
   const productIds = parseProductIds(values.product_ids_raw);
 
   const { data: current } = await supabaseAdmin
     .from("promotions")
-    .select("is_active")
+    .select("is_active, starts_at, ends_at")
     .eq("id", id)
     .single();
 
@@ -140,9 +161,20 @@ export async function updatePromotionAction(
     productIds,
   );
 
-  if (error) return { error, attempt };
+  if (error) return { error, values };
 
-  if (values.is_active && !current?.is_active) {
+  const oldStatus = current
+    ? getPromotionStatus(current.is_active, current.starts_at, current.ends_at)
+    : null;
+  const newStartsAtIso = new Date(values.starts_at).toISOString();
+  const newEndsAtIso = new Date(values.ends_at).toISOString();
+  const newStatus = getPromotionStatus(
+    values.is_active,
+    newStartsAtIso,
+    newEndsAtIso,
+  );
+
+  if (newStatus === "active" && oldStatus !== "active") {
     await createNotification({
       type: "new_promotion",
       title: "New promotion",

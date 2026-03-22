@@ -19,7 +19,6 @@ export interface ResetPasswordState {
   error?: string;
   fieldErrors?: ResetPasswordErrors & { otp?: string };
   values?: { otp: string; password: string; confirmPassword: string };
-  attempt?: number;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -44,7 +43,7 @@ export async function resetPassword(
   formData: FormData,
 ): Promise<ResetPasswordState> {
   const { otp, password, confirmPassword } = parseResetValues(formData);
-  const attempt = (_prevState?.attempt ?? 0) + 1;
+  const values = { otp, password, confirmPassword };
 
   const fieldErrors: ResetPasswordState["fieldErrors"] = {};
 
@@ -57,10 +56,8 @@ export async function resetPassword(
     Object.assign(fieldErrors, passwordErrors);
   }
 
-  const values = { otp, password, confirmPassword };
-
   if (Object.keys(fieldErrors).length > 0) {
-    return { fieldErrors, values, attempt };
+    return { fieldErrors, values };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -76,7 +73,6 @@ export async function resetPassword(
     return {
       error: "Invalid or expired code. Please try again.",
       values,
-      attempt,
     };
   }
 
@@ -89,7 +85,6 @@ export async function resetPassword(
     return {
       error: "Failed to update password. Please try again.",
       values,
-      attempt,
     };
   }
 

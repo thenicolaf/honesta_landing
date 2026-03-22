@@ -19,7 +19,6 @@ export interface AddressState {
     address?: string;
   };
   values?: AddressValues;
-  attempt?: number;
 }
 
 interface AddressValues {
@@ -62,10 +61,9 @@ export async function createAddressAction(
   formData: FormData,
 ): Promise<AddressState> {
   const values = parseAddressValues(formData);
-  const attempt = (_prevState?.attempt ?? 0) + 1;
 
   if (!values.address) {
-    return { fieldErrors: { address: "Address is required." }, values, attempt };
+    return { fieldErrors: { address: "Address is required." }, values };
   }
 
   const { user } = await requireUser();
@@ -78,10 +76,10 @@ export async function createAddressAction(
   });
 
   if (error) {
-    return { error, values, attempt };
+    return { error, values };
   }
 
-  return { success: true, attempt };
+  return { success: true };
 }
 
 export async function updateAddressAction(
@@ -90,10 +88,9 @@ export async function updateAddressAction(
   formData: FormData,
 ): Promise<AddressState> {
   const values = parseAddressValues(formData);
-  const attempt = (_prevState?.attempt ?? 0) + 1;
 
   if (!values.address) {
-    return { fieldErrors: { address: "Address is required." }, values, attempt };
+    return { fieldErrors: { address: "Address is required." }, values };
   }
 
   const { user } = await requireUser();
@@ -105,10 +102,10 @@ export async function updateAddressAction(
   });
 
   if (error) {
-    return { error, values, attempt };
+    return { error, values };
   }
 
-  return { success: true, attempt };
+  return { success: true };
 }
 
 export async function deleteAddressAction(

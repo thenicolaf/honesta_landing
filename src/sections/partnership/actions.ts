@@ -13,19 +13,17 @@ export interface PartnershipState {
   error?: string;
   fieldErrors?: PartnershipErrors;
   values?: Partial<PartnershipInquiry>;
-  attempt?: number;
 }
 
 export async function submitPartnershipInquiry(
-  prevState: PartnershipState | null,
+  _prevState: PartnershipState | null,
   formData: FormData,
 ): Promise<PartnershipState | null> {
   const data = Object.fromEntries(formData) as Partial<PartnershipInquiry>;
-  const attempt = (prevState?.attempt ?? 0) + 1;
 
   const fieldErrors = validatePartnership(data);
   if (fieldErrors) {
-    return { fieldErrors, values: data, attempt };
+    return { fieldErrors, values: data };
   }
 
   const { error } = await supabaseAdmin.from("partnership_inquiries").insert({
@@ -47,7 +45,6 @@ export async function submitPartnershipInquiry(
       error:
         "Something went wrong. Please try again or message us on Instagram.",
       values: data,
-      attempt,
     };
   }
 

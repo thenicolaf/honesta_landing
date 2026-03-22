@@ -9,7 +9,7 @@ import { validateEmail } from "@/shared/utils/validateAuth";
 export interface ForgotPasswordState {
   error?: string;
   fieldErrors?: { email?: string };
-  attempt?: number;
+  values?: { email: string };
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -25,17 +25,16 @@ export async function requestPasswordReset(
   formData: FormData,
 ): Promise<ForgotPasswordState> {
   const email = parseEmail(formData);
-  const attempt = (_prevState?.attempt ?? 0) + 1;
 
   const emailError = validateEmail(email);
   if (emailError) {
-    return { fieldErrors: { email: emailError }, attempt };
+    return { fieldErrors: { email: emailError }, values: { email } };
   }
 
   const { error } = await supabase.auth.resetPasswordForEmail(email);
 
   if (error) {
-    return { error: "Something went wrong. Please try again.", attempt };
+    return { error: "Something went wrong. Please try again.", values: { email } };
   }
 
   redirect(`/reset-password?email=${encodeURIComponent(email)}`);

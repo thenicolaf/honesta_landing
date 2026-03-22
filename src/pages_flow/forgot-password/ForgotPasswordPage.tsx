@@ -40,7 +40,7 @@ export function ForgotPasswordPage() {
         Enter your email address and we&apos;ll send you a code to reset your password.
       </p>
 
-      <form key={state?.attempt ?? 0} action={action} noValidate className="flex flex-col gap-4">
+      <form action={action} noValidate className="flex flex-col gap-4">
         <div>
           <FormLabel htmlFor="email">Email</FormLabel>
           <FormInput

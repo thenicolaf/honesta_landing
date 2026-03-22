@@ -53,7 +53,7 @@ export function ChangePasswordForm({ onDone }: ChangePasswordFormProps) {
   }, [state, onDone]);
 
   return (
-    <form key={state?.attempt ?? 0} ref={formRef} action={action} className="flex flex-col gap-5">
+    <form ref={formRef} action={action} className="flex flex-col gap-5">
       <div>
         <FormLabel htmlFor="currentPassword">Current Password</FormLabel>
         <FormPasswordInput
