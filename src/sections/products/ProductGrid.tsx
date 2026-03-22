@@ -13,6 +13,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/shared/ui";
+import { IconLeaf } from "@/shared/icons";
 import { useFilterBar } from "@/providers/FilterProvider";
 import { ProductItem } from "./ProductItem";
 import type { DbProduct, DbProductGridProps, Product } from "./types";
@@ -53,14 +54,7 @@ function ProductEmptyState() {
       transition={{ duration: 0.4, ease: "easeOut" }}
     >
       <EmptyState
-        icon={
-          <p
-            className="font-display font-semibold text-heading/15 leading-none select-none"
-            style={{ fontSize: "clamp(4rem, 10vw, 7rem)" }}
-          >
-            ∅
-          </p>
-        }
+        icon={<IconLeaf className="w-12 h-12 text-earth/15" />}
         label="Coming soon"
         description="We're working on this collection. Check back soon."
         className="py-0"

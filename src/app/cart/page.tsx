@@ -5,6 +5,7 @@ import { getDeliverySettings } from "@/lib/deliveryDb";
 export const metadata: Metadata = {
   title: "Cart",
   description: "Review your selected natural dried fruits before checkout.",
+  robots: { index: false, follow: false },
 };
 
 export default async function CartRoute() {

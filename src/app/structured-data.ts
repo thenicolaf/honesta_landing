@@ -5,13 +5,23 @@ export const structuredData = {
   "@context": "https://schema.org",
   "@graph": [
     {
-      "@type": "Organization",
+      "@type": ["Organization", "LocalBusiness"],
       "@id": `${siteUrl}/#organization`,
       name: "HONESTA",
       url: siteUrl,
       description:
         "Handcrafted natural dried fruits. No sugar, no additives. Small batch production.",
       sameAs: [instagramUrl],
+      address: {
+        "@type": "PostalAddress",
+        addressCountry: "AE",
+        addressRegion: "Dubai",
+      },
+      areaServed: {
+        "@type": "Country",
+        name: "United Arab Emirates",
+      },
+      currenciesAccepted: "AED",
     },
     {
       "@type": "WebSite",
@@ -19,6 +29,14 @@ export const structuredData = {
       url: siteUrl,
       name: "HONESTA",
       publisher: { "@id": `${siteUrl}/#organization` },
+      potentialAction: {
+        "@type": "SearchAction",
+        target: {
+          "@type": "EntryPoint",
+          urlTemplate: `${siteUrl}/?category={search_term_string}#products`,
+        },
+        "query-input": "required name=search_term_string",
+      },
     },
     {
       "@type": "WebPage",
