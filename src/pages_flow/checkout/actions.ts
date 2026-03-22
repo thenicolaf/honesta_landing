@@ -101,6 +101,7 @@ export async function submitCheckout(
     order.id,
     order.total,
     customer,
+    emirate,
   );
   if (paymentError || !paymentUrl) {
     return { error: paymentError ?? "Failed to create payment", values: customer };

@@ -29,6 +29,7 @@ interface CreateOrderParams {
   firstName?: string;
   lastName?: string;
   address1?: string;
+  city?: string;
 }
 
 export async function createOrder(params: CreateOrderParams) {
@@ -58,8 +59,8 @@ export async function createOrder(params: CreateOrderParams) {
       firstName: params.firstName ?? "",
       lastName: params.lastName ?? "",
       address1: params.address1 ?? "",
-      city: "Dubai",
-      stateProvince: "Dubai",
+      city: params.city || "Dubai",
+      stateProvince: params.city || "Dubai",
       countryCode: "AE",
     };
   }

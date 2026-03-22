@@ -6,6 +6,7 @@ export async function createPaymentForOrder(
   orderId: string,
   totalInAed: number,
   customer: Partial<CustomerInfo>,
+  emirate?: string,
 ): Promise<{ paymentUrl: string | null; error: string | null }> {
   try {
     const ngeniusOrder = await createNGeniusOrder({
@@ -15,6 +16,7 @@ export async function createPaymentForOrder(
       firstName: customer.firstName,
       lastName: customer.lastName,
       address1: customer.address,
+      city: emirate,
     });
 
     await supabaseAdmin
