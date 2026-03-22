@@ -68,6 +68,8 @@ export interface CartItem {
   variantId: string;
   /** products.id — for UI links and promotion lookup */
   productId: string;
+  /** URL-safe slug for product detail link */
+  slug?: string;
   /** Snapshot of Product.title */
   name: string;
   /** Variant price (discounted if promotion active) */

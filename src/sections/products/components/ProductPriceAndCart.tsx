@@ -10,7 +10,7 @@ import type { Product, ProductVariant } from "../types";
 interface ProductPriceAndCartProps {
   product: Pick<
     Product,
-    "id" | "title" | "price" | "image_url" | "in_stock" | "promotion"
+    "id" | "slug" | "title" | "price" | "image_url" | "in_stock" | "promotion"
   >;
   selectedVariant?: ProductVariant;
 }
@@ -91,6 +91,7 @@ export function ProductPriceAndCart({ product, selectedVariant }: ProductPriceAn
     addToCart({
       variantId: selectedVariant.id,
       productId: product.id!,
+      slug: product.slug,
       name: product.title,
       price: effectivePrice!,
       originalPrice: variantPromotion ? variantPrice! : undefined,

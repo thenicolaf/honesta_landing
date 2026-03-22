@@ -20,6 +20,7 @@ import {
 
 interface ProductItemProps {
   product: Product;
+  from?: string;
 }
 
 function stop(e: React.MouseEvent) {
@@ -27,7 +28,7 @@ function stop(e: React.MouseEvent) {
   e.preventDefault();
 }
 
-export function ProductItem({ product }: ProductItemProps) {
+export function ProductItem({ product, from }: ProductItemProps) {
   const {
     title,
     category,
@@ -99,7 +100,7 @@ export function ProductItem({ product }: ProductItemProps) {
 
   if (product.slug) {
     return (
-      <Link href={`/products/${product.slug}`} className="block h-full">
+      <Link href={`/products/${product.slug}${from ? `?from=${from}` : ""}`} className="block h-full">
         {card}
       </Link>
     );

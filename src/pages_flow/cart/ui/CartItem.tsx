@@ -1,8 +1,14 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Minus, Plus } from "lucide-react";
 import { Button, Badge, Card, toastInfo } from "@/shared/ui";
 import { formatDateTime } from "@/shared/ui/Table";
 import type { CartItem as CartItemType } from "@/sections/products/types";
+
+function stop(e: React.MouseEvent) {
+  e.stopPropagation();
+  e.preventDefault();
+}
 
 function WeightBadge({ weight_g }: { weight_g?: number }) {
   if (!weight_g) return null;
@@ -28,7 +34,8 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
         as="button"
         variant="outline"
         size="icon"
-        onClick={() => {
+        onClick={(e) => {
+          stop(e);
           if (item.quantity === 1) {
             onRemove(item.variantId);
             toastInfo("Removed from cart");
@@ -47,7 +54,10 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
         as="button"
         variant="primary"
         size="icon"
-        onClick={() => onUpdateQuantity(item.variantId, item.quantity + 1)}
+        onClick={(e) => {
+          stop(e);
+          onUpdateQuantity(item.variantId, item.quantity + 1);
+        }}
         aria-label="Increase quantity"
       >
         <Plus className="w-3.5 h-3.5" />
@@ -68,13 +78,19 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
     </div>
   );
 
-  return (
+  const card = (
     <Card variant="default" padding="sm">
-      {/* Desktop: single row (unchanged) */}
+      {/* Desktop: single row */}
       <div className="hidden sm:flex items-center gap-4">
         {item.image_url && (
           <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-sand">
-            <Image src={item.image_url} alt={item.name} fill className="object-cover" sizes="64px" />
+            <Image
+              src={item.image_url}
+              alt={item.name}
+              fill
+              className="object-cover"
+              sizes="64px"
+            />
           </div>
         )}
         <div className="flex-1 min-w-0">
@@ -94,7 +110,12 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
                   AED {item.originalPrice!.toFixed(2)}
                 </span>
                 <Badge variant="counter" size="pill">
-                  -{Math.round(((item.originalPrice! - item.price) / item.originalPrice!) * 100)}%
+                  -
+                  {Math.round(
+                    ((item.originalPrice! - item.price) / item.originalPrice!) *
+                      100,
+                  )}
+                  %
                 </Badge>
               </div>
               {item.promotionEndsAt && (
@@ -118,7 +139,13 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
         <div className="flex items-start gap-3">
           {item.image_url && (
             <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-sand">
-              <Image src={item.image_url} alt={item.name} fill className="object-cover" sizes="56px" />
+              <Image
+                src={item.image_url}
+                alt={item.name}
+                fill
+                className="object-cover"
+                sizes="56px"
+              />
             </div>
           )}
           <div className="flex-1 min-w-0">
@@ -138,7 +165,13 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
                     AED {item.originalPrice!.toFixed(2)}
                   </span>
                   <Badge variant="counter" size="pill">
-                    -{Math.round(((item.originalPrice! - item.price) / item.originalPrice!) * 100)}%
+                    -
+                    {Math.round(
+                      ((item.originalPrice! - item.price) /
+                        item.originalPrice!) *
+                        100,
+                    )}
+                    %
                   </Badge>
                 </div>
                 {item.promotionEndsAt && (
@@ -161,4 +194,14 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
       </div>
     </Card>
   );
+
+  if (item.slug) {
+    return (
+      <Link href={`/products/${item.slug}?from=cart`} className="block">
+        {card}
+      </Link>
+    );
+  }
+
+  return card;
 }

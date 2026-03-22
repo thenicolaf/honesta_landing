@@ -22,9 +22,16 @@ import {
 
 interface ProductDetailPageProps {
   product: Product;
+  backHref?: string;
+  backLabel?: string;
 }
 
-export function ProductDetailPage({ product }: ProductDetailPageProps) {
+export function ProductDetailPage({
+  product,
+  backHref = "/#products",
+  backLabel = "Back to products",
+}: ProductDetailPageProps) {
+
   const {
     title,
     category,
@@ -51,7 +58,7 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
     <main className="grow min-h-160 bg-cream pt-24 pb-16">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         {/* Back link */}
-        <HashLink href="/#products">
+        <HashLink href={backHref}>
           <Button
             as="button"
             type="button"
@@ -60,7 +67,7 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
             startIcon={<ArrowLeft size={14} />}
             className="mb-5"
           >
-            Back to products
+            {backLabel}
           </Button>
         </HashLink>
 

@@ -16,6 +16,7 @@ type CartDbRow = {
     product_id: string;
     products: {
       title: string;
+      slug: string;
       image_url: string | null;
       promotion_products: { promotions: PromotionRow | PromotionRow[] }[];
     };
@@ -31,7 +32,7 @@ export async function getCartFromDb(
       `variant_id, quantity,
        product_variants(
          id, weight_g, price, product_id,
-         products(title, image_url,
+         products(title, slug, image_url,
            promotion_products(promotions(discount_type, discount_value, starts_at, ends_at, is_active))
          )
        )`,
@@ -56,6 +57,7 @@ export async function getCartFromDb(
     return {
       variantId: v.id,
       productId: v.product_id,
+      slug: product.slug,
       name: product.title,
       price,
       originalPrice: activePromo ? originalPrice : undefined,

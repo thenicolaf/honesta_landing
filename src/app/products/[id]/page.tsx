@@ -7,6 +7,7 @@ import { buildProductJsonLd, buildBreadcrumbJsonLd } from "./structured-data";
 
 interface Props {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -30,8 +31,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function Page({ params }: Props) {
-  const { id } = await params;
+const FROM_MAP: Record<string, { href: string; label: string }> = {
+  favorites: { href: "/panel/favorites", label: "Back to favorites" },
+  cart: { href: "/cart", label: "Back to cart" },
+};
+
+export default async function Page({ params, searchParams }: Props) {
+  const [{ id }, { from }] = await Promise.all([params, searchParams]);
   const dbProduct = await getProductBySlug(id);
   if (!dbProduct) notFound();
 
@@ -51,7 +57,10 @@ export default async function Page({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <ProductDetailPage product={product} />
+      <ProductDetailPage
+        product={product}
+        {...(from && FROM_MAP[from] ? { backHref: FROM_MAP[from].href, backLabel: FROM_MAP[from].label } : {})}
+      />
     </>
   );
 }
