@@ -12,7 +12,9 @@ Do not read, display, or reference the contents of `.env.local`, `.env.productio
 ```bash
 pnpm dev       # start dev server (localhost:3000)
 pnpm build     # production build
+pnpm start     # start production server (port 3000)
 pnpm lint      # ESLint check
+pnpm server    # expose localhost:3000 via ngrok (for webhook testing)
 ```
 
 No test suite configured yet.
@@ -22,37 +24,250 @@ No test suite configured yet.
 - **Next.js 16** (App Router) + **React 19** + **TypeScript**
 - **Tailwind CSS v4** — config is CSS-only via `@theme` in `globals.css`, no `tailwind.config.ts`
 - **React Compiler** enabled (`reactCompiler: true` in `next.config.ts`) — no manual `useMemo`/`useCallback` needed
+- **Supabase** (`@supabase/supabase-js` + `@supabase/ssr`) — orders, products, and auth
+- **N-Genius** — payment gateway (UAE, amounts in fils: 1 AED = 100 fils)
+- **motion/react** (not `framer-motion`) — animations
+- **lucide-react** — supplemental icon library (prefer custom icons in `src/shared/icons/` first)
+- **react-toastify** — toast notifications (wrapped in `src/shared/ui/Toast.tsx`, configured in root layout)
+- **@react-google-maps/api** — Google Maps for address selection in checkout (`AddressWithMap` component)
+- **yet-another-react-lightbox** — fullscreen image viewer with zoom/thumbnails (wrapped in `src/shared/ui/Lightbox.tsx`)
+- **@dnd-kit/react** — drag-and-drop for sortable image thumbnails in upload zones
+- **react-photo-album** — rows-based image gallery (wrapped in `src/shared/ui/Gallery.tsx`)
 - **pnpm** as package manager
 
 ## Path alias
 
-`@/*` maps to `src/*` — use `@/shared/ui`, `@/components`, etc.
+`@/*` maps to `src/*` — use `@/shared/ui`, `@/lib/supabase`, `@/providers`, etc.
 
 ## Architecture
 
 ```
 src/
-├── app/                    # Next.js App Router
-│   ├── layout.tsx          # fonts + SEO metadata
-│   ├── page.tsx            # landing page (assembles all sections)
-│   ├── globals.css         # Tailwind @theme tokens (brand colors, fonts)
-│   ├── metadata.ts         # shared Next.js Metadata object
-│   ├── structured-data.ts  # JSON-LD schema
-│   ├── sitemap.ts          # dynamic sitemap
-│   └── robots.ts           # robots.txt rules
+├── app/                        # Next.js App Router routes
+│   ├── layout.tsx              # Root layout — wraps with CartProvider + FavoritesProvider + NotificationsProvider
+│   ├── page.tsx                # Landing page (Hero, Products, Categories)
+│   ├── cart/page.tsx           # Shopping cart route
+│   ├── checkout/
+│   │   ├── page.tsx            # Checkout form (reads customer cookie)
+│   │   ├── cancel/page.tsx     # Payment cancelled fallback
+│   │   └── result/page.tsx     # Payment result (polls N-Genius, updates DB)
+│   ├── (auth)/                 # Auth route group — shared AuthLayout (centered card)
+│   │   ├── login/page.tsx      # Email/password + Google OAuth login
+│   │   ├── signup/page.tsx     # Registration (name, email, password, confirm)
+│   │   ├── verify-email/       # OTP verification after signup
+│   │   ├── forgot-password/    # Request password reset email
+│   │   └── reset-password/     # OTP + new password form
+│   ├── auth/callback/route.ts  # OAuth PKCE code exchange → session cookie → redirect
+│   ├── panel/                  # Authenticated panel segment (/panel/*) — layout adds AdminSidebar
+│   │   ├── layout.tsx          # Reads user via createSupabaseServerClient(), passes email to sidebar
+│   │   ├── page.tsx            # Admin dashboard with statistics (requires admin role)
+│   │   ├── profile/page.tsx    # /panel/profile
+│   │   ├── favorites/page.tsx  # /panel/favorites
+│   │   ├── orders/page.tsx     # /panel/orders
+│   │   ├── all-orders/page.tsx # /panel/all-orders (admin only)
+│   │   ├── partnerships/       # /panel/partnerships (admin only)
+│   │   ├── categories/         # /panel/categories CRUD (admin only)
+│   │   ├── products/           # /panel/products CRUD (admin only)
+│   │   └── promotions/         # /panel/promotions CRUD (admin only)
+│   ├── api/
+│   │   ├── payment/webhook/    # N-Genius webhook → updates order status in Supabase
+│   │   ├── notifications/      # GET/PATCH notifications for admin bell
+│   │   ├── storage/            # upload/delete images to Supabase Storage
+│   │   └── options/            # Form options (categories, tags, etc.)
+│   └── globals.css, metadata.ts, sitemap.ts, robots.ts, structured-data.ts
+│
+├── lib/                        # Backend / data-access layer (server-only)
+│   ├── supabase.ts             # `createSupabaseBrowserClient()` — browser client for Client Components
+│   ├── supabase.server.ts      # `supabase`, `supabaseAdmin`, `createSupabaseServerClient()`
+│   ├── ngenius.ts              # N-Genius payment API (auth, create order, poll status)
+│   ├── payments.ts             # Orchestrates: create payment → update DB with ngenius_ref
+│   ├── orders.ts               # Supabase order creation (orders + order_items tables)
+│   ├── favoritesDb.ts          # Favorites CRUD
+│   ├── cart.ts                 # localStorage cart helpers
+│   ├── cartDb.ts               # Database-backed cart (cart_items table, per-user sync)
+│   ├── productsDb.ts           # Admin product queries + form options
+│   ├── categoriesDb.ts         # Category data queries
+│   ├── promotionsDb.ts         # Promotions CRUD
+│   ├── notificationsDb.ts      # Notifications CRUD
+│   ├── storage.ts              # Image upload/delete to Supabase Storage
+│   └── syncCartPrices.ts       # Syncs cart prices with active promotions
+│
+├── proxy.ts                    # Next.js middleware helper — refreshes auth session + protects private routes
+│
+├── pages_flow/                 # Page-level component trees (co-located with their routes)
+│   ├── cart/                   # CartPage + CartGrid + CartItem + CartSummary
+│   ├── checkout/               # CheckoutPage + CheckoutForm + OrderSummary + SubmitButton
+│   │   └── actions.ts          # Server action: validate → save to DB → create payment → redirect
+│   ├── home/                   # CategoriesSection, ProductsSection
+│   ├── login/                  # LoginPage + LoginForm + GoogleSignInButton
+│   ├── signup/                 # SignupPage + SignupForm
+│   ├── verify-email/           # VerifyEmailPage (OTP input)
+│   ├── forgot-password/        # ForgotPasswordPage
+│   ├── reset-password/         # ResetPasswordPage (OTP + new password)
+│   ├── favorites/              # FavoritesPage + FavoritesGrid
+│   ├── profile/                # ProfilePage + ProfileForm + ChangePasswordForm + SignOutButton
+│   │   └── actions.ts          # updateProfile(), changePassword(), signOut()
+│   ├── orders/                 # OrdersPage + OrderCards (user order history)
+│   ├── panel/
+│   │   ├── dashboard/          # DashboardPage + types (admin statistics)
+│   │   ├── orders/             # AllOrdersPage + AdminOrderCards + filters + useOrdersTable
+│   │   ├── partnerships/       # PartnershipsPage + InquiryCards + filters + useInquiriesTable
+│   │   ├── categories/         # CategoryForm + actions
+│   │   ├── products/           # ProductForm + actions
+│   │   └── promotions/         # PromotionsPage + PromotionForm + actions
+│   └── PageLoader.tsx          # Thin wrapper around <Loader /> for route loading.tsx files
+│
+├── providers/                  # React context providers + hooks
+│   ├── CartProvider.tsx        # useSyncExternalStore-based cart state (hydration-safe)
+│   ├── FavoritesProvider.tsx   # useSyncExternalStore-based favorites state + useOptimistic
+│   ├── NotificationsProvider.tsx # Supabase Realtime subscription for notifications (all roles)
+│   ├── CategoryFilterProvider.tsx
+│   ├── FilterProvider.tsx      # Generic filter context — useFilterBar(key) hook
+│   └── SearchParamsFilterProvider.tsx  # Syncs FilterProvider state to URL search params
+│
+├── sections/                   # Landing-page section components
+│   ├── Navbar.tsx, Hero.tsx, PhilosophyBlock.tsx, PartnershipCTA.tsx, TrustBadges.tsx, Footer.tsx
+│   ├── partnership/            # actions.ts — submitPartnershipInquiry server action → partnership_inquiries table
+│   ├── categories/             # CategoryCard, CategoryGrid, consts, types
+│   └── products/               # ProductGrid, ProductItem, consts, mapDbProducts
+│       └── types/              # Product & CartItem types + Supabase db-types
+│
 └── shared/
-    ├── ui/                 # reusable primitives (Button, Badge, Card, etc.)
-    ├── sections/           # page-level section components (Navbar, Hero, etc.)
-    │   └── products/       # product sub-module: types.ts, consts.ts, ProductGrid, ProductItem
-    ├── providers/          # React context providers + hooks
-    ├── icons/              # SVG icon components + index.ts barrel
-    ├── types/              # shared TypeScript types (Category enum, etc.)
-    └── utils/cn.ts         # clsx + tailwind-merge
+    ├── consts.ts               # CUSTOMER_COOKIE_KEY, DELIVERY_FEE, COOKIE_CONSENT_KEY
+    ├── ui/                     # Reusable primitives (Button, Badge, Card, Form, Collapsible, etc.)
+    ├── icons/                  # SVG icon components + index.ts barrel
+    ├── types/                  # Categories enum, CustomerInfo, OrderStatus, ProfileInfo, UserRole
+    └── utils/                  # cn.ts, validateCustomer.ts, validatePartnership.ts, validateProfile.ts, validateAuth.ts, validatePhone.ts, calculateDiscount.ts
 ```
 
-**Rule:** generic primitives → `src/shared/ui/`, page sections → `src/shared/sections/`, SVG icons → `src/shared/icons/`, React context providers → `src/shared/providers/`.
+**Rule:** backend/data-access → `src/lib/`, page-level component trees → `src/pages_flow/`, landing sections → `src/sections/`, generic primitives → `src/shared/ui/`, SVG icons → `src/shared/icons/`, React context providers → `src/providers/`.
 
-**Page assembly** (`page.tsx`): `CategoryFilterProvider` wraps `CategoryCards` + `ProductGrid` so they share a single active-category state.
+## Routes
+
+| Route | Purpose |
+|-------|---------|
+| `/` | Landing page |
+| `/cart` | Shopping cart |
+| `/checkout` | Checkout form (customer info + order summary) |
+| `/checkout/result?ref={orderRef}` | Payment result — polls N-Genius, shows success/failure |
+| `/checkout/cancel` | Payment cancelled screen |
+| `POST /api/payment/webhook` | N-Genius webhook — updates `orders.status` in Supabase |
+| `GET/PATCH /api/notifications` | Notification endpoints (any authenticated user) |
+| `/login` | Email/password + Google OAuth login |
+| `/signup` | Registration (name, email, password) |
+| `/verify-email?email={email}` | OTP verification after signup |
+| `/forgot-password` | Request password reset email |
+| `/reset-password?email={email}` | OTP + new password form |
+| `/auth/callback` | OAuth PKCE code exchange → session cookie → redirect |
+| `/panel` | Admin dashboard with statistics (admin only) |
+| `/panel/profile` | User profile + change password |
+| `/panel/favorites` | Saved favourite products |
+| `/panel/orders` | Order history |
+| `/panel/all-orders` | All orders management (admin only) |
+| `/panel/partnerships` | Partnership inquiries (admin only) |
+| `/panel/categories` | Category management (admin only) |
+| `/panel/categories/create` | Create new category (admin only) |
+| `/panel/categories/[id]/edit` | Edit category (admin only) |
+| `/panel/products` | Product management (admin only) |
+| `/panel/products/create` | Create new product (admin only) |
+| `/panel/products/[id]/details` | Product detail view (admin only) |
+| `/panel/products/[id]/edit` | Edit product (admin only) |
+| `/panel/promotions` | Promotion management (admin only) |
+| `/panel/promotions/create` | Create new promotion (admin only) |
+| `/panel/promotions/[id]/edit` | Edit promotion (admin only) |
+
+## Panel Section (`panel` route segment)
+
+All panel routes live under `/panel` and share an authenticated layout:
+- `AdminLayout` — server component, reads user via `createSupabaseServerClient()`, passes `email` to `AdminSidebar`
+- `AdminSidebar` — responsive: horizontal on mobile, sticky vertical on desktop; contains `AdminNav` + sign-out button
+- `AdminNav` — client component with route-aware active underline
+- `AdminPageHeader` — reusable header with "My Account" label + dynamic `title` prop
+
+**Protected routes:** `src/proxy.ts` guards all `/panel/*` routes — unauthenticated users are redirected to `/login?next={pathname}`. User routes (`/panel/profile`, `/panel/favorites`, `/panel/orders`) are whitelisted for any authenticated user; all other `/panel/*` routes require `role=admin`.
+
+## Favorites
+
+- `FavoritesProvider` (`src/providers/FavoritesProvider.tsx`) — same `useSyncExternalStore` + listener pattern as `CartProvider`; uses `useOptimistic` for instant toggle feedback
+- `useFavorites()` exposes `toggleFavorite(id)`, `isFavorite(id)`, `isHydrated`
+- DB layer: `src/lib/favoritesDb.ts` — `getFavoritesFromDb()`, `addFavoriteToDb()`, `removeFavoriteFromDb()`
+- DB table: `user_favorites` (user_id, product_id)
+
+## Loading pattern
+
+Every route segment has a `loading.tsx` that renders:
+```tsx
+<main className="grow"><PageLoader /></main>
+```
+`PageLoader` lives in `src/pages_flow/PageLoader.tsx` and is re-exported from `@/shared/ui`.
+
+## E-commerce & Payment Flow
+
+**Checkout server action** (`src/pages_flow/checkout/actions.ts`):
+1. Validates `CustomerInfo` (phone must match `^\+971[0-9]{9}$`, UAE format)
+2. Saves customer to `CUSTOMER_COOKIE_KEY` cookie (30 days) for form repopulation
+3. Creates order in Supabase (`orders` + `order_items` with variant_id + price/name/weight_g snapshots)
+4. Calls N-Genius to create a payment, gets back payment URL
+5. Updates order with `ngenius_ref`, then `redirect()` to N-Genius hosted page
+
+**Result page** (`src/app/checkout/result/page.tsx`):
+- Server component — polls N-Genius directly for final status
+- Updates `orders.status` → `PAID` or `FAILED`
+- Renders `<ClearCartOnSuccess>` (client component) which clears localStorage cart on success
+
+**Webhook** (`src/app/api/payment/webhook/route.ts`):
+- Receives N-Genius events; maps states (PURCHASED/CAPTURED → PAID, FAILED/REVERSED → FAILED/CANCELLED)
+- Validates via `NGENIUS_WEBHOOK_SECRET` header
+
+## Cart System
+
+- **Identity:** Cart items are keyed by `variantId` (product_variants.id), not product_id. Same product with different variants = separate cart entries.
+- **Storage:** localStorage under key `"honesta_cart"`, DB table `cart_items` stores only `(user_id, variant_id, quantity)` — prices computed via join
+- **Provider:** `CartProvider` uses `useSyncExternalStore` — no Zustand/Redux
+- **Hydration:** `isHydrated` flag prevents SSR/client mismatch; server always renders empty cart
+- **Hook:** `useCart()` exposes `items`, `itemCount`, `total`, `addToCart(item)`, `removeFromCart(variantId)`, `updateItemQuantity(variantId, qty)`, `clearCart`, `isHydrated`
+- **CartItem type:** `{ variantId, productId, slug?, name, price, originalPrice?, quantity, image_url?, weight_g }`
+- **Price sync:** `syncCartPrices` queries products with variants + promotions, recalculates prices. `originalPrice` is computed from promotions on the fly, never stored in DB.
+- **DB cart (`cartDb.ts`):** `getCartFromDb` does a join: `cart_items → product_variants → products` (with promotions) to build full CartItem objects. `upsertItemInDb` stores only `(user_id, variant_id, quantity)`.
+
+## Auth
+
+Two auth methods: **email/password** and **Google OAuth**.
+
+**Email/password flow:** `/signup` → email + password + confirm → Supabase sends OTP email → `/verify-email` → OTP verified → session created → redirect to `/`.
+
+**Google OAuth flow:** `/login` → `GoogleSignInButton` calls `supabase.auth.signInWithOAuth({ provider: "google" })` → Google redirects to `/auth/callback?code=…` → `createSupabaseServerClient().auth.exchangeCodeForSession(code)` sets a cookie → redirect to `/` (or `next` param). This is a **full page reload** (NextResponse.redirect).
+
+**Email/password login:** `/login` → `LoginForm` submits server action → `signInWithPassword()` → `redirect()`. This is a **client-side navigation** (server action redirect), so React state in layouts persists.
+
+**Password reset flow:** `/forgot-password` → enter email → Supabase sends recovery OTP → `/reset-password?email=…` → enter OTP + new password → `verifyOtp({ type: "recovery" })` + `updateUser({ password })` → redirect.
+
+**Important:** When the `SignOutButton` dialog triggers `signOut()` (server action with redirect), it must call `close()` first to reset the dialog's controlled `open` state — otherwise the stale `true` persists through client-side navigation and reopens on next login.
+
+Session refresh: `src/proxy.ts` exports a middleware helper (`proxy()`) that must be called from `middleware.ts`. It creates an `@supabase/ssr` server client and calls `auth.getUser()` on every request to keep the session cookie fresh.
+
+**Route guards** in `src/proxy.ts`:
+- `/panel/*` → unauthenticated users redirected to `/login?next={pathname}`
+- `/panel/*` (except `/profile`, `/favorites`, `/orders`) → require `role=admin`
+- Guest-only routes (`/login`, `/signup`, `/verify-email`, `/forgot-password`, `/reset-password`) → authenticated users redirected away
+
+**Client selection guide:**
+| Situation | Use |
+|-----------|-----|
+| Server Action / API route needing auth identity | `createSupabaseServerClient()` from `@/lib/supabase.server` |
+| Server Action / API route, no auth needed | `supabase` from `@/lib/supabase.server` |
+| Bypassing RLS (admin ops) | `supabaseAdmin` from `@/lib/supabase.server` |
+
+## Supabase
+
+Two files, three client instances:
+- `src/lib/supabase.ts` — `createSupabaseBrowserClient()` — browser client for Client Components
+- `src/lib/supabase.server.ts` — three server-side exports:
+  - `supabase` — static anon client, subject to RLS (non-auth server queries)
+  - `supabaseAdmin` — static service-role client, bypasses RLS (use only in server actions, API routes, and `lib/`)
+  - `createSupabaseServerClient()` — async, reads cookies via `@supabase/ssr`; use whenever you need the current user's session
+
+**DB tables:** `orders` (status, is_fulfilled, subtotal, delivery_fee, total, customer fields, ngenius_ref), `order_items` (order_id, variant_id, name, price, weight_g, quantity — snapshots at order time), `products` (image_url, images JSONB `[]`, in_stock, badge, note, nutrition JSONB, status — **no price/weight_g columns**, these live in `product_variants`), `product_variants` (product_id, weight_g, price — one-to-many with products), `categories` (name, slug, audience, tagline, description, image_url, badge, sort_order), `benefits` (id, name, description — unique on name+description), `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, role `user_role`, gender, birthday, allow_notifications), `cart_items` (user_id, variant_id, quantity — minimal, prices via join), `notifications` (type, title, message, related_id, user_id, audience `user_role` — nullable, NULL = all roles), `notification_reads` (notification_id, user_id, read_at — tracks per-user read status), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id).
 
 ## Design system
 
@@ -87,27 +302,243 @@ Grain texture: add class `noise` + `relative` on a section — the `.noise::afte
 - Component signature: `function Icon{Name}(props: React.ComponentProps<"svg">)` — spread `{...props}` on the `<svg>` so callers can pass `className`, `aria-hidden`, etc.
 - Never inline `<svg>` markup directly in section components. Always import from `@/shared/icons`.
 
+## UI component rule
+
+**Always use components from `@/shared/ui` instead of raw HTML elements.** Never use `<button>`, `<a>`, `<input>`, `<select>`, `<textarea>` directly — use `Button`, `FormInput`, `FormSelect`, `FormTextarea`, etc. This ensures consistent styling across the entire site.
+
 ## Shared UI components
 
 All use `class-variance-authority` (cva) for variants + `cn()` for className merging.
 
 Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React context internally; sub-components access it via a `use*` hook. Follow this same pattern when adding new compound components.
 
-- **`Button`** — defaults to `<a>`, pass `as="button"` for `<button>`. Variants: `primary | secondary | ghost`. Sizes: `sm | md | lg`.
-- **`Badge`** — inline label/tag. Variants: `natural` (moss green) | `warm` (sand) | `outline`.
+- **`Button`** — defaults to `<a>`, pass `as="button"` for `<button>`. Internal links (starting with `/`, no `#`) automatically use `next/link` `Link` for client-side navigation. Hash links fall back to `<a>`. Supports `ref` prop (React 19 ref-as-prop). Variants: `primary | secondary | outline | text`. Colors: `primary | error | warning | default`. Sizes: `icon | inline | sm | md | lg`. `buttonVariants` is also exported for applying Button styles to non-Button elements (e.g. `HashLink`).
+- **`Badge`** — inline label/tag. Variants: `natural` (moss green) | `warm` (sand) | `outline`. Sizes: `xs | sm | md`.
 - **`Card`** — wrapper with 16px radius. Variants: `default` (white-warm) | `sand` | `outline` | `dark` (earth bg).
 - **`TagToolbar` / `TagToolbarItem`** — single-select pill filter bar (`role="radiogroup"`). Controlled or uncontrolled via `value`/`onValueChange`/`defaultValue`. Empty string `""` means "All".
-- **`Collapsible` / `CollapsibleTrigger` / `CollapsibleChevron` / `CollapsibleContent`** — animated accordion. `CollapsibleContent` uses `motion/react` `AnimatePresence` for height transition.
+- **`Collapsible` / `CollapsibleTrigger` / `CollapsibleChevron` / `CollapsibleContent`** — animated accordion using `motion/react` `AnimatePresence`.
+- **`Select` / `SelectTrigger` / `SelectValue` / `SelectContent` / `SelectItem` / `SelectGroup` / `SelectSeparator`** — custom dropdown, context-based, supports controlled/uncontrolled, `clearable` prop, auto up/down direction.
+- **`FormTileRadio` / `FormTileRadioItem`** — single-select tile radio group. Sizes: `sm` (compact, for product cards) | `md` (default). Context-based compound component with controlled/uncontrolled support.
+- **`Form` components** — `FormLabel` (`required` prop adds red `*`), `FormInput`, `FormSelect`, `FormTextarea`, `FormError`, `FormPasswordInput` (visibility toggle), `FormPhoneInput` (UAE format: displays `0XX XXX XXXX`, submits `+971XXXXXXXXX` via hidden input), `FormOtpInput` (6-digit OTP with `defaultValue` + `useResendCooldown` hook), `FormCheckbox`, `FormNumberInput` (stepper with +/- buttons, controlled via `value`/`onValueChange`), `FormUploadZone` (supports `initialUrl` for single image edit mode, `initialUrls` for multi-image; integrated Lightbox preview + sortable thumbnails) — CVA variants with `default` / `error` states. `FormSelect` wraps the `Select` compound component.
+- **`DropdownMenu` / `DropdownMenuTrigger` / `DropdownMenuContent` / `DropdownMenuItem` / `DropdownMenuSeparator` / `DropdownMenuLabel`** — context-based dropdown menu with auto up/down direction, outside-click and Escape close, `destructive` + `disabled` item variants.
+- **`Table` / `TableHeader` / `TableHeaderRow` / `TableHead` / `TableBody` / `TableRow` / `TableCell` / `TableEmpty` / `TablePagination`** — compound table with sticky header, sort indicators, dividers. Context-based (`useTable`).
+- **`DataTable`** — declarative wrapper: pass `data`, `columns: ColumnDef[]`, `sort`, `pagination` and it renders a full `Table`. Hooks: `useTableSort`, `useTableData`, `useTableSearch`, `useTablePagination`. Helpers: `formatAed`, `formatDate`, `formatDateTime`, `shortId`, comparators (`compareString`, `compareNumber`, `compareDate`).
+- **`DataCard` / `DataCardHeader` / `DataCardBody` / `DataCardField` / `DataCardFooter` / `DataCardGrid` / `DataCardList` / `DataCardEmpty`** — compound card for mobile-friendly data display. Context-based (`useDataCard`). `DataCardList` uses CSS grid (`grid-cols-1` default, pass `className` for responsive cols). `DataCardGrid` is a declarative helper that renders `FieldDef[]`.
+- **`Thumbnail`** — reusable image thumbnail. Props: `src`, `alt`, `selected?` (orange border), `softDeleted?` (dimmed + grayscale), `showLabel?` (alt text below, default true), `onClick?`, `children?` (overlay buttons). Used by `SortableThumbnail` and `ProductDetailImage`.
+- **`Popover` / `PopoverTrigger` / `PopoverContent`** — context-based popover with auto up/down direction, outside-click close, viewport clamping. Supports **controlled mode** via `open`/`onOpenChange` props (used by `BenefitsSection`, `NutritionSection`). `usePopover()` hook for child components.
+- **`MultiSelect` / `MultiSelectTrigger` / `MultiSelectContent` / `MultiSelectItem` / `MultiSelectEmpty` / `MultiSelectCreate` / `MultiSelectDelete`** — compound multi-select with search, selected-items-first sorting, scroll preservation. Context-based (`useMultiSelect`). `MultiSelectCreate` for inline option creation, `MultiSelectDelete` for inline deletion.
+- **`Tooltip` / `TooltipTrigger` / `TooltipContent`** — hover/focus tooltip with 4-direction support (`side` prop: `top | bottom | left | right`), auto-fallback to opposite side if no space. `delay` prop (default 200ms). Toggle on click for touch devices. **Always use `asChild`** on `TooltipTrigger` — it merges all handlers (onClick, onMouseEnter, etc.) with the child element's handlers via `cloneElement`. No `useId()` — safe inside Suspense boundaries.
+- **`Gallery`** — rows-based image gallery using `react-photo-album`. Props: `images: GalleryImage[]`, `rowHeight`, `maxPerRow`, `spacing`, `onClick(index)`. No built-in Lightbox — compose with `<Lightbox>` externally.
+- **`CartEmpty`** — empty cart placeholder screen.
+- **`Loader`** — loading spinner (used during cart hydration).
+
+## Responsive table/cards pattern
+
+Admin data pages (orders, partnerships) use a dual-render approach:
+- `< xl` — `DataCard` cards via `DataCardList` (typically `md:grid-cols-2` for 2 columns from 768px)
+- `xl+` — `DataTable` with full sorting and pagination
+
+Both views share the same `paginatedData` from hooks like `useOrdersTable` / `useInquiriesTable`, which manage sort + pagination state via URL search params (`SearchParamsFilterProvider` + `useFilterBar`).
+
+```tsx
+{/* Mobile: cards */}
+<div className="xl:hidden">
+  <OrderCards orders={paginatedData} />
+</div>
+{/* Desktop: table */}
+<div className="hidden xl:block">
+  <DataTable data={paginatedData} columns={columns} ... />
+</div>
+```
+
+## Filter system
+
+- **`FilterProvider`** (`src/providers/FilterProvider.tsx`) — generic React context for `Record<string, string>` filter state. `useFilterBar(key)` returns `{ value, onValueChange }`.
+- **`SearchParamsFilterProvider`** (`src/providers/SearchParamsFilterProvider.tsx`) — wraps `FilterProvider` and syncs state to URL search params (supports browser back/forward). Uses bidirectional sync with race-condition protection: state → URL effect runs FIRST (sets `updatingUrl` flag), URL → state effect runs SECOND (skips when flag is set). URL is updated synchronously via `history.replaceState` + async via `router.replace` to ensure `window.location.search` is current for other code (e.g. HashTracker).
+- Filter keys typically: `["search", "status"|"type", "sortKey", "sortDir", "page", "pageSize"]`.
+- Always reset `page` filter when changing search/status filters.
+
+## Product Variants
+
+Products use a **variant-based pricing model**. Prices and weights live in `product_variants` table, not on `products` directly.
+
+- **Table:** `product_variants` (id, product_id, weight_g, price) — one-to-many with products
+- **Types:** `ProductVariant { id, weight_g, price }`, `Product.variants: ProductVariant[]`
+- `Product.price` and `Product.weight_g` are computed from `variants[0]` (smallest) in `mapDbProducts()`
+- **Admin form:** `VariantsSection` (`src/pages_flow/panel/products/product-form/VariantsSection.tsx`) — dynamic rows with `FormNumberInput`, serialized as JSON hidden input. Logic in `variants.ts`.
+- **Admin display:** `AdminVariantBadges` (`src/pages_flow/panel/products/AdminVariantBadges.tsx`) — Badge components showing `{weight}g — AED {price}` with promotion support
+- **Public UI:** `ProductVariantSelector` (`src/sections/products/components/ProductVariantSelector.tsx`) — uses `FormTileRadio` with `size="sm"` for cards, `size="md"` for detail pages. Shows even for single variant.
+- **Variant selection state** lives in `ProductItem` (cards) and `ProductDetailPage` (public detail) — passed down as `selectedVariant` prop to `ProductPriceAndCart`
+- **Promotions** apply to all variants of a product equally — discount computed per-variant price via `calculateDiscountedPrice()`
+- **Supabase queries** must include `product_variants(id, weight_g, price)` in SELECT — see `PUBLIC_PRODUCTS_SELECT` / `PRODUCTS_SELECT` in `productsDb.ts`
+
+## Product Images
+
+Products have a **main image** (`image_url`) and an optional **gallery** (`images` JSONB array). These are independent fields in the DB but managed through a single `FormUploadZone` in the admin form.
+
+- **DB columns:** `products.image_url` (main, single URL), `products.images` (JSONB `[]`, gallery URLs ordered by position)
+- **Admin form:** One `FormUploadZone` with `name="images"`, `multiple={true}`, `maxFiles={8}`. First uploaded image = `image_url`, rest = `images`. Drag-and-drop reordering via `@dnd-kit/react` — first position always gets "Main" badge.
+- **Server action parsing:** `parseUploads(formData)` splits `formData.getAll("images")` → `image_url` (index 0) + `images` (index 1+). Helper `cleanupRemovedImages(oldUrls, newUrls)` deletes removed files from Supabase Storage on update/delete.
+- **Edit mode initialization:** `getInitialUrls(product)` merges `[image_url, ...images]` back into a single array for the upload zone.
+- **Public display:** `ProductDetailImage` combines `[image_url, ...images]`, shows main image + thumbnail strip + `Lightbox` for fullscreen zoom.
+- **Cards:** `ProductImage` continues to use only `image_url` for card thumbnails.
+- **Types:** `Product.images: string[]`, `DbProduct.images: string[] | null`
+- **Mapper:** `mapDbProducts` sets `images: p.images ?? []` (independent from `image_url`)
+
+## Lightbox
+
+`Lightbox` (`src/shared/ui/Lightbox.tsx`) wraps `yet-another-react-lightbox` with brand theming.
+
+- **API:** `<Lightbox open onClose slides={LightboxSlide[]} index? />`
+- **Plugins:** Zoom always; Counter + Thumbnails when `slides.length > 1`
+- **Theming:** CSS variables inline — earth backdrop, white-warm buttons, orange active/thumbnail border
+- **Single image:** hides prev/next buttons, disables carousel loop
+- Replaces the old custom `ImagePreview` + `Dialog` pattern everywhere
+
+## Sortable Upload Thumbnails
+
+`SortableThumbnails` (`src/shared/ui/UploadZone/SortableThumbnails.tsx`) provides drag-and-drop reordering for uploaded images.
+
+- **Library:** `@dnd-kit/react` v0.3 — `DragDropProvider` + `useSortable` from `@dnd-kit/react/sortable`
+- **Components:** `SortableThumbnails` (container with `DragDropProvider`) → `SortableThumbnail` (individual draggable item)
+- **Features:** "Main" badge on first item, 40% opacity while dragging, remove button on hover, drag handle button (GripVertical icon, bottom-left corner)
+- **Drag handle:** Uses `useSortable({ handle: ref })` with `PointerSensor` and `activationConstraints: () => undefined` for instant activation. Drag only via handle button — prevents conflict with Lightbox click on image.
+- **Reorder detection:** `isSortable(source)` in `onDragEnd`, reads `source.initialIndex` / `source.index`, applies via `moveItem()` utility
+- **Integration:** `UploadZone` always renders `SortableThumbnails` for both URL and file modes. `SortableThumbnail` wraps the shared `Thumbnail` component.
+- **Single item:** When only 1 image, `sortable={false}` hides drag handle and disables dnd via `disabled: true` on `useSortable`.
 
 ## Key business logic
 
-- **Main CTA** links to Instagram DM via `process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL`. Always use `target="_blank" rel="noopener noreferrer"`. See `.env.example` for the full set of Instagram env vars (`NEXT_PUBLIC_INSTAGRAM_DM_URL`, `NEXT_PUBLIC_INSTAGRAM_BRAND_URL`, `NEXT_PUBLIC_INSTAGRAM_BRAND`).
-- No cart or e-commerce — this is a pure showcase landing. All purchase flow goes through Instagram.
-- Product data is static (no API). Lives in `src/shared/sections/products/consts.ts`. The `Product` type and `Category` enum are defined alongside in `types.ts` and `src/shared/types/Categories.ts` respectively. Product fields `benefits`, `nutrition`, `servingIdeas`, `occasions` are stored for future modal/detail use but not rendered yet.
+- **PartnershipCTA** section (`src/sections/PartnershipCTA.tsx`) replaces the old InstagramCTA. It offers two contact channels: Instagram DM button (uses `NEXT_PUBLIC_INSTAGRAM_DM_URL` + `NEXT_PUBLIC_INSTAGRAM_BRAND_URL`) and an inline partnership inquiry form that submits via `useActionState` to a server action saving to `partnership_inquiries`. Always use `target="_blank" rel="noopener noreferrer"` for Instagram links. See `.env.example` for all Instagram env vars.
+- **Product data** loaded from Supabase (with `image_url` + `images` from Storage). `mapDbProducts()` converts Supabase rows to the `Product` type, including variant mapping, image arrays, and promotion calculation.
+- **Delivery fee** is `NEXT_PUBLIC_DELIVERY_FEE` env var (default 25 AED), defined in `src/shared/consts.ts`.
+- **Product badge** — optional `badge` text field on both `products` and `categories` tables. Displayed via `Badge` component in `ProductHeader` and category cards. If empty/null, badge is hidden.
+- **Nutrition** — dynamic fields stored as `Record<string, { name: string; value: number }>` in `products.nutrition` JSONB. Admin form (`NutritionSection`) allows adding/removing fields via Popover form. Default 8 fields (Calories, Carbs, etc.) pre-populated for new products. `NutritionTable` in public UI iterates `Object.values(nutrition)`.
+- **Benefits** — managed via `BenefitsSection` with `MultiSelect` compound component. Supports inline creation (Popover form with name + description) and deletion. API: `POST/DELETE /api/options` with `entityType: "benefits"`. Benefits table: `benefits(id, name, description)`.
+- **Product fields** `servingIdeas`, `occasions` are rendered in collapsible detail sections on product cards and detail pages.
+- **Promotions** — `src/lib/promotionsDb.ts` handles CRUD. Promotions have `discount_type` (percentage | fixed), `discount_value`, date range, and `is_active` flag. Linked to products via `promotion_products` join table. Status is computed client-side via `getPromotionStatus()` (active | scheduled | expired) based on `is_active` + dates. Promotion list sorts active first.
+- **Order fulfillment** — `orders.is_fulfilled` boolean field. Admin toggles via `FulfilledToggle` checkbox component (`src/pages_flow/panel/orders/FulfilledToggle.tsx`) with server action. Filterable in admin orders view (Fulfilled / Unfulfilled).
+
+## Category Sorting
+
+Categories have a `sort_order` integer column. Order is controlled via drag-and-drop in admin `/panel/categories`.
+
+- **DB:** `categories.sort_order` — new categories get `max(sort_order) + 1`
+- **Admin UI:** `SortableCategoryGrid` (`src/pages_flow/panel/categories/SortableCategoryGrid.tsx`) — uses `@dnd-kit/react` with `useSortable({ handle })` for drag via GripVertical button only
+- **Optimistic updates:** `useOptimistic` for instant reorder + `useTransition` for server action
+- **Server action:** `reorderCategories(orderedIds)` → batch updates `sort_order` → `revalidatePath`
+- **Everywhere sorted:** `getCategories()` uses `.order("sort_order")` — affects landing page categories, product filter bar, admin categories, product form dropdown
+- **Touch support:** `PointerSensor` with `activationConstraints: () => undefined` removes 250ms touch delay
+
+## Notifications
+
+Multi-role notification system with Supabase Realtime.
+
+**Tables:**
+- `notifications` — `user_id` (UUID, nullable) + `audience` (`user_role` enum, nullable). `user_id` set = personal notification. `user_id` NULL = broadcast. `audience` NULL = all roles, specific role = only that role.
+- `notification_reads` — `(notification_id, user_id)` PK. Presence of row = read. Used for both personal and broadcast notifications.
+- RLS enabled on both tables — users only see notifications targeted to them.
+
+**Notification types:** `new_order`, `order_paid`, `order_failed`, `order_cancelled` (admin), `new_partnership` (admin), `new_promotion`, `new_product`, `new_category` (broadcast to all). Styles in `src/shared/ui/NotificationTypeConfig.tsx`.
+
+**DB layer:** `src/lib/notificationsDb.ts` — `createNotification({ type, title, message?, relatedId?, audience?, userId? })`. Default `audience = "admin"`. Queries use left join on `notification_reads` to compute `is_read`.
+
+**Provider:** `NotificationsProvider` (`src/providers/NotificationsProvider.tsx`) — accepts `role`, `userId`, `allowNotifications` props. Subscribes to Supabase Realtime `INSERT` on `notifications` table. Client-side filters by role/audience. When `allowNotifications = false`, broadcast notifications are hidden (personal still shown).
+
+**User preferences:** `profiles.allow_notifications` boolean (default `true`). Toggle via `toggleNotifications()` server action in `src/pages_flow/profile/actions.ts`. UI: `NotificationSettingsSection` on profile page (non-admin only).
+
+**Broadcast triggers:** Promotions (on activation), Products (on publish), Categories (on creation) — all send `audience: null` (all roles).
+
+**UI:** `NotificationBell` in navbar (all logged-in users). `RecentNotifications` on admin dashboard.
+
+## Address system
+
+`AddressWithMap` (`src/shared/ui/AddressWithMap.tsx`) — 5 fields: Emirate (select), City, Area, Building (all with `AddressSuggestInput` for Google Places suggestions), Flat/Villa. Bidirectional sync with Google Maps:
+- **Fields → Map:** debounced forward geocoding on manual input (700ms)
+- **Map → Fields:** reverse geocoding on map click
+- **Suggestion select → Map:** `PlacesService.getDetails` for coordinates + `extractAddressParts` for emirate
+
+`AddressSuggestInput` (`src/shared/ui/AddressSuggestInput.tsx`) — wraps `DropdownMenu` (controlled mode) + `FormInput`. Uses `AutocompleteService.getPlacePredictions` with `types` and `locationBias` per field.
+
+Address utilities in `src/shared/utils/address.ts`:
+- `composeAddress({ emirate, city, area, buildingName, flatNumber })` → string (always includes city for correct round-trip parsing)
+- `parseAddress(string)` → `ParsedAddressProps` (extracts fields from composed string)
+- `displayAddress(address)` → string (like composeAddress but skips city when equals emirate — for UI display)
+- `shortAddress(address)` → string (area + city? + emirate — compact display for cards)
+
+## Phone validation
+
+All phone fields use `FormPhoneInput` (displays `0XX XXX XXXX`, submits normalized `+971XXXXXXXXX` via hidden input). Shared validation in `src/shared/utils/validatePhone.ts`:
+- `normalizePhone(raw)` — accepts `0501234567`, `501234567`, `+971501234567`, `971501234567` → returns `+971501234567`
+- `formatPhoneDisplay(raw)` — formats for display as `0XX XXX XXXX`
+- `validatePhone(phone, { required })` — validates against `/^\+971[0-9]{9}$/`
+
+Used by `validateCustomer.ts`, `validateProfile.ts`, `validatePartnership.ts`.
+
+## Server Actions standard
+
+All `actions.ts` files follow this pattern (canonical example: `src/pages_flow/profile/actions.ts`):
+
+```ts
+"use server";
+
+// Import the appropriate Supabase client (see client selection guide above)
+import { supabaseAdmin } from "@/lib/supabase.server";
+// or: import { createSupabaseServerClient } from "@/lib/supabase.server";
+
+// 1. Export a typed State interface from the same file
+export interface FooState {
+  success?: boolean;
+  error?: string;           // top-level DB/network error message
+  fieldErrors?: {           // per-field validation errors
+    name?: string;
+  };
+  values?: Partial<FooInfo>; // echo back form values for repopulation
+  attempt?: number;          // incremented each submission, used as form key
+}
+
+// 2. Action signature for useActionState: (_prevState, formData) => Promise<State>
+export async function createFoo(
+  _prevState: FooState | null,
+  formData: FormData,
+): Promise<FooState> {
+  const name = (formData.get("name") as string)?.trim();
+
+  const attempt = (_prevState?.attempt ?? 0) + 1;
+
+  // 3. Collect field errors into an object, return early if any
+  const fieldErrors: FooState["fieldErrors"] = {};
+  if (!name) fieldErrors.name = "Name is required";
+  if (Object.keys(fieldErrors).length > 0) return { fieldErrors, values: { name }, attempt };
+
+  // 4. DB call
+  const { error } = await supabaseAdmin.from("foos").insert({ name });
+  if (error) return { error: "Failed to save. Please try again.", values: { name }, attempt };
+
+  return { success: true, attempt };
+}
+
+// 5. For actions bound with .bind(null, id), id comes before _prevState
+export async function updateFoo(
+  id: string,
+  _prevState: FooState | null,
+  formData: FormData,
+): Promise<FooState> { ... }
+```
+
+**Rules:**
+- `"use server"` always at top
+- State interface exported from the same `actions.ts` file
+- Validation collects all field errors before returning — never throw, always return state
+- Top-level DB errors go in `error`, field-level errors go in `fieldErrors`
+- **Always return `values` on every error path** — forms use `key={state?.attempt ?? 0}` which remounts the form, so `defaultValue={state?.values?.fieldName}` is needed to preserve user input
+- Always return `attempt` (incremented counter) — used as form `key` to reset field states after submission
+- Never use `supabaseAdmin` for auth-identity operations — use `createSupabaseServerClient()` instead
+- Actions that need the current user must call `createSupabaseServerClient()` and redirect to `/login` if no session
 
 ## Animations
 
-`motion/react` (not `framer-motion`) — lighter package, same API. Import as:
+Import as:
 
 ```ts
 import { motion } from "motion/react";
@@ -116,3 +547,52 @@ import { motion } from "motion/react";
 Standard patterns: `initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}` with `staggerChildren` for groups. Hero parallax via `useScroll` + `useTransform`.
 
 Any section that uses `motion` hooks (`useScroll`, `useTransform`) must add `"use client"` at the top of the file.
+
+## Hydration safety
+
+**Never use `useId()` in compound UI components** (`Select`, `Tooltip`, `Popover`, `DropdownMenu`, `Dialog`, `MultiSelect`). React's `useId()` generates different IDs on server vs client inside Suspense boundaries, causing hydration mismatch. All these components use context-based state without ID-based ARIA linking.
+
+## Navigation & scroll
+
+- **`HashLink`** (`src/sections/navbar/HashLink.tsx`) — custom `<a>` that handles smooth scroll for hash links. Same-page: `scrollIntoView({ behavior: "smooth" })`. Cross-page: `router.push()` + `MutationObserver` to wait for target element.
+- **`ScrollToTop`** (`src/app/_components/ScrollToTop.tsx`) — scrolls to top on pathname change (skips hash navigation and initial render).
+- **`RestoreScroll`** (`src/app/_components/RestoreScroll.tsx`) — restores scroll position after page reload. Works with `beforeunload` script in `<head>` that saves `scrollY` to sessionStorage.
+- **`HashTracker`** (`src/app/_components/HashTracker.tsx`) — rendered in home page `page.tsx` (not root layout), updates URL hash based on which section is in viewport via `IntersectionObserver` with `rootMargin: "-30% 0px -70% 0px"`. On initial load with hash (e.g. `/#products`), suppresses hash updates and scrolls to the target section via `scrollIntoView({ behavior: "instant" })`. Uses retry polling (200ms) to find Suspense-deferred sections.
+- **Active nav links** — `useActiveHash()` hook (`src/sections/navbar/useActiveHash.ts`) polls `window.location.hash` for desktop/mobile nav highlighting.
+- **Navigation links** — shared source of truth in `src/shared/consts/navLinks.ts` (`NAV_LINKS`, `TAB_LINKS`). Used by Navbar, NavMobileTabBar, and Footer.
+
+## Product sorting
+
+- **Sort utility** — `src/sections/products/utils/sortProducts.ts` — `sortProducts(products, sortKey)` and generic `sortBySortKey(items, sortKey)`.
+- **Sort keys:** `""` (recommended: promotions → best-sellers → category), `"promotions"`, `"best-sellers"`, `"category"`.
+- **Sales data** — `getProductSalesMap()` in `productsDb.ts` aggregates `order_items` quantities by product_id for paid orders.
+- **`totalSold`** field on `Product` type — populated by `mapDbProducts(raw, salesMap)`.
+
+## SEO
+
+**Root structured data** (`src/app/structured-data.ts`) — injected in root layout:
+- `Organization` + `LocalBusiness` (Dubai, UAE, AED)
+- `WebSite` with `SearchAction` (sitelinks search box)
+- `WebPage` (root)
+
+**Home page** (`src/app/page.tsx`):
+- `generateMetadata()` — dynamic title/description when `?category=slug` is present (reads category data from DB)
+- `CollectionPage` JSON-LD (`src/app/home-structured-data.ts`) — ItemList of categories with BreadcrumbList
+
+**Product detail pages** (`src/app/products/[id]/page.tsx`):
+- **Product schema** — with `AggregateOffer` for multi-variant pricing, promotion `priceValidUntil`, `additionalProperty` for tags/freeFrom, all images.
+- **BreadcrumbList** — Home → Category → Product.
+- Structured data builders in `src/app/products/[id]/structured-data.ts`.
+- **Back navigation** — `FROM_MAP` maps `?from=` param to back button href/label (e.g. `?from=favorites` → "Back to favorites", `?from=cart` → "Back to cart"). Default: "Back to products" → `/#products`.
+
+**Indexing** — private routes have `robots: { index: false }`: `(auth)/*`, `/cart`, `/checkout/*`, `/panel/*`. `robots.ts` disallows these paths for crawlers. Sitemap includes only `/` and `/products/*`.
+
+## Error pages
+
+- **`src/app/not-found.tsx`** — 404 page (server component, renders inside layout)
+- **`src/app/error.tsx`** — route error boundary (`"use client"`, receives `error` + `reset`)
+- **`src/app/global-error.tsx`** — root layout error (`"use client"`, own `<html><body>`, inline styles with brand colors)
+
+## Soft delete for upload images
+
+In edit mode, `FormUploadZone` uses soft delete for existing images — marking them as deleted visually without removing from Storage until form is saved. This prevents broken image URLs if admin navigates away without saving. New images uploaded in the session are deleted immediately on remove. `cleanupRemovedImages()` in server actions handles actual Storage deletion on save.

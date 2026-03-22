@@ -6,6 +6,7 @@ const cardVariants = cva("rounded-[16px] overflow-hidden transition-all duration
     variant: {
       default: "bg-white-warm shadow-sm hover:shadow-md",
       sand:    "bg-sand shadow-sm hover:shadow-md",
+      cream:   "bg-cream border border-parchment hover:border-bark",
       outline: "bg-transparent border border-parchment hover:border-bark",
       dark:    "bg-earth text-white-warm",
     },

@@ -1,0 +1,125 @@
+import Link from "next/link";
+import { IconInstagram } from "@/shared/icons";
+import { NAV_LINKS } from "@/shared/consts/navLinks";
+import { HashLink } from "./navbar/HashLink";
+
+export function Footer() {
+  const year = new Date().getFullYear();
+
+  return (
+    <footer className="noise relative bg-earth overflow-hidden">
+      <div className="relative mx-auto max-w-7xl px-6 lg:px-10 py-16 md:py-20">
+        {/* ── Main columns ─────────────────────────────── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-12 md:gap-8 pb-12 border-b border-sand/10 text-center sm:text-left">
+          {/* Column 1: Brand */}
+          <div className="flex flex-col gap-5 items-center sm:items-start">
+            <HashLink
+              href="/#hero"
+              className="flex flex-col leading-none select-none w-fit"
+            >
+              <span className="font-display font-bold text-2xl text-white-warm tracking-widest uppercase">
+                HONESTA
+              </span>
+              <span className="font-body font-light text-xs uppercase tracking-[0.22em] text-sand/50 mt-0.5">
+                Sweetness Before Marketing
+              </span>
+            </HashLink>
+
+            <p className="font-body font-light text-sand/50 text-sm leading-relaxed max-w-55">
+              Handcrafted dried fruit snacks.
+              <br />
+              100% fruit. No additives. Made with care.
+            </p>
+          </div>
+
+          {/* Column 2: Navigate */}
+          <div>
+            <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-sand/40 mb-5">
+              Navigate
+            </p>
+            <ul className="flex flex-col gap-3">
+              {NAV_LINKS.map(({ href, label }) => (
+                <li key={href}>
+                  <HashLink
+                    href={href}
+                    className="font-body font-light text-sand/65 text-sm hover:text-orange-light transition-colors duration-200"
+                  >
+                    {label}
+                  </HashLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Column 3: Contact */}
+          <div>
+            <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-sand/40 mb-5">
+              Contact
+            </p>
+            <ul className="flex flex-col gap-3">
+              <li>
+                <a
+                  href={process.env.NEXT_PUBLIC_INSTAGRAM_BRAND_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 font-body font-light text-sand/65 text-sm hover:text-orange-light transition-colors duration-200"
+                >
+                  <IconInstagram className="w-3.5 h-3.5 shrink-0" />@
+                  {process.env.NEXT_PUBLIC_INSTAGRAM_BRAND}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-body font-light text-sand/65 text-sm hover:text-orange-light transition-colors duration-200"
+                >
+                  DM on Instagram
+                </a>
+              </li>
+              <li>
+                {/* TODO: replace with real email address */}
+                <a
+                  href={`mailto:${process.env.NEXT_PUBLIC_EMAIL}`}
+                  className="font-body font-light text-sand/65 text-sm hover:text-orange-light transition-colors duration-200"
+                >
+                  {process.env.NEXT_PUBLIC_EMAIL}
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* ── Bottom bar ────────────────────────────────── */}
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="font-body font-light text-2xs text-sand/30 tracking-wide">
+            © {year} HONESTA. All rights reserved. Built by{" "}
+            <a
+              href="https://github.com/thenicolaf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sand/50 hover:text-orange-light transition-colors duration-200"
+            >
+              thenicolaf
+            </a>
+          </p>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/terms"
+              className="font-body font-light text-2xs text-sand/30 tracking-wide hover:text-orange-light transition-colors duration-200"
+            >
+              Terms & Conditions
+            </Link>
+            <Link
+              href="/privacy"
+              className="font-body font-light text-2xs text-sand/30 tracking-wide hover:text-orange-light transition-colors duration-200"
+            >
+              Privacy Policy
+            </Link>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
