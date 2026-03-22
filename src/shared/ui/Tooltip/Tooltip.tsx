@@ -103,43 +103,45 @@ interface TooltipTriggerProps {
   className?: string;
   /** Render child element as trigger instead of wrapping in a span */
   asChild?: boolean;
-  /** Click handler (e.g. stopPropagation to prevent parent Link navigation) */
-  onClick?: (e: React.MouseEvent) => void;
 }
 
 export function TooltipTrigger({
   children,
   className,
   asChild = false,
-  onClick,
 }: TooltipTriggerProps) {
   const { show, hide, toggle } = useTooltip();
-
-  const handleClick = (e: React.MouseEvent) => {
-    onClick?.(e);
-    toggle();
-  };
-
-  const handlers = {
-    onMouseEnter: show,
-    onMouseLeave: hide,
-    onFocus: show,
-    onBlur: hide,
-    onClick: handleClick,
-  };
 
   if (asChild) {
     const child = Children.only(children);
     if (!isValidElement(child)) return null;
-    const childProps = child.props as { className?: string };
+    const childProps = child.props as {
+      className?: string;
+      onClick?: (e: React.MouseEvent) => void;
+      onMouseEnter?: (e: React.MouseEvent) => void;
+      onMouseLeave?: (e: React.MouseEvent) => void;
+      onFocus?: (e: React.FocusEvent) => void;
+      onBlur?: (e: React.FocusEvent) => void;
+    };
     return cloneElement(child as React.ReactElement<Record<string, unknown>>, {
-      ...handlers,
+      onMouseEnter: (e: React.MouseEvent) => { childProps.onMouseEnter?.(e); show(); },
+      onMouseLeave: (e: React.MouseEvent) => { childProps.onMouseLeave?.(e); hide(); },
+      onFocus: (e: React.FocusEvent) => { childProps.onFocus?.(e); show(); },
+      onBlur: (e: React.FocusEvent) => { childProps.onBlur?.(e); hide(); },
+      onClick: (e: React.MouseEvent) => { childProps.onClick?.(e); toggle(); },
       className: cn(childProps.className, className),
     });
   }
 
   return (
-    <span className={className} {...handlers}>
+    <span
+      className={className}
+      onMouseEnter={show}
+      onMouseLeave={hide}
+      onFocus={show}
+      onBlur={hide}
+      onClick={toggle}
+    >
       {children}
     </span>
   );

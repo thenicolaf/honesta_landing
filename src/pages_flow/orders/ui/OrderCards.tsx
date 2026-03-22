@@ -27,7 +27,7 @@ export function OrderCards({ orders }: { orders: Order[] }) {
   }
 
   return (
-    <DataCardList className="md:grid-cols-2">
+    <DataCardList className="sm:grid-cols-2">
       {orders.map((order) => (
         <DataCard key={order.id}>
           <DataCardHeader>
@@ -84,7 +84,10 @@ export function OrderCards({ orders }: { orders: Order[] }) {
 
             <DataCardField label="Address">
               {order.address ? (
-                <CopyText text={displayAddress(order.address)} className="text-2xs text-earth/60">
+                <CopyText
+                  text={displayAddress(order.address)}
+                  className="text-2xs text-earth/60"
+                >
                   <span>{displayAddress(order.address)}</span>
                 </CopyText>
               ) : (

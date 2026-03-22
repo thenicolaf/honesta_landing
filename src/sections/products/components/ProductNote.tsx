@@ -42,15 +42,17 @@ function TruncatedNote({ note }: { note: string }) {
 
   if (!isClamped) return blockquote;
 
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-  };
-
   return (
     <Tooltip side="top" className="block">
-      <TooltipTrigger className="block text-left w-full" onClick={handleClick}>
-        {blockquote}
+      <TooltipTrigger asChild className="block text-left w-full">
+        <blockquote
+          onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+          className="border-l-2 border-orange/40 bg-sand/50 rounded-r-lg px-3 py-2 font-body text-sm text-earth/70 italic cursor-pointer"
+        >
+          <span ref={textRef} className="line-clamp-2">
+            {note}
+          </span>
+        </blockquote>
       </TooltipTrigger>
       <TooltipContent className="whitespace-normal w-full left-0 translate-x-0! text-left">
         {note}

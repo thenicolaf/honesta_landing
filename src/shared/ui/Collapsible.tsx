@@ -40,18 +40,18 @@ export function Collapsible({ children, className, defaultOpen = false }: Collap
 
 // ─── CollapsibleTrigger ───────────────────────────────────────────────────────
 
-interface CollapsibleTriggerProps {
+interface CollapsibleTriggerProps
+  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "type"> {
   children: React.ReactNode;
-  className?: string;
-  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
-export function CollapsibleTrigger({ children, className, onClick }: CollapsibleTriggerProps) {
+export function CollapsibleTrigger({ children, className, onClick, ...rest }: CollapsibleTriggerProps) {
   const { open, toggle } = useCollapsible();
 
   return (
     <button
       type="button"
+      {...rest}
       onClick={(e) => {
         onClick?.(e);
         toggle();

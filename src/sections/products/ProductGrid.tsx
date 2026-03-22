@@ -131,7 +131,7 @@ function ProductGridInner({
   return (
     <>
       <motion.div
-        className="mb-10 flex flex-col sm:flex-row items-center justify-center gap-4"
+        className="mb-10 flex flex-col sm:flex-row sm:items-start items-center justify-center gap-4"
         initial={{ opacity: 0, y: 12 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-40px" }}
@@ -141,6 +141,7 @@ function ProductGridInner({
           {...categoryFilter}
           items={categories ?? []}
           className="justify-center"
+          toolbarClassName="max-sm:justify-center"
         />
         <Select
           value={sortFilter.value || ""}

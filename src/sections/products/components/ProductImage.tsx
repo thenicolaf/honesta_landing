@@ -61,18 +61,17 @@ export function ProductImage({
           showTagline && "opacity-0 pointer-events-none",
         )}
       >
-        <TooltipTrigger
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            setShowTagline(true);
-          }}
-        >
+        <TooltipTrigger asChild>
           <Button
             as="button"
             type="button"
             variant="text"
             size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              setShowTagline(true);
+            }}
             className="rounded-full bg-earth/30 p-1.5! text-white-warm! backdrop-blur-sm hover:bg-earth/50 transition-all duration-300"
             aria-label="Show description"
           >

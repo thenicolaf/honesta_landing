@@ -6,7 +6,10 @@ const SECTION_IDS = ["hero", "categories", "products", "story", "contact"];
 
 export function HashTracker() {
   useEffect(() => {
-    let currentHash = window.location.hash;
+    const initialHash = window.location.hash;
+    let currentHash = initialHash;
+    let suppressUpdates = !!initialHash;
+    let scrolledToTarget = false;
     const tracked = new Set<string>();
 
     const io = new IntersectionObserver(
@@ -15,6 +18,16 @@ export function HashTracker() {
           if (!entry.isIntersecting) continue;
 
           const id = entry.target.id;
+
+          // Target section entered viewport — scroll succeeded, resume tracking
+          if (suppressUpdates && `#${id}` === initialHash) {
+            suppressUpdates = false;
+            scrolledToTarget = true;
+          }
+
+          // Don't update URL while waiting to scroll to initial hash
+          if (suppressUpdates) continue;
+
           const newHash = id === "hero" ? "" : `#${id}`;
 
           if (currentHash !== newHash) {
@@ -26,6 +39,15 @@ export function HashTracker() {
       },
       { rootMargin: "-30% 0px -70% 0px" },
     );
+
+    function scrollToInitialHash() {
+      if (scrolledToTarget || !initialHash) return;
+      const el = document.getElementById(initialHash.slice(1));
+      if (el) {
+        scrolledToTarget = true;
+        el.scrollIntoView({ behavior: "instant" });
+      }
+    }
 
     function trackSections() {
       for (const id of SECTION_IDS) {
@@ -39,15 +61,31 @@ export function HashTracker() {
       return tracked.size === SECTION_IDS.length;
     }
 
-    // Retry until all sections found (Suspense sections may hydrate later)
-    if (!trackSections()) {
+    // Initial attempt
+    trackSections();
+    scrollToInitialHash();
+
+    // Retry for Suspense-deferred sections
+    if (!trackSections() || (initialHash && !scrolledToTarget)) {
       const retryId = setInterval(() => {
-        if (trackSections()) clearInterval(retryId);
+        trackSections();
+        scrollToInitialHash();
+        if (tracked.size === SECTION_IDS.length && (!initialHash || scrolledToTarget)) {
+          clearInterval(retryId);
+        }
       }, 200);
       setTimeout(() => clearInterval(retryId), 5000);
     }
 
-    return () => io.disconnect();
+    // Safety: stop suppressing after 3s if target never appeared
+    const safetyTimer = suppressUpdates
+      ? setTimeout(() => { suppressUpdates = false; }, 3000)
+      : undefined;
+
+    return () => {
+      io.disconnect();
+      if (safetyTimer) clearTimeout(safetyTimer);
+    };
   }, []);
 
   return null;

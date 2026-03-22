@@ -32,11 +32,12 @@ export function FavoriteButton({ productId, className, tooltipSide = "bottom" }:
 
   return (
     <Tooltip side={tooltipSide} className={className}>
-      <TooltipTrigger onClick={handleClick}>
+      <TooltipTrigger asChild>
         <Button
           as="button"
           variant="outline"
           size="icon"
+          onClick={handleClick}
           aria-label={label}
           className={active ? "text-orange" : "text-earth/30 hover:text-orange"}
         >

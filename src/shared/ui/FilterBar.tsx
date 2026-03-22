@@ -17,6 +17,7 @@ interface FilterBarProps {
   allLabel?: string;
   label?: string;
   className?: string;
+  toolbarClassName?: string;
 }
 
 // ─── FilterBar ───────────────────────────────────────────────────────────────
@@ -28,6 +29,7 @@ export function FilterBar({
   allLabel = "All",
   label,
   className,
+  toolbarClassName,
 }: FilterBarProps) {
   return (
     <div className={cn("flex flex-col items-start gap-3", className)}>
@@ -36,7 +38,11 @@ export function FilterBar({
           {label}
         </span>
       )}
-      <TagToolbar value={value} onValueChange={onValueChange}>
+      <TagToolbar
+        value={value}
+        onValueChange={onValueChange}
+        className={toolbarClassName}
+      >
         <TagToolbarItem value="">{allLabel}</TagToolbarItem>
         {items.map((item) => (
           <TagToolbarItem key={item.value} value={item.value}>

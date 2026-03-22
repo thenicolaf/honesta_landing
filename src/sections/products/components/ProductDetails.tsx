@@ -176,7 +176,7 @@ export function ProductDetails(props: DetailsContentProps) {
   return (
     <Collapsible className="border-t border-parchment/50 pt-3">
       <Tooltip side="top" className="block">
-        <TooltipTrigger className="block">
+        <TooltipTrigger asChild>
           <CollapsibleTrigger
             onClick={(e) => {
               e.stopPropagation();
@@ -184,7 +184,7 @@ export function ProductDetails(props: DetailsContentProps) {
             }}
             className="flex w-full items-center justify-between gap-2 font-body font-semibold uppercase tracking-[0.12em] text-2xs text-earth/55 hover:text-orange transition-colors duration-200"
           >
-            <span>Details</span>
+            Details
             <CollapsibleChevron />
           </CollapsibleTrigger>
         </TooltipTrigger>

@@ -108,7 +108,7 @@ export function DashboardPage({ stats }: { stats: DashboardStats }) {
       <AdminPageHeader title="Dashboard" actions={<RefreshButton />} />
 
       {/* ── Overview ─────────────────────────────────────────────────── */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <section className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
         <StatCard
           icon={<DollarSign className="w-5 h-5" />}
           label="Revenue"
@@ -148,7 +148,14 @@ export function DashboardPage({ stats }: { stats: DashboardStats }) {
                 {icon}
               </div>
               <div className="flex flex-col gap-0.5">
-                <Badge variant={variant} size="xs" className={cn("min-[30rem]:px-3 min-[30rem]:py-1 min-[30rem]:text-2xs", badgeClassName)}>
+                <Badge
+                  variant={variant}
+                  size="xs"
+                  className={cn(
+                    "min-[30rem]:px-3 min-[30rem]:py-1 min-[30rem]:text-2xs",
+                    badgeClassName,
+                  )}
+                >
                   {label}
                 </Badge>
                 <p className="font-body font-bold text-lg min-[30rem]:text-xl text-earth">
@@ -240,14 +247,17 @@ export function DashboardPage({ stats }: { stats: DashboardStats }) {
                           ? `${p.discount_value}% off`
                           : `AED ${p.discount_value} off`}
                         {" · "}
-                        {p.product_count} product{p.product_count !== 1 ? "s" : ""}
+                        {p.product_count} product
+                        {p.product_count !== 1 ? "s" : ""}
                       </p>
                       <p className="font-body text-xs text-earth/30 mt-1">
                         Ends {formatDateTime(p.ends_at)}
                       </p>
                     </div>
                   </div>
-                  <Badge variant="natural" size="xs">Active</Badge>
+                  <Badge variant="natural" size="xs">
+                    Active
+                  </Badge>
                 </div>
               </Card>
             ))}

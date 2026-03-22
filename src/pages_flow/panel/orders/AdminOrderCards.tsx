@@ -36,7 +36,7 @@ export function AdminOrderCards({
   }
 
   return (
-    <DataCardList className="md:grid-cols-2">
+    <DataCardList className="sm:grid-cols-2">
       {orders.map((order) => (
         <DataCard key={order.id}>
           <DataCardHeader>
