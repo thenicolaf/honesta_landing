@@ -8,7 +8,6 @@ import { Suspense } from "react";
 export default async function Home() {
   return (
     <main className="grow min-h-160">
-      <HashTracker />
       <Hero />
       <TrustBadges />
       <SearchParamsFilterProvider keys={["category", "sort"]}>
@@ -21,6 +20,7 @@ export default async function Home() {
       </SearchParamsFilterProvider>
       <PhilosophyBlock />
       <PartnershipCTA />
+      <HashTracker />
     </main>
   );
 }

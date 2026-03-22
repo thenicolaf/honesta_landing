@@ -1,5 +1,6 @@
 import { cn } from "@/shared/utils/cn";
-import { Button } from "./Button";
+import { HashLink } from "@/sections/navbar/HashLink";
+import { Button, buttonVariants } from "./Button";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -30,16 +31,30 @@ export function EmptyState({ icon, label, description, action, className }: Empt
       {description && (
         <p className="font-body font-light text-sm text-earth/40 max-w-xs">{description}</p>
       )}
-      {action && (
-        <Button
-          href={action.href}
-          variant={action.variant ?? "outline"}
-          size={action.size ?? "sm"}
-          className="mt-2"
-        >
-          {action.label}
-        </Button>
-      )}
+      {action &&
+        (action.href.includes("#") ? (
+          <HashLink
+            href={action.href}
+            className={cn(
+              buttonVariants({
+                variant: action.variant ?? "outline",
+                size: action.size ?? "sm",
+              }),
+              "mt-2",
+            )}
+          >
+            {action.label}
+          </HashLink>
+        ) : (
+          <Button
+            href={action.href}
+            variant={action.variant ?? "outline"}
+            size={action.size ?? "sm"}
+            className="mt-2"
+          >
+            {action.label}
+          </Button>
+        ))}
     </div>
   );
 }

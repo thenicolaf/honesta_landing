@@ -6,18 +6,10 @@ const SECTION_IDS = ["hero", "categories", "products", "story", "contact"];
 
 export function HashTracker() {
   useEffect(() => {
-    const sections = SECTION_IDS
-      .map((id) => document.getElementById(id))
-      .filter(Boolean) as HTMLElement[];
-
-    if (sections.length === 0) return;
-
     let currentHash = window.location.hash;
+    const tracked = new Set<string>();
 
-    // Observe a narrow strip at 30% from top of viewport.
-    // When a section's top edge crosses this strip, it becomes active.
-    // This works for any section height, including very tall ones.
-    const observer = new IntersectionObserver(
+    const io = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (!entry.isIntersecting) continue;
@@ -32,18 +24,30 @@ export function HashTracker() {
           }
         }
       },
-      {
-        // Collapse viewport to a 1px line at ~30% from top:
-        // top margin = -30%, bottom margin = -70% + 1px
-        rootMargin: "-30% 0px -70% 0px",
-      },
+      { rootMargin: "-30% 0px -70% 0px" },
     );
 
-    for (const section of sections) {
-      observer.observe(section);
+    function trackSections() {
+      for (const id of SECTION_IDS) {
+        if (tracked.has(id)) continue;
+        const el = document.getElementById(id);
+        if (el) {
+          tracked.add(id);
+          io.observe(el);
+        }
+      }
+      return tracked.size === SECTION_IDS.length;
     }
 
-    return () => observer.disconnect();
+    // Retry until all sections found (Suspense sections may hydrate later)
+    if (!trackSections()) {
+      const retryId = setInterval(() => {
+        if (trackSections()) clearInterval(retryId);
+      }, 200);
+      setTimeout(() => clearInterval(retryId), 5000);
+    }
+
+    return () => io.disconnect();
   }, []);
 
   return null;
