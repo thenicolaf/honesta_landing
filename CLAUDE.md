@@ -32,6 +32,7 @@ No test suite configured yet.
 - **@react-google-maps/api** — Google Maps for address selection in checkout (`AddressWithMap` component)
 - **yet-another-react-lightbox** — fullscreen image viewer with zoom/thumbnails (wrapped in `src/shared/ui/Lightbox.tsx`)
 - **@dnd-kit/react** — drag-and-drop for sortable image thumbnails in upload zones
+- **react-photo-album** — rows-based image gallery (wrapped in `src/shared/ui/Gallery.tsx`)
 - **pnpm** as package manager
 
 ## Path alias
@@ -266,7 +267,7 @@ Two files, three client instances:
   - `supabaseAdmin` — static service-role client, bypasses RLS (use only in server actions, API routes, and `lib/`)
   - `createSupabaseServerClient()` — async, reads cookies via `@supabase/ssr`; use whenever you need the current user's session
 
-**DB tables:** `orders` (status, is_fulfilled, subtotal, delivery_fee, total, customer fields, ngenius_ref), `order_items` (order_id, variant_id, name, price, weight_g, quantity — snapshots at order time), `products` (image_url, images JSONB `[]`, in_stock, badge, nutrition JSONB, status — **no price/weight_g columns**, these live in `product_variants`), `product_variants` (product_id, weight_g, price — one-to-many with products), `categories` (name, slug, audience, tagline, description, image_url, badge, sort_order), `benefits` (id, name, description — unique on name+description), `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, role `user_role`, gender, birthday, allow_notifications), `cart_items` (user_id, variant_id, quantity — minimal, prices via join), `notifications` (type, title, message, related_id, user_id, audience `user_role` — nullable, NULL = all roles), `notification_reads` (notification_id, user_id, read_at — tracks per-user read status), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id).
+**DB tables:** `orders` (status, is_fulfilled, subtotal, delivery_fee, total, customer fields, ngenius_ref), `order_items` (order_id, variant_id, name, price, weight_g, quantity — snapshots at order time), `products` (image_url, images JSONB `[]`, in_stock, badge, note, nutrition JSONB, status — **no price/weight_g columns**, these live in `product_variants`), `product_variants` (product_id, weight_g, price — one-to-many with products), `categories` (name, slug, audience, tagline, description, image_url, badge, sort_order), `benefits` (id, name, description — unique on name+description), `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, role `user_role`, gender, birthday, allow_notifications), `cart_items` (user_id, variant_id, quantity — minimal, prices via join), `notifications` (type, title, message, related_id, user_id, audience `user_role` — nullable, NULL = all roles), `notification_reads` (notification_id, user_id, read_at — tracks per-user read status), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id).
 
 ## Design system
 
@@ -326,6 +327,8 @@ Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React conte
 - **`Thumbnail`** — reusable image thumbnail. Props: `src`, `alt`, `selected?` (orange border), `softDeleted?` (dimmed + grayscale), `showLabel?` (alt text below, default true), `onClick?`, `children?` (overlay buttons). Used by `SortableThumbnail` and `ProductDetailImage`.
 - **`Popover` / `PopoverTrigger` / `PopoverContent`** — context-based popover with auto up/down direction, outside-click close, viewport clamping. Supports **controlled mode** via `open`/`onOpenChange` props (used by `BenefitsSection`, `NutritionSection`). `usePopover()` hook for child components.
 - **`MultiSelect` / `MultiSelectTrigger` / `MultiSelectContent` / `MultiSelectItem` / `MultiSelectEmpty` / `MultiSelectCreate` / `MultiSelectDelete`** — compound multi-select with search, selected-items-first sorting, scroll preservation. Context-based (`useMultiSelect`). `MultiSelectCreate` for inline option creation, `MultiSelectDelete` for inline deletion.
+- **`Tooltip` / `TooltipTrigger` / `TooltipContent`** — hover/focus tooltip with 4-direction support (`side` prop: `top | bottom | left | right`), auto-fallback to opposite side if no space. `delay` prop (default 200ms). Toggle on click for touch devices. `onClick` prop on `TooltipTrigger` for stopPropagation. No `useId()` — safe inside Suspense boundaries.
+- **`Gallery`** — rows-based image gallery using `react-photo-album`. Props: `images: GalleryImage[]`, `rowHeight`, `maxPerRow`, `spacing`, `onClick(index)`. No built-in Lightbox — compose with `<Lightbox>` externally.
 - **`CartEmpty`** — empty cart placeholder screen.
 - **`Loader`** — loading spinner (used during cart hydration).
 
@@ -446,7 +449,7 @@ Multi-role notification system with Supabase Realtime.
 
 **Broadcast triggers:** Promotions (on activation), Products (on publish), Categories (on creation) — all send `audience: null` (all roles).
 
-**UI:** `NotificationBell` in navbar (all logged-in users). `RecentNotifications` on admin dashboard. Bell shows stable `id="notification-bell"` on Popover to avoid hydration mismatch.
+**UI:** `NotificationBell` in navbar (all logged-in users). `RecentNotifications` on admin dashboard.
 
 ## Address system
 
@@ -544,3 +547,40 @@ import { motion } from "motion/react";
 Standard patterns: `initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}` with `staggerChildren` for groups. Hero parallax via `useScroll` + `useTransform`.
 
 Any section that uses `motion` hooks (`useScroll`, `useTransform`) must add `"use client"` at the top of the file.
+
+## Hydration safety
+
+**Never use `useId()` in compound UI components** (`Select`, `Tooltip`, `Popover`, `DropdownMenu`, `Dialog`, `MultiSelect`). React's `useId()` generates different IDs on server vs client inside Suspense boundaries, causing hydration mismatch. All these components use context-based state without ID-based ARIA linking.
+
+## Navigation & scroll
+
+- **`HashLink`** (`src/sections/navbar/HashLink.tsx`) — custom `<a>` that handles smooth scroll for hash links. Same-page: `scrollIntoView({ behavior: "smooth" })`. Cross-page: `router.push()` + `MutationObserver` to wait for target element.
+- **`ScrollToTop`** (`src/app/_components/ScrollToTop.tsx`) — scrolls to top on pathname change (skips hash navigation and initial render).
+- **`RestoreScroll`** (`src/app/_components/RestoreScroll.tsx`) — restores scroll position after page reload. Works with `beforeunload` script in `<head>` that saves `scrollY` to sessionStorage.
+- **`HashTracker`** (`src/app/_components/HashTracker.tsx`) — only on home page, updates URL hash based on which section is in viewport via `IntersectionObserver` with `rootMargin: "-30% 0px -70% 0px"`.
+- **Active nav links** — `useActiveHash()` hook (`src/sections/navbar/useActiveHash.ts`) polls `window.location.hash` for desktop/mobile nav highlighting.
+- **Navigation links** — shared source of truth in `src/shared/consts/navLinks.ts` (`NAV_LINKS`, `TAB_LINKS`). Used by Navbar, NavMobileTabBar, and Footer.
+
+## Product sorting
+
+- **Sort utility** — `src/sections/products/utils/sortProducts.ts` — `sortProducts(products, sortKey)` and generic `sortBySortKey(items, sortKey)`.
+- **Sort keys:** `""` (recommended: promotions → best-sellers → category), `"promotions"`, `"best-sellers"`, `"category"`.
+- **Sales data** — `getProductSalesMap()` in `productsDb.ts` aggregates `order_items` quantities by product_id for paid orders.
+- **`totalSold`** field on `Product` type — populated by `mapDbProducts(raw, salesMap)`.
+
+## Product SEO
+
+Product detail pages (`src/app/products/[id]/page.tsx`) include two JSON-LD blocks:
+- **Product schema** — with `AggregateOffer` for multi-variant pricing, promotion `priceValidUntil`, `additionalProperty` for tags/freeFrom, all images.
+- **BreadcrumbList** — Home → Category → Product.
+- Structured data builders in `src/app/products/[id]/structured-data.ts`.
+
+## Error pages
+
+- **`src/app/not-found.tsx`** — 404 page (server component, renders inside layout)
+- **`src/app/error.tsx`** — route error boundary (`"use client"`, receives `error` + `reset`)
+- **`src/app/global-error.tsx`** — root layout error (`"use client"`, own `<html><body>`, inline styles with brand colors)
+
+## Soft delete for upload images
+
+In edit mode, `FormUploadZone` uses soft delete for existing images — marking them as deleted visually without removing from Storage until form is saved. This prevents broken image URLs if admin navigates away without saving. New images uploaded in the session are deleted immediately on remove. `cleanupRemovedImages()` in server actions handles actual Storage deletion on save.

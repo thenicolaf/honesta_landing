@@ -11,6 +11,7 @@ import {
 } from "@/providers";
 import { ToastProvider, CookieConsent } from "@/shared/ui";
 import { ScrollToTop } from "./_components/ScrollToTop";
+import { RestoreScroll } from "./_components/RestoreScroll";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
 import { COOKIE_CONSENT_KEY } from "@/shared/consts";
 import { cookies } from "next/headers";
@@ -54,6 +55,13 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{window.addEventListener("beforeunload",function(){sessionStorage.setItem("scroll:"+location.pathname+location.hash,String(scrollY))})}catch(e){}`,
+          }}
+        />
+      </head>
       <body
         className={`${cormorant.variable} ${jost.variable} antialiased flex flex-col min-h-screen`}
         suppressHydrationWarning
@@ -75,6 +83,7 @@ export default async function RootLayout({
           </FavoritesProvider>
         </CartProvider>
         <ScrollToTop />
+        <RestoreScroll />
         <ToastProvider />
         <CookieConsent show={!hasConsent} />
         <script

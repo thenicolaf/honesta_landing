@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getProductBySlug } from "@/lib/productsDb";
 import { mapDbProducts } from "@/sections/products/utils";
 import { ProductDetailPage } from "@/pages_flow/products/ProductDetailPage";
+import { buildProductJsonLd, buildBreadcrumbJsonLd } from "./structured-data";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -37,32 +38,18 @@ export default async function Page({ params }: Props) {
   const siteUrl = process.env.PUBLIC_BASE_URL!;
   const [product] = mapDbProducts([dbProduct]);
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: dbProduct.title,
-    description:
-      dbProduct.tagline ??
-      `${dbProduct.title} — natural dried fruit by HONESTA.`,
-    image: dbProduct.image_url,
-    brand: { "@type": "Organization", name: "HONESTA" },
-    offers: {
-      "@type": "Offer",
-      price: product.price ?? 0,
-      priceCurrency: "AED",
-      availability:
-        dbProduct.in_stock !== false
-          ? "https://schema.org/InStock"
-          : "https://schema.org/OutOfStock",
-      url: `${siteUrl}/products/${dbProduct.slug}`,
-    },
-  };
+  const productJsonLd = buildProductJsonLd(dbProduct, product, siteUrl);
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd(dbProduct, product, siteUrl);
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       <ProductDetailPage product={product} />
     </>

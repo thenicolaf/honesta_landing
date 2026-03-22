@@ -6,7 +6,6 @@ import {
   useState,
   useRef,
   useEffect,
-  useId,
 } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { IconChevron, IconX } from "@/shared/icons";
@@ -30,8 +29,6 @@ interface SelectContextValue {
   options: SelectOption[];
   clearable: boolean;
   direction: "down" | "up";
-  triggerId: string;
-  listboxId: string;
   toggle: () => void;
   close: () => void;
   select: (value: string) => void;
@@ -71,9 +68,6 @@ export function Select({
   const [internalValue, setInternalValue] = useState(defaultValue);
   const [direction, setDirection] = useState<"down" | "up">("down");
   const rootRef = useRef<HTMLDivElement>(null);
-  const uid = useId();
-  const triggerId = `select-trigger-${uid}`;
-  const listboxId = `select-listbox-${uid}`;
 
   const value = controlledValue ?? internalValue;
 
@@ -125,7 +119,7 @@ export function Select({
 
   return (
     <SelectContext.Provider
-      value={{ open, value, options, clearable, direction, triggerId, listboxId, toggle, close, select, clear }}
+      value={{ open, value, options, clearable, direction, toggle, close, select, clear }}
     >
       <div ref={rootRef} className={cn("relative block", className)}>
         {children}
@@ -143,17 +137,15 @@ interface SelectTriggerProps {
 }
 
 export function SelectTrigger({ children, className }: SelectTriggerProps) {
-  const { open, value, clearable, toggle, clear, triggerId, listboxId } = useSelect();
+  const { open, value, clearable, toggle, clear } = useSelect();
   const showClear = clearable && value !== "";
 
   return (
     <button
-      id={triggerId}
       type="button"
       role="combobox"
       aria-expanded={open}
       aria-haspopup="listbox"
-      aria-controls={listboxId}
       onClick={toggle}
       className={cn(
         "flex w-full items-center justify-between gap-3 rounded-xl",
@@ -236,7 +228,7 @@ interface SelectContentProps {
 }
 
 export function SelectContent({ children, className }: SelectContentProps) {
-  const { open, options, direction, listboxId, triggerId } = useSelect();
+  const { open, options, direction } = useSelect();
 
   const isUp = direction === "up";
   const yOffset = isUp ? 6 : -6;
@@ -247,9 +239,7 @@ export function SelectContent({ children, className }: SelectContentProps) {
     <AnimatePresence initial={false}>
       {open && (
         <motion.ul
-          id={listboxId}
           role="listbox"
-          aria-labelledby={triggerId}
           initial={{ opacity: 0, y: yOffset, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: yOffset, scale: 0.98 }}

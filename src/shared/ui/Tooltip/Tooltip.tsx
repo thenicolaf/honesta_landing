@@ -3,7 +3,6 @@
 import {
   useState,
   useRef,
-  useId,
   useCallback,
   Children,
   cloneElement,
@@ -28,7 +27,6 @@ function resolveSide(
 
   if (space[preferred] >= MIN_SPACE) return preferred;
 
-  // Flip to opposite side on the same axis
   const opposite: Record<TooltipSide, TooltipSide> = {
     top: "bottom",
     bottom: "top",
@@ -60,9 +58,6 @@ export function Tooltip({
   const [resolvedSide, setResolvedSide] = useState<TooltipSide>(side);
   const rootRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
-  const uid = useId();
-  const triggerId = `tooltip-trigger-${uid}`;
-  const contentId = `tooltip-content-${uid}`;
 
   const show = useCallback(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -92,7 +87,7 @@ export function Tooltip({
 
   return (
     <TooltipContext.Provider
-      value={{ open, resolvedSide, triggerId, contentId, show, hide, toggle }}
+      value={{ open, resolvedSide, show, hide, toggle }}
     >
       <div ref={rootRef} className={cn("relative inline-block", className)}>
         {children}
@@ -118,7 +113,7 @@ export function TooltipTrigger({
   asChild = false,
   onClick,
 }: TooltipTriggerProps) {
-  const { open, show, hide, toggle, triggerId, contentId } = useTooltip();
+  const { show, hide, toggle } = useTooltip();
 
   const handleClick = (e: React.MouseEvent) => {
     onClick?.(e);
@@ -138,19 +133,13 @@ export function TooltipTrigger({
     if (!isValidElement(child)) return null;
     const childProps = child.props as { className?: string };
     return cloneElement(child as React.ReactElement<Record<string, unknown>>, {
-      "aria-describedby": open ? contentId : undefined,
       ...handlers,
       className: cn(childProps.className, className),
     });
   }
 
   return (
-    <span
-      id={triggerId}
-      aria-describedby={open ? contentId : undefined}
-      className={className}
-      {...handlers}
-    >
+    <span className={className} {...handlers}>
       {children}
     </span>
   );
@@ -183,7 +172,7 @@ export function TooltipContent({
   children,
   className,
 }: TooltipContentProps) {
-  const { open, hide, resolvedSide, contentId } = useTooltip();
+  const { open, hide, resolvedSide } = useTooltip();
   const offset = initialOffset[resolvedSide];
 
   const handleClick = (e: React.MouseEvent) => {
@@ -196,7 +185,6 @@ export function TooltipContent({
     <AnimatePresence initial={false}>
       {open && (
         <motion.div
-          id={contentId}
           role="tooltip"
           onClick={handleClick}
           initial={{ opacity: 0, x: offset.x, y: offset.y, scale: 0.95 }}

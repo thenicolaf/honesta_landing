@@ -15,7 +15,7 @@ import { NavUserButton } from "./NavUserButton";
 import { NavMobileTabBar } from "./NavMobileTabBar";
 import { HashLink } from "./HashLink";
 import { useActiveHash } from "./useActiveHash";
-import { NAV_LINKS } from "./consts";
+import { NAV_LINKS } from "@/shared/consts/navLinks";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 

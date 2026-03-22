@@ -4,7 +4,6 @@ import {
   useState,
   useRef,
   useEffect,
-  useId,
   useCallback,
   Children,
   cloneElement,
@@ -22,7 +21,6 @@ const VIEWPORT_PAD = 16;
 interface PopoverProps {
   children: React.ReactNode;
   className?: string;
-  id?: string;
   /** Controlled open state */
   open?: boolean;
   /** Callback when open state changes (controlled mode) */
@@ -32,17 +30,12 @@ interface PopoverProps {
 export function Popover({
   children,
   className,
-  id,
   open: controlledOpen,
   onOpenChange,
 }: PopoverProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [direction, setDirection] = useState<"down" | "up">("down");
   const rootRef = useRef<HTMLDivElement>(null);
-  const uid = useId();
-  const stableId = id ?? uid;
-  const triggerId = `popover-trigger-${stableId}`;
-  const contentId = `popover-content-${stableId}`;
 
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
@@ -93,7 +86,7 @@ export function Popover({
 
   return (
     <PopoverContext.Provider
-      value={{ open, direction, triggerId, contentId, toggle, close }}
+      value={{ open, direction, toggle, close }}
     >
       <div ref={rootRef} className={cn("relative inline-block", className)}>
         {children}
@@ -119,7 +112,7 @@ export function PopoverTrigger({
   asChild = false,
   stopPropagation = false,
 }: PopoverTriggerProps) {
-  const { open, toggle, triggerId, contentId } = usePopover();
+  const { open, toggle } = usePopover();
 
   const handleClick = (e: React.MouseEvent) => {
     if (stopPropagation) {
@@ -139,7 +132,6 @@ export function PopoverTrigger({
     return cloneElement(child as React.ReactElement<Record<string, unknown>>, {
       "aria-haspopup": "dialog",
       "aria-expanded": open,
-      "aria-controls": contentId,
       onClick: (e: React.MouseEvent) => {
         handleClick(e);
         childProps.onClick?.(e);
@@ -150,11 +142,9 @@ export function PopoverTrigger({
 
   return (
     <button
-      id={triggerId}
       type="button"
       aria-haspopup="dialog"
       aria-expanded={open}
-      aria-controls={contentId}
       onClick={handleClick}
       className={cn("cursor-pointer", className)}
     >
@@ -180,7 +170,7 @@ export function PopoverContent({
   width = "w-80",
   className,
 }: PopoverContentProps) {
-  const { open, direction, contentId, triggerId } = usePopover();
+  const { open, direction } = usePopover();
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Clamp to viewport after mount / resize — no state, direct DOM mutation
@@ -215,9 +205,7 @@ export function PopoverContent({
       {open && (
         <motion.div
           ref={contentRef}
-          id={contentId}
           role="dialog"
-          aria-labelledby={triggerId}
           initial={{ opacity: 0, y: yOffset, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: yOffset, scale: 0.97 }}

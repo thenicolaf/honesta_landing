@@ -1,12 +1,6 @@
-import Link from "next/link";
 import { IconInstagram } from "@/shared/icons";
-
-const NAV_LINKS = [
-  { href: "/#products", label: "Products" },
-  { href: "/#categories", label: "Categories" },
-  { href: "/#story", label: "Our Story" },
-  { href: "/#contact", label: "Contact" },
-];
+import { NAV_LINKS } from "@/shared/consts/navLinks";
+import { HashLink } from "./navbar/HashLink";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -18,7 +12,7 @@ export function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-12 md:gap-8 pb-12 border-b border-sand/10 text-center sm:text-left">
           {/* Column 1: Brand */}
           <div className="flex flex-col gap-5 items-center sm:items-start">
-            <Link
+            <HashLink
               href="/#hero"
               className="flex flex-col leading-none select-none w-fit"
             >
@@ -28,7 +22,7 @@ export function Footer() {
               <span className="font-body font-light text-xs uppercase tracking-[0.22em] text-sand/50 mt-0.5">
                 Sweetness Before Marketing
               </span>
-            </Link>
+            </HashLink>
 
             <p className="font-body font-light text-sand/50 text-sm leading-relaxed max-w-55">
               Handcrafted dried fruit snacks.
@@ -45,12 +39,12 @@ export function Footer() {
             <ul className="flex flex-col gap-3">
               {NAV_LINKS.map(({ href, label }) => (
                 <li key={href}>
-                  <Link
+                  <HashLink
                     href={href}
                     className="font-body font-light text-sand/65 text-sm hover:text-orange-light transition-colors duration-200"
                   >
                     {label}
-                  </Link>
+                  </HashLink>
                 </li>
               ))}
             </ul>

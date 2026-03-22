@@ -7,8 +7,6 @@ export type TooltipSide = "top" | "bottom" | "left" | "right";
 export interface TooltipContextValue {
   open: boolean;
   resolvedSide: TooltipSide;
-  triggerId: string;
-  contentId: string;
   show: () => void;
   hide: () => void;
   toggle: () => void;

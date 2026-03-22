@@ -6,7 +6,6 @@ import {
   useState,
   useEffect,
   useRef,
-  useId,
   cloneElement,
   isValidElement,
 } from "react";
@@ -20,8 +19,6 @@ import { Button } from "./Button";
 
 interface DialogContextValue {
   open: boolean;
-  titleId: string;
-  descriptionId: string;
   toggle: () => void;
   close: () => void;
 }
@@ -48,9 +45,6 @@ export function Dialog({
   onOpenChange,
 }: DialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
-  const uid = useId();
-  const titleId = `dialog-title-${uid}`;
-  const descriptionId = `dialog-description-${uid}`;
 
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
@@ -67,7 +61,7 @@ export function Dialog({
 
   return (
     <DialogContext.Provider
-      value={{ open, titleId, descriptionId, toggle, close }}
+      value={{ open, toggle, close }}
     >
       {children}
     </DialogContext.Provider>
@@ -152,7 +146,7 @@ export function DialogContent({
   size = "md",
   showCloseButton = true,
 }: DialogContentProps) {
-  const { open, close, titleId, descriptionId } = useDialog();
+  const { open, close } = useDialog();
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Close on Escape
@@ -199,8 +193,6 @@ export function DialogContent({
               ref={contentRef}
               role="dialog"
               aria-modal="true"
-              aria-labelledby={titleId}
-              aria-describedby={descriptionId}
               initial={{ opacity: 0, scale: 0.96, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
@@ -282,10 +274,8 @@ export function DialogTitle({
   children: React.ReactNode;
   className?: string;
 }) {
-  const { titleId } = useDialog();
   return (
     <h2
-      id={titleId}
       className={cn(
         "font-display font-semibold text-xl text-heading",
         className,
@@ -305,10 +295,8 @@ export function DialogDescription({
   children: React.ReactNode;
   className?: string;
 }) {
-  const { descriptionId } = useDialog();
   return (
     <p
-      id={descriptionId}
       className={cn("font-body font-light text-sm text-earth/60", className)}
     >
       {children}

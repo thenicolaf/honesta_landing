@@ -5,8 +5,6 @@ import { createContext, useContext } from "react";
 export interface PopoverContextValue {
   open: boolean;
   direction: "down" | "up";
-  triggerId: string;
-  contentId: string;
   toggle: () => void;
   close: () => void;
 }

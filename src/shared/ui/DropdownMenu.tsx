@@ -6,7 +6,6 @@ import {
   useState,
   useRef,
   useEffect,
-  useId,
   Children,
   cloneElement,
   isValidElement,
@@ -21,8 +20,6 @@ const DROPDOWN_MAX_H = 240;
 interface DropdownMenuContextValue {
   open: boolean;
   direction: "down" | "up";
-  triggerId: string;
-  menuId: string;
   toggle: () => void;
   close: () => void;
 }
@@ -43,7 +40,6 @@ export function useDropdownMenu() {
 interface DropdownMenuProps {
   children: React.ReactNode;
   className?: string;
-  id?: string;
   /** Controlled open state */
   open?: boolean;
   /** Called when open state should change (controlled mode) */
@@ -53,17 +49,12 @@ interface DropdownMenuProps {
 export function DropdownMenu({
   children,
   className,
-  id,
   open: controlledOpen,
   onOpenChange,
 }: DropdownMenuProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [direction, setDirection] = useState<"down" | "up">("down");
   const rootRef = useRef<HTMLDivElement>(null);
-  const uid = useId();
-  const stableId = id ?? uid;
-  const triggerId = `dropdown-trigger-${stableId}`;
-  const menuId = `dropdown-menu-${stableId}`;
 
   const open = controlledOpen ?? internalOpen;
 
@@ -110,7 +101,7 @@ export function DropdownMenu({
 
   return (
     <DropdownMenuContext.Provider
-      value={{ open, direction, triggerId, menuId, toggle, close }}
+      value={{ open, direction, toggle, close }}
     >
       <div ref={rootRef} className={cn("relative inline-block", className)}>
         {children}
@@ -136,7 +127,7 @@ export function DropdownMenuTrigger({
   stopPropagation = false,
   asChild = false,
 }: DropdownMenuTriggerProps) {
-  const { open, toggle, triggerId, menuId } = useDropdownMenu();
+  const { open, toggle } = useDropdownMenu();
 
   const handleClick = (e: React.MouseEvent) => {
     if (stopPropagation) {
@@ -166,11 +157,9 @@ export function DropdownMenuTrigger({
 
   return (
     <button
-      id={triggerId}
       type="button"
       aria-haspopup="menu"
       aria-expanded={open}
-      aria-controls={menuId}
       onClick={handleClick}
       className={cn("cursor-pointer", className)}
     >
@@ -192,7 +181,7 @@ export function DropdownMenuContent({
   className,
   align = "left",
 }: DropdownMenuContentProps) {
-  const { open, direction, menuId, triggerId } = useDropdownMenu();
+  const { open, direction } = useDropdownMenu();
 
   const isUp = direction === "up";
   const yOffset = isUp ? 6 : -6;
@@ -201,9 +190,7 @@ export function DropdownMenuContent({
     <AnimatePresence initial={false}>
       {open && (
         <motion.ul
-          id={menuId}
           role="menu"
-          aria-labelledby={triggerId}
           initial={{ opacity: 0, y: yOffset, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: yOffset, scale: 0.98 }}

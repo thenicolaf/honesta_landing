@@ -31,7 +31,7 @@ export function NavUserButton({ user, isAdmin }: NavUserButtonProps) {
   if (user) {
     return (
       <>
-        <DropdownMenu id="nav-user">
+        <DropdownMenu>
           <DropdownMenuTrigger className="p-1">
             <Avatar initial={user.email} size="sm" title={user.email} />
           </DropdownMenuTrigger>

@@ -5,7 +5,7 @@ import { useScroll, useMotionValueEvent, motion } from "motion/react";
 import { cn } from "@/shared/utils/cn";
 import { HashLink } from "./HashLink";
 import { useActiveHash } from "./useActiveHash";
-import { TAB_LINKS } from "./consts";
+import { TAB_LINKS } from "@/shared/consts/navLinks";
 
 export function NavMobileTabBar() {
   const { scrollY } = useScroll();

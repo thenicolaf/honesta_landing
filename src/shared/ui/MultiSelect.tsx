@@ -7,7 +7,6 @@ import {
   useRef,
   useEffect,
   useLayoutEffect,
-  useId,
 } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { IconChevron, IconPlus, IconX } from "@/shared/icons";
@@ -30,8 +29,6 @@ interface MultiSelectContextValue {
   clearable: boolean;
   search: string;
   direction: "down" | "up";
-  triggerId: string;
-  listboxId: string;
   listRef: React.RefObject<HTMLUListElement | null>;
   scrollTopRef: React.RefObject<number>;
   toggle: () => void;
@@ -78,9 +75,6 @@ export function MultiSelect({
   const rootRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const scrollTopRef = useRef(0);
-  const uid = useId();
-  const triggerId = `multiselect-trigger-${uid}`;
-  const listboxId = `multiselect-listbox-${uid}`;
 
   const values = controlledValue ?? internalValue;
 
@@ -156,8 +150,6 @@ export function MultiSelect({
         clearable,
         search,
         direction,
-        triggerId,
-        listboxId,
         listRef,
         scrollTopRef,
         toggle,
@@ -188,7 +180,7 @@ export function MultiSelectTrigger({
   className,
   renderTag,
 }: MultiSelectTriggerProps) {
-  const { open, values, options, clearable, toggle, removeItem, clearAll, triggerId, listboxId } =
+  const { open, values, options, clearable, toggle, removeItem, clearAll } =
     useMultiSelect();
   const hasValues = values.length > 0;
   const showClear = clearable && hasValues;
@@ -198,12 +190,10 @@ export function MultiSelectTrigger({
 
   return (
     <button
-      id={triggerId}
       type="button"
       role="combobox"
       aria-expanded={open}
       aria-haspopup="listbox"
-      aria-controls={listboxId}
       onClick={toggle}
       className={cn(
         "flex w-full flex-wrap items-center gap-1.5 rounded-xl text-left",
@@ -281,7 +271,7 @@ export function MultiSelectContent({
   className,
   searchPlaceholder = "Search...",
 }: MultiSelectContentProps) {
-  const { open, values, options, direction, search, setSearch, listboxId, triggerId, listRef, scrollTopRef } =
+  const { open, values, options, direction, search, setSearch, listRef, scrollTopRef } =
     useMultiSelect();
 
   const sortedOptions = [...options].sort((a, b) => {
@@ -363,9 +353,7 @@ export function MultiSelectContent({
           {/* Items */}
           <motion.ul
             ref={listRef}
-            id={listboxId}
             role="listbox"
-            aria-labelledby={triggerId}
             aria-multiselectable="true"
             layoutScroll
             className="py-1.5 max-h-52 overflow-y-auto overscroll-contain"
