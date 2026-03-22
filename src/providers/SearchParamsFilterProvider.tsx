@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, startTransition } from "react";
+import { useEffect, useRef } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { FilterProvider, useFilter } from "./FilterProvider";
 import type { FilterValues } from "./FilterProvider";
@@ -13,44 +13,60 @@ function SearchParamsSync({ keys }: { keys: string[] }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isInitial = useRef(true);
+  const filtersRef = useRef(filters);
+  filtersRef.current = filters;
+  const updatingUrl = useRef(false);
 
-  // Sync URL → state on search params change (e.g. browser back/forward, link navigation)
-  useEffect(() => {
-    for (const key of keys) {
-      const urlValue = searchParams.get(key) ?? "";
-      if (urlValue !== (filters[key] ?? "")) {
-        setFilter(key, urlValue);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
-
-  // Sync state → URL when filters change (skip initial render)
+  // Sync state → URL (must be BEFORE URL → state to set updatingUrl flag first)
   useEffect(() => {
     if (isInitial.current) {
       isInitial.current = false;
       return;
     }
 
-    startTransition(() => {
-      const params = new URLSearchParams(searchParams.toString());
+    updatingUrl.current = true;
 
-      for (const key of keys) {
-        const value = filters[key] ?? "";
-        if (value) {
-          params.set(key, value);
-        } else {
-          params.delete(key);
-        }
+    const params = new URLSearchParams(searchParams.toString());
+
+    for (const key of keys) {
+      const value = filters[key] ?? "";
+      if (value) {
+        params.set(key, value);
+      } else {
+        params.delete(key);
       }
+    }
 
-      const qs = params.toString();
-      const hash = window.location.hash;
-      const url = qs ? `${pathname}?${qs}${hash}` : `${pathname}${hash}`;
-      router.replace(url, { scroll: false });
-    });
+    const qs = params.toString();
+    const hash = window.location.hash;
+    const url = qs ? `${pathname}?${qs}${hash}` : `${pathname}${hash}`;
+
+    // Sync URL immediately so other code (e.g. HashTracker) sees current search params
+    window.history.replaceState(null, "", url);
+    router.replace(url, { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
+
+  // Sync URL → state (browser back/forward, external navigation)
+  useEffect(() => {
+    if (updatingUrl.current) {
+      const current = filtersRef.current;
+      const synced = keys.every(
+        (key) => (searchParams.get(key) ?? "") === (current[key] ?? ""),
+      );
+      if (synced) updatingUrl.current = false;
+      return;
+    }
+
+    const current = filtersRef.current;
+    for (const key of keys) {
+      const urlValue = searchParams.get(key) ?? "";
+      if (urlValue !== (current[key] ?? "")) {
+        setFilter(key, urlValue);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   return null;
 }

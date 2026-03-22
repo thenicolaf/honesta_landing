@@ -56,14 +56,19 @@ export function formatDateTime(
   locale = "en-GB",
   options?: Intl.DateTimeFormatOptions,
 ): string {
-  return new Date(dateStr).toLocaleString(locale, {
+  const d = new Date(dateStr);
+  const date = d.toLocaleDateString(locale, {
     day: "numeric",
     month: "short",
     year: "numeric",
+    ...options,
+  });
+  const time = d.toLocaleTimeString(locale, {
     hour: "2-digit",
     minute: "2-digit",
     ...options,
   });
+  return `${date}, ${time}`;
 }
 
 /** Truncate a UUID to first N chars (uppercased). */
