@@ -36,7 +36,7 @@ export function PartnershipForm() {
           Thank you!
         </p>
         <p className="font-body font-light text-earth/70 text-sm leading-relaxed">
-          We&apos;ll be in touch within 24 hours.
+          We&apos;ll get back to you as soon as possible.
         </p>
       </div>
     );
@@ -54,7 +54,7 @@ export function PartnershipForm() {
                 id="business_name"
                 name="business_name"
                 type="text"
-                placeholder="Bloom Café"
+                placeholder="Your business name"
                 defaultValue={state?.values?.business_name}
                 state={state?.fieldErrors?.business_name ? "error" : "default"}
               />

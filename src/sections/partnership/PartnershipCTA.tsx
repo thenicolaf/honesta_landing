@@ -113,9 +113,9 @@ export function PartnershipCTA() {
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="font-body font-light text-white/85 text-base md:text-lg leading-relaxed mb-8 md:mb-12 max-w-xl mx-auto text-center"
           >
-            Restaurants, cafés, health stores, boutique hotels — we supply
-            businesses of any size. Honest ingredients. Flexible volumes.
-            Personal service.
+            Restaurants, coffee shops, gyms, spas, hotels, and event
+            catering — we supply businesses of any size. Honest ingredients.
+            Flexible volumes. Personal service.
           </motion.p>
 
           {/* Instagram card */}
