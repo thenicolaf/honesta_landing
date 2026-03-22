@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useScroll, useTransform, motion } from "motion/react";
 import { Button } from "@/shared/ui";
 import { IconInstagram } from "@/shared/icons";
+import { HashLink } from "./navbar";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -114,9 +115,12 @@ export function Hero() {
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="flex flex-col items-center gap-4"
           >
-            <Button href="#products" size="lg">
-              Explore Honest Sweets
-            </Button>
+            <HashLink href="/#products">
+              <Button as="button" type="button" size="lg">
+                Explore Honest Sweets
+              </Button>
+            </HashLink>
+
             <a
               href={process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL}
               target="_blank"

@@ -7,6 +7,7 @@ import {
   formatDeliveryDaysRange,
 } from "@/shared/utils/calculateDelivery";
 import type { DeliverySetting } from "@/lib/deliveryDb";
+import { HashLink } from "@/sections";
 
 interface CartSummaryProps {
   deliverySettings: DeliverySetting[];
@@ -78,14 +79,17 @@ export function CartSummary({ deliverySettings }: CartSummaryProps) {
         <Button className="w-full" href="/checkout">
           Proceed to Checkout
         </Button>
-        <Button
-          href="/#products"
-          variant="text"
-          size="sm"
-          className="text-earth/50 hover:text-orange"
-        >
-          Continue Shopping
-        </Button>
+        <HashLink href="/#products" className="text-center">
+          <Button
+            variant={"text"}
+            type="button"
+            as="button"
+            size={"sm"}
+            className="text-earth/50 hover:text-orange mx-auto"
+          >
+            Continue Shopping
+          </Button>
+        </HashLink>
       </div>
     </>
   );

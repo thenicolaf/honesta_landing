@@ -1,15 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import {
   FormLabel,
   FormInput,
   FormPhoneInput,
   FormTextarea,
   FormError,
+  FormCheckbox,
   AddressWithMap,
 } from "@/shared/ui";
 import { SubmitButton } from "./SubmitButton";
 import { AddressSelector } from "./AddressSelector";
+import Link from "next/link";
 import { CustomerInfo } from "@/shared/types";
 import type { CustomerErrors } from "@/shared/utils/validateCustomer";
 import { parseAddress } from "@/shared/utils/address";
@@ -36,6 +39,8 @@ export function CheckoutForm({
   minimumOrder,
   disabledEmirates,
 }: CheckoutFormProps) {
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+
   return (
     <>
       {/* Name row */}
@@ -129,10 +134,25 @@ export function CheckoutForm({
         />
       </div>
 
+      <FormCheckbox
+        name="terms"
+        checked={agreedToTerms}
+        onChange={(e) => setAgreedToTerms(e.target.checked)}
+        label={
+          <>
+            I have read and agree to the{" "}
+            <Link href="/terms" className="underline text-orange">
+              Terms and Conditions
+            </Link>
+          </>
+        }
+      />
+
       <SubmitButton
         totalWithDelivery={totalWithDelivery}
         belowMinimum={belowMinimum}
         minimumOrder={minimumOrder}
+        agreedToTerms={agreedToTerms}
       />
 
       <p className="font-body font-light text-earth/40 text-xs text-center">

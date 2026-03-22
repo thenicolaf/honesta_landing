@@ -7,15 +7,17 @@ interface SubmitButtonProps {
   totalWithDelivery: number;
   belowMinimum?: boolean;
   minimumOrder?: number | null;
+  agreedToTerms?: boolean;
 }
 
 export function SubmitButton({
   totalWithDelivery,
   belowMinimum,
   minimumOrder,
+  agreedToTerms,
 }: SubmitButtonProps) {
   const { pending } = useFormStatus();
-  const disabled = pending || !!belowMinimum;
+  const disabled = pending || !!belowMinimum || !agreedToTerms;
 
   return (
     <div className="flex flex-col gap-1.5">
