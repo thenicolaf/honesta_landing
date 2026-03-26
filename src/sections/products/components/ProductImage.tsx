@@ -54,32 +54,34 @@ export function ProductImage({
       {topRight}
 
       {/* Info button — fades out when overlay is visible */}
-      <Tooltip
-        side="left"
-        className={cn(
-          "absolute bottom-3 right-3 z-20",
-          showTagline && "opacity-0 pointer-events-none",
-        )}
-      >
-        <TooltipTrigger asChild>
-          <Button
-            as="button"
-            type="button"
-            variant="text"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              setShowTagline(true);
-            }}
-            className="rounded-full bg-earth/30 p-1.5! text-white-warm! backdrop-blur-sm hover:bg-earth/50 transition-all duration-300"
-            aria-label="Show description"
-          >
-            <IconInfo className="w-3.5 h-3.5" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>Show description</TooltipContent>
-      </Tooltip>
+      {tagline && (
+        <Tooltip
+          side="left"
+          className={cn(
+            "absolute bottom-3 right-3 z-20",
+            showTagline && "opacity-0 pointer-events-none",
+          )}
+        >
+          <TooltipTrigger asChild>
+            <Button
+              as="button"
+              type="button"
+              variant="text"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setShowTagline(true);
+              }}
+              className="rounded-full bg-earth/30 p-1.5! text-white-warm! backdrop-blur-sm hover:bg-earth/50 transition-all duration-300"
+              aria-label="Show description"
+            >
+              <IconInfo className="w-3.5 h-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Show description</TooltipContent>
+        </Tooltip>
+      )}
 
       {/* Tagline overlay — click to dismiss */}
       <div
