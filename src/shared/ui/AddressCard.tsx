@@ -1,7 +1,11 @@
 "use client";
 
 import { Card, Badge, CopyText, Button } from "@/shared/ui";
-import { displayAddress, shortAddress, parseAddress } from "@/shared/utils/address";
+import {
+  displayAddress,
+  shortAddress,
+  parseAddress,
+} from "@/shared/utils/address";
 import { MapPin, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import type { UserAddress } from "@/lib/addressesDb";
@@ -93,7 +97,7 @@ export function AddressCard({
 
       <CopyText
         text={displayAddress(address.address)}
-        className="text-sm text-earth hover:text-orange mt-1 w-full min-w-0"
+        className="text-sm text-earth hover:text-orange mt-1 w-fit min-w-0"
         onClick={(e) => e.stopPropagation()}
       >
         <MapPin className="w-3.5 h-3.5 shrink-0 text-earth/40" />

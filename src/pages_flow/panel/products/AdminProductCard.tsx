@@ -42,20 +42,21 @@ export function AdminProductCard({ product }: { product: AdminDbProduct }) {
         title={product.title}
         tagline={tagline}
         sale={!!promotion}
+        topRight={
+          product.in_stock === false ? (
+            <Badge
+              variant="outline"
+              size="sm"
+              className="absolute top-3 right-3 z-20 bg-white-warm/80 backdrop-blur-sm"
+            >
+              Out of stock
+            </Badge>
+          ) : undefined
+        }
       />
 
       <div className="flex-1 p-5 flex flex-col gap-3">
-        <ProductHeader
-          category={category}
-          badge={badge}
-          extraBadges={
-            product.in_stock === false ? (
-              <Badge variant="outline" size="sm">
-                Out of stock
-              </Badge>
-            ) : undefined
-          }
-        />
+        <ProductHeader category={category} badge={badge} />
         <ProductTitle title={product.title} />
 
         <AdminVariantBadges
