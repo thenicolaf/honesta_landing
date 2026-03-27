@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { AddressCard, AddressWithMap, FormError, Card } from "@/shared/ui";
+import {
+  AddressCard,
+  AddressWithMap,
+  FormError,
+  Card,
+} from "@/shared/ui";
+import type { AddressFieldErrors } from "@/shared/ui/AddressWithMap";
 import { parseAddress } from "@/shared/utils/address";
 import { MapPin } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
@@ -15,7 +21,7 @@ interface AddressSelectorProps {
     lat?: string;
     lng?: string;
   };
-  error?: string | null;
+  fieldErrors?: AddressFieldErrors | null;
   onEmirateChange?: (emirate: string) => void;
   disabledEmirates?: string[];
 }
@@ -23,7 +29,7 @@ interface AddressSelectorProps {
 export function AddressSelector({
   addresses,
   defaultValues,
-  error,
+  fieldErrors,
   onEmirateChange,
   disabledEmirates,
 }: AddressSelectorProps) {
@@ -92,7 +98,7 @@ export function AddressSelector({
         <AddressHiddenInputs address={selectedAddress} />
       )}
 
-      <FormError message={error ?? undefined} />
+      <FormError message={!isCustom ? fieldErrors?.emirate : undefined} />
 
       {/* Custom address form */}
       <AnimatePresence>
@@ -109,7 +115,7 @@ export function AddressSelector({
                 {...parseAddress(defaultValues?.address)}
                 defaultLat={defaultValues?.lat}
                 defaultLng={defaultValues?.lng}
-                error={isCustom ? error : undefined}
+                fieldErrors={isCustom ? fieldErrors : undefined}
                 onEmirateChange={onEmirateChange}
                 disabledEmirates={disabledEmirates}
               />
@@ -127,6 +133,13 @@ function AddressHiddenInputs({ address }: { address: UserAddress }) {
     <>
       <input type="hidden" name="emirate" value={parsed.defaultEmirate ?? ""} />
       <input type="hidden" name="address" value={address.address} />
+      <input type="hidden" name="addressCity" value={parsed.defaultCity ?? ""} />
+      <input type="hidden" name="addressArea" value={parsed.defaultArea ?? ""} />
+      <input
+        type="hidden"
+        name="addressBuilding"
+        value={parsed.defaultBuildingName ?? ""}
+      />
       <input
         type="hidden"
         name="lat"

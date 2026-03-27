@@ -119,6 +119,7 @@ export {
   type FieldDef,
 } from "./DataCard";
 export { AddressWithMap } from "./AddressWithMap";
+export type { AddressFieldErrors } from "./AddressWithMap";
 export { AddressSuggestInput } from "./AddressSuggestInput";
 export { AddressCard } from "./AddressCard";
 export { CopyText } from "./CopyText";

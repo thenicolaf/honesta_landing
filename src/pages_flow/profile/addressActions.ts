@@ -17,6 +17,10 @@ export interface AddressState {
   fieldErrors?: {
     label?: string;
     address?: string;
+    emirate?: string;
+    addressCity?: string;
+    addressArea?: string;
+    addressBuilding?: string;
   };
   values?: AddressValues;
 }
@@ -37,6 +41,23 @@ function parseAddressValues(formData: FormData): AddressValues {
     lat: (formData.get("lat") as string) || "",
     lng: (formData.get("lng") as string) || "",
   };
+}
+
+function validateAddressFields(
+  formData: FormData,
+): AddressState["fieldErrors"] | null {
+  const fieldErrors: AddressState["fieldErrors"] = {};
+  const emirate = (formData.get("emirate") as string)?.trim();
+  const city = (formData.get("addressCity") as string)?.trim();
+  const area = (formData.get("addressArea") as string)?.trim();
+  const building = (formData.get("addressBuilding") as string)?.trim();
+
+  if (!emirate) fieldErrors.emirate = "Emirate is required.";
+  if (!city) fieldErrors.addressCity = "City is required.";
+  if (!area) fieldErrors.addressArea = "Area is required.";
+  if (!building) fieldErrors.addressBuilding = "Building is required.";
+
+  return Object.keys(fieldErrors).length > 0 ? fieldErrors : null;
 }
 
 function parseCoordinates(values: AddressValues) {
@@ -62,15 +83,16 @@ export async function createAddressAction(
 ): Promise<AddressState> {
   const values = parseAddressValues(formData);
 
-  if (!values.address) {
-    return { fieldErrors: { address: "Address is required." }, values };
+  const fieldErrors = validateAddressFields(formData);
+  if (fieldErrors) {
+    return { fieldErrors, values };
   }
 
   const { user } = await requireUser();
 
   const { error } = await createAddress(user.id, {
     label: values.label || undefined,
-    address: values.address,
+    address: values.address!,
     coordinates: parseCoordinates(values),
     is_default: false,
   });
@@ -89,15 +111,16 @@ export async function updateAddressAction(
 ): Promise<AddressState> {
   const values = parseAddressValues(formData);
 
-  if (!values.address) {
-    return { fieldErrors: { address: "Address is required." }, values };
+  const fieldErrors = validateAddressFields(formData);
+  if (fieldErrors) {
+    return { fieldErrors, values };
   }
 
   const { user } = await requireUser();
 
   const { error } = await updateAddress(id, user.id, {
     label: values.label || undefined,
-    address: values.address,
+    address: values.address!,
     coordinates: parseCoordinates(values),
   });
 

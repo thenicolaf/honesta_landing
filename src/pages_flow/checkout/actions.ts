@@ -29,6 +29,8 @@ export async function submitCheckout(
 ): Promise<CheckoutState | null> {
   const customer = Object.fromEntries(formData) as Partial<CustomerInfo>;
 
+  console.log("[submitCheckout] formData entries:", Object.fromEntries(formData));
+
   const cookieStore = await cookies();
 
   // 1. Check auth — authorized users' data comes from DB, not cookies
@@ -48,6 +50,7 @@ export async function submitCheckout(
 
   const fieldErrors = validateCustomer(customer);
   if (fieldErrors) {
+    console.log("[submitCheckout] validation errors:", fieldErrors);
     return { fieldErrors, values: customer };
   }
 
@@ -59,7 +62,9 @@ export async function submitCheckout(
 
   if (setting && !setting.is_active) {
     return {
-      error: `Delivery to ${emirate} is currently unavailable`,
+      fieldErrors: {
+        emirate: `Delivery to ${emirate} is currently unavailable`,
+      },
       values: customer,
     };
   }
@@ -72,7 +77,9 @@ export async function submitCheckout(
 
   if (delivery.belowMinimum) {
     return {
-      error: `Minimum order of AED ${delivery.minimumOrder} is required for ${emirate}`,
+      fieldErrors: {
+        emirate: `Minimum order of AED ${delivery.minimumOrder} is required for ${emirate}`,
+      },
       values: customer,
     };
   }
