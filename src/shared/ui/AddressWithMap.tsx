@@ -17,6 +17,13 @@ const DUBAI_CENTER = { lat: 25.2048, lng: 55.2708 };
 const LIBRARIES: ["places"] = ["places"];
 const FORWARD_GEOCODE_DEBOUNCE = 700;
 
+export interface AddressFieldErrors {
+  emirate?: string;
+  city?: string;
+  area?: string;
+  buildingName?: string;
+}
+
 interface Props {
   defaultEmirate?: string;
   defaultCity?: string;
@@ -25,7 +32,8 @@ interface Props {
   defaultFlatNumber?: string;
   defaultLat?: string;
   defaultLng?: string;
-  error?: string | null;
+  fieldErrors?: AddressFieldErrors | null;
+  required?: boolean;
   onEmirateChange?: (emirate: string) => void;
   disabledEmirates?: string[];
 }
@@ -69,14 +77,15 @@ function matchEmirate(raw: string): string {
 }
 
 export function AddressWithMap({
-  defaultEmirate = "Dubai",
+  defaultEmirate,
   defaultCity = "",
   defaultArea = "",
   defaultBuildingName = "",
   defaultFlatNumber = "",
   defaultLat,
   defaultLng,
-  error,
+  fieldErrors,
+  required = true,
   onEmirateChange,
   disabledEmirates,
 }: Props) {
@@ -97,7 +106,8 @@ export function AddressWithMap({
   );
 
   // --- Raw state setters (no cascade) ---
-  const [emirate, setEmirateState] = useState(defaultEmirate);
+  const resolvedDefaultEmirate = defaultEmirate ?? (required ? "Dubai" : "");
+  const [emirate, setEmirateState] = useState(resolvedDefaultEmirate);
   const [city, setCityState] = useState(defaultCity);
   const [area, setAreaState] = useState(defaultArea);
   const [buildingName, setBuildingNameState] = useState(defaultBuildingName);
@@ -291,7 +301,6 @@ export function AddressWithMap({
     return () => clearTimeout(timer);
   }, [emirate, city, area, buildingName, isLoaded]);
 
-  const hasError = !!error;
   const composed = composeAddress({
     emirate,
     city,
@@ -313,7 +322,9 @@ export function AddressWithMap({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {/* Emirate */}
         <div className="sm:col-span-2">
-          <FormLabel htmlFor="address-emirate-select">Emirate</FormLabel>
+          <FormLabel htmlFor="address-emirate-select" required={required}>
+            Emirate
+          </FormLabel>
           <FormSelect
             id="address-emirate-select"
             name="_emirate"
@@ -323,14 +334,18 @@ export function AddressWithMap({
               ...e,
               disabled: disabledEmirates?.includes(e.value),
             }))}
+            clearable
             placeholder="Emirate"
-            state={hasError ? "error" : "default"}
+            state={fieldErrors?.emirate ? "error" : "default"}
           />
+          <FormError message={fieldErrors?.emirate} />
         </div>
 
         {/* City */}
         <div>
-          <FormLabel htmlFor="address-city">City</FormLabel>
+          <FormLabel htmlFor="address-city" required={required}>
+            City
+          </FormLabel>
           {isLoaded ? (
             <AddressSuggestInput
               id="address-city"
@@ -338,7 +353,7 @@ export function AddressWithMap({
               onChange={handleCityChange}
               onSelect={onCitySelect}
               placeholder="City"
-              state={hasError ? "error" : "default"}
+              state={fieldErrors?.city ? "error" : "default"}
               types={["(cities)"]}
               locationBias={locationBias}
             />
@@ -349,14 +364,17 @@ export function AddressWithMap({
               value={city}
               onChange={(e) => handleCityChange(e.target.value)}
               placeholder="City"
-              state={hasError ? "error" : "default"}
+              state={fieldErrors?.city ? "error" : "default"}
             />
           )}
+          <FormError message={fieldErrors?.city} />
         </div>
 
         {/* Area */}
         <div>
-          <FormLabel htmlFor="address-area">Area</FormLabel>
+          <FormLabel htmlFor="address-area" required={required}>
+            Area
+          </FormLabel>
           {isLoaded ? (
             <AddressSuggestInput
               id="address-area"
@@ -364,7 +382,7 @@ export function AddressWithMap({
               onChange={handleAreaChange}
               onSelect={onAreaSelect}
               placeholder="Area / district"
-              state={hasError ? "error" : "default"}
+              state={fieldErrors?.area ? "error" : "default"}
               types={["sublocality", "neighborhood"]}
               locationBias={locationBias}
             />
@@ -375,14 +393,17 @@ export function AddressWithMap({
               value={area}
               onChange={(e) => handleAreaChange(e.target.value)}
               placeholder="Area / district"
-              state={hasError ? "error" : "default"}
+              state={fieldErrors?.area ? "error" : "default"}
             />
           )}
+          <FormError message={fieldErrors?.area} />
         </div>
 
         {/* Building Name */}
         <div>
-          <FormLabel htmlFor="address-building">Building</FormLabel>
+          <FormLabel htmlFor="address-building" required={required}>
+            Building
+          </FormLabel>
           {isLoaded ? (
             <AddressSuggestInput
               id="address-building"
@@ -390,7 +411,7 @@ export function AddressWithMap({
               onChange={setBuildingNameState}
               onSelect={onBuildingSelect}
               placeholder="Building name"
-              state={hasError ? "error" : "default"}
+              state={fieldErrors?.buildingName ? "error" : "default"}
               types={["establishment"]}
               locationBias={locationBias}
             />
@@ -401,9 +422,10 @@ export function AddressWithMap({
               value={buildingName}
               onChange={(e) => setBuildingNameState(e.target.value)}
               placeholder="Building name"
-              state={hasError ? "error" : "default"}
+              state={fieldErrors?.buildingName ? "error" : "default"}
             />
           )}
+          <FormError message={fieldErrors?.buildingName} />
         </div>
 
         {/* Flat Number */}
@@ -415,7 +437,6 @@ export function AddressWithMap({
             value={flatNumber}
             onChange={(e) => setFlatNumber(e.target.value)}
             placeholder="Flat / villa number"
-            state={hasError ? "error" : "default"}
           />
         </div>
       </div>
@@ -425,8 +446,9 @@ export function AddressWithMap({
       <input type="hidden" name="address" value={composed} />
       <input type="hidden" name="lat" value={markerPos.lat} />
       <input type="hidden" name="lng" value={markerPos.lng} />
-
-      <FormError message={error ?? undefined} />
+      <input type="hidden" name="addressCity" value={city} />
+      <input type="hidden" name="addressArea" value={area} />
+      <input type="hidden" name="addressBuilding" value={buildingName} />
 
       {isLoaded && (
         <div className="mt-3 overflow-hidden rounded-xl border border-parchment">

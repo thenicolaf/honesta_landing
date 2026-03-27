@@ -119,7 +119,12 @@ function AddressDialogForm({
         {...parsed}
         defaultLat={defaultLat}
         defaultLng={defaultLng}
-        error={state?.fieldErrors?.address}
+        fieldErrors={{
+          emirate: state?.fieldErrors?.emirate,
+          city: state?.fieldErrors?.addressCity,
+          area: state?.fieldErrors?.addressArea,
+          buildingName: state?.fieldErrors?.addressBuilding,
+        }}
       />
 
       <div className="flex items-center justify-end gap-3 pt-2">

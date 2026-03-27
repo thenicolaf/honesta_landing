@@ -126,6 +126,13 @@ export function PartnershipForm() {
           {...parseAddress(state?.values?.address)}
           defaultLat={state?.values?.lat}
           defaultLng={state?.values?.lng}
+          required={false}
+          fieldErrors={{
+            emirate: state?.fieldErrors?.emirate,
+            city: state?.fieldErrors?.addressCity,
+            area: state?.fieldErrors?.addressArea,
+            buildingName: state?.fieldErrors?.addressBuilding,
+          }}
         />
       </div>
 

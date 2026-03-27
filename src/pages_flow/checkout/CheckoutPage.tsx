@@ -28,15 +28,16 @@ export function CheckoutPage({
 }: CheckoutPageProps) {
   const { items, total, isHydrated } = useCart();
   const [emirate, setEmirate] = useState(
-    defaultValues?.address
-      ? extractEmirateFromAddress(defaultValues.address, addresses)
-      : "Dubai",
+    extractEmirateFromAddress(defaultValues?.address ?? "", addresses),
   );
 
   const delivery = calculateDelivery(total, emirate, deliverySettings);
   const disabledEmirates = deliverySettings
     .filter((s) => !s.is_active)
     .map((s) => s.emirate);
+  const emirateWarning = disabledEmirates.includes(emirate)
+    ? `Delivery to ${emirate} is currently unavailable. Please select another emirate.`
+    : undefined;
 
   const [state, formAction] = useActionState(
     submitCheckout.bind(null, items),
@@ -85,6 +86,7 @@ export function CheckoutPage({
               defaultValues={defaultValues}
               addresses={addresses}
               fieldErrors={state?.fieldErrors}
+              emirateWarning={emirateWarning}
               totalWithDelivery={total + delivery.fee}
               onEmirateChange={setEmirate}
               belowMinimum={delivery.belowMinimum}

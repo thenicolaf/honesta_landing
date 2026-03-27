@@ -22,6 +22,7 @@ interface CheckoutFormProps {
   defaultValues?: Partial<CustomerInfo>;
   addresses?: UserAddress[];
   fieldErrors?: CustomerErrors;
+  emirateWarning?: string;
   totalWithDelivery: number;
   onEmirateChange?: (emirate: string) => void;
   belowMinimum?: boolean;
@@ -33,6 +34,7 @@ export function CheckoutForm({
   defaultValues = {},
   addresses,
   fieldErrors,
+  emirateWarning,
   totalWithDelivery,
   onEmirateChange,
   belowMinimum,
@@ -41,6 +43,12 @@ export function CheckoutForm({
 }: CheckoutFormProps) {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
+  const addressFieldErrors = {
+    emirate: fieldErrors?.emirate ?? emirateWarning,
+    city: fieldErrors?.addressCity,
+    area: fieldErrors?.addressArea,
+    buildingName: fieldErrors?.addressBuilding,
+  };
   return (
     <>
       {/* Name row */}
@@ -102,7 +110,7 @@ export function CheckoutForm({
         <AddressSelector
           addresses={addresses}
           defaultValues={defaultValues}
-          error={fieldErrors?.address}
+          fieldErrors={addressFieldErrors}
           onEmirateChange={onEmirateChange}
           disabledEmirates={disabledEmirates}
         />
@@ -111,7 +119,7 @@ export function CheckoutForm({
           {...parseAddress(defaultValues.address)}
           defaultLat={defaultValues.lat}
           defaultLng={defaultValues.lng}
-          error={fieldErrors?.address}
+          fieldErrors={addressFieldErrors}
           onEmirateChange={onEmirateChange}
           disabledEmirates={disabledEmirates}
         />
