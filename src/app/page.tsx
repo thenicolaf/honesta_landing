@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Hero, TrustBadges, PhilosophyBlock, PartnershipCTA } from "@/sections";
+import { Hero, TrustBadges, PhilosophyBlock, AboutUs, PartnershipCTA } from "@/sections";
 import { Loader } from "@/shared/ui";
 import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvider";
 import { CategoriesSection, ProductsSection } from "@/pages_flow/home";
@@ -52,6 +52,7 @@ export default async function Home() {
         </Suspense>
       </SearchParamsFilterProvider>
       <PhilosophyBlock />
+      <AboutUs />
       <PartnershipCTA />
       <HashTracker />
       <script

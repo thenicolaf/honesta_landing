@@ -25,10 +25,13 @@ export function Hero() {
       {/* Left hero image */}
       <motion.div
         className="absolute inset-y-0 left-0 w-1/4 max-xl:w-1/3 max-md:w-[40%]"
+        initial={{ opacity: 0, x: "-60%" }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
         style={{ y: imageY }}
       >
         <Image
-          src="/honesta_left_hero.png"
+          src="/honesta_left_hero.webp"
           alt=""
           fill
           priority
@@ -40,10 +43,13 @@ export function Hero() {
       {/* Right hero image */}
       <motion.div
         className="absolute inset-y-0 right-0 w-1/4 max-xl:w-1/3 max-md:w-[40%]"
+        initial={{ opacity: 0, x: "60%" }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
         style={{ y: imageY }}
       >
         <Image
-          src="/honesta_right_hero.png"
+          src="/honesta_right_hero.webp"
           alt=""
           fill
           priority

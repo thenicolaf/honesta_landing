@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-
-const SECTION_IDS = ["hero", "categories", "products", "story", "contact"];
+import { SECTION_IDS } from "@/shared/consts/navLinks";
 
 export function HashTracker() {
   useEffect(() => {
