@@ -10,4 +10,4 @@ export { SearchParamsFilterProvider } from "./SearchParamsFilterProvider";
 export {
   NotificationsProvider,
   useNotifications,
-} from "./NotificationsProvider";
+} from "./notifications";

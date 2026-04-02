@@ -3,6 +3,7 @@ import { ProfileSection } from "./ProfileSection";
 import { PasswordSection } from "./PasswordSection";
 import { AddressSection } from "./AddressSection";
 import { NotificationSettingsSection } from "./NotificationSettingsSection";
+import { PushNotificationSection } from "./PushNotificationSection";
 import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
 import type { UserAddress } from "@/lib/addressesDb";
 
@@ -36,6 +37,8 @@ export function ProfilePage({ profile, addresses, provider, role, allowNotificat
       {role !== "admin" && (
         <NotificationSettingsSection defaultChecked={allowNotifications ?? true} />
       )}
+
+      <PushNotificationSection />
 
       {provider === "email" && <PasswordSection />}
     </>

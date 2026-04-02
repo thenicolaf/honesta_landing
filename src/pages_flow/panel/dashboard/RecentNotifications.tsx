@@ -14,7 +14,7 @@ import { useNotifications } from "@/providers";
 import { cn } from "@/shared/utils/cn";
 
 export function RecentNotifications() {
-  const { notifications, isLoading } = useNotifications();
+  const { notifications, isLoading, markAsRead } = useNotifications();
   const { paginatedData, pagination } = useTablePagination(notifications, 10);
 
   if (isLoading) return <Loader />;
@@ -35,11 +35,14 @@ export function RecentNotifications() {
           {paginatedData.map((n) => {
             const style = getNotificationStyle(n.type);
             return (
-              <div
+              <button
                 key={n.id}
+                type="button"
+                onClick={() => !n.is_read && markAsRead(n.id)}
                 className={cn(
-                  "flex items-start gap-3 px-4 py-3",
-                  !n.is_read && "bg-orange/3",
+                  "flex items-start gap-3 px-4 py-3 w-full text-left transition-colors",
+                  !n.is_read && "bg-orange/3 hover:bg-orange/6 cursor-pointer",
+                  n.is_read && "cursor-default",
                 )}
               >
                 <div className={cn("rounded-lg p-2 shrink-0 mt-0.5", style.bg, style.iconColor)}>
@@ -61,7 +64,7 @@ export function RecentNotifications() {
                 {!n.is_read && (
                   <span className={cn("mt-2 w-2 h-2 rounded-full shrink-0", style.dot)} />
                 )}
-              </div>
+              </button>
             );
           })}
         </div>

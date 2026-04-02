@@ -1,13 +1,13 @@
 "use client";
 
 import { createContext, useContext, useState } from "react";
-import { useRealtimeNotifications } from "./notifications/hooks/useRealtimeNotifications";
-import { useServiceWorker } from "./notifications/hooks/useServiceWorker";
+import { useRealtimeNotifications } from "./hooks/useRealtimeNotifications";
+import { useServiceWorker } from "./hooks/useServiceWorker";
 import type {
   NotificationsContextValue,
   NotificationsProviderProps,
   PushState,
-} from "./notifications/types";
+} from "./types";
 
 const NotificationsContext = createContext<NotificationsContextValue | null>(
   null,

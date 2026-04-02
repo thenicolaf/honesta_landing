@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "./supabase.server";
+import { sendPushNotifications, getNotificationUrl } from "./pushNotification";
 import type { UserRole } from "@/shared/types";
 
 export type Notification = {
@@ -43,6 +44,15 @@ export async function createNotification({
     audience,
     user_id: userId ?? null,
   });
+
+  // Send push notifications (fire-and-forget)
+  sendPushNotifications({
+    title,
+    body: message,
+    url: getNotificationUrl(type),
+    audience,
+    userId,
+  }).catch((err) => console.error("[push] Failed to send:", err));
 }
 
 export async function getNotifications(
