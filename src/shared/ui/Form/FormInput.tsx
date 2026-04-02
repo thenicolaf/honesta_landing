@@ -7,14 +7,18 @@ import { fieldVariants, type FieldVariantProps } from "./shared";
 
 interface FormInputProps
   extends React.ComponentPropsWithRef<"input">, FieldVariantProps {
+  startIcon?: React.ReactNode;
+  wrapperClassName?: string;
   clearable?: boolean;
   onClear?: () => void;
 }
 
 export function FormInput({
   className,
+  wrapperClassName,
   state,
   ref,
+  startIcon,
   clearable = false,
   onClear,
   value,
@@ -23,13 +27,19 @@ export function FormInput({
   const showClear = clearable && !!value;
 
   return (
-    <div className="relative">
+    <div className={cn("relative", wrapperClassName)}>
+      {startIcon && (
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-earth/40 pointer-events-none">
+          {startIcon}
+        </span>
+      )}
       <input
         ref={ref}
         value={value}
         className={cn(
           fieldVariants({ state }),
           "h-10",
+          startIcon && "pl-9",
           clearable && "pr-9",
           className,
         )}

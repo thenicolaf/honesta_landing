@@ -27,7 +27,7 @@ export function NavMobileTabBar() {
     >
       <nav
         aria-label="Mobile navigation"
-        className="flex items-center gap-1 bg-white-warm/95 backdrop-blur-md rounded-full px-3 py-2.5 ring-1 ring-parchment/40 shadow-[0_8px_40px_rgba(61,43,31,0.16)]"
+        className="flex items-center gap-0.5 sm:gap-1 bg-white-warm/95 backdrop-blur-md rounded-full px-2 sm:px-3 py-2 sm:py-2.5 ring-1 ring-parchment/40 shadow-[0_8px_40px_rgba(61,43,31,0.16)]"
       >
         {TAB_LINKS.map(({ href, label, Icon }) => {
           const hash = href.split("#")[1];
@@ -38,14 +38,14 @@ export function NavMobileTabBar() {
               key={href}
               href={href}
               className={cn(
-                "flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-full transition-colors duration-200",
+                "flex flex-col items-center gap-0.5 px-2.5 sm:px-4 py-1.5 rounded-full transition-colors duration-200",
                 isActive
                   ? "text-orange bg-sand/50"
                   : "text-earth/50 hover:text-orange hover:bg-sand/50 active:bg-sand",
               )}
             >
-              <Icon className="w-5 h-5" strokeWidth={1.5} />
-              <span className="font-body font-semibold uppercase text-[0.5rem] tracking-widest">
+              <Icon className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={1.5} />
+              <span className="font-body font-semibold uppercase text-[0.45rem] sm:text-[0.5rem] tracking-widest">
                 {label}
               </span>
             </HashLink>

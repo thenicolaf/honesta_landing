@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Card, Checkbox, toastInfo } from "@/shared/ui";
 import { toggleNotifications } from "./actions";
 
@@ -13,6 +14,17 @@ export function NotificationSettingsSection({
 }: NotificationSettingsSectionProps) {
   const [checked, setChecked] = useState(defaultChecked);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const next = e.target.checked;
+    setChecked(next);
+    startTransition(async () => {
+      await toggleNotifications(next);
+      router.refresh();
+    });
+    toastInfo(next ? "Notifications enabled" : "Notifications disabled");
+  }
 
   return (
     <Card className="p-4 md:px-6 md:py-4 lg:p-8 mt-6">
@@ -23,16 +35,7 @@ export function NotificationSettingsSection({
         checked={checked}
         disabled={isPending}
         label="Receive notifications about promotions, new products and categories"
-        onChange={(e) => {
-          const next = e.target.checked;
-          setChecked(next);
-          startTransition(() => {
-            toggleNotifications(next);
-          });
-          toastInfo(
-            next ? "Notifications enabled" : "Notifications disabled",
-          );
-        }}
+        onChange={handleChange}
       />
     </Card>
   );

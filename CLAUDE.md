@@ -26,6 +26,7 @@ No test suite configured yet.
 - **React Compiler** enabled (`reactCompiler: true` in `next.config.ts`) — no manual `useMemo`/`useCallback` needed
 - **Supabase** (`@supabase/supabase-js` + `@supabase/ssr`) — orders, products, and auth
 - **N-Genius** — payment gateway (UAE, amounts in fils: 1 AED = 100 fils)
+- **web-push** — server-side PWA push notifications (VAPID)
 - **motion/react** (not `framer-motion`) — animations
 - **lucide-react** — supplemental icon library (prefer custom icons in `src/shared/icons/` first)
 - **react-toastify** — toast notifications (wrapped in `src/shared/ui/Toast.tsx`, configured in root layout)
@@ -72,6 +73,8 @@ src/
 │   ├── api/
 │   │   ├── payment/webhook/    # N-Genius webhook → updates order status in Supabase
 │   │   ├── notifications/      # GET/PATCH notifications for admin bell
+│   │   │   └── resolve/        # GET resolve notification UUID → href (product/category slug)
+│   │   ├── push-subscription/  # POST/DELETE push notification subscriptions
 │   │   ├── storage/            # upload/delete images to Supabase Storage
 │   │   └── options/            # Form options (categories, tags, etc.)
 │   └── globals.css, metadata.ts, sitemap.ts, robots.ts, structured-data.ts
@@ -88,7 +91,8 @@ src/
 │   ├── productsDb.ts           # Admin product queries + form options
 │   ├── categoriesDb.ts         # Category data queries
 │   ├── promotionsDb.ts         # Promotions CRUD
-│   ├── notificationsDb.ts      # Notifications CRUD
+│   ├── notificationsDb.ts      # Notifications CRUD + triggers push via pushNotification.ts
+│   ├── pushNotification.ts     # Server-side web-push sending (VAPID, lazy init)
 │   ├── storage.ts              # Image upload/delete to Supabase Storage
 │   └── syncCartPrices.ts       # Syncs cart prices with active promotions
 │
@@ -105,7 +109,7 @@ src/
 │   ├── forgot-password/        # ForgotPasswordPage
 │   ├── reset-password/         # ResetPasswordPage (OTP + new password)
 │   ├── favorites/              # FavoritesPage + FavoritesGrid
-│   ├── profile/                # ProfilePage + ProfileForm + ChangePasswordForm + SignOutButton
+│   ├── profile/                # ProfilePage + ProfileForm + ChangePasswordForm + SignOutButton + PushNotificationSection
 │   │   └── actions.ts          # updateProfile(), changePassword(), signOut()
 │   ├── orders/                 # OrdersPage + OrderCards (user order history)
 │   ├── panel/
@@ -120,24 +124,29 @@ src/
 ├── providers/                  # React context providers + hooks
 │   ├── CartProvider.tsx        # useSyncExternalStore-based cart state (hydration-safe)
 │   ├── FavoritesProvider.tsx   # useSyncExternalStore-based favorites state + useOptimistic
-│   ├── NotificationsProvider.tsx # Supabase Realtime subscription for notifications (all roles)
-│   ├── CategoryFilterProvider.tsx
-│   ├── FilterProvider.tsx      # Generic filter context — useFilterBar(key) hook
-│   └── SearchParamsFilterProvider.tsx  # Syncs FilterProvider state to URL search params
+│   ├── notifications/          # Notification system (decomposed)
+│   │   ├── NotificationsProvider.tsx  # Thin provider composing hooks
+│   │   ├── types.ts            # PushState, NotificationsContextValue
+│   │   ├── hooks/useRealtimeNotifications.ts  # Supabase Realtime + fetch + markAsRead
+│   │   ├── hooks/useServiceWorker.ts  # SW registration + push subscribe/unsubscribe
+│   │   └── utils.ts            # urlBase64ToUint8Array helper
+│   ├── FilterProvider.tsx      # Generic filter context — useFilterBar(key) + useFilterBarMulti(key)
+│   └── SearchParamsFilterProvider.tsx  # Syncs FilterProvider state to URL search params (supports multiKeys)
 │
 ├── sections/                   # Landing-page section components
-│   ├── Navbar.tsx, Hero.tsx, PhilosophyBlock.tsx, PartnershipCTA.tsx, TrustBadges.tsx, Footer.tsx
+│   ├── Navbar.tsx, Hero.tsx, PhilosophyBlock.tsx, AboutUs.tsx, PartnershipCTA.tsx, Footer.tsx
 │   ├── partnership/            # actions.ts — submitPartnershipInquiry server action → partnership_inquiries table
 │   ├── categories/             # CategoryCard, CategoryGrid, consts, types
 │   └── products/               # ProductGrid, ProductItem, consts, mapDbProducts
 │       └── types/              # Product & CartItem types + Supabase db-types
 │
 └── shared/
-    ├── consts.ts               # CUSTOMER_COOKIE_KEY, DELIVERY_FEE, COOKIE_CONSENT_KEY
+    ├── consts.ts               # CUSTOMER_COOKIE_KEY, DELIVERY_FEE, COOKIE_CONSENT_KEY, PUSH_OPT_OUT_KEY
+    ├── consts/navLinks.ts      # SectionId enum, SECTION_IDS, NAV_LINKS, TAB_LINKS
     ├── ui/                     # Reusable primitives (Button, Badge, Card, Form, Collapsible, etc.)
     ├── icons/                  # SVG icon components + index.ts barrel
     ├── types/                  # Categories enum, CustomerInfo, OrderStatus, ProfileInfo, UserRole
-    └── utils/                  # cn.ts, validateCustomer.ts, validatePartnership.ts, validateProfile.ts, validateAuth.ts, validatePhone.ts, calculateDiscount.ts
+    └── utils/                  # cn.ts, validateCustomer.ts, validatePartnership.ts, validateProfile.ts, validateAuth.ts, validatePhone.ts, calculateDiscount.ts, resolveNotificationHref.ts
 ```
 
 **Rule:** backend/data-access → `src/lib/`, page-level component trees → `src/pages_flow/`, landing sections → `src/sections/`, generic primitives → `src/shared/ui/`, SVG icons → `src/shared/icons/`, React context providers → `src/providers/`.
@@ -153,6 +162,8 @@ src/
 | `/checkout/cancel` | Payment cancelled screen |
 | `POST /api/payment/webhook` | N-Genius webhook — updates `orders.status` in Supabase |
 | `GET/PATCH /api/notifications` | Notification endpoints (any authenticated user) |
+| `GET /api/notifications/resolve` | Resolve notification UUID → href (`?type=new_product&id=uuid`) |
+| `POST/DELETE /api/push-subscription` | Manage push notification subscriptions (authenticated) |
 | `/login` | Email/password + Google OAuth login |
 | `/signup` | Registration (name, email, password) |
 | `/verify-email?email={email}` | OTP verification after signup |
@@ -267,7 +278,7 @@ Two files, three client instances:
   - `supabaseAdmin` — static service-role client, bypasses RLS (use only in server actions, API routes, and `lib/`)
   - `createSupabaseServerClient()` — async, reads cookies via `@supabase/ssr`; use whenever you need the current user's session
 
-**DB tables:** `orders` (status, is_fulfilled, subtotal, delivery_fee, total, customer fields, ngenius_ref), `order_items` (order_id, variant_id, name, price, weight_g, quantity — snapshots at order time), `products` (image_url, images JSONB `[]`, in_stock, badge, note, nutrition JSONB, status — **no price/weight_g columns**, these live in `product_variants`), `product_variants` (product_id, weight_g, price — one-to-many with products), `categories` (name, slug, audience, tagline, description, image_url, badge, sort_order), `benefits` (id, name, description — unique on name+description), `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, role `user_role`, gender, birthday, allow_notifications), `cart_items` (user_id, variant_id, quantity — minimal, prices via join), `notifications` (type, title, message, related_id, user_id, audience `user_role` — nullable, NULL = all roles), `notification_reads` (notification_id, user_id, read_at — tracks per-user read status), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id).
+**DB tables:** `orders` (status, is_fulfilled, subtotal, delivery_fee, total, customer fields, ngenius_ref), `order_items` (order_id, variant_id, name, price, weight_g, quantity — snapshots at order time), `products` (image_url, images JSONB `[]`, in_stock, badge, note, nutrition JSONB, status — **no price/weight_g columns**, these live in `product_variants`), `product_variants` (product_id, weight_g, price — one-to-many with products), `categories` (name, slug, audience, tagline, description, image_url, badge, sort_order), `benefits` (id, name, description — unique on name+description), `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, role `user_role`, gender, birthday, allow_notifications), `cart_items` (user_id, variant_id, quantity — minimal, prices via join), `notifications` (type, title, message, related_id, user_id, audience `user_role` — nullable, NULL = all roles), `notification_reads` (notification_id, user_id, read_at — tracks per-user read status), `push_subscriptions` (user_id, endpoint UNIQUE, p256dh, auth — FK to auth.users + profiles, RLS per user), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id).
 
 ## Design system
 
@@ -319,7 +330,7 @@ Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React conte
 - **`Collapsible` / `CollapsibleTrigger` / `CollapsibleChevron` / `CollapsibleContent`** — animated accordion using `motion/react` `AnimatePresence`.
 - **`Select` / `SelectTrigger` / `SelectValue` / `SelectContent` / `SelectItem` / `SelectGroup` / `SelectSeparator`** — custom dropdown, context-based, supports controlled/uncontrolled, `clearable` prop, auto up/down direction.
 - **`FormTileRadio` / `FormTileRadioItem`** — single-select tile radio group. Sizes: `sm` (compact, for product cards) | `md` (default). Context-based compound component with controlled/uncontrolled support.
-- **`Form` components** — `FormLabel` (`required` prop adds red `*`), `FormInput`, `FormSelect`, `FormTextarea`, `FormError`, `FormPasswordInput` (visibility toggle), `FormPhoneInput` (UAE format: displays `0XX XXX XXXX`, submits `+971XXXXXXXXX` via hidden input), `FormOtpInput` (6-digit OTP with `defaultValue` + `useResendCooldown` hook), `FormCheckbox`, `FormNumberInput` (stepper with +/- buttons, controlled via `value`/`onValueChange`), `FormUploadZone` (supports `initialUrl` for single image edit mode, `initialUrls` for multi-image; integrated Lightbox preview + sortable thumbnails) — CVA variants with `default` / `error` states. `FormSelect` wraps the `Select` compound component.
+- **`Form` components** — `FormLabel` (`required` prop adds red `*`), `FormInput` (supports `startIcon` for left icon, `wrapperClassName` for outer div, `clearable` + `onClear`), `FormSelect`, `FormTextarea`, `FormError`, `FormPasswordInput` (visibility toggle), `FormPhoneInput` (UAE format: displays `0XX XXX XXXX`, submits `+971XXXXXXXXX` via hidden input), `FormOtpInput` (6-digit OTP with `defaultValue` + `useResendCooldown` hook), `FormCheckbox`, `FormNumberInput` (stepper with +/- buttons, controlled via `value`/`onValueChange`), `FormUploadZone` (supports `initialUrl` for single image edit mode, `initialUrls` for multi-image; integrated Lightbox preview + sortable thumbnails) — CVA variants with `default` / `error` states. `FormSelect` wraps the `Select` compound component.
 - **`DropdownMenu` / `DropdownMenuTrigger` / `DropdownMenuContent` / `DropdownMenuItem` / `DropdownMenuSeparator` / `DropdownMenuLabel`** — context-based dropdown menu with auto up/down direction, outside-click and Escape close, `destructive` + `disabled` item variants.
 - **`Table` / `TableHeader` / `TableHeaderRow` / `TableHead` / `TableBody` / `TableRow` / `TableCell` / `TableEmpty` / `TablePagination`** — compound table with sticky header, sort indicators, dividers. Context-based (`useTable`).
 - **`DataTable`** — declarative wrapper: pass `data`, `columns: ColumnDef[]`, `sort`, `pagination` and it renders a full `Table`. Hooks: `useTableSort`, `useTableData`, `useTableSearch`, `useTablePagination`. Helpers: `formatAed`, `formatDate`, `formatDateTime`, `shortId`, comparators (`compareString`, `compareNumber`, `compareDate`).
@@ -353,8 +364,10 @@ Both views share the same `paginatedData` from hooks like `useOrdersTable` / `us
 
 ## Filter system
 
-- **`FilterProvider`** (`src/providers/FilterProvider.tsx`) — generic React context for `Record<string, string>` filter state. `useFilterBar(key)` returns `{ value, onValueChange }`.
-- **`SearchParamsFilterProvider`** (`src/providers/SearchParamsFilterProvider.tsx`) — wraps `FilterProvider` and syncs state to URL search params (supports browser back/forward). Uses bidirectional sync with race-condition protection: state → URL effect runs FIRST (sets `updatingUrl` flag), URL → state effect runs SECOND (skips when flag is set). URL is updated synchronously via `history.replaceState` + async via `router.replace` to ensure `window.location.search` is current for other code (e.g. HashTracker).
+- **`FilterProvider`** (`src/providers/FilterProvider.tsx`) — generic React context for `Record<string, string>` filter state. Two hooks:
+  - `useFilterBar(key)` — returns `{ value: string, onValueChange }` for single-value filters
+  - `useFilterBarMulti(key)` — returns `{ values: string[], onValuesChange }` for multi-value filters (stored as comma-separated string internally)
+- **`SearchParamsFilterProvider`** (`src/providers/SearchParamsFilterProvider.tsx`) — wraps `FilterProvider` and syncs state to URL search params (supports browser back/forward). Props: `keys: string[]` + optional `multiKeys?: string[]`. Multi-keys use `searchParams.getAll(key)` / `params.append(key, v)` for multiple URL params (e.g. `?category=a&category=b`). Uses bidirectional sync with race-condition protection: state → URL effect runs FIRST (sets `updatingUrl` flag), URL → state effect runs SECOND (skips when flag is set).
 - Filter keys typically: `["search", "status"|"type", "sortKey", "sortDir", "page", "pageSize"]`.
 - Always reset `page` filter when changing search/status filters.
 
@@ -441,15 +454,52 @@ Multi-role notification system with Supabase Realtime.
 
 **Notification types:** `new_order`, `order_paid`, `order_failed`, `order_cancelled` (admin), `new_partnership` (admin), `new_promotion`, `new_product`, `new_category` (broadcast to all). Styles in `src/shared/ui/NotificationTypeConfig.tsx`.
 
-**DB layer:** `src/lib/notificationsDb.ts` — `createNotification({ type, title, message?, relatedId?, audience?, userId? })`. Default `audience = "admin"`. Queries use left join on `notification_reads` to compute `is_read`.
+**DB layer:** `src/lib/notificationsDb.ts` — `createNotification({ type, title, message?, relatedId?, audience?, userId? })`. Default `audience = "admin"`. Queries use left join on `notification_reads` to compute `is_read`. New users only see notifications created after their registration (`created_at >= user.created_at`).
 
-**Provider:** `NotificationsProvider` (`src/providers/NotificationsProvider.tsx`) — accepts `role`, `userId`, `allowNotifications` props. Subscribes to Supabase Realtime `INSERT` on `notifications` table. Client-side filters by role/audience. When `allowNotifications = false`, broadcast notifications are hidden (personal still shown).
+**Provider:** `src/providers/notifications/` — decomposed into:
+- `NotificationsProvider.tsx` — thin provider composing `useRealtimeNotifications` + `useServiceWorker`
+- `hooks/useRealtimeNotifications.ts` — Supabase Realtime INSERT listener + fetch + markAsRead
+- `hooks/useServiceWorker.ts` — SW registration, push subscribe/unsubscribe, auto-resubscription
+- `types.ts` — `PushState`, `NotificationsContextValue`, `NotificationsProviderProps`
 
-**User preferences:** `profiles.allow_notifications` boolean (default `true`). Toggle via `toggleNotifications()` server action in `src/pages_flow/profile/actions.ts`. UI: `NotificationSettingsSection` on profile page (non-admin only).
+Accepts `role`, `userId`, `allowNotifications` props. When `allowNotifications = false`, broadcast notifications are hidden (personal still shown).
+
+**User preferences:** `profiles.allow_notifications` boolean (default `true`). Toggle via `toggleNotifications()` server action in `src/pages_flow/profile/actions.ts`. UI: `NotificationSettingsSection` on profile page (non-admin only). Toggle calls `router.refresh()` to update provider props without page reload.
 
 **Broadcast triggers:** Promotions (on activation), Products (on publish), Categories (on creation) — all send `audience: null` (all roles).
 
-**UI:** `NotificationBell` in navbar (all logged-in users). `RecentNotifications` on admin dashboard.
+**UI:** `NotificationBell` in navbar (all logged-in users). `RecentNotifications` + `MarkAllReadButton` on admin dashboard. Both support clickable notifications with navigation.
+
+**Notification links:** `related_id` stores UUID of the related entity. Clicking a notification navigates to the relevant page:
+- `getNotificationHref(type)` in `src/shared/ui/NotificationTypeConfig.tsx` — static URLs (orders → `/panel/all-orders`, promotions → `/?sort=promotions#products`)
+- `resolveNotificationHref(type, relatedId)` in `src/shared/utils/resolveNotificationHref.ts` — async, resolves product/category UUID → slug via `/api/notifications/resolve`
+- Push notifications resolve URLs server-side via `getNotificationUrl()` in `src/lib/pushNotification.ts`
+
+## Push Notifications (PWA)
+
+Native push notifications via Web Push API + Service Worker.
+
+**PWA setup:**
+- Manifest: `public/favicon/site.webmanifest` (name, icons, start_url, display: standalone)
+- Service Worker: `public/sw.js` — handles `push` (showNotification) and `notificationclick` (open/focus tab)
+- No caching — SW only handles push events
+
+**Server-side:** `src/lib/pushNotification.ts`
+- `web-push` with lazy VAPID initialization (`ensureVapid()` — skips if env vars missing)
+- `sendPushNotifications({ title, body, url, audience, userId })` — queries `push_subscriptions` joined with `profiles` for role/preference filtering
+- Auto-cleanup of expired subscriptions (HTTP 410/404)
+- Called from `createNotification()` as fire-and-forget
+
+**Client-side:** `src/providers/notifications/hooks/useServiceWorker.ts`
+- Registers SW on mount, resolves initial push state
+- Auto-resubscribes if permission granted but subscription lost (unless user explicitly opted out via `PUSH_OPT_OUT_KEY` in localStorage)
+- Exposes `subscribeToPush()`, `unsubscribeFromPush()`, `pushState` via context
+
+**DB table:** `push_subscriptions` (user_id, endpoint UNIQUE, p256dh, auth). FK to both `auth.users` and `profiles`. RLS: users manage own subscriptions only.
+
+**UI:** `PushNotificationSection` (`src/pages_flow/profile/PushNotificationSection.tsx`) — shown for all roles on profile page. States: unsupported, prompt, granted, subscribed, denied.
+
+**Env vars:** `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (same as public key, exposed to client).
 
 ## Address system
 
@@ -559,7 +609,7 @@ Any section that uses `motion` hooks (`useScroll`, `useTransform`) must add `"us
 - **`RestoreScroll`** (`src/app/_components/RestoreScroll.tsx`) — restores scroll position after page reload. Works with `beforeunload` script in `<head>` that saves `scrollY` to sessionStorage.
 - **`HashTracker`** (`src/app/_components/HashTracker.tsx`) — rendered in home page `page.tsx` (not root layout), updates URL hash based on which section is in viewport via `IntersectionObserver` with `rootMargin: "-30% 0px -70% 0px"`. On initial load with hash (e.g. `/#products`), suppresses hash updates and scrolls to the target section via `scrollIntoView({ behavior: "instant" })`. Uses retry polling (200ms) to find Suspense-deferred sections.
 - **Active nav links** — `useActiveHash()` hook (`src/sections/navbar/useActiveHash.ts`) polls `window.location.hash` for desktop/mobile nav highlighting.
-- **Navigation links** — shared source of truth in `src/shared/consts/navLinks.ts` (`NAV_LINKS`, `TAB_LINKS`). Used by Navbar, NavMobileTabBar, and Footer.
+- **Navigation links** — shared source of truth in `src/shared/consts/navLinks.ts`. `SectionId` enum (`Hero`, `Categories`, `Products`, `Story`, `About`, `Contact`), `SECTION_IDS = Object.values(SectionId)` (used by `HashTracker`), `NAV_LINKS` and `TAB_LINKS` (typed with `NavLink<T>` generic). Used by Navbar, NavMobileTabBar, Footer, and HashTracker.
 
 ## Product sorting
 

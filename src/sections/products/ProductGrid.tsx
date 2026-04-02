@@ -2,11 +2,11 @@
 
 import { useMemo } from "react";
 import { motion } from "motion/react";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, Search } from "lucide-react";
 
 import {
-  FilterBar,
   EmptyState,
+  FormInput,
   Select,
   SelectTrigger,
   SelectValue,
@@ -106,18 +106,36 @@ function ProductGridInner({
 }) {
   const categoryFilter = useFilterBar("category");
   const sortFilter = useFilterBar("sort");
+  const searchFilter = useFilterBar("search");
 
   const sorted = useMemo(() => {
-    const filtered = categoryFilter.value
-      ? rawProducts.filter((p) => p.categories?.slug === categoryFilter.value)
-      : rawProducts;
+    const searchVal = searchFilter.value.toLowerCase();
+
+    const filtered = rawProducts.filter((p) => {
+      if (categoryFilter.value && p.categories?.slug !== categoryFilter.value)
+        return false;
+      if (searchVal) {
+        const tags = p.product_tags?.map((t) => t.tag_options.label) ?? [];
+        const haystack = [p.title, p.tagline, p.categories?.name, ...tags]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        if (!haystack.includes(searchVal)) return false;
+      }
+      return true;
+    });
+
     const products = mapDbProducts(filtered, salesMap);
     return sortProducts(products, (sortFilter.value || "") as ProductSortKey);
-  }, [rawProducts, salesMap, categoryFilter.value, sortFilter.value]);
+  }, [
+    rawProducts,
+    salesMap,
+    categoryFilter.value,
+    sortFilter.value,
+    searchFilter.value,
+  ]);
 
-  const products = sorted;
-
-  const hasPromo = products.some((p) => p.promotion);
+  const hasPromo = sorted.some((p) => p.promotion);
   const visibleSortOptions = SORT_OPTIONS.filter(
     (o) => !o.promoOnly || hasPromo,
   );
@@ -125,32 +143,65 @@ function ProductGridInner({
   return (
     <>
       <motion.div
-        className="mb-10 flex flex-col sm:flex-row sm:items-start items-center justify-center gap-4"
+        className="mb-10 flex flex-col sm:flex-row sm:items-end items-stretch gap-4"
         initial={{ opacity: 0, y: 12 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-40px" }}
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
-        <FilterBar
-          {...categoryFilter}
-          items={categories ?? []}
-          className="justify-center"
-          toolbarClassName="max-sm:justify-center"
+        <FormInput
+          type="text"
+          placeholder="Search by name, tag, category..."
+          value={searchFilter.value}
+          onChange={(e) => searchFilter.onValueChange(e.target.value)}
+          clearable
+          onClear={() => searchFilter.onValueChange("")}
+          startIcon={<Search size={14} />}
+          wrapperClassName="w-full sm:flex-1"
+          className="h-9 text-sm bg-white-warm! border-earth/15! hover:border-earth/35!"
         />
+
+        <Select
+          value={categoryFilter.value}
+          onValueChange={categoryFilter.onValueChange}
+          options={(categories ?? []).map((c) => ({
+            value: c.value,
+            label: c.label,
+          }))}
+          clearable
+        >
+          <SelectTrigger className="w-full sm:w-56 h-9">
+            <SelectValue placeholder="All Categories" />
+          </SelectTrigger>
+          <SelectContent>
+            {(options) =>
+              options.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))
+            }
+          </SelectContent>
+        </Select>
+
         <Select
           value={sortFilter.value || ""}
           onValueChange={sortFilter.onValueChange}
+          options={visibleSortOptions}
+          clearable
         >
-          <SelectTrigger className="w-48 h-9 text-2xs font-body font-semibold uppercase tracking-widest">
+          <SelectTrigger className="w-full sm:w-48 h-9">
             <ArrowUpDown size={12} className="shrink-0 mr-1.5 text-earth/40" />
-            <SelectValue placeholder="Sort by" />
+            <SelectValue placeholder="Sort by" className="mr-auto" />
           </SelectTrigger>
           <SelectContent>
-            {visibleSortOptions.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
+            {(options) =>
+              options.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))
+            }
           </SelectContent>
         </Select>
       </motion.div>

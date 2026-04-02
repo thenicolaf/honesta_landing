@@ -30,7 +30,7 @@ export function ToastProvider() {
       pauseOnHover
       limit={5}
       className="p-4!"
-      toastClassName="!bg-white-warm !rounded-[16px] !shadow-sm !font-body !text-sm !text-earth !px-5 !py-4 !min-h-0 !flex !items-center !gap-3"
+      toastClassName="!bg-white-warm !rounded-[16px] !shadow-sm !font-body !text-sm !text-earth !pl-5 !pr-10 !py-4 !min-h-0 !flex !items-center !gap-3"
       closeButton={({ closeToast }) => (
         <Button
           as="button"

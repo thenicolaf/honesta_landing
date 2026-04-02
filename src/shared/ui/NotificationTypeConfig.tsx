@@ -68,3 +68,22 @@ const DEFAULT_STYLE: NotificationTypeStyle = {
 export function getNotificationStyle(type: string): NotificationTypeStyle {
   return TYPE_STYLES[type] ?? DEFAULT_STYLE;
 }
+
+export function getNotificationHref(type: string): string | null {
+  switch (type) {
+    case "new_promotion":
+      return "/?sort=promotions#products";
+    case "new_order":
+    case "order_paid":
+    case "order_failed":
+    case "order_cancelled":
+      return "/panel/all-orders";
+    case "new_partnership":
+      return "/panel/partnerships";
+    case "new_product":
+    case "new_category":
+      return null; // requires async resolve via API
+    default:
+      return null;
+  }
+}

@@ -22,6 +22,7 @@ import { OrderStatus } from "@/shared/types";
 import type { DashboardStats } from "./types";
 import { cn } from "@/shared/utils/cn";
 import { RecentNotifications } from "./RecentNotifications";
+import { MarkAllReadButton } from "./MarkAllReadButton";
 import { ProductSalesSection } from "./ProductSalesSection";
 
 // ─── Stat Card ──────────────────────────────────────────────────────────────
@@ -61,9 +62,20 @@ function StatCard({
 
 // ─── Section Heading ────────────────────────────────────────────────────────
 
-function SectionHeading({ children }: { children: React.ReactNode }) {
+function SectionHeading({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <h3 className="font-body font-semibold uppercase tracking-[0.12em] text-2xs text-earth/40 mb-3">
+    <h3
+      className={cn(
+        "font-body font-semibold uppercase tracking-[0.12em] text-2xs text-earth/40 mb-3",
+        className,
+      )}
+    >
       {children}
     </h3>
   );
@@ -266,7 +278,10 @@ export function DashboardPage({ stats }: { stats: DashboardStats }) {
       )}
 
       {/* ── Recent Notifications ──────────────────────────────────────── */}
-      <SectionHeading>Recent Notifications</SectionHeading>
+      <div className="flex items-center justify-between mb-3">
+        <SectionHeading className="mb-0">Recent Notifications</SectionHeading>
+        <MarkAllReadButton />
+      </div>
       <RecentNotifications />
     </>
   );

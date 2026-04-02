@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
 import {
   Card,
@@ -9,13 +10,15 @@ import {
   useTablePagination,
   getNotificationStyle,
 } from "@/shared/ui";
+import { resolveNotificationHref } from "@/shared/utils/resolveNotificationHref";
 import { formatDateTime } from "@/shared/ui/Table";
 import { useNotifications } from "@/providers";
 import { cn } from "@/shared/utils/cn";
 
 export function RecentNotifications() {
-  const { notifications, isLoading } = useNotifications();
+  const { notifications, isLoading, markAsRead } = useNotifications();
   const { paginatedData, pagination } = useTablePagination(notifications, 10);
+  const router = useRouter();
 
   if (isLoading) return <Loader />;
 
@@ -34,15 +37,31 @@ export function RecentNotifications() {
         <div className="divide-y divide-earth/6">
           {paginatedData.map((n) => {
             const style = getNotificationStyle(n.type);
+
+            async function handleClick() {
+              if (!n.is_read) markAsRead(n.id);
+              const href = await resolveNotificationHref(n.type, n.related_id);
+              if (href) router.push(href);
+            }
+
             return (
-              <div
+              <button
                 key={n.id}
+                type="button"
+                onClick={handleClick}
                 className={cn(
-                  "flex items-start gap-3 px-4 py-3",
-                  !n.is_read && "bg-orange/3",
+                  "flex items-start gap-3 px-4 py-3 w-full text-left transition-colors cursor-pointer",
+                  !n.is_read && "bg-orange/3 hover:bg-orange/6",
+                  n.is_read && "hover:bg-sand/30",
                 )}
               >
-                <div className={cn("rounded-lg p-2 shrink-0 mt-0.5", style.bg, style.iconColor)}>
+                <div
+                  className={cn(
+                    "rounded-lg p-2 shrink-0 mt-0.5",
+                    style.bg,
+                    style.iconColor,
+                  )}
+                >
                   {style.icon}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -59,9 +78,14 @@ export function RecentNotifications() {
                   </p>
                 </div>
                 {!n.is_read && (
-                  <span className={cn("mt-2 w-2 h-2 rounded-full shrink-0", style.dot)} />
+                  <span
+                    className={cn(
+                      "mt-2 w-2 h-2 rounded-full shrink-0",
+                      style.dot,
+                    )}
+                  />
                 )}
-              </div>
+              </button>
             );
           })}
         </div>

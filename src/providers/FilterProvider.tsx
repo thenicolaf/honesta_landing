@@ -57,3 +57,12 @@ export function useFilterBar(key: string) {
     onValueChange: (v: string) => setFilter(key, v),
   };
 }
+
+export function useFilterBarMulti(key: string) {
+  const { getFilter, setFilter } = useFilter();
+  const raw = getFilter(key);
+  return {
+    values: raw ? raw.split(",") : [],
+    onValuesChange: (v: string[]) => setFilter(key, v.join(",")),
+  };
+}
