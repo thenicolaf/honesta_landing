@@ -134,7 +134,7 @@ src/
 │   └── SearchParamsFilterProvider.tsx  # Syncs FilterProvider state to URL search params (supports multiKeys)
 │
 ├── sections/                   # Landing-page section components
-│   ├── Navbar.tsx, Hero.tsx, TrustBadges.tsx, PhilosophyBlock.tsx, AboutUs.tsx, PartnershipCTA.tsx, Footer.tsx
+│   ├── Navbar.tsx, Hero.tsx, PhilosophyBlock.tsx, AboutUs.tsx, PartnershipCTA.tsx, Footer.tsx
 │   ├── partnership/            # actions.ts — submitPartnershipInquiry server action → partnership_inquiries table
 │   ├── categories/             # CategoryCard, CategoryGrid, consts, types
 │   └── products/               # ProductGrid, ProductItem, consts, mapDbProducts

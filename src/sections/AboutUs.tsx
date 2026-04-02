@@ -1,9 +1,17 @@
 "use client";
 
 import { motion } from "motion/react";
-import { GraduationCap, Sparkles } from "lucide-react";
-import { Card } from "@/shared/ui";
-import { IconLeaf, IconLightning, IconHands } from "@/shared/icons";
+import { GraduationCap, ShoppingBag, Sparkles } from "lucide-react";
+import { Button, Card } from "@/shared/ui";
+import {
+  IconLeaf,
+  IconLightning,
+  IconHands,
+  IconBurjKhalifa,
+  IconCleanLabel,
+  IconNoSugar,
+} from "@/shared/icons";
+import { HashLink } from "./navbar";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -38,6 +46,34 @@ const qualityCards = [
     icon: IconHands,
     title: "Honest Production",
     text: "We are a family project, and the integrity of our process is fundamental to us. Thorough preparation of raw materials, the use of professional equipment, and personal control at every stage allow us to guarantee quality we are proud of.",
+  },
+];
+
+const badges = [
+  {
+    Icon: IconBurjKhalifa,
+    label: "Made in UAE",
+    description: "Crafted in Dubai",
+  },
+  {
+    Icon: IconLeaf,
+    label: "100% Fruit",
+    description: "Nothing else added",
+  },
+  {
+    Icon: IconHands,
+    label: "Small Batch",
+    description: "Made by hand",
+  },
+  {
+    Icon: IconCleanLabel,
+    label: "Clean Label",
+    description: "What you see = all",
+  },
+  {
+    Icon: IconNoSugar,
+    label: "No Sugar Added",
+    description: "Natural sweetness only",
   },
 ];
 
@@ -103,6 +139,37 @@ export function AboutUs() {
               enjoy eating ourselves and confidently share with our loved ones.
             </p>
           </motion.div>
+        </motion.div>
+
+        {/* ── Trust Badges ────────────────────────────── */}
+        <motion.div
+          className="flex flex-wrap justify-center gap-10 md:gap-6 mb-16 lg:mb-20"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          variants={{
+            visible: {
+              transition: { staggerChildren: 0.15, delayChildren: 0.1 },
+            },
+          }}
+        >
+          {badges.map(({ Icon, label, description }) => (
+            <motion.div
+              key={label}
+              variants={fadeUp}
+              transition={{ duration: 0.55, ease: "easeOut" }}
+              className="flex flex-col items-center gap-3 text-center w-36 md:w-40"
+            >
+              <Icon className="w-12 h-12 text-moss" />
+              <div className="w-8 h-px bg-parchment" />
+              <p className="font-body font-semibold uppercase tracking-[0.12em] text-2xs text-earth">
+                {label}
+              </p>
+              <p className="font-body font-light text-sm text-earth/60 leading-snug">
+                {description}
+              </p>
+            </motion.div>
+          ))}
         </motion.div>
 
         {/* ── The Perfect Snack ────────────────────────── */}
@@ -228,6 +295,29 @@ export function AboutUs() {
           >
             HONESTA&nbsp;&mdash; Honest products for everyone.
           </motion.p>
+
+          <motion.div
+            variants={fadeUp}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="mt-10"
+          >
+            <HashLink href="/#products" className="group">
+              <Button
+                as="button"
+                type="button"
+                variant="primary"
+                size="lg"
+                endIcon={
+                  <ShoppingBag
+                    className="w-5 h-5 transition-transform duration-300 group-hover:translate-y-0.5"
+                    strokeWidth={1.5}
+                  />
+                }
+              >
+                Explore Honest Sweets
+              </Button>
+            </HashLink>
+          </motion.div>
         </motion.div>
       </div>
     </section>

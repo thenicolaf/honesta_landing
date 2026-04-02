@@ -112,11 +112,14 @@ function ProductGridInner({
     const searchVal = searchFilter.value.toLowerCase();
 
     const filtered = rawProducts.filter((p) => {
-      if (categoryFilter.value && p.categories?.slug !== categoryFilter.value) return false;
+      if (categoryFilter.value && p.categories?.slug !== categoryFilter.value)
+        return false;
       if (searchVal) {
         const tags = p.product_tags?.map((t) => t.tag_options.label) ?? [];
         const haystack = [p.title, p.tagline, p.categories?.name, ...tags]
-          .filter(Boolean).join(" ").toLowerCase();
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
         if (!haystack.includes(searchVal)) return false;
       }
       return true;
@@ -124,7 +127,13 @@ function ProductGridInner({
 
     const products = mapDbProducts(filtered, salesMap);
     return sortProducts(products, (sortFilter.value || "") as ProductSortKey);
-  }, [rawProducts, salesMap, categoryFilter.value, sortFilter.value, searchFilter.value]);
+  }, [
+    rawProducts,
+    salesMap,
+    categoryFilter.value,
+    sortFilter.value,
+    searchFilter.value,
+  ]);
 
   const hasPromo = sorted.some((p) => p.promotion);
   const visibleSortOptions = SORT_OPTIONS.filter(
@@ -155,10 +164,13 @@ function ProductGridInner({
         <Select
           value={categoryFilter.value}
           onValueChange={categoryFilter.onValueChange}
-          options={(categories ?? []).map((c) => ({ value: c.value, label: c.label }))}
+          options={(categories ?? []).map((c) => ({
+            value: c.value,
+            label: c.label,
+          }))}
           clearable
         >
-          <SelectTrigger className="w-full sm:w-56 h-9 text-2xs font-body font-semibold uppercase tracking-widest">
+          <SelectTrigger className="w-full sm:w-56 h-9">
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
           <SelectContent>
@@ -175,17 +187,21 @@ function ProductGridInner({
         <Select
           value={sortFilter.value || ""}
           onValueChange={sortFilter.onValueChange}
+          options={visibleSortOptions}
+          clearable
         >
-          <SelectTrigger className="w-full sm:w-48 h-9 text-2xs font-body font-semibold uppercase tracking-widest">
+          <SelectTrigger className="w-full sm:w-48 h-9">
             <ArrowUpDown size={12} className="shrink-0 mr-1.5 text-earth/40" />
-            <SelectValue placeholder="Sort by" />
+            <SelectValue placeholder="Sort by" className="mr-auto" />
           </SelectTrigger>
           <SelectContent>
-            {visibleSortOptions.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
+            {(options) =>
+              options.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))
+            }
           </SelectContent>
         </Select>
       </motion.div>

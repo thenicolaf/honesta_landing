@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Hero, TrustBadges, PhilosophyBlock, AboutUs, PartnershipCTA } from "@/sections";
+import { Hero, PhilosophyBlock, AboutUs, PartnershipCTA } from "@/sections";
 import { Loader } from "@/shared/ui";
 import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvider";
 import { CategoriesSection, ProductsSection } from "@/pages_flow/home";
@@ -42,7 +42,7 @@ export default async function Home() {
   return (
     <main className="grow min-h-160">
       <Hero />
-      <TrustBadges />
+      <AboutUs />
       <SearchParamsFilterProvider keys={["category", "sort", "search"]}>
         <Suspense fallback={<Loader />}>
           <CategoriesSection />
@@ -52,7 +52,6 @@ export default async function Home() {
         </Suspense>
       </SearchParamsFilterProvider>
       <PhilosophyBlock />
-      <AboutUs />
       <PartnershipCTA />
       <HashTracker />
       <script

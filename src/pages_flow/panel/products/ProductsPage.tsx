@@ -78,11 +78,14 @@ function ProductsPageInner({
 
     const filtered = products.filter((p) => {
       if (statusFilter.value && p.status !== statusFilter.value) return false;
-      if (categoryFilter.value && p.categories?.slug !== categoryFilter.value) return false;
+      if (categoryFilter.value && p.categories?.slug !== categoryFilter.value)
+        return false;
       if (searchVal) {
         const tags = p.product_tags?.map((t) => t.tag_options.label) ?? [];
         const haystack = [p.title, p.tagline, p.categories?.name, ...tags]
-          .filter(Boolean).join(" ").toLowerCase();
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
         if (!haystack.includes(searchVal)) return false;
       }
       return true;
@@ -96,7 +99,14 @@ function ProductsPageInner({
       category: p.categories?.name ?? "",
     }));
     return sortBySortKey(withSortFields, sortKey);
-  }, [products, statusFilter.value, categoryFilter.value, sortFilter.value, searchFilter.value, salesMap]);
+  }, [
+    products,
+    statusFilter.value,
+    categoryFilter.value,
+    sortFilter.value,
+    searchFilter.value,
+    salesMap,
+  ]);
 
   const hasPromo = sorted.some((p) => p.promotion);
   const visibleSortOptions = SORT_OPTIONS.filter(
@@ -121,17 +131,20 @@ function ProductsPageInner({
         <Select
           value={statusFilter.value}
           onValueChange={statusFilter.onValueChange}
+          options={STATUS_ITEMS}
           clearable
         >
-          <SelectTrigger className="w-full sm:w-44 h-9 text-2xs font-body font-semibold uppercase tracking-widest">
+          <SelectTrigger className="w-full sm:w-44 h-9">
             <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
           <SelectContent>
-            {STATUS_ITEMS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
+            {(options) =>
+              options.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))
+            }
           </SelectContent>
         </Select>
 
@@ -142,7 +155,7 @@ function ProductsPageInner({
             options={categoryItems}
             clearable
           >
-            <SelectTrigger className="w-full sm:w-56 h-9 text-2xs font-body font-semibold uppercase tracking-widest">
+            <SelectTrigger className="w-full sm:w-56 h-9">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
@@ -160,17 +173,21 @@ function ProductsPageInner({
         <Select
           value={sortFilter.value || ""}
           onValueChange={sortFilter.onValueChange}
+          options={visibleSortOptions}
+          clearable
         >
-          <SelectTrigger className="w-full sm:w-48 h-9 text-2xs font-body font-semibold uppercase tracking-widest">
+          <SelectTrigger className="w-full sm:w-48 h-9">
             <ArrowUpDown size={12} className="shrink-0 mr-1.5 text-earth/40" />
-            <SelectValue placeholder="Sort by" />
+            <SelectValue placeholder="Sort by" className="mr-auto" />
           </SelectTrigger>
           <SelectContent>
-            {visibleSortOptions.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
+            {(options) =>
+              options.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))
+            }
           </SelectContent>
         </Select>
       </div>
@@ -229,7 +246,9 @@ export function ProductsPage({
         Products
       </h1>
 
-      <SearchParamsFilterProvider keys={["status", "category", "sort", "search"]}>
+      <SearchParamsFilterProvider
+        keys={["status", "category", "sort", "search"]}
+      >
         <ProductsPageInner
           products={products}
           categoryItems={categories}

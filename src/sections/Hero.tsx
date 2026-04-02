@@ -3,8 +3,8 @@
 import Image from "next/image";
 import { useScroll, useTransform, motion } from "motion/react";
 import { Button } from "@/shared/ui";
-import { IconInstagram } from "@/shared/icons";
 import { HashLink } from "./navbar";
+import { BookOpen, ShoppingBag } from "lucide-react";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -119,23 +119,44 @@ export function Hero() {
           <motion.div
             variants={fadeUp}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="flex flex-col items-center gap-4"
+            className="flex flex-col items-center gap-6"
           >
-            <HashLink href="/#products">
-              <Button as="button" type="button" size="lg">
-                Explore Honest Sweets
+            {/* Primary — Our Story */}
+            <HashLink href="/#about" className="group">
+              <Button
+                as="button"
+                type="button"
+                variant="primary"
+                size="lg"
+                endIcon={
+                  <BookOpen
+                    className="w-5 h-5 transition-transform duration-300 group-hover:translate-y-0.5"
+                    strokeWidth={1.5}
+                  />
+                }
+              >
+                Discover Our Story
               </Button>
             </HashLink>
 
-            <a
-              href={process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 font-body font-semibold uppercase text-2xs tracking-[0.14em] text-earth/60 hover:text-orange transition-colors duration-200"
-            >
-              <IconInstagram className="w-4 h-4" />
-              Write us on Instagram
-            </a>
+            {/* Secondary — Products */}
+            <HashLink href="/#products" className="group">
+              <Button
+                as="button"
+                type="button"
+                variant="outline"
+                size="md"
+                className="font-display italic capitalize"
+                endIcon={
+                  <ShoppingBag
+                    className="w-4 h-4 transition-transform duration-300 group-hover:translate-y-0.5"
+                    strokeWidth={1.5}
+                  />
+                }
+              >
+                Explore Honest Sweets
+              </Button>
+            </HashLink>
           </motion.div>
         </motion.div>
       </div>

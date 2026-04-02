@@ -3,10 +3,10 @@ import { ShoppingBag, Grid3X3, BookOpen, MessageCircle, Info } from "lucide-reac
 
 export enum SectionId {
   Hero = "hero",
+  About = "about",
   Categories = "categories",
   Products = "products",
   Story = "story",
-  About = "about",
   Contact = "contact",
 }
 
@@ -23,17 +23,17 @@ type NavIconLink = NavLink<{ Icon: ComponentType<SVGProps<SVGSVGElement>> }> & {
 };
 
 export const NAV_LINKS: NavLink[] = [
+  { href: `/#${SectionId.About}`, label: "About" },
   { href: `/#${SectionId.Categories}`, label: "Categories" },
   { href: `/#${SectionId.Products}`, label: "Products" },
   { href: `/#${SectionId.Story}`, label: "Story" },
-  { href: `/#${SectionId.About}`, label: "About" },
   { href: `/#${SectionId.Contact}`, label: "Contact" },
 ];
 
 export const TAB_LINKS: NavIconLink[] = [
+  { href: `/#${SectionId.About}`, label: "About", Icon: Info },
   { href: `/#${SectionId.Categories}`, label: "Categories", Icon: Grid3X3 },
   { href: `/#${SectionId.Products}`, label: "Products", Icon: ShoppingBag },
   { href: `/#${SectionId.Story}`, label: "Story", Icon: BookOpen },
-  { href: `/#${SectionId.About}`, label: "About", Icon: Info },
   { href: `/#${SectionId.Contact}`, label: "Contact", Icon: MessageCircle },
 ];
