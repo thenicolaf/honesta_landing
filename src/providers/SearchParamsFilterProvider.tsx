@@ -7,7 +7,7 @@ import type { FilterValues } from "./FilterProvider";
 
 // ─── SearchParamsSync ────────────────────────────────────────────────────────
 
-function SearchParamsSync({ keys }: { keys: string[] }) {
+function SearchParamsSync({ keys, multiKeys = [] }: { keys: string[]; multiKeys?: string[] }) {
   const { filters, setFilter } = useFilter();
   const router = useRouter();
   const pathname = usePathname();
@@ -29,11 +29,13 @@ function SearchParamsSync({ keys }: { keys: string[] }) {
     const params = new URLSearchParams(searchParams.toString());
 
     for (const key of keys) {
-      const value = filters[key] ?? "";
-      if (value) {
-        params.set(key, value);
+      params.delete(key);
+      if (multiKeys.includes(key)) {
+        const vals = (filters[key] ?? "").split(",").filter(Boolean);
+        vals.forEach((v) => params.append(key, v));
       } else {
-        params.delete(key);
+        const value = filters[key] ?? "";
+        if (value) params.set(key, value);
       }
     }
 
@@ -51,16 +53,21 @@ function SearchParamsSync({ keys }: { keys: string[] }) {
   useEffect(() => {
     if (updatingUrl.current) {
       const current = filtersRef.current;
-      const synced = keys.every(
-        (key) => (searchParams.get(key) ?? "") === (current[key] ?? ""),
-      );
+      const synced = keys.every((key) => {
+        const urlValue = multiKeys.includes(key)
+          ? searchParams.getAll(key).join(",")
+          : searchParams.get(key) ?? "";
+        return urlValue === (current[key] ?? "");
+      });
       if (synced) updatingUrl.current = false;
       return;
     }
 
     const current = filtersRef.current;
     for (const key of keys) {
-      const urlValue = searchParams.get(key) ?? "";
+      const urlValue = multiKeys.includes(key)
+        ? searchParams.getAll(key).join(",")
+        : searchParams.get(key) ?? "";
       if (urlValue !== (current[key] ?? "")) {
         setFilter(key, urlValue);
       }
@@ -75,24 +82,31 @@ function SearchParamsSync({ keys }: { keys: string[] }) {
 
 interface SearchParamsFilterProviderProps {
   keys: string[];
+  multiKeys?: string[];
   children: React.ReactNode;
 }
 
 export function SearchParamsFilterProvider({
   keys,
+  multiKeys = [],
   children,
 }: SearchParamsFilterProviderProps) {
   const searchParams = useSearchParams();
 
   const initialValues: FilterValues = {};
   for (const key of keys) {
-    const val = searchParams.get(key);
-    if (val) initialValues[key] = val;
+    if (multiKeys.includes(key)) {
+      const vals = searchParams.getAll(key).join(",");
+      if (vals) initialValues[key] = vals;
+    } else {
+      const val = searchParams.get(key);
+      if (val) initialValues[key] = val;
+    }
   }
 
   return (
     <FilterProvider initialValues={initialValues}>
-      <SearchParamsSync keys={keys} />
+      <SearchParamsSync keys={keys} multiKeys={multiKeys} />
       {children}
     </FilterProvider>
   );

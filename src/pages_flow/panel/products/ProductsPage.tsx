@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
-import { Plus, ArrowUpDown } from "lucide-react";
+import { Plus, ArrowUpDown, Search } from "lucide-react";
 
 import {
   Button,
-  FilterBar,
   EmptyState,
+  FormInput,
   ToastFromUrl,
   Select,
   SelectTrigger,
@@ -71,12 +71,20 @@ function ProductsPageInner({
   const statusFilter = useFilterBar("status");
   const categoryFilter = useFilterBar("category");
   const sortFilter = useFilterBar("sort");
+  const searchFilter = useFilterBar("search");
 
   const sorted = useMemo(() => {
+    const searchVal = searchFilter.value.toLowerCase();
+
     const filtered = products.filter((p) => {
       if (statusFilter.value && p.status !== statusFilter.value) return false;
-      if (categoryFilter.value && p.categories?.slug !== categoryFilter.value)
-        return false;
+      if (categoryFilter.value && p.categories?.slug !== categoryFilter.value) return false;
+      if (searchVal) {
+        const tags = p.product_tags?.map((t) => t.tag_options.label) ?? [];
+        const haystack = [p.title, p.tagline, p.categories?.name, ...tags]
+          .filter(Boolean).join(" ").toLowerCase();
+        if (!haystack.includes(searchVal)) return false;
+      }
       return true;
     });
 
@@ -88,7 +96,7 @@ function ProductsPageInner({
       category: p.categories?.name ?? "",
     }));
     return sortBySortKey(withSortFields, sortKey);
-  }, [products, statusFilter.value, categoryFilter.value, sortFilter.value, salesMap]);
+  }, [products, statusFilter.value, categoryFilter.value, sortFilter.value, searchFilter.value, salesMap]);
 
   const hasPromo = sorted.some((p) => p.promotion);
   const visibleSortOptions = SORT_OPTIONS.filter(
@@ -97,21 +105,63 @@ function ProductsPageInner({
 
   return (
     <>
-      <div className="flex flex-wrap items-end gap-3 mb-6">
-        <FilterBar {...statusFilter} items={STATUS_ITEMS} label="Status" />
+      <div className="flex flex-col sm:flex-row sm:items-end gap-3 mb-6">
+        <FormInput
+          type="text"
+          placeholder="Search by name, tag, category..."
+          value={searchFilter.value}
+          onChange={(e) => searchFilter.onValueChange(e.target.value)}
+          clearable
+          onClear={() => searchFilter.onValueChange("")}
+          startIcon={<Search size={14} />}
+          wrapperClassName="w-full sm:flex-1"
+          className="h-9 text-sm bg-white-warm! border-earth/15! hover:border-earth/35!"
+        />
+
+        <Select
+          value={statusFilter.value}
+          onValueChange={statusFilter.onValueChange}
+          clearable
+        >
+          <SelectTrigger className="w-full sm:w-44 h-9 text-2xs font-body font-semibold uppercase tracking-widest">
+            <SelectValue placeholder="All Statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            {STATUS_ITEMS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         {categoryItems.length > 1 && (
-          <FilterBar
-            {...categoryFilter}
-            items={categoryItems}
-            allLabel="All Categories"
-            label="Category"
-          />
+          <Select
+            value={categoryFilter.value}
+            onValueChange={categoryFilter.onValueChange}
+            options={categoryItems}
+            clearable
+          >
+            <SelectTrigger className="w-full sm:w-56 h-9 text-2xs font-body font-semibold uppercase tracking-widest">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              {(options) =>
+                options.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))
+              }
+            </SelectContent>
+          </Select>
         )}
+
         <Select
           value={sortFilter.value || ""}
           onValueChange={sortFilter.onValueChange}
         >
-          <SelectTrigger className="w-48 h-9 text-2xs font-body font-semibold uppercase tracking-widest">
+          <SelectTrigger className="w-full sm:w-48 h-9 text-2xs font-body font-semibold uppercase tracking-widest">
             <ArrowUpDown size={12} className="shrink-0 mr-1.5 text-earth/40" />
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
@@ -179,7 +229,7 @@ export function ProductsPage({
         Products
       </h1>
 
-      <SearchParamsFilterProvider keys={["status", "category", "sort"]}>
+      <SearchParamsFilterProvider keys={["status", "category", "sort", "search"]}>
         <ProductsPageInner
           products={products}
           categoryItems={categories}
