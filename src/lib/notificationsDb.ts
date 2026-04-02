@@ -46,13 +46,11 @@ export async function createNotification({
   });
 
   // Send push notifications (fire-and-forget)
-  sendPushNotifications({
-    title,
-    body: message,
-    url: getNotificationUrl(type),
-    audience,
-    userId,
-  }).catch((err) => console.error("[push] Failed to send:", err));
+  getNotificationUrl(type, relatedId)
+    .then((url) =>
+      sendPushNotifications({ title, body: message, url, audience, userId }),
+    )
+    .catch((err) => console.error("[push] Failed to send:", err));
 }
 
 export async function getNotifications(
@@ -60,8 +58,9 @@ export async function getNotifications(
   role: string,
   limit = 20,
   offset = 0,
+  userCreatedAt?: string,
 ): Promise<Notification[]> {
-  const { data, error } = await supabaseAdmin
+  let query = supabaseAdmin
     .from("notifications")
     .select("*, notification_reads!left(user_id)")
     .or(
@@ -70,6 +69,12 @@ export async function getNotifications(
     .eq("notification_reads.user_id", userId)
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
+
+  if (userCreatedAt) {
+    query = query.gte("created_at", userCreatedAt);
+  }
+
+  const { data, error } = await query;
 
   if (error) return [];
   return (data as DbNotificationRow[]).map((row) => ({
@@ -82,13 +87,20 @@ export async function getNotifications(
 export async function getUnreadCount(
   userId: string,
   role: string,
+  userCreatedAt?: string,
 ): Promise<number> {
-  const { data: visible, error: visibleErr } = await supabaseAdmin
+  let query = supabaseAdmin
     .from("notifications")
     .select("id")
     .or(
       `user_id.eq.${userId},and(user_id.is.null,audience.is.null),and(user_id.is.null,audience.eq.${role})`,
     );
+
+  if (userCreatedAt) {
+    query = query.gte("created_at", userCreatedAt);
+  }
+
+  const { data: visible, error: visibleErr } = await query;
 
   if (visibleErr || !visible?.length) return 0;
 

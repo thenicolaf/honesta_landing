@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Bell } from "lucide-react";
+import { useRouter } from "next/navigation";
 import {
   Button,
   Badge,
@@ -10,6 +11,7 @@ import {
   PopoverContent,
   getNotificationStyle,
 } from "@/shared/ui";
+import { resolveNotificationHref } from "@/shared/utils/resolveNotificationHref";
 import { usePopover } from "@/shared/ui/Popover";
 import { formatDateTime } from "@/shared/ui/Table";
 import { useNotifications } from "@/providers";
@@ -20,27 +22,37 @@ function NotificationItem({
   type,
   title,
   message,
+  related_id,
   is_read,
   created_at,
   onRead,
+  onNavigate,
 }: {
   id: string;
   type: string;
   title: string;
   message: string | null;
+  related_id: string | null;
   is_read: boolean;
   created_at: string;
   onRead: (id: string) => void;
+  onNavigate: (href: string) => void;
 }) {
   const style = getNotificationStyle(type);
+
+  async function handleClick() {
+    if (!is_read) onRead(id);
+    const href = await resolveNotificationHref(type, related_id);
+    if (href) onNavigate(href);
+  }
 
   return (
     <button
       type="button"
-      onClick={() => !is_read && onRead(id)}
+      onClick={handleClick}
       className={cn(
-        "w-full text-left px-4 py-3 border-b border-earth/6 last:border-b-0 transition-colors duration-150",
-        is_read ? "opacity-50" : "hover:bg-sand/30",
+        "w-full text-left px-4 py-3 border-b border-earth/6 last:border-b-0 transition-colors duration-150 cursor-pointer",
+        is_read ? "opacity-50 hover:opacity-70" : "hover:bg-sand/30",
       )}
     >
       <div className="flex items-start gap-2.5">
@@ -76,6 +88,44 @@ function NotificationItem({
   );
 }
 
+function NotificationList({
+  notifications,
+  onRead,
+  router,
+}: {
+  notifications: {
+    id: string;
+    type: string;
+    title: string;
+    message: string | null;
+    related_id: string | null;
+    is_read: boolean;
+    created_at: string;
+  }[];
+  onRead: (id: string) => void;
+  router: ReturnType<typeof useRouter>;
+}) {
+  const { close } = usePopover();
+
+  function handleNavigate(href: string) {
+    close();
+    router.push(href);
+  }
+
+  return (
+    <>
+      {notifications.map((n) => (
+        <NotificationItem
+          key={n.id}
+          {...n}
+          onRead={onRead}
+          onNavigate={handleNavigate}
+        />
+      ))}
+    </>
+  );
+}
+
 function DashboardLink() {
   const { close } = usePopover();
   return (
@@ -94,6 +144,7 @@ function DashboardLink() {
 export function NotificationBell({ isAdmin = false }: { isAdmin?: boolean }) {
   const { notifications, unreadCount, markAsRead, markAllAsRead } =
     useNotifications();
+  const router = useRouter();
 
   return (
     <Popover>
@@ -136,11 +187,11 @@ export function NotificationBell({ isAdmin = false }: { isAdmin?: boolean }) {
               No notifications yet
             </p>
           ) : (
-            notifications
-              .slice(0, 10)
-              .map((n) => (
-                <NotificationItem key={n.id} {...n} onRead={markAsRead} />
-              ))
+            <NotificationList
+              notifications={notifications.slice(0, 10)}
+              onRead={markAsRead}
+              router={router}
+            />
           )}
         </div>
 

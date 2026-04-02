@@ -39,7 +39,17 @@ const NOTIFICATION_URL_MAP: Record<string, string> = {
   new_category: "/#categories",
 };
 
-export function getNotificationUrl(type: string): string {
+export async function getNotificationUrl(type: string, relatedId?: string): Promise<string> {
+  if (relatedId) {
+    if (type === "new_product") {
+      const { data } = await supabaseAdmin.from("products").select("slug").eq("id", relatedId).single();
+      if (data?.slug) return `/products/${data.slug}`;
+    }
+    if (type === "new_category") {
+      const { data } = await supabaseAdmin.from("categories").select("slug").eq("id", relatedId).single();
+      if (data?.slug) return `/?category=${data.slug}#products`;
+    }
+  }
   return NOTIFICATION_URL_MAP[type] ?? "/panel";
 }
 

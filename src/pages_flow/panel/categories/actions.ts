@@ -48,18 +48,22 @@ export async function createCategory(
 
   const maxOrder = await getMaxSortOrder();
 
-  const { error } = await supabaseAdmin.from("categories").insert({
-    name,
-    slug,
-    audience: values.audience?.trim() || null,
-    badge: values.badge?.trim() || null,
-    tagline: values.tagline?.trim() || null,
-    description: values.description?.trim() || null,
-    image_url: values.image_url?.trim() || null,
-    sort_order: maxOrder + 1,
-  });
+  const { data, error } = await supabaseAdmin
+    .from("categories")
+    .insert({
+      name,
+      slug,
+      audience: values.audience?.trim() || null,
+      badge: values.badge?.trim() || null,
+      tagline: values.tagline?.trim() || null,
+      description: values.description?.trim() || null,
+      image_url: values.image_url?.trim() || null,
+      sort_order: maxOrder + 1,
+    })
+    .select("id")
+    .single();
 
-  if (error) {
+  if (error || !data) {
     return { error: "Failed to create category. Please try again.", values };
   }
 
@@ -67,6 +71,7 @@ export async function createCategory(
     type: "new_category",
     title: "New category",
     message: name,
+    relatedId: data.id,
     audience: null,
   });
 

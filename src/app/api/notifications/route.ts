@@ -22,7 +22,7 @@ async function requireAuth() {
     .single();
 
   return profile?.role
-    ? { userId: user.id, role: profile.role as string }
+    ? { userId: user.id, role: profile.role as string, createdAt: user.created_at }
     : null;
 }
 
@@ -35,8 +35,8 @@ export async function GET(request: NextRequest) {
   const offset = Number(searchParams.get("offset")) || 0;
 
   const [notifications, unreadCount] = await Promise.all([
-    getNotifications(auth.userId, auth.role, limit, offset),
-    getUnreadCount(auth.userId, auth.role),
+    getNotifications(auth.userId, auth.role, limit, offset, auth.createdAt),
+    getUnreadCount(auth.userId, auth.role, auth.createdAt),
   ]);
 
   return NextResponse.json({ notifications, unreadCount });
