@@ -22,11 +22,15 @@ export async function generateMetadata({
     if (match) {
       return {
         title: `${match.name} — HONESTA`,
-        description: match.description || `${match.name}. ${match.tagline}. Natural dried fruits by HONESTA.`,
+        description:
+          match.description ||
+          `${match.name}. ${match.tagline}. Natural dried fruits by HONESTA.`,
         openGraph: {
           title: `${match.name} — HONESTA`,
           description: match.tagline,
-          ...(match.image_url ? { images: [{ url: match.image_url, alt: match.name }] } : {}),
+          ...(match.image_url
+            ? { images: [{ url: match.image_url, alt: match.name }] }
+            : {}),
         },
       };
     }

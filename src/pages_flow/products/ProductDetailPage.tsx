@@ -31,7 +31,6 @@ export function ProductDetailPage({
   backHref = "/#products",
   backLabel = "Back to products",
 }: ProductDetailPageProps) {
-
   const {
     title,
     category,
@@ -85,7 +84,9 @@ export function ProductDetailPage({
               category={category}
               badge={badge}
               extraBadges={
-                product.id && <FavoriteButton productId={product.id} />
+                product.id && (
+                  <FavoriteButton productId={product.id} tooltipSide="left" />
+                )
               }
             />
 
