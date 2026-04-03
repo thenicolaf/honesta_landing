@@ -1,9 +1,13 @@
+"use client";
+
 import Image from "next/image";
 import { Button } from "@/shared/ui";
 import { HashLink } from "../navbar";
+import { useAboutExpanded } from "../about/AboutExpandedProvider";
 import { BookOpen, ShoppingBag } from "lucide-react";
 
 export function HeroContent() {
+  const { expandAndScroll } = useAboutExpanded();
   return (
     <div className="relative h-full mx-auto max-w-7xl px-6 lg:px-10 flex items-center justify-center">
       <div className="max-w-lg pt-20 text-center relative">
@@ -48,7 +52,14 @@ export function HeroContent() {
           className="flex flex-col items-center gap-6 animate-hero-fade-up"
           style={{ animationDelay: "0.82s" }}
         >
-          <HashLink href="/#about" className="group">
+          <HashLink
+            href="/#about"
+            className="group"
+            onClick={(e) => {
+              e.preventDefault();
+              expandAndScroll();
+            }}
+          >
             <Button
               as="button"
               type="button"

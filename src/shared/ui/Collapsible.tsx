@@ -26,13 +26,28 @@ interface CollapsibleProps {
   children: React.ReactNode;
   className?: string;
   defaultOpen?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function Collapsible({ children, className, defaultOpen = false }: CollapsibleProps) {
-  const [open, setOpen] = useState(defaultOpen);
+export function Collapsible({
+  children,
+  className,
+  defaultOpen = false,
+  open: controlledOpen,
+  onOpenChange,
+}: CollapsibleProps) {
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
+  const open = controlledOpen ?? internalOpen;
+
+  const toggle = () => {
+    const next = !open;
+    if (controlledOpen === undefined) setInternalOpen(next);
+    onOpenChange?.(next);
+  };
 
   return (
-    <CollapsibleContext.Provider value={{ open, toggle: () => setOpen((v) => !v) }}>
+    <CollapsibleContext.Provider value={{ open, toggle }}>
       <div className={cn(className)}>{children}</div>
     </CollapsibleContext.Provider>
   );
