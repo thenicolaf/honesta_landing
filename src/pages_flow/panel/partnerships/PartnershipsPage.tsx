@@ -2,7 +2,6 @@
 
 import { useMemo } from "react";
 import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
-import { RefreshButton } from "@/app/panel/_components/RefreshButton";
 import { DataTable, DataCardPagination } from "@/shared/ui";
 import { Handshake } from "lucide-react";
 import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvider";
@@ -10,17 +9,30 @@ import { useFilterBar } from "@/providers/FilterProvider";
 import { inquiryColumns } from "./columns";
 import { filterInquiries } from "./helpers";
 import { useInquiriesTable } from "./useInquiriesTable";
+import { useRealtimeInquiries } from "./useRealtimeInquiries";
 import { InquiryFilters } from "./InquiryFilters";
 import { InquiryCards } from "./InquiryCards";
 import type { PartnershipInquiry } from "./types";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const FILTER_KEYS = ["search", "type", "sortKey", "sortDir", "page", "pageSize"];
+const FILTER_KEYS = [
+  "search",
+  "type",
+  "sortKey",
+  "sortDir",
+  "page",
+  "pageSize",
+];
 
 // ─── Inner (consumes filter context) ──────────────────────────────────────────
 
-function PartnershipsInner({ inquiries }: { inquiries: PartnershipInquiry[] }) {
+function PartnershipsInner({
+  inquiries: initial,
+}: {
+  inquiries: PartnershipInquiry[];
+}) {
+  const inquiries = useRealtimeInquiries(initial);
   const searchFilter = useFilterBar("search");
   const typeFilter = useFilterBar("type");
 
@@ -74,10 +86,14 @@ function PartnershipsInner({ inquiries }: { inquiries: PartnershipInquiry[] }) {
 
 // ─── PartnershipsPage ─────────────────────────────────────────────────────────
 
-export function PartnershipsPage({ inquiries }: { inquiries: PartnershipInquiry[] }) {
+export function PartnershipsPage({
+  inquiries,
+}: {
+  inquiries: PartnershipInquiry[];
+}) {
   return (
     <>
-      <AdminPageHeader title="Partnerships" actions={<RefreshButton />} />
+      <AdminPageHeader title="Partnerships" />
 
       <SearchParamsFilterProvider keys={FILTER_KEYS}>
         <PartnershipsInner inquiries={inquiries} />
