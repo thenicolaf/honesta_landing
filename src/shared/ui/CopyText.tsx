@@ -30,7 +30,7 @@ export function CopyText({
     <button
       type="button"
       onClick={handleCopy}
-      className={`inline-flex items-center gap-1.5 transition-colors hover:text-orange ${className}`}
+      className={`inline-flex items-center gap-1.5 transition-colors max-w-fit hover:text-orange ${className}`}
     >
       <AnimatePresence mode="wait" initial={false}>
         {copied ? (
