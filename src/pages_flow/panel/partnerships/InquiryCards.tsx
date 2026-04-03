@@ -7,6 +7,7 @@ import {
   DataCardFooter,
   DataCardList,
   DataCardEmpty,
+  CopyText,
 } from "@/shared/ui";
 import { displayAddress } from "@/shared/utils/address";
 import { formatDateTime } from "@/shared/ui/Table";
@@ -48,7 +49,7 @@ export function InquiryCards({ inquiries, emptyDescription }: InquiryCardsProps)
             <DataCardField label="Contact">
               <div className="flex flex-col gap-0.5">
                 <span className="font-semibold text-sm">{inquiry.contact_name}</span>
-                <span className="text-2xs text-earth/40">{inquiry.phone}</span>
+                <CopyText text={inquiry.phone} className="text-2xs text-earth/40">{inquiry.phone}</CopyText>
               </div>
             </DataCardField>
 
@@ -60,7 +61,7 @@ export function InquiryCards({ inquiries, emptyDescription }: InquiryCardsProps)
 
             {inquiry.address && (
               <DataCardField label="Address">
-                <span className="text-2xs text-earth/60">{displayAddress(inquiry.address)}</span>
+                <CopyText text={displayAddress(inquiry.address)} className="text-2xs text-earth/60">{displayAddress(inquiry.address)}</CopyText>
               </DataCardField>
             )}
           </DataCardBody>

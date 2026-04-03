@@ -57,7 +57,7 @@ export function AdminOrderCards({
                   {order.first_name} {order.last_name}
                 </span>
                 <span className="text-2xs text-earth/50">{order.email}</span>
-                <span className="text-2xs text-earth/40">{order.phone}</span>
+                <CopyText text={order.phone} className="text-2xs text-earth/40">{order.phone}</CopyText>
                 {(order.gender || order.birthday) && (
                   <span className="text-2xs text-earth/30">
                     {order.gender

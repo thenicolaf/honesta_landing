@@ -5,6 +5,7 @@ import {
   compareString,
 } from "@/shared/ui/Table";
 import { displayAddress } from "@/shared/utils/address";
+import { CopyText } from "@/shared/ui";
 import type { PartnershipInquiry } from "./types";
 
 type InquiryKey =
@@ -36,7 +37,7 @@ export const contactColumn: ColumnDef<PartnershipInquiry, InquiryKey> = {
   cell: (i) => (
     <div className="flex flex-col gap-0.5">
       <span className="font-semibold text-sm">{i.contact_name}</span>
-      <span className="text-2xs text-earth/40">{i.phone}</span>
+      <CopyText text={i.phone} className="text-2xs text-earth/40">{i.phone}</CopyText>
     </div>
   ),
   sortable: true,
@@ -63,7 +64,7 @@ export const addressColumn: ColumnDef<PartnershipInquiry, InquiryKey> = {
   header: "Address",
   cell: (i) =>
     i.address ? (
-      <span className="text-2xs text-earth/60 line-clamp-2">{displayAddress(i.address)}</span>
+      <CopyText text={displayAddress(i.address)} className="text-2xs text-earth/60 line-clamp-2">{displayAddress(i.address)}</CopyText>
     ) : (
       <span className="text-2xs text-earth/20">—</span>
     ),

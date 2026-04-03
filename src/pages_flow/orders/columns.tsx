@@ -132,7 +132,7 @@ export const customerColumn: ColumnDef<AdminOrder, OrderKey> = {
         {o.first_name} {o.last_name}
       </span>
       <span className="text-2xs text-earth/50">{o.email}</span>
-      <span className="text-2xs text-earth/40">{o.phone}</span>
+      <CopyText text={o.phone} className="text-2xs text-earth/40">{o.phone}</CopyText>
       {(o.gender || o.birthday) && (
         <span className="text-2xs text-earth/30">
           {o.gender

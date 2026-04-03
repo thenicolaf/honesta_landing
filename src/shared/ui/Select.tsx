@@ -28,6 +28,9 @@ interface SelectContextValue {
   value: string;
   options: SelectOption[];
   clearable: boolean;
+  searchable: boolean;
+  search: string;
+  setSearch: (v: string) => void;
   direction: "down" | "up";
   toggle: () => void;
   close: () => void;
@@ -52,6 +55,7 @@ interface SelectProps {
   value?: string;
   options?: SelectOption[];
   clearable?: boolean;
+  searchable?: boolean;
   onValueChange?: (value: string) => void;
 }
 
@@ -62,16 +66,21 @@ export function Select({
   value: controlledValue,
   options = [],
   clearable = false,
+  searchable = false,
   onValueChange,
 }: SelectProps) {
   const [open, setOpen] = useState(false);
   const [internalValue, setInternalValue] = useState(defaultValue);
+  const [search, setSearch] = useState("");
   const [direction, setDirection] = useState<"down" | "up">("down");
   const rootRef = useRef<HTMLDivElement>(null);
 
   const value = controlledValue ?? internalValue;
 
-  const close = () => setOpen(false);
+  const close = () => {
+    setOpen(false);
+    setSearch("");
+  };
 
   const clear = () => {
     if (controlledValue === undefined) setInternalValue("");
@@ -119,7 +128,7 @@ export function Select({
 
   return (
     <SelectContext.Provider
-      value={{ open, value, options, clearable, direction, toggle, close, select, clear }}
+      value={{ open, value, options, clearable, searchable, search, setSearch, direction, toggle, close, select, clear }}
     >
       <div ref={rootRef} className={cn("relative block", className)}>
         {children}
@@ -225,21 +234,34 @@ export function SelectValue({
 interface SelectContentProps {
   children: React.ReactNode | ((options: SelectOption[]) => React.ReactNode);
   className?: string;
+  searchPlaceholder?: string;
 }
 
-export function SelectContent({ children, className }: SelectContentProps) {
-  const { open, options, direction } = useSelect();
+export function SelectContent({ children, className, searchPlaceholder = "Search..." }: SelectContentProps) {
+  const { open, options, searchable, search, setSearch, direction } = useSelect();
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const isUp = direction === "up";
   const yOffset = isUp ? 6 : -6;
 
-  const resolved = typeof children === "function" ? children(options) : children;
+  const filtered = searchable && search
+    ? options.filter((o) => o.label.toLowerCase().includes(search.toLowerCase()))
+    : options;
+
+  const resolved = typeof children === "function" ? children(filtered) : children;
+
+  // Auto-focus search on open
+  useEffect(() => {
+    if (open && searchable) {
+      const t = setTimeout(() => searchRef.current?.focus(), 50);
+      return () => clearTimeout(t);
+    }
+  }, [open, searchable]);
 
   return (
     <AnimatePresence initial={false}>
       {open && (
-        <motion.ul
-          role="listbox"
+        <motion.div
           initial={{ opacity: 0, y: yOffset, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: yOffset, scale: 0.98 }}
@@ -248,12 +270,53 @@ export function SelectContent({ children, className }: SelectContentProps) {
             "absolute left-0 right-0 z-50",
             isUp ? "bottom-full mb-1.5" : "top-full mt-1.5",
             "rounded-xl border border-earth/12 bg-white-warm shadow-lg shadow-earth/8",
-            "py-1.5 max-h-60 overflow-y-auto overscroll-contain",
+            "overflow-hidden",
             className,
           )}
         >
-          {resolved}
-        </motion.ul>
+          {searchable && (
+            <div className="flex items-center gap-1.5 px-3 pt-2.5 pb-2 border-b border-earth/8">
+              <input
+                ref={searchRef}
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={searchPlaceholder}
+                className="flex-1 min-w-0 bg-transparent outline-none font-body text-sm text-earth placeholder:text-earth/35 py-0.5"
+              />
+              <AnimatePresence initial={false}>
+                {search && (
+                  <motion.span
+                    key="clear-search"
+                    initial={{ opacity: 0, scale: 0.6 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.6 }}
+                    transition={{ duration: 0.15 }}
+                    className="inline-flex"
+                  >
+                    <span
+                      role="button"
+                      aria-label="Clear search"
+                      onClick={(e) => { e.stopPropagation(); setSearch(""); }}
+                      className="p-0.5 rounded-full text-earth/35 hover:text-earth/70 hover:bg-earth/8 transition-colors duration-150 cursor-pointer"
+                    >
+                      <IconX className="w-3.5 h-3.5" />
+                    </span>
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+          <ul
+            role="listbox"
+            className={cn(
+              "max-h-60 overflow-y-auto overscroll-contain",
+              searchable ? "py-1" : "py-1.5",
+            )}
+          >
+            {resolved}
+          </ul>
+        </motion.div>
       )}
     </AnimatePresence>
   );
