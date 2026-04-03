@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useCallback } from "react";
+import { forwardRef, useCallback, useState } from "react";
 import PhoneInput from "react-phone-number-input/max";
 import type { Value } from "react-phone-number-input";
 import { isValidPhoneNumber } from "libphonenumber-js";
@@ -139,6 +139,22 @@ export function FormPhoneInput({
   state,
   className,
 }: FormPhoneInputProps) {
+  const [internalValue, setInternalValue] = useState<Value | undefined>(
+    () => {
+      const raw = controlledValue || defaultValue;
+      return raw ? (raw.replace(/\s/g, "") as Value) : undefined;
+    },
+  );
+
+  const value = controlledValue !== undefined
+    ? (controlledValue.replace(/\s/g, "") as Value)
+    : internalValue;
+
+  const handleChange = (val?: Value) => {
+    if (controlledValue === undefined) setInternalValue(val);
+    onChange?.(val ?? undefined);
+  };
+
   return (
     <div
       className={cn(
@@ -156,8 +172,8 @@ export function FormPhoneInput({
         defaultCountry="AE"
         international
         limitMaxLength
-        defaultValue={(defaultValue || controlledValue || undefined) as Value}
-        onChange={(val) => onChange?.(val ?? undefined)}
+        value={value}
+        onChange={handleChange}
         placeholder={placeholder}
         inputComponent={CustomInput}
         countrySelectComponent={CountrySelect}
