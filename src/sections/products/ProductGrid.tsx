@@ -69,10 +69,10 @@ function ProductList({ products }: { products: Product[] }) {
       {products.map((product, i) => (
         <motion.div
           key={product.id ?? product.title}
-          initial={{ opacity: 0, y: 28 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-40px" }}
-          transition={{ duration: 0.5, ease: "easeOut", delay: i * 0.07 }}
+          transition={{ duration: 0.35, ease: "easeOut", delay: (i % 3) * 0.05 }}
           className="h-full"
         >
           <ProductItem product={product} />

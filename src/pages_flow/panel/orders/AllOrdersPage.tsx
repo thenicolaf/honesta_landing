@@ -2,7 +2,6 @@
 
 import { useMemo } from "react";
 import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
-import { RefreshButton } from "@/app/panel/_components/RefreshButton";
 import { DataTable, DataCardPagination } from "@/shared/ui";
 import { IconReceipt } from "@/shared/icons";
 import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvider";
@@ -11,22 +10,38 @@ import { adminOrderColumns } from "@/pages_flow/orders/columns";
 import type { AdminOrder } from "@/pages_flow/orders/types";
 import { filterOrders } from "./helpers";
 import { useOrdersTable } from "./useOrdersTable";
+import { useRealtimeOrders } from "./useRealtimeOrders";
 import { OrderFilters } from "./OrderFilters";
 import { AdminOrderCards } from "./AdminOrderCards";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const FILTER_KEYS = ["search", "status", "fulfilled", "sortKey", "sortDir", "page", "pageSize"];
+const FILTER_KEYS = [
+  "search",
+  "status",
+  "fulfilled",
+  "sortKey",
+  "sortDir",
+  "page",
+  "pageSize",
+];
 
 // ─── Inner (consumes filter context) ──────────────────────────────────────────
 
-function AllOrdersInner({ orders }: { orders: AdminOrder[] }) {
+function AllOrdersInner({ orders: initial }: { orders: AdminOrder[] }) {
+  const orders = useRealtimeOrders(initial);
   const searchFilter = useFilterBar("search");
   const statusFilter = useFilterBar("status");
   const fulfilledFilter = useFilterBar("fulfilled");
 
   const filtered = useMemo(
-    () => filterOrders(orders, statusFilter.value, searchFilter.value, fulfilledFilter.value),
+    () =>
+      filterOrders(
+        orders,
+        statusFilter.value,
+        searchFilter.value,
+        fulfilledFilter.value,
+      ),
     [orders, statusFilter.value, searchFilter.value, fulfilledFilter.value],
   );
 
@@ -35,7 +50,11 @@ function AllOrdersInner({ orders }: { orders: AdminOrder[] }) {
     adminOrderColumns,
   );
 
-  const hasFilters = !!(searchFilter.value || statusFilter.value || fulfilledFilter.value);
+  const hasFilters = !!(
+    searchFilter.value ||
+    statusFilter.value ||
+    fulfilledFilter.value
+  );
 
   const emptyDescription = hasFilters
     ? "Try adjusting filters to find what you're looking for."
@@ -78,7 +97,7 @@ function AllOrdersInner({ orders }: { orders: AdminOrder[] }) {
 export function AllOrdersPage({ orders }: { orders: AdminOrder[] }) {
   return (
     <>
-      <AdminPageHeader title="All Orders" actions={<RefreshButton />} />
+      <AdminPageHeader title="All Orders" />
 
       <SearchParamsFilterProvider keys={FILTER_KEYS}>
         <AllOrdersInner orders={orders} />

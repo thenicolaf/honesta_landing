@@ -1,62 +1,168 @@
 "use client";
 
-import { useState } from "react";
-import { formatPhoneDisplay, normalizePhone } from "@/shared/utils/validatePhone";
-import { FormInput } from "./FormInput";
+import { forwardRef, useCallback } from "react";
+import PhoneInput from "react-phone-number-input/max";
+import type { Value } from "react-phone-number-input";
+import { isValidPhoneNumber } from "libphonenumber-js";
+import getUnicodeFlagIcon from "country-flag-icons/unicode";
+import { cn } from "@/shared/utils/cn";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "../Select";
 import type { FieldVariantProps } from "./shared";
+
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 interface FormPhoneInputProps extends FieldVariantProps {
   name: string;
   id?: string;
   defaultValue?: string;
+  value?: string;
+  onChange?: (value: string | undefined) => void;
   placeholder?: string;
   className?: string;
 }
 
-/**
- * Phone input that displays a user-friendly local format (0XX XXX XXXX)
- * and submits the normalized +971XXXXXXXXX value via a hidden input.
- */
+interface CountryOption {
+  value?: string;
+  label: string;
+  divider?: boolean;
+}
+
+// ─── Custom input (styled with fieldVariants) ────────────────────────────────
+
+const CustomInput = forwardRef<
+  HTMLInputElement,
+  React.ComponentPropsWithRef<"input">
+>(function CustomInput({ className, value, onChange, ...props }, ref) {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const prev = String(value ?? "");
+    const next = e.target.value;
+    const prevDigits = prev.replace(/\D/g, "");
+    const nextDigits = next.replace(/\D/g, "");
+
+    if (
+      nextDigits.length > prevDigits.length &&
+      prevDigits.length > 0 &&
+      isValidPhoneNumber("+" + prevDigits)
+    ) {
+      e.preventDefault();
+      return;
+    }
+    onChange?.(e);
+  };
+
+  return (
+    <input
+      ref={ref}
+      value={value}
+      onChange={handleChange}
+      className={cn(
+        "flex-1 h-10 bg-transparent pr-3 font-body font-light text-earth text-sm",
+        "placeholder:text-earth/30 focus:outline-none",
+        "disabled:cursor-not-allowed disabled:opacity-40",
+        className,
+      )}
+      {...props}
+    />
+  );
+});
+
+// ─── Custom country select (uses our Select compound component) ──────────────
+
+function CountrySelect({
+  value,
+  onChange,
+  options,
+}: {
+  value?: string;
+  onChange: (value?: string) => void;
+  options: CountryOption[];
+}) {
+  const countries = options.filter((o) => !o.divider && o.value);
+
+  const handleChange = useCallback(
+    (val: string) => {
+      onChange(val === "ZZ" ? undefined : val);
+    },
+    [onChange],
+  );
+
+  const flag = value ? getUnicodeFlagIcon(value) : "🌐";
+
+  return (
+    <Select
+      value={value ?? "ZZ"}
+      onValueChange={handleChange}
+      className="static"
+      searchable
+      options={countries.map((c) => ({
+        value: c.value!,
+        label: c.label,
+      }))}
+    >
+      <SelectTrigger className="w-auto gap-1 border-0! shadow-none! ring-0! rounded-l-xl! rounded-r-none! px-3 py-0 h-10 bg-transparent hover:bg-earth/4">
+        <span className="text-lg leading-none">{flag}</span>
+        <SelectValue placeholder="🌐" className="hidden" />
+      </SelectTrigger>
+      <SelectContent className="max-h-72">
+        {(options) =>
+          options.map((c) => (
+            <SelectItem key={c.value} value={c.value!}>
+              <span className="flex items-center gap-2">
+                <span className="text-base leading-none">
+                  {getUnicodeFlagIcon(c.value!)}
+                </span>
+                <span className="truncate">{c.label}</span>
+              </span>
+            </SelectItem>
+          ))
+        }
+      </SelectContent>
+    </Select>
+  );
+}
+
+// ─── FormPhoneInput ──────────────────────────────────────────────────────────
+
 export function FormPhoneInput({
   name,
   id,
   defaultValue,
-  placeholder = "050 123 4567",
+  value: controlledValue,
+  onChange,
+  placeholder,
   state,
   className,
 }: FormPhoneInputProps) {
-  const [display, setDisplay] = useState(() =>
-    defaultValue ? formatPhoneDisplay(defaultValue) : "",
-  );
-
-  const normalized = normalizePhone(display);
-
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const cleaned = e.target.value.replace(/[^\d\s+]/g, "");
-    setDisplay(formatPhoneDisplay(cleaned));
-  }
-
-  function handleBlur() {
-    if (display.trim()) {
-      setDisplay(formatPhoneDisplay(display));
-    }
-  }
-
   return (
-    <>
-      <input type="hidden" name={name} value={normalized} />
-      <FormInput
+    <div
+      className={cn(
+        "relative flex items-center rounded-xl border bg-cream transition-colors",
+        "focus-within:border-orange",
+        state === "error"
+          ? "border-red-400 focus-within:border-red-500"
+          : "border-parchment",
+        className,
+      )}
+    >
+      <PhoneInput
         id={id}
-        type="tel"
-        inputMode="tel"
-        autoComplete="tel"
-        value={display}
-        onChange={handleChange}
-        onBlur={handleBlur}
+        name={name}
+        defaultCountry="AE"
+        international
+        limitMaxLength
+        defaultValue={(defaultValue || controlledValue || undefined) as Value}
+        onChange={(val) => onChange?.(val ?? undefined)}
         placeholder={placeholder}
-        state={state}
-        className={className}
+        inputComponent={CustomInput}
+        countrySelectComponent={CountrySelect}
+        className="flex items-center flex-1 [&>.PhoneInputCountryIcon]:hidden"
       />
-    </>
+    </div>
   );
 }
