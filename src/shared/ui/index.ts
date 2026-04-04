@@ -81,6 +81,7 @@ export {
   DatePickerPresets,
   useDatePicker,
 } from "./DatePicker";
+export { ScrollWheel, type ScrollWheelItem, type ScrollWheelProps } from "./ScrollWheel";
 export { Gallery, type GalleryImage } from "./Gallery";
 export { EmptyState } from "./EmptyState";
 export { FilterBar, type FilterBarItem } from "./FilterBar";

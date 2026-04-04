@@ -28,5 +28,8 @@ export const calendarClassNames = {
   selected: "[&>button]:bg-orange/20! [&>button]:text-orange! [&>button]:font-medium",
   today: "[&>button]:bg-earth/5 [&>button]:text-earth/50 [&>button]:font-medium",
   outside: "invisible",
-  disabled: "text-earth/15 pointer-events-none",
+  disabled: cn(
+    "pointer-events-none",
+    "[&>button]:text-earth/20 [&>button]:hover:bg-transparent",
+  ),
 };

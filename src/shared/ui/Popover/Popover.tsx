@@ -4,6 +4,7 @@ import {
   useState,
   useRef,
   useEffect,
+  useLayoutEffect,
   useCallback,
   Children,
   cloneElement,
@@ -14,6 +15,7 @@ import { cn } from "@/shared/utils/cn";
 import { PopoverContext, usePopover } from "./context";
 
 const POPOVER_MAX_H = 360;
+const POPOVER_MIN_W = 320;
 const VIEWPORT_PAD = 16;
 
 // ─── Popover (root) ─────────────────────────────────────────────────────────
@@ -34,7 +36,7 @@ export function Popover({
   onOpenChange,
 }: PopoverProps) {
   const [internalOpen, setInternalOpen] = useState(false);
-  const [direction, setDirection] = useState<"down" | "up">("down");
+  const [direction, setDirection] = useState<{ vertical: "down" | "up"; horizontal: "left" | "right" }>({ vertical: "down", horizontal: "left" });
   const rootRef = useRef<HTMLDivElement>(null);
 
   const isControlled = controlledOpen !== undefined;
@@ -55,9 +57,14 @@ export function Popover({
       const rect = rootRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
-      setDirection(
-        spaceBelow >= POPOVER_MAX_H || spaceBelow >= spaceAbove ? "down" : "up",
-      );
+      // Horizontal: prefer "left" (popover extends to the right from trigger's left edge),
+      // fall back to "right" when there isn't enough space on the right.
+      const spaceRight = window.innerWidth - rect.left;
+      const spaceLeft = rect.right;
+      setDirection({
+        vertical: spaceBelow >= POPOVER_MAX_H || spaceBelow >= spaceAbove ? "down" : "up",
+        horizontal: spaceRight >= POPOVER_MIN_W || spaceRight >= spaceLeft ? "left" : "right",
+      });
     }
     setOpen(!open);
   }, [open, setOpen]);
@@ -158,7 +165,7 @@ export function PopoverTrigger({
 interface PopoverContentProps {
   children: React.ReactNode;
   /** Preferred alignment — auto-adjusted if content overflows viewport */
-  align?: "left" | "right";
+  align?: "left" | "right" | "auto";
   /** Content width. Defaults to 320px (w-80). */
   width?: string;
   className?: string;
@@ -166,38 +173,56 @@ interface PopoverContentProps {
 
 export function PopoverContent({
   children,
-  align = "right",
+  align = "auto",
   width = "w-80",
   className,
 }: PopoverContentProps) {
   const { open, direction } = usePopover();
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Clamp to viewport after mount / resize — no state, direct DOM mutation
+  // Clamp to viewport after mount / resize — no state, direct DOM mutation.
+  // Uses offsetWidth / offsetParent so measurements are NOT affected by motion's
+  // `scale` transform in the enter animation — otherwise clamp would run with
+  // scaled-down dimensions and miss overflow until the animation completes.
   const clamp = useCallback(() => {
     const el = contentRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
+    const parent = el?.offsetParent as HTMLElement | null;
+    if (!el || !parent) return;
 
-    if (rect.left < VIEWPORT_PAD) {
-      const parentRect = el.offsetParent?.getBoundingClientRect();
-      if (parentRect) {
-        const currentRight = parentRect.right - rect.right;
-        const shift = VIEWPORT_PAD - rect.left;
-        el.style.right = `${currentRight - shift}px`;
-        el.classList.remove("right-0", "left-0");
-      }
+    // Reset previous inline positioning so we measure from CSS baseline
+    el.style.left = "";
+    el.style.right = "";
+
+    const parentRect = parent.getBoundingClientRect();
+    const width = el.offsetWidth;
+    // Untransformed top-left of el in viewport coords
+    const baseLeft = parentRect.left + el.offsetLeft;
+    const baseRight = baseLeft + width;
+    const vw = window.innerWidth;
+
+    const overflowLeft = VIEWPORT_PAD - baseLeft;
+    const overflowRight = baseRight - (vw - VIEWPORT_PAD);
+
+    if (overflowLeft > 0 || overflowRight > 0) {
+      let desiredLeft = baseLeft;
+      if (overflowRight > 0) desiredLeft -= overflowRight;
+      if (desiredLeft < VIEWPORT_PAD) desiredLeft = VIEWPORT_PAD;
+
+      el.style.left = `${desiredLeft - parentRect.left}px`;
+      el.style.right = "auto";
+      el.classList.remove("right-0", "left-0");
     }
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open) return;
-    requestAnimationFrame(clamp);
+    clamp();
     window.addEventListener("resize", clamp);
     return () => window.removeEventListener("resize", clamp);
   }, [open, clamp]);
 
-  const isUp = direction === "up";
+  const isUp = direction.vertical === "up";
+  const resolvedAlign = align === "auto" ? direction.horizontal : align;
   const yOffset = isUp ? 6 : -6;
 
   return (
@@ -215,7 +240,7 @@ export function PopoverContent({
             "absolute z-50",
             width,
             isUp ? "bottom-full mb-1.5" : "top-full mt-1.5",
-            align === "right" ? "right-0" : "left-0",
+            resolvedAlign === "right" ? "right-0" : "left-0",
             "rounded-[16px] border border-earth/8 bg-white-warm shadow-lg shadow-earth/8",
             "overflow-hidden",
             className,

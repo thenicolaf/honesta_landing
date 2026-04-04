@@ -1,17 +1,18 @@
 "use client";
 
-import { useState } from "react";
 import { DayPicker } from "react-day-picker";
-import { format, eachMonthOfInterval, eachYearOfInterval, startOfYear, endOfYear } from "date-fns";
+import { format, eachYearOfInterval } from "date-fns";
 import { PopoverContent } from "../Popover";
-import { Popover, PopoverTrigger, PopoverContent as MonthYearPopoverContent } from "../Popover";
+import { Popover, PopoverTrigger, PopoverContent as WheelPopoverContent } from "../Popover";
 import { Button } from "../Button";
+import { ScrollWheel, type ScrollWheelItem } from "../ScrollWheel";
 import { IconChevron } from "@/shared/icons";
 import { cn } from "@/shared/utils/cn";
 import { usePopover } from "../Popover";
 import { useDatePicker } from "./context";
 import { calendarClassNames } from "./calendar-classes";
 import { useCalendarMonth } from "./hooks/useCalendarMonth";
+import { DatePickerTime } from "./DatePickerTime";
 
 // ─── Custom Chevron ──────────────────────────────────────────────────────────
 
@@ -31,124 +32,25 @@ function CustomChevron(props: {
   );
 }
 
-// ─── Month/Year Picker ───────────────────────────────────────────────────────
+// ─── Month & Year wheel data ────────────────────────────────────────────────
 
-const MONTHS = eachMonthOfInterval({
-  start: startOfYear(new Date()),
-  end: endOfYear(new Date()),
-}).map((date) => ({ label: format(date, "MMM"), index: date.getMonth() }));
+const MONTH_ITEMS: ScrollWheelItem[] = Array.from({ length: 12 }, (_, i) => ({
+  value: String(i),
+  label: format(new Date(2024, i, 1), "LLLL"),
+}));
 
 const now = new Date();
-const YEARS = eachYearOfInterval({
-  start: new Date(now.getFullYear() - 80, 0, 1),
-  end: new Date(now.getFullYear() + 20, 0, 1),
-}).map((date) => date.getFullYear());
+const DEFAULT_MIN_YEAR = now.getFullYear() - 80;
+const DEFAULT_MAX_YEAR = now.getFullYear() + 20;
 
-function MonthYearPicker({
-  displayMonth,
-  onMonthChange,
-}: {
-  displayMonth: Date;
-  onMonthChange: (date: Date) => void;
-}) {
-  const [view, setView] = useState<"months" | "years">("months");
-  const activeMonth = displayMonth.getMonth();
-  const activeYear = displayMonth.getFullYear();
-
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          as="button"
-          type="button"
-          variant="text"
-          size="sm"
-          className="normal-case font-body text-base font-medium text-earth hover:text-orange"
-        >
-          {format(displayMonth, "LLLL yyyy")}
-        </Button>
-      </PopoverTrigger>
-      <MonthYearPopoverContent align="left" width="w-auto" className="p-3">
-        {/* Tab switcher */}
-        <div className="flex gap-1 mb-2">
-          <Button
-            as="button"
-            type="button"
-            variant="text"
-            size="sm"
-            onClick={() => setView("months")}
-            className={cn(
-              "flex-1 py-1.5! text-2xs font-semibold normal-case tracking-[0.08em]",
-              view === "months"
-                ? "bg-sand text-earth"
-                : "text-earth/40 hover:text-earth hover:bg-earth/5",
-            )}
-          >
-            Month
-          </Button>
-          <Button
-            as="button"
-            type="button"
-            variant="text"
-            size="sm"
-            onClick={() => setView("years")}
-            className={cn(
-              "flex-1 py-1.5! text-2xs font-semibold normal-case tracking-[0.08em]",
-              view === "years"
-                ? "bg-sand text-earth"
-                : "text-earth/40 hover:text-earth hover:bg-earth/5",
-            )}
-          >
-            Year
-          </Button>
-        </div>
-
-        {view === "months" ? (
-          <div className="grid grid-cols-3 gap-1">
-            {MONTHS.map((m) => (
-              <Button
-                key={m.index}
-                as="button"
-                type="button"
-                variant="text"
-                size="sm"
-                onClick={() => onMonthChange(new Date(activeYear, m.index, 1))}
-                className={cn(
-                  "px-3! py-2! text-sm normal-case",
-                  m.index === activeMonth
-                    ? "bg-sand text-earth font-medium"
-                    : "text-earth/70 hover:bg-earth/5 hover:text-earth",
-                )}
-              >
-                {m.label}
-              </Button>
-            ))}
-          </div>
-        ) : (
-          <div className="max-h-48 overflow-y-auto overscroll-contain flex flex-col gap-0.5">
-            {YEARS.map((y) => (
-              <Button
-                key={y}
-                as="button"
-                type="button"
-                variant="text"
-                size="sm"
-                onClick={() => onMonthChange(new Date(y, activeMonth, 1))}
-                className={cn(
-                  "px-4! py-1.5! text-sm justify-start",
-                  y === activeYear
-                    ? "bg-sand text-earth font-medium"
-                    : "text-earth/70 hover:bg-earth/5 hover:text-earth",
-                )}
-              >
-                {y}
-              </Button>
-            ))}
-          </div>
-        )}
-      </MonthYearPopoverContent>
-    </Popover>
-  );
+function buildYearItems(minYear: number, maxYear: number): ScrollWheelItem[] {
+  return eachYearOfInterval({
+    start: new Date(minYear, 0, 1),
+    end: new Date(maxYear, 0, 1),
+  }).map((date) => ({
+    value: String(date.getFullYear()),
+    label: String(date.getFullYear()),
+  }));
 }
 
 // ─── DatePickerContent ───────────────────────────────────────────────────────
@@ -162,68 +64,178 @@ export function DatePickerContent({
   children,
   className,
 }: DatePickerContentProps) {
-  const { value, selectDate } = useDatePicker();
+  const { value, selectDate, minDate, maxDate, showTime } = useDatePicker();
   const { open, close } = usePopover();
   const { displayMonth, setManualMonth } = useCalendarMonth(value, open);
 
+  const minYear = minDate?.getFullYear() ?? DEFAULT_MIN_YEAR;
+  const maxYear = maxDate?.getFullYear() ?? DEFAULT_MAX_YEAR;
+  const yearItems = buildYearItems(minYear, maxYear);
+
+  // Filter months to those that have at least one selectable day given minDate/maxDate
+  const currentYear = displayMonth.getFullYear();
+  const monthItems = MONTH_ITEMS.filter((m) => {
+    const idx = Number(m.value);
+    if (minDate && (currentYear < minDate.getFullYear() ||
+      (currentYear === minDate.getFullYear() && idx < minDate.getMonth()))) return false;
+    if (maxDate && (currentYear > maxDate.getFullYear() ||
+      (currentYear === maxDate.getFullYear() && idx > maxDate.getMonth()))) return false;
+    return true;
+  });
+
+  const disabledDays = [
+    ...(minDate ? [{ before: minDate }] : []),
+    ...(maxDate ? [{ after: maxDate }] : []),
+  ];
+
+  // Arrow disabled state: can't go further than min/max month
+  const prevMonth = new Date(currentYear, displayMonth.getMonth() - 1, 1);
+  const nextMonth = new Date(currentYear, displayMonth.getMonth() + 1, 1);
+  const prevDisabled =
+    !!minDate &&
+    prevMonth.getFullYear() * 12 + prevMonth.getMonth() <
+      minDate.getFullYear() * 12 + minDate.getMonth();
+  const nextDisabled =
+    !!maxDate &&
+    nextMonth.getFullYear() * 12 + nextMonth.getMonth() >
+      maxDate.getFullYear() * 12 + maxDate.getMonth();
+
   return (
-    <PopoverContent align="left" width="w-auto" className={cn("overflow-visible", className)}>
+    <PopoverContent align="auto" width="w-auto" className={cn("overflow-visible max-w-[calc(100vw-2rem)]", className)}>
       <div className="p-3 font-body">
-        {/* Custom header: ← MonthYear → */}
+        {/* Custom header: ← Month ▾  Year ▾ → */}
         <div className="flex items-center justify-between pb-2">
           <Button
             as="button"
             type="button"
             variant="text"
             size="icon"
+            disabled={prevDisabled}
             onClick={() =>
               setManualMonth(
                 new Date(displayMonth.getFullYear(), displayMonth.getMonth() - 1, 1),
               )
             }
-            className="w-auto! h-auto! p-1.5! rounded-lg text-earth/50 hover:text-earth hover:bg-earth/5"
+            className="w-auto! h-auto! p-1.5! rounded-lg text-earth/50 hover:text-earth hover:bg-earth/5 disabled:opacity-30 disabled:pointer-events-none"
           >
             <IconChevron className="w-4 h-4 rotate-90" />
           </Button>
 
-          <MonthYearPicker
-            displayMonth={displayMonth}
-            onMonthChange={setManualMonth}
-          />
+          <div className="flex items-center gap-0.5">
+            {/* Month wheel */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  as="button"
+                  type="button"
+                  variant="text"
+                  size="sm"
+                  className="normal-case font-body text-base font-medium text-earth hover:text-orange gap-1"
+                >
+                  {format(displayMonth, "LLLL")}
+                  <IconChevron className="w-3 h-3" />
+                </Button>
+              </PopoverTrigger>
+              <WheelPopoverContent align="left" width="w-auto" className="p-2">
+                <ScrollWheel
+                  items={monthItems}
+                  value={String(displayMonth.getMonth())}
+                  onValueChange={(v) =>
+                    setManualMonth(new Date(displayMonth.getFullYear(), Number(v), 1))
+                  }
+                  itemHeight={36}
+                  visibleCount={5}
+                  className="w-36"
+                />
+              </WheelPopoverContent>
+            </Popover>
+
+            {/* Year wheel */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  as="button"
+                  type="button"
+                  variant="text"
+                  size="sm"
+                  className="normal-case font-body text-base font-medium text-earth hover:text-orange gap-1"
+                >
+                  {format(displayMonth, "yyyy")}
+                  <IconChevron className="w-3 h-3" />
+                </Button>
+              </PopoverTrigger>
+              <WheelPopoverContent align="left" width="w-auto" className="p-2">
+                <ScrollWheel
+                  items={yearItems}
+                  value={String(displayMonth.getFullYear())}
+                  onValueChange={(v) =>
+                    setManualMonth(new Date(Number(v), displayMonth.getMonth(), 1))
+                  }
+                  itemHeight={36}
+                  visibleCount={7}
+                  className="w-20"
+                />
+              </WheelPopoverContent>
+            </Popover>
+          </div>
 
           <Button
             as="button"
             type="button"
             variant="text"
             size="icon"
+            disabled={nextDisabled}
             onClick={() =>
               setManualMonth(
                 new Date(displayMonth.getFullYear(), displayMonth.getMonth() + 1, 1),
               )
             }
-            className="w-auto! h-auto! p-1.5! rounded-lg text-earth/50 hover:text-earth hover:bg-earth/5"
+            className="w-auto! h-auto! p-1.5! rounded-lg text-earth/50 hover:text-earth hover:bg-earth/5 disabled:opacity-30 disabled:pointer-events-none"
           >
             <IconChevron className="w-4 h-4 -rotate-90" />
           </Button>
         </div>
 
-        <DayPicker
-          mode="single"
-          selected={value}
-          onSelect={(date) => {
-            selectDate(date ?? undefined);
-            close();
-          }}
-          month={displayMonth}
-          onMonthChange={setManualMonth}
-          classNames={{
-            ...calendarClassNames,
-            root: "",
-            month_caption: "hidden",
-            nav: "hidden",
-          }}
-          components={{ Chevron: CustomChevron }}
-        />
+        <div className="flex items-start gap-3">
+          <DayPicker
+            mode="single"
+            selected={value}
+            onSelect={(date) => {
+              if (!date) {
+                selectDate(undefined);
+                if (!showTime) close();
+                return;
+              }
+              // Preserve existing time when a day is picked in showTime mode
+              if (showTime && value) {
+                const next = new Date(date);
+                next.setHours(value.getHours());
+                next.setMinutes(value.getMinutes());
+                next.setSeconds(value.getSeconds());
+                selectDate(next);
+              } else {
+                selectDate(date);
+              }
+              if (!showTime) close();
+            }}
+            month={displayMonth}
+            onMonthChange={setManualMonth}
+            disabled={disabledDays.length > 0 ? disabledDays : undefined}
+            classNames={{
+              ...calendarClassNames,
+              root: "",
+              month_caption: "hidden",
+              nav: "hidden",
+            }}
+            components={{ Chevron: CustomChevron }}
+          />
+
+          {showTime && (
+            <div className="self-stretch flex items-center border-l border-earth/8 pl-3">
+              <DatePickerTime />
+            </div>
+          )}
+        </div>
       </div>
       {children}
     </PopoverContent>

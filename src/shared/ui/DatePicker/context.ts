@@ -8,6 +8,10 @@ export interface DatePickerContextValue {
   clearable: boolean;
   /** Display format for maskito: "dd.MM.yyyy" or "dd.MM.yyyy HH:mm" */
   format: string;
+  /** Minimum selectable date (inclusive) */
+  minDate?: Date;
+  /** Maximum selectable date (inclusive) */
+  maxDate?: Date;
   selectDate: (date: Date | undefined) => void;
   clear: () => void;
   /** Formatted value for display: "4 Apr 2026" or "4 Apr 2026, 14:30" */

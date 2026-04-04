@@ -124,6 +124,8 @@ export function ProfileForm({ defaultValues, onDone }: ProfileFormProps) {
             }
             placeholder="Select your birthday"
             clearable
+            minDate={new Date(new Date().getFullYear() - 120, 0, 1)}
+            maxDate={new Date()}
           />
         </div>
       </div>

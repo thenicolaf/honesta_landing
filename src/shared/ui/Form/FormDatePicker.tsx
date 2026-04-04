@@ -29,6 +29,8 @@ interface FormDatePickerProps {
   className?: string;
   onValueChange?: (value: Date | undefined) => void;
   presets?: Array<{ label: string; date: Date }>;
+  minDate?: Date;
+  maxDate?: Date;
 }
 
 function HiddenInput({ id, name }: { id?: string; name: string }) {
@@ -51,6 +53,8 @@ export function FormDatePicker({
   className,
   onValueChange,
   presets,
+  minDate,
+  maxDate,
 }: FormDatePickerProps) {
   const [internalValue, setInternalValue] = useState<Date | undefined>(
     defaultValue,
@@ -75,6 +79,8 @@ export function FormDatePicker({
         onValueChange={handleChange}
         showTime={showTime}
         clearable={clearable}
+        minDate={minDate}
+        maxDate={maxDate}
         className="w-full"
       >
         <DatePickerMaskedInput

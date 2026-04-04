@@ -13,6 +13,8 @@ interface DatePickerProps {
   onValueChange?: (value: Date | undefined) => void;
   showTime?: boolean;
   clearable?: boolean;
+  minDate?: Date;
+  maxDate?: Date;
 }
 
 export function DatePicker({
@@ -23,6 +25,8 @@ export function DatePicker({
   onValueChange,
   showTime = false,
   clearable = false,
+  minDate,
+  maxDate,
 }: DatePickerProps) {
   const [internalValue, setInternalValue] = useState<Date | undefined>(
     defaultValue,
@@ -54,6 +58,8 @@ export function DatePicker({
         showTime,
         clearable,
         format,
+        minDate,
+        maxDate,
         selectDate,
         clear,
         displayValue,
