@@ -66,7 +66,7 @@ export function ProfileSection({ profile }: { profile: ProfileData | null }) {
     : null;
 
   return (
-    <Card className="p-4 md:px-6 md:py-4 lg:p-8">
+    <Card className="p-4 md:px-6 md:py-4 lg:p-8 overflow-visible">
       <div className="flex items-center justify-between mb-6">
         <p className="font-body font-semibold uppercase tracking-[0.12em] text-2xs text-earth/50">
           Personal Information

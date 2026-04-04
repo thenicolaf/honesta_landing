@@ -7,6 +7,7 @@ import {
   FormNumberInput,
   FormSelect,
   FormCheckbox,
+  FormDatePicker,
   FormError,
   Button,
 } from "@/shared/ui";
@@ -22,13 +23,6 @@ const DISCOUNT_TYPE_OPTIONS = [
   { value: "percentage", label: "Percentage (%)" },
   { value: "fixed", label: "Fixed (AED)" },
 ];
-
-function toDatetimeLocal(iso: string) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
 
 interface PromotionFormProps {
   promotion?: PromotionWithProducts;
@@ -100,34 +94,36 @@ export function PromotionForm({ promotion, products }: PromotionFormProps) {
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <FormLabel htmlFor="promo-starts">Start Date *</FormLabel>
-            <FormInput
-              id="promo-starts"
-              name="starts_at"
-              type="datetime-local"
-              defaultValue={
-                state?.values?.starts_at ??
-                (promotion ? toDatetimeLocal(promotion.starts_at) : "")
-              }
-              state={state?.fieldErrors?.starts_at ? "error" : "default"}
-            />
-            <FormError message={state?.fieldErrors?.starts_at} />
-          </div>
-          <div>
-            <FormLabel htmlFor="promo-ends">End Date *</FormLabel>
-            <FormInput
-              id="promo-ends"
-              name="ends_at"
-              type="datetime-local"
-              defaultValue={
-                state?.values?.ends_at ??
-                (promotion ? toDatetimeLocal(promotion.ends_at) : "")
-              }
-              state={state?.fieldErrors?.ends_at ? "error" : "default"}
-            />
-            <FormError message={state?.fieldErrors?.ends_at} />
-          </div>
+          <FormDatePicker
+            id="promo-starts"
+            name="starts_at"
+            label="Start Date *"
+            showTime
+            defaultValue={
+              state?.values?.starts_at
+                ? new Date(state.values.starts_at)
+                : promotion
+                  ? new Date(promotion.starts_at)
+                  : undefined
+            }
+            state={state?.fieldErrors?.starts_at ? "error" : "default"}
+            errorMessage={state?.fieldErrors?.starts_at}
+          />
+          <FormDatePicker
+            id="promo-ends"
+            name="ends_at"
+            label="End Date *"
+            showTime
+            defaultValue={
+              state?.values?.ends_at
+                ? new Date(state.values.ends_at)
+                : promotion
+                  ? new Date(promotion.ends_at)
+                  : undefined
+            }
+            state={state?.fieldErrors?.ends_at ? "error" : "default"}
+            errorMessage={state?.fieldErrors?.ends_at}
+          />
         </div>
 
         <div>

@@ -24,3 +24,4 @@ export { IconMinus } from "./IconMinus";
 export { IconUpload } from "./IconUpload";
 export { IconEye } from "./IconEye";
 export { IconEyeOff } from "./IconEyeOff";
+export { IconCalendar } from "./IconCalendar";

@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
-import { FormLabel, FormInput, FormPhoneInput, FormTileRadio, FormTileRadioItem, FormError, Button, toastSuccess, toastError } from "@/shared/ui";
+import { FormLabel, FormInput, FormPhoneInput, FormTileRadio, FormTileRadioItem, FormDatePicker, FormError, Button, toastSuccess, toastError } from "@/shared/ui";
 import { updateProfile, type ProfileState } from "./actions";
 
 interface ProfileData {
@@ -114,13 +114,16 @@ export function ProfileForm({ defaultValues, onDone }: ProfileFormProps) {
         </div>
         <div>
           <FormLabel htmlFor="birthday">Birthday</FormLabel>
-          <FormInput
+          <FormDatePicker
             id="birthday"
             name="birthday"
-            type="date"
             defaultValue={
-              state?.values?.birthday ?? defaultValues?.birthday ?? undefined
+              (state?.values?.birthday ?? defaultValues?.birthday)
+                ? new Date((state?.values?.birthday ?? defaultValues?.birthday)! + "T00:00:00")
+                : undefined
             }
+            placeholder="Select your birthday"
+            clearable
           />
         </div>
       </div>
