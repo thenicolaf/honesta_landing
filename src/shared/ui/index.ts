@@ -67,8 +67,7 @@ export { Tag } from "./Tag";
 export { Thumbnail } from "./Thumbnail";
 export {
   UploadZone,
-  type UploadFile,
-  type UploadItem,
+  type DeferredItem,
   type UploadMultipleProps,
 } from "./UploadZone";
 export { Lightbox, type LightboxSlide } from "./Lightbox";

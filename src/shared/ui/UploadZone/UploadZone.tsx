@@ -1,12 +1,10 @@
 "use client";
 
 import { cn } from "@/shared/utils/cn";
-import type { UploadFile, UploadItem, UploadMultipleProps } from "./types";
+import type { DeferredItem, UploadMultipleProps } from "./types";
 import { DropZone } from "./DropZone";
 import { SortableThumbnails } from "./SortableThumbnails";
-import { DataTransferInputs } from "./DataTransferInputs";
-import { useFilesMode } from "./useFilesMode";
-import { useItemsMode } from "./useItemsMode";
+import { useDeferredItems } from "./useDeferredItems";
 
 interface UploadZoneBase {
   name: string;
@@ -14,18 +12,8 @@ interface UploadZoneBase {
   maxSizeMb?: number;
   state?: "default" | "error";
   className?: string;
-
-  // --- Legacy file-based mode (used when onUpload is NOT provided) ---
-  value?: UploadFile[];
-  onChange?: (files: UploadFile[]) => void;
-
-  // --- URL-based mode (used when onUpload IS provided) ---
-  items?: UploadItem[];
-  onItemsChange?: (items: UploadItem[]) => void;
-  onUpload?: (file: File) => Promise<UploadItem | null>;
-  onRemove?: (item: UploadItem) => Promise<void>;
-  uploading?: boolean;
-
+  items: DeferredItem[];
+  onItemsChange: (items: DeferredItem[]) => void;
   onPreview?: (index: number) => void;
 }
 
@@ -38,40 +26,22 @@ export function UploadZone(props: UploadZoneProps) {
     maxSizeMb = 5,
     state,
     className,
-    value,
-    onChange,
     items,
     onItemsChange,
-    onUpload,
-    onRemove,
-    uploading = false,
     onPreview,
   } = props;
 
   const multiple = props.multiple ?? true;
   const maxFiles = multiple ? (props.maxFiles ?? 10) : 1;
-  const isUrlMode = !!onUpload;
 
-  const filesMode = useFilesMode(maxFiles, maxSizeMb, value, onChange);
-  const itemsMode = useItemsMode(
+  const { addFiles, removeItem, reorder } = useDeferredItems(
     maxFiles,
     maxSizeMb,
-    onUpload ?? (async () => null),
-    onRemove,
     items,
     onItemsChange,
   );
 
-  const itemCount = isUrlMode ? itemsMode.items.length : filesMode.files.length;
-  const atLimit = itemCount >= maxFiles;
-
-  const handleFiles = (incoming: FileList | File[]) => {
-    if (isUrlMode) {
-      itemsMode.addFiles(incoming);
-    } else {
-      filesMode.addFiles(incoming);
-    }
-  };
+  const atLimit = items.length >= maxFiles;
 
   return (
     <div className={cn("flex flex-col gap-3", className)}>
@@ -80,48 +50,37 @@ export function UploadZone(props: UploadZoneProps) {
         multiple={multiple}
         maxSizeMb={maxSizeMb}
         disabled={atLimit}
-        uploading={uploading}
         state={state}
-        onFiles={handleFiles}
+        onFiles={addFiles}
       />
 
-      {/* Hidden inputs for form submission */}
-      {isUrlMode
-        ? itemsMode.items.map((item) => (
-            <input
-              key={item.id}
-              type="hidden"
-              name={name}
-              value={item.url}
-            />
-          ))
-        : <DataTransferInputs name={name} files={filesMode.files} />
-      }
-
-      {/* Thumbnails — URL mode */}
-      {isUrlMode && (
-        <SortableThumbnails
-          items={itemsMode.items}
-          onReorder={(reordered) => itemsMode.reorder(reordered)}
-          onRemove={(item) => itemsMode.removeItem(item)}
-          onPreview={onPreview}
-        />
+      {/* Hybrid hidden inputs: text for existing URLs, file for new uploads */}
+      {items.map((item) =>
+        item.origin ? (
+          <input key={item.id} type="hidden" name={name} value={item.preview} />
+        ) : item.file ? (
+          <input
+            key={item.id}
+            type="file"
+            name={name}
+            className="hidden"
+            ref={(el) => {
+              if (el) {
+                const dt = new DataTransfer();
+                dt.items.add(item.file!);
+                el.files = dt.files;
+              }
+            }}
+          />
+        ) : null,
       )}
 
-      {/* Thumbnails — Legacy file mode */}
-      {!isUrlMode && (
-        <SortableThumbnails
-          items={filesMode.files.map((f) => ({ id: f.id, url: f.preview, name: f.file.name }))}
-          onReorder={(reordered) => {
-            const reorderedFiles = reordered
-              .map((item) => filesMode.files.find((f) => f.id === item.id))
-              .filter(Boolean) as typeof filesMode.files;
-            filesMode.reorder(reorderedFiles);
-          }}
-          onRemove={(item) => filesMode.removeFile(item.id)}
-          onPreview={onPreview}
-        />
-      )}
+      <SortableThumbnails
+        items={items}
+        onReorder={reorder}
+        onRemove={(item) => removeItem(item.id)}
+        onPreview={onPreview}
+      />
     </div>
   );
 }

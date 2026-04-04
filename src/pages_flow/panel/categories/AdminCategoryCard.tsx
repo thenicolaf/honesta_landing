@@ -56,12 +56,12 @@ export function AdminCategoryCard({
       </div>
 
       <div className="flex flex-col p-6 gap-4 grow">
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-col items-start gap-2">
           <p className="font-body font-semibold uppercase tracking-[0.14em] text-2xs text-earth/50">
             {category.audience}
           </p>
           {category.badge && (
-            <Badge variant="natural" className="shrink-0">
+            <Badge variant="natural" className="shrink-0 -translate-x-2">
               {category.badge}
             </Badge>
           )}

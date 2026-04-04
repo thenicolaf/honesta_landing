@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase.server";
-import { deleteImage } from "@/lib/storage";
+import { deleteImage, parseFormImages, type StorageBucket } from "@/lib/storage";
 import { createNotification } from "@/lib/notificationsDb";
 import type { NutritionJson } from "./product-form/nutrition";
 
@@ -186,11 +186,10 @@ function validateProduct(values: Partial<ProductValues>) {
   return Object.keys(fieldErrors).length > 0 ? fieldErrors : null;
 }
 
-function parseUploads(formData: FormData): { image_url: string | null; images: string[] } {
-  const all = formData
-    .getAll("images")
-    .map((v) => (v as string).trim())
-    .filter(Boolean);
+async function parseUploads(formData: FormData): Promise<{ image_url: string | null; images: string[] }> {
+  const slug = (formData.get("images__slug") as string) || "product";
+  const bucket = ((formData.get("images__bucket") as string) || "products") as StorageBucket;
+  const all = await parseFormImages(formData, "images", slug, bucket);
   return { image_url: all[0] || null, images: all.slice(1) };
 }
 
@@ -215,12 +214,12 @@ async function cleanupRemovedImages(
   }
 }
 
-function parseProductValues(
+async function parseProductValues(
   values: Partial<ProductValues>,
   formData: FormData,
 ) {
   const title = values.title!.trim();
-  const { image_url, images } = parseUploads(formData);
+  const { image_url, images } = await parseUploads(formData);
 
   return {
     slug: toSlug(title),
@@ -323,7 +322,7 @@ export async function createProduct(
     return { fieldErrors, values };
   }
 
-  const productData = parseProductValues(values, formData);
+  const productData = await parseProductValues(values, formData);
   const status = (formData.get("status") as string) || "draft";
 
   const variants = parseVariants(values.variants);
@@ -368,7 +367,7 @@ export async function updateProduct(
     return { fieldErrors, values };
   }
 
-  const productData = parseProductValues(values, formData);
+  const productData = await parseProductValues(values, formData);
 
   // Fetch old images to clean up removed ones
   const { data: existing } = await supabaseAdmin
