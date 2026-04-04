@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/shared/utils/cn";
+import { usePopover } from "../Popover";
 import { useDatePicker } from "./context";
 
 interface Preset {
@@ -18,6 +19,7 @@ export function DatePickerPresets({
   className,
 }: DatePickerPresetsProps) {
   const { selectDate } = useDatePicker();
+  const { close } = usePopover();
 
   if (presets.length === 0) return null;
 
@@ -32,7 +34,10 @@ export function DatePickerPresets({
         <button
           key={preset.label}
           type="button"
-          onClick={() => selectDate(preset.date)}
+          onClick={() => {
+            selectDate(preset.date);
+            close();
+          }}
           className="px-3 py-1.5 rounded-lg text-2xs font-body font-semibold uppercase tracking-[0.08em] text-earth/50 hover:text-orange hover:bg-earth/5 transition-colors cursor-pointer"
         >
           {preset.label}

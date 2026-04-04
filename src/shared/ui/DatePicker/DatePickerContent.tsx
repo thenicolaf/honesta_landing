@@ -163,7 +163,7 @@ export function DatePickerContent({
   className,
 }: DatePickerContentProps) {
   const { value, selectDate } = useDatePicker();
-  const { open } = usePopover();
+  const { open, close } = usePopover();
   const { displayMonth, setManualMonth } = useCalendarMonth(value, open);
 
   return (
@@ -210,7 +210,10 @@ export function DatePickerContent({
         <DayPicker
           mode="single"
           selected={value}
-          onSelect={(date) => selectDate(date ?? undefined)}
+          onSelect={(date) => {
+            selectDate(date ?? undefined);
+            close();
+          }}
           month={displayMonth}
           onMonthChange={setManualMonth}
           classNames={{

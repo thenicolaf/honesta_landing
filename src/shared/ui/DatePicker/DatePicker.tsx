@@ -37,7 +37,6 @@ export function DatePicker({
   const selectDate = (date: Date | undefined) => {
     setInternalValue(date);
     onValueChange?.(date);
-    setPopoverOpen(false);
   };
 
   const clear = () => {
