@@ -196,7 +196,7 @@ export function DatePickerContent({
           </Button>
         </div>
 
-        <div className="flex items-start gap-3">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3">
           <DayPicker
             mode="single"
             selected={value}
@@ -231,7 +231,7 @@ export function DatePickerContent({
           />
 
           {showTime && (
-            <div className="self-stretch flex items-center border-l border-earth/8 pl-3">
+            <div className="self-stretch flex items-center justify-center border-t sm:border-t-0 sm:border-l border-earth/8 pt-3 sm:pt-0 sm:pl-3 w-full sm:w-auto">
               <DatePickerTime />
             </div>
           )}

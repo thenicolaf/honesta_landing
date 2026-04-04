@@ -43,7 +43,8 @@ export function PromotionForm({ promotion, products }: PromotionFormProps) {
     state?.values?.discount_type ?? promotion?.discount_type ?? "percentage",
   );
   const [discountValue, setDiscountValue] = useState(
-    parseFloat(state?.values?.discount_value ?? "") || (promotion?.discount_value ?? 0),
+    parseFloat(state?.values?.discount_value ?? "") ||
+      (promotion?.discount_value ?? 0),
   );
 
   return (
@@ -54,7 +55,9 @@ export function PromotionForm({ promotion, products }: PromotionFormProps) {
         </p>
 
         <div>
-          <FormLabel htmlFor="promo-name">Name *</FormLabel>
+          <FormLabel htmlFor="promo-name" required>
+            Name
+          </FormLabel>
           <FormInput
             id="promo-name"
             name="name"
@@ -77,14 +80,18 @@ export function PromotionForm({ promotion, products }: PromotionFormProps) {
             />
           </div>
           <div>
-            <FormLabel htmlFor="promo-discount-value">Discount Value *</FormLabel>
+            <FormLabel htmlFor="promo-discount-value" required>
+              Discount Value
+            </FormLabel>
             <FormNumberInput
               id="promo-discount-value"
               name="discount_value"
               min={0}
               max={discountType === "percentage" ? 100 : undefined}
               step={1}
-              placeholder={discountType === "percentage" ? "e.g. 20" : "e.g. 10"}
+              placeholder={
+                discountType === "percentage" ? "e.g. 20" : "e.g. 10"
+              }
               value={discountValue}
               onValueChange={setDiscountValue}
               state={state?.fieldErrors?.discount_value ? "error" : "default"}
@@ -97,8 +104,9 @@ export function PromotionForm({ promotion, products }: PromotionFormProps) {
           <FormDatePicker
             id="promo-starts"
             name="starts_at"
-            label="Start Date *"
+            label="Start Date"
             showTime
+            required
             defaultValue={
               state?.values?.starts_at
                 ? new Date(state.values.starts_at)
@@ -112,8 +120,9 @@ export function PromotionForm({ promotion, products }: PromotionFormProps) {
           <FormDatePicker
             id="promo-ends"
             name="ends_at"
-            label="End Date *"
+            label="End Date"
             showTime
+            required
             defaultValue={
               state?.values?.ends_at
                 ? new Date(state.values.ends_at)
@@ -127,7 +136,7 @@ export function PromotionForm({ promotion, products }: PromotionFormProps) {
         </div>
 
         <div>
-          <FormLabel>Products *</FormLabel>
+          <FormLabel required>Products</FormLabel>
           <ProductPicker
             name="product_ids"
             options={products}
