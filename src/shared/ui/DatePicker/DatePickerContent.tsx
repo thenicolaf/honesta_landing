@@ -206,16 +206,18 @@ export function DatePickerContent({
                 if (!showTime) close();
                 return;
               }
+              let next = date;
               // Preserve existing time when a day is picked in showTime mode
               if (showTime && value) {
-                const next = new Date(date);
+                next = new Date(date);
                 next.setHours(value.getHours());
                 next.setMinutes(value.getMinutes());
                 next.setSeconds(value.getSeconds());
-                selectDate(next);
-              } else {
-                selectDate(date);
               }
+              // Clamp to [minDate, maxDate] so preserved time doesn't escape bounds
+              if (minDate && next.getTime() < minDate.getTime()) next = new Date(minDate);
+              if (maxDate && next.getTime() > maxDate.getTime()) next = new Date(maxDate);
+              selectDate(next);
               if (!showTime) close();
             }}
             month={displayMonth}

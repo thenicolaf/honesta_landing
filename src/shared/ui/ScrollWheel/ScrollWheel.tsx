@@ -27,13 +27,14 @@ export function ScrollWheel({
   visibleCount = 5,
   className,
 }: ScrollWheelProps) {
-  const { containerRef, itemRefs, paddingHeight } = useScrollWheel({
-    items,
-    value,
-    onValueChange,
-    itemHeight,
-    visibleCount,
-  });
+  const { containerRef, itemRefs, paddingHeight, scrollToIndex, handleKeyDown } =
+    useScrollWheel({
+      items,
+      value,
+      onValueChange,
+      itemHeight,
+      visibleCount,
+    });
 
   return (
     <div
@@ -52,7 +53,9 @@ export function ScrollWheel({
       {/* Scrollable container */}
       <div
         ref={containerRef}
-        className="h-full overflow-y-auto overscroll-contain"
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
+        className="h-full overflow-y-auto overscroll-contain focus:outline-none"
         style={{ scrollSnapType: "y mandatory", scrollbarWidth: "none" }}
       >
         {/* Top spacer */}
@@ -64,7 +67,13 @@ export function ScrollWheel({
             ref={(el) => {
               itemRefs.current[i] = el;
             }}
-            className="flex items-center justify-center font-body text-sm text-earth select-none"
+            onClick={() => !item.disabled && scrollToIndex(i)}
+            className={cn(
+              "flex items-center justify-center font-body text-sm select-none",
+              item.disabled
+                ? "text-earth/20 cursor-not-allowed"
+                : "text-earth cursor-pointer",
+            )}
             style={{
               height: itemHeight,
               scrollSnapAlign: "center",

@@ -59,11 +59,11 @@ export function FormDatePicker({
   const [internalValue, setInternalValue] = useState<Date | undefined>(
     defaultValue,
   );
-  const isControlled = controlledValue !== undefined;
+  const isControlled = onValueChange !== undefined;
   const value = isControlled ? controlledValue : internalValue;
 
   const handleChange = (date: Date | undefined) => {
-    if (!isControlled) setInternalValue(date);
+    setInternalValue(date);
     onValueChange?.(date);
   };
 

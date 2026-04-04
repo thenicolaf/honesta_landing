@@ -47,6 +47,21 @@ export function PromotionForm({ promotion, products }: PromotionFormProps) {
       (promotion?.discount_value ?? 0),
   );
 
+  const [startsAt, setStartsAt] = useState<Date | undefined>(() =>
+    state?.values?.starts_at
+      ? new Date(state.values.starts_at)
+      : promotion
+        ? new Date(promotion.starts_at)
+        : undefined,
+  );
+  const [endsAt, setEndsAt] = useState<Date | undefined>(() =>
+    state?.values?.ends_at
+      ? new Date(state.values.ends_at)
+      : promotion
+        ? new Date(promotion.ends_at)
+        : undefined,
+  );
+
   return (
     <form action={dispatch} className="flex flex-col gap-6">
       <div className="rounded-2xl border border-earth/8 bg-white-warm p-5 flex flex-col gap-4">
@@ -105,15 +120,14 @@ export function PromotionForm({ promotion, products }: PromotionFormProps) {
             id="promo-starts"
             name="starts_at"
             label="Start Date"
+            placeholder="When promotion begins"
             showTime
             required
-            defaultValue={
-              state?.values?.starts_at
-                ? new Date(state.values.starts_at)
-                : promotion
-                  ? new Date(promotion.starts_at)
-                  : undefined
-            }
+            clearable
+            value={startsAt}
+            onValueChange={setStartsAt}
+            minDate={new Date()}
+            maxDate={endsAt}
             state={state?.fieldErrors?.starts_at ? "error" : "default"}
             errorMessage={state?.fieldErrors?.starts_at}
           />
@@ -121,15 +135,13 @@ export function PromotionForm({ promotion, products }: PromotionFormProps) {
             id="promo-ends"
             name="ends_at"
             label="End Date"
+            placeholder="When promotion ends"
             showTime
             required
-            defaultValue={
-              state?.values?.ends_at
-                ? new Date(state.values.ends_at)
-                : promotion
-                  ? new Date(promotion.ends_at)
-                  : undefined
-            }
+            clearable
+            value={endsAt}
+            onValueChange={setEndsAt}
+            minDate={startsAt ?? new Date()}
             state={state?.fieldErrors?.ends_at ? "error" : "default"}
             errorMessage={state?.fieldErrors?.ends_at}
           />

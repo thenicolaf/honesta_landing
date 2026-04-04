@@ -1,8 +1,9 @@
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, useLayoutEffect } from "react";
 
 export interface ScrollWheelItem {
   value: string;
   label: string;
+  disabled?: boolean;
 }
 
 interface UseScrollWheelOptions {
@@ -32,7 +33,9 @@ export function useScrollWheel({
   const rafRef = useRef<number>(0);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
   const valueRef = useRef(value);
-  valueRef.current = value;
+  useLayoutEffect(() => {
+    valueRef.current = value;
+  }, [value]);
 
   const paddingHeight = Math.floor(visibleCount / 2) * itemHeight;
 
@@ -88,18 +91,41 @@ export function useScrollWheel({
 
   // ─── Selection finalization ──────────────────────────────────────────
 
+  // Find the nearest non-disabled item index, searching outward from `index`.
+  const findNearestEnabledIndex = useCallback(
+    (index: number): number => {
+      if (items[index] && !items[index].disabled) return index;
+      for (let offset = 1; offset < items.length; offset++) {
+        const up = index - offset;
+        const down = index + offset;
+        if (down < items.length && !items[down].disabled) return down;
+        if (up >= 0 && !items[up].disabled) return up;
+      }
+      return index;
+    },
+    [items],
+  );
+
   const finalizeSelection = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
 
     const centerIndex = Math.round(el.scrollTop / itemHeight);
     const clamped = Math.max(0, Math.min(centerIndex, items.length - 1));
-    const item = items[clamped];
+    const targetIndex = findNearestEnabledIndex(clamped);
+    const item = items[targetIndex];
 
-    if (item && item.value !== valueRef.current) {
+    if (!item) return;
+
+    // If the nearest enabled differs from where we landed, smooth-scroll to it
+    if (targetIndex !== clamped) {
+      el.scrollTo({ top: targetIndex * itemHeight, behavior: "smooth" });
+    }
+
+    if (item.value !== valueRef.current) {
       onValueChange(item.value);
     }
-  }, [items, itemHeight, onValueChange]);
+  }, [items, itemHeight, onValueChange, findNearestEnabledIndex]);
 
   // ─── Event listeners ─────────────────────────────────────────────────
 
@@ -120,7 +146,19 @@ export function useScrollWheel({
       finalizeSelection();
     };
 
+    // Normalize mouse wheel to exactly one item per tick.
+    // Trackpads (Mac) and precision wheels send small deltaY (<50px) — we let them
+    // scroll natively. Physical mouse wheels send deltaY ≈ 100 which would skip
+    // multiple items — we intercept and scroll by exactly one itemHeight.
+    const onWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) < 50) return; // trackpad / precision — native scroll
+      e.preventDefault();
+      const direction = e.deltaY > 0 ? 1 : -1;
+      el.scrollBy({ top: direction * itemHeight, behavior: "smooth" });
+    };
+
     el.addEventListener("scroll", onScroll, { passive: true });
+    el.addEventListener("wheel", onWheel, { passive: false });
 
     const hasScrollEnd = "onscrollend" in window;
     if (hasScrollEnd) {
@@ -129,15 +167,19 @@ export function useScrollWheel({
 
     return () => {
       el.removeEventListener("scroll", onScroll);
+      el.removeEventListener("wheel", onWheel);
       if (hasScrollEnd) {
         el.removeEventListener("scrollend", onScrollEnd);
       }
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [handleScroll, finalizeSelection]);
+  }, [handleScroll, finalizeSelection, itemHeight]);
 
-  // ─── Initial scroll + visual effects on mount ────────────────────────
+  // ─── Sync scroll position with `value` prop ─────────────────────────
+  // Runs on mount AND when `value` changes externally. If the wheel is
+  // already centered on the target item (within half an item), we skip —
+  // that means the change originated from our own scroll finalization.
 
   useEffect(() => {
     const el = containerRef.current;
@@ -145,14 +187,76 @@ export function useScrollWheel({
 
     const index = items.findIndex((item) => item.value === value);
     const targetIndex = index >= 0 ? index : 0;
+    const targetScrollTop = targetIndex * itemHeight;
+
+    // Skip if already at target (user-driven update)
+    if (Math.abs(el.scrollTop - targetScrollTop) < itemHeight / 2) {
+      applyVisualEffects(el.scrollTop);
+      return;
+    }
 
     requestAnimationFrame(() => {
-      el.scrollTo({ top: targetIndex * itemHeight, behavior: "instant" });
-      applyVisualEffects(targetIndex * itemHeight);
+      el.scrollTo({ top: targetScrollTop, behavior: "instant" });
+      applyVisualEffects(targetScrollTop);
     });
-    // Only run on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [value, items, itemHeight, applyVisualEffects]);
 
-  return { containerRef, itemRefs, paddingHeight } as const;
+  // Scroll to a specific item index with smooth animation.
+  // Skips disabled items by finding the nearest enabled one.
+  const scrollToIndex = useCallback(
+    (index: number) => {
+      const el = containerRef.current;
+      if (!el) return;
+      const clamped = Math.max(0, Math.min(index, items.length - 1));
+      const target = findNearestEnabledIndex(clamped);
+      el.scrollTo({ top: target * itemHeight, behavior: "smooth" });
+    },
+    [items.length, itemHeight, findNearestEnabledIndex],
+  );
+
+  // Keyboard navigation: arrows = ±1, PageUp/Down = ±5, Home/End = edges
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      const el = containerRef.current;
+      if (!el) return;
+
+      const currentIndex = Math.round(el.scrollTop / itemHeight);
+      let nextIndex = currentIndex;
+
+      switch (e.key) {
+        case "ArrowDown":
+          nextIndex = currentIndex + 1;
+          break;
+        case "ArrowUp":
+          nextIndex = currentIndex - 1;
+          break;
+        case "PageDown":
+          nextIndex = currentIndex + 5;
+          break;
+        case "PageUp":
+          nextIndex = currentIndex - 5;
+          break;
+        case "Home":
+          nextIndex = 0;
+          break;
+        case "End":
+          nextIndex = items.length - 1;
+          break;
+        default:
+          return;
+      }
+
+      e.preventDefault();
+      scrollToIndex(nextIndex);
+    },
+    [itemHeight, items.length, scrollToIndex],
+  );
+
+  return {
+    containerRef,
+    itemRefs,
+    paddingHeight,
+    scrollToIndex,
+    handleKeyDown,
+  } as const;
 }
