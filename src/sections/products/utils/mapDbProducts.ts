@@ -53,6 +53,7 @@ export function mapDbProducts(
       nutrition: p.nutrition && Object.keys(p.nutrition).length > 0
         ? p.nutrition
         : undefined,
+      mark: p.mark ?? "standard",
       promotion,
       totalSold: salesMap?.[p.id] ?? 0,
     };

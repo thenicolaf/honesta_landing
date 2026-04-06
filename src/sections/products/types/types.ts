@@ -50,6 +50,8 @@ export interface Product {
   occasions?: string[];
   /** Unique product note (delivery nuances, storage tips, etc.) */
   note?: string;
+  /** Admin-assigned product mark */
+  mark: "standard" | "best_seller" | "new";
   /** Total units sold (from paid orders) */
   totalSold?: number;
   /** Active promotion applied to this product */

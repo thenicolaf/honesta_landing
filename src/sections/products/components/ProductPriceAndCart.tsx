@@ -10,7 +10,7 @@ import type { Product, ProductVariant } from "../types";
 interface ProductPriceAndCartProps {
   product: Pick<
     Product,
-    "id" | "slug" | "title" | "price" | "image_url" | "in_stock" | "promotion"
+    "id" | "slug" | "title" | "price" | "image_url" | "in_stock" | "promotion" | "mark"
   >;
   selectedVariant?: ProductVariant;
 }
@@ -47,7 +47,7 @@ export function ProductPriceAndCart({ product, selectedVariant }: ProductPriceAn
   if (product.in_stock === false) {
     return (
       <div className="mt-auto flex items-center justify-between gap-3 pt-1">
-        <ProductPrice price={variantPrice!} promotion={variantPromotion} />
+        <ProductPrice price={variantPrice!} promotion={variantPromotion} mark={product.mark} />
         <Badge variant="outline" size="md">
           Out of Stock
         </Badge>
@@ -105,7 +105,7 @@ export function ProductPriceAndCart({ product, selectedVariant }: ProductPriceAn
   if (quantity > 0) {
     return (
       <div className="mt-auto flex items-center justify-between gap-3 pt-1">
-        <ProductPrice price={variantPrice} promotion={variantPromotion} />
+        <ProductPrice price={variantPrice} promotion={variantPromotion} mark={product.mark} />
         <div className="flex items-center gap-2">
           <Button
             as="button"
@@ -135,7 +135,7 @@ export function ProductPriceAndCart({ product, selectedVariant }: ProductPriceAn
 
   return (
     <div className="mt-auto flex items-center justify-between gap-3 pt-1">
-      <ProductPrice price={variantPrice} promotion={variantPromotion} />
+      <ProductPrice price={variantPrice} promotion={variantPromotion} mark={product.mark} />
       <Button as="button" variant="primary" size="sm" onClick={handleAdd}>
         Add to Cart
       </Button>

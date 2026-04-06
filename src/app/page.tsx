@@ -50,7 +50,7 @@ export default async function Home() {
         <Hero />
         <AboutUs />
       </AboutExpandedProvider>
-      <SearchParamsFilterProvider keys={["category", "sort", "search"]}>
+      <SearchParamsFilterProvider keys={["category", "sort", "search", "mark"]}>
         <Suspense fallback={<Loader />}>
           <CategoriesSection />
         </Suspense>

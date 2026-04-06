@@ -67,6 +67,8 @@ function ProductDetailContent({ product }: ProductDetailPageProps) {
           image_url={product.image_url ?? ""}
           images={(product.images as string[] | null) ?? []}
           title={product.title}
+          sale={!!promotion}
+          mark={product.mark}
         />
 
         {/* Content column */}
@@ -88,6 +90,7 @@ function ProductDetailContent({ product }: ProductDetailPageProps) {
           <AdminVariantBadges
             variants={product.product_variants}
             promotion={promotion}
+            mark={product.mark}
             size="sm"
           />
 

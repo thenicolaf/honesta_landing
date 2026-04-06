@@ -76,6 +76,8 @@ export function ProductDetailPage({
             image_url={image_url}
             images={product.images}
             title={title}
+            sale={!!product.promotion}
+            mark={product.mark}
           />
 
           {/* Content column */}

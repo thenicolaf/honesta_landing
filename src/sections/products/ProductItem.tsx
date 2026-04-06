@@ -57,6 +57,7 @@ export function ProductItem({ product, from }: ProductItemProps) {
         title={title}
         tagline={tagline}
         sale={!!product.promotion}
+        mark={product.mark}
         topRight={
           product.id ? (
             <FavoriteButton

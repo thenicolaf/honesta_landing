@@ -14,7 +14,9 @@ import {
   SelectItem,
 } from "@/shared/ui";
 import { IconLeaf } from "@/shared/icons";
+import { cn } from "@/shared/utils/cn";
 import { useFilterBar } from "@/providers/FilterProvider";
+import { findActivePromotion } from "@/shared/utils/calculateDiscount";
 import { ProductItem } from "./ProductItem";
 import type { DbProduct, DbProductGridProps, Product } from "./types";
 import { mapDbProducts, sortProducts, type ProductSortKey } from "./utils";
@@ -72,7 +74,11 @@ function ProductList({ products }: { products: Product[] }) {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-40px" }}
-          transition={{ duration: 0.35, ease: "easeOut", delay: (i % 3) * 0.05 }}
+          transition={{
+            duration: 0.35,
+            ease: "easeOut",
+            delay: (i % 3) * 0.05,
+          }}
           className="h-full"
         >
           <ProductItem product={product} />
@@ -84,15 +90,16 @@ function ProductList({ products }: { products: Product[] }) {
 
 // ─── ProductGridInner ────────────────────────────────────────────────────────
 
-const SORT_OPTIONS: {
-  value: ProductSortKey;
-  label: string;
-  promoOnly?: boolean;
-}[] = [
-  { value: "", label: "Recommended" },
-  { value: "promotions", label: "On Sale", promoOnly: true },
-  { value: "best-sellers", label: "Best Sellers" },
-  { value: "category", label: "By Category" },
+const MARK_ITEMS = [
+  { value: "best_seller", label: "Best Sellers" },
+  { value: "promotions", label: "Promotions" },
+  { value: "new", label: "New" },
+];
+
+const SORT_OPTIONS: { value: ProductSortKey; label: string }[] = [
+  { value: "promotions", label: "Promotions" },
+  { value: "best_sellers", label: "Best Sellers" },
+  { value: "new", label: "New" },
 ];
 
 function ProductGridInner({
@@ -107,9 +114,18 @@ function ProductGridInner({
   const categoryFilter = useFilterBar("category");
   const sortFilter = useFilterBar("sort");
   const searchFilter = useFilterBar("search");
+  const markFilter = useFilterBar("mark");
+
+  const hasPromo = rawProducts.some((p) => findActivePromotion(p.promotion_products));
+  const defaultSort: ProductSortKey = hasPromo ? "promotions" : "best_sellers";
+  const sortDisabled = markFilter.value !== "";
+  const effectiveSort = sortDisabled
+    ? ""
+    : ((sortFilter.value || defaultSort) as ProductSortKey);
 
   const sorted = useMemo(() => {
     const searchVal = searchFilter.value.toLowerCase();
+    const markVal = markFilter.value;
 
     const filtered = rawProducts.filter((p) => {
       if (categoryFilter.value && p.categories?.slug !== categoryFilter.value)
@@ -122,23 +138,26 @@ function ProductGridInner({
           .toLowerCase();
         if (!haystack.includes(searchVal)) return false;
       }
+      if (
+        markVal === "promotions" &&
+        !findActivePromotion(p.promotion_products)
+      )
+        return false;
+      if (markVal === "best_seller" && p.mark !== "best_seller") return false;
+      if (markVal === "new" && p.mark !== "new") return false;
       return true;
     });
 
     const products = mapDbProducts(filtered, salesMap);
-    return sortProducts(products, (sortFilter.value || "") as ProductSortKey);
+    return sortProducts(products, effectiveSort);
   }, [
     rawProducts,
     salesMap,
     categoryFilter.value,
-    sortFilter.value,
+    effectiveSort,
     searchFilter.value,
+    markFilter.value,
   ]);
-
-  const hasPromo = sorted.some((p) => p.promotion);
-  const visibleSortOptions = SORT_OPTIONS.filter(
-    (o) => !o.promoOnly || hasPromo,
-  );
 
   return (
     <>
@@ -185,14 +204,39 @@ function ProductGridInner({
         </Select>
 
         <Select
-          value={sortFilter.value || ""}
-          onValueChange={sortFilter.onValueChange}
-          options={visibleSortOptions}
+          value={markFilter.value}
+          onValueChange={markFilter.onValueChange}
+          options={MARK_ITEMS}
           clearable
         >
-          <SelectTrigger className="w-full sm:w-48 h-9">
+          <SelectTrigger className="w-full sm:w-44 h-9">
+            <SelectValue placeholder="All" />
+          </SelectTrigger>
+          <SelectContent>
+            {(options) =>
+              options.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))
+            }
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={effectiveSort}
+          onValueChange={sortFilter.onValueChange}
+          options={SORT_OPTIONS}
+          clearable
+        >
+          <SelectTrigger
+            className={cn(
+              "w-full sm:w-48 h-9",
+              sortDisabled && "opacity-50 pointer-events-none",
+            )}
+          >
             <ArrowUpDown size={12} className="shrink-0 mr-1.5 text-earth/40" />
-            <SelectValue placeholder="Sort by" className="mr-auto" />
+            <SelectValue placeholder="By Category" className="mr-auto" />
           </SelectTrigger>
           <SelectContent>
             {(options) =>

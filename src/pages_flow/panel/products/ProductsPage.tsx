@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Plus, ArrowUpDown, Search } from "lucide-react";
+import { cn } from "@/shared/utils/cn";
 
 import {
   Button,
@@ -34,15 +35,16 @@ const STATUS_ITEMS = [
   { value: ProductStatus.ARCHIVED, label: "Archived" },
 ];
 
-const SORT_OPTIONS: {
-  value: ProductSortKey;
-  label: string;
-  promoOnly?: boolean;
-}[] = [
-  { value: "", label: "Recommended" },
-  { value: "promotions", label: "On Sale", promoOnly: true },
-  { value: "best-sellers", label: "Best Sellers" },
-  { value: "category", label: "By Category" },
+const MARK_ITEMS = [
+  { value: "best_seller", label: "Best Sellers" },
+  { value: "promotions", label: "Promotions" },
+  { value: "new", label: "New" },
+];
+
+const SORT_OPTIONS: { value: ProductSortKey; label: string }[] = [
+  { value: "promotions", label: "Promotions" },
+  { value: "best_sellers", label: "Best Sellers" },
+  { value: "new", label: "New" },
 ];
 
 function AdminProductGrid({ products }: { products: AdminDbProduct[] }) {
@@ -60,21 +62,26 @@ function AdminProductGrid({ products }: { products: AdminDbProduct[] }) {
 interface ProductsPageInnerProps {
   products: AdminDbProduct[];
   categoryItems: { value: string; label: string }[];
-  salesMap?: Record<string, number>;
 }
 
 function ProductsPageInner({
   products,
   categoryItems,
-  salesMap,
 }: ProductsPageInnerProps) {
   const statusFilter = useFilterBar("status");
   const categoryFilter = useFilterBar("category");
   const sortFilter = useFilterBar("sort");
   const searchFilter = useFilterBar("search");
+  const markFilter = useFilterBar("mark");
+
+  const hasPromo = products.some((p) => findActivePromotion(p.promotion_products));
+  const defaultSort: ProductSortKey = hasPromo ? "promotions" : "best_sellers";
+  const sortDisabled = markFilter.value !== "";
+  const effectiveSort = sortDisabled ? "" : (sortFilter.value || defaultSort) as ProductSortKey;
 
   const sorted = useMemo(() => {
     const searchVal = searchFilter.value.toLowerCase();
+    const markVal = markFilter.value;
 
     const filtered = products.filter((p) => {
       if (statusFilter.value && p.status !== statusFilter.value) return false;
@@ -88,30 +95,27 @@ function ProductsPageInner({
           .toLowerCase();
         if (!haystack.includes(searchVal)) return false;
       }
+      if (markVal === "promotions" && !findActivePromotion(p.promotion_products))
+        return false;
+      if (markVal === "best_seller" && p.mark !== "best_seller") return false;
+      if (markVal === "new" && p.mark !== "new") return false;
       return true;
     });
 
-    const sortKey = (sortFilter.value || "") as ProductSortKey;
     const withSortFields = filtered.map((p) => ({
       ...p,
       promotion: findActivePromotion(p.promotion_products) ?? undefined,
-      totalSold: salesMap?.[p.id] ?? 0,
       category: p.categories?.name ?? "",
     }));
-    return sortBySortKey(withSortFields, sortKey);
+    return sortBySortKey(withSortFields, effectiveSort);
   }, [
     products,
     statusFilter.value,
     categoryFilter.value,
-    sortFilter.value,
+    effectiveSort,
     searchFilter.value,
-    salesMap,
+    markFilter.value,
   ]);
-
-  const hasPromo = sorted.some((p) => p.promotion);
-  const visibleSortOptions = SORT_OPTIONS.filter(
-    (o) => !o.promoOnly || hasPromo,
-  );
 
   return (
     <>
@@ -171,14 +175,34 @@ function ProductsPageInner({
         )}
 
         <Select
-          value={sortFilter.value || ""}
-          onValueChange={sortFilter.onValueChange}
-          options={visibleSortOptions}
+          value={markFilter.value}
+          onValueChange={markFilter.onValueChange}
+          options={MARK_ITEMS}
           clearable
         >
-          <SelectTrigger className="w-full sm:w-48 h-9">
+          <SelectTrigger className="w-full sm:w-44 h-9">
+            <SelectValue placeholder="All Marks" />
+          </SelectTrigger>
+          <SelectContent>
+            {(options) =>
+              options.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))
+            }
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={effectiveSort}
+          onValueChange={sortFilter.onValueChange}
+          options={SORT_OPTIONS}
+          clearable
+        >
+          <SelectTrigger className={cn("w-full sm:w-48 h-9", sortDisabled && "opacity-50 pointer-events-none")}>
             <ArrowUpDown size={12} className="shrink-0 mr-1.5 text-earth/40" />
-            <SelectValue placeholder="Sort by" className="mr-auto" />
+            <SelectValue placeholder="By Category" className="mr-auto" />
           </SelectTrigger>
           <SelectContent>
             {(options) =>
@@ -214,13 +238,11 @@ function ProductsPageInner({
 interface ProductsPageProps {
   products: AdminDbProduct[];
   categories: { value: string; label: string }[];
-  salesMap?: Record<string, number>;
 }
 
 export function ProductsPage({
   products,
   categories,
-  salesMap,
 }: ProductsPageProps) {
   return (
     <ProductActionsProvider>
@@ -247,12 +269,11 @@ export function ProductsPage({
       </h1>
 
       <SearchParamsFilterProvider
-        keys={["status", "category", "sort", "search"]}
+        keys={["status", "category", "sort", "search", "mark"]}
       >
         <ProductsPageInner
           products={products}
           categoryItems={categories}
-          salesMap={salesMap}
         />
       </SearchParamsFilterProvider>
     </ProductActionsProvider>

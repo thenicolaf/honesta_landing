@@ -21,6 +21,7 @@ interface ProductValues {
   image_url: string;
   images: string;
   in_stock: string;
+  mark: string;
   category_id: string;
   tagIds: string;
   freeFromIds: string;
@@ -230,6 +231,7 @@ async function parseProductValues(
     image_url,
     images,
     in_stock: values.in_stock === "true",
+    mark: values.mark || "new",
     category_id: values.category_id || null,
     nutrition: JSON.parse((formData.get("nutrition") as string) || "{}") as NutritionJson,
   };

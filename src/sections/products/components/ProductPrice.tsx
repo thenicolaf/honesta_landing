@@ -2,16 +2,23 @@ import { Badge } from "@/shared/ui";
 import { formatDateTime } from "@/shared/ui/Table";
 import type { Product } from "../types";
 
+const MARK_PRICE_COLOR: Record<string, string> = {
+  best_seller: "text-red-700",
+  new: "text-moss",
+};
+
 interface ProductPriceProps {
   price: number;
   promotion?: Product["promotion"];
+  mark?: "standard" | "best_seller" | "new";
   className?: string;
 }
 
-export function ProductPrice({ price, promotion, className }: ProductPriceProps) {
+export function ProductPrice({ price, promotion, mark, className }: ProductPriceProps) {
   if (!promotion) {
+    const color = (mark && MARK_PRICE_COLOR[mark]) ?? "text-earth";
     return (
-      <span className={`font-body font-semibold text-earth text-sm ${className ?? ""}`}>
+      <span className={`font-body font-semibold ${color} text-sm ${className ?? ""}`}>
         AED {price.toFixed(2)}
       </span>
     );
