@@ -2,13 +2,13 @@
 
 import { DragDropProvider } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
-import type { UploadItem } from "./types";
+import type { DeferredItem } from "./types";
 import { SortableThumbnail } from "./SortableThumbnail";
 
 interface SortableThumbnailsProps {
-  items: UploadItem[];
-  onReorder: (items: UploadItem[]) => void;
-  onRemove: (item: UploadItem) => void;
+  items: DeferredItem[];
+  onReorder: (items: DeferredItem[]) => void;
+  onRemove: (item: DeferredItem) => void;
   onPreview?: (index: number) => void;
 }
 
@@ -48,7 +48,7 @@ export function SortableThumbnails({
             key={item.id}
             id={item.id}
             index={idx}
-            src={item.url}
+            src={item.preview}
             alt={item.name}
             isMain={idx === 0}
             sortable={items.length > 1}

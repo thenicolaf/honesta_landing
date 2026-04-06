@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase.server";
-import { deleteImage } from "@/lib/storage";
+import { deleteImage, uploadImage, type StorageBucket } from "@/lib/storage";
 import { createNotification } from "@/lib/notificationsDb";
 import { getMaxSortOrder, updateCategoryOrder } from "@/lib/categoriesDb";
 
@@ -34,6 +34,18 @@ function toSlug(name: string): string {
     .replace(/-+/g, "-");
 }
 
+async function resolveImageUrl(formData: FormData): Promise<string | null> {
+  const entry = formData.get("image_url");
+  if (!entry) return null;
+  if (typeof entry === "string") return entry.trim() || null;
+  if (entry instanceof File && entry.size > 0) {
+    const slug = (formData.get("image_url__slug") as string) || "category";
+    const bucket = ((formData.get("image_url__bucket") as string) || "categories") as StorageBucket;
+    return uploadImage(entry, slug, bucket);
+  }
+  return null;
+}
+
 export async function createCategory(
   _prevState: CategoryState | null,
   formData: FormData,
@@ -45,6 +57,7 @@ export async function createCategory(
 
   const name = values.name!.trim();
   const slug = toSlug(name);
+  const imageUrl = await resolveImageUrl(formData);
 
   const maxOrder = await getMaxSortOrder();
 
@@ -57,7 +70,7 @@ export async function createCategory(
       badge: values.badge?.trim() || null,
       tagline: values.tagline?.trim() || null,
       description: values.description?.trim() || null,
-      image_url: values.image_url?.trim() || null,
+      image_url: imageUrl,
       sort_order: maxOrder + 1,
     })
     .select("id")
@@ -90,7 +103,7 @@ export async function updateCategory(
 
   const name = values.name!.trim();
   const slug = toSlug(name);
-  const newImageUrl = values.image_url?.trim() || null;
+  const newImageUrl = await resolveImageUrl(formData);
 
   // Fetch old image URL to clean up if changed
   const { data: existing } = await supabaseAdmin

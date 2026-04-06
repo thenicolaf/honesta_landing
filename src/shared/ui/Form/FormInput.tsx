@@ -29,9 +29,9 @@ export function FormInput({
   return (
     <div className={cn("relative", wrapperClassName)}>
       {startIcon && (
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-earth/40 pointer-events-none">
+        <div className="absolute inline-flex left-3 top-1/2 -translate-y-1/2 text-earth/40 pointer-events-none">
           {startIcon}
-        </span>
+        </div>
       )}
       <input
         ref={ref}

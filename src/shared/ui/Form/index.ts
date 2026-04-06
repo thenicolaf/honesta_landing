@@ -11,3 +11,4 @@ export { FormPhoneInput } from "./FormPhoneInput";
 export { FormUploadZone } from "./FormUploadZone";
 export { FormOtpInput, useResendCooldown } from "./input-otp";
 export { FormTileRadio, FormTileRadioItem } from "./FormTileRadio";
+export { FormDatePicker } from "./FormDatePicker";

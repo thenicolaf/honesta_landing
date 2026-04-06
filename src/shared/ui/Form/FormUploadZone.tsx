@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { UploadZone, type UploadItem, type UploadMultipleProps } from "../UploadZone";
+import { UploadZone, type DeferredItem, type UploadMultipleProps } from "../UploadZone";
 import { Lightbox } from "../Lightbox";
 
 type FormUploadZoneProps = UploadMultipleProps & {
@@ -23,16 +23,17 @@ type FormUploadZoneProps = UploadMultipleProps & {
 function buildInitialItems(
   initialUrls?: string[],
   initialUrl?: string,
-): UploadItem[] {
+): DeferredItem[] {
   if (initialUrls?.length) {
     return initialUrls.map((url, i) => ({
       id: crypto.randomUUID(),
-      url,
+      preview: url,
       name: `Image ${i + 1}`,
+      origin: true,
     }));
   }
   if (initialUrl) {
-    return [{ id: crypto.randomUUID(), url: initialUrl, name: "Current image" }];
+    return [{ id: crypto.randomUUID(), preview: initialUrl, name: "Current image", origin: true }];
   }
   return [];
 }
@@ -51,10 +52,9 @@ export function FormUploadZone(props: FormUploadZoneProps) {
     ...multipleProps
   } = props;
 
-  const [items, setItems] = useState<UploadItem[]>(() =>
+  const [items, setItems] = useState<DeferredItem[]>(() =>
     buildInitialItems(initialUrls, initialUrl),
   );
-  const [uploading, setUploading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewIndex, setPreviewIndex] = useState(0);
 
@@ -63,53 +63,18 @@ export function FormUploadZone(props: FormUploadZoneProps) {
     setPreviewOpen(true);
   };
 
-  const handleUpload = async (file: File): Promise<UploadItem | null> => {
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("slug", slug);
-      formData.append("bucket", bucket);
-
-      const res = await fetch("/api/storage/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) return null;
-
-      const { url } = await res.json();
-      return { id: crypto.randomUUID(), url, name: file.name };
-    } catch {
-      return null;
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleRemove = async (item: UploadItem): Promise<void> => {
-    try {
-      await fetch("/api/storage/delete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: item.url, bucket }),
-      });
-    } catch {
-      // Deletion failure shouldn't block UI
-    }
-  };
-
   return (
     <>
+      {/* Pass slug/bucket as hidden inputs for server action */}
+      <input type="hidden" name={`${name}__slug`} value={slug} />
+      <input type="hidden" name={`${name}__bucket`} value={bucket} />
+
       <UploadZone
         name={name}
         accept={accept}
         maxSizeMb={maxSizeMb}
         items={items}
         onItemsChange={setItems}
-        onUpload={handleUpload}
-        onRemove={handleRemove}
-        uploading={uploading}
         onPreview={handlePreview}
         state={state}
         className={className}
@@ -119,7 +84,7 @@ export function FormUploadZone(props: FormUploadZoneProps) {
       <Lightbox
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
-        slides={items.map((i) => ({ src: i.url, alt: i.name }))}
+        slides={items.map((i) => ({ src: i.preview, alt: i.name }))}
         index={previewIndex}
       />
     </>

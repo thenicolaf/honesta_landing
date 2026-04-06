@@ -4,7 +4,7 @@ import { createContext, useContext } from "react";
 
 export interface PopoverContextValue {
   open: boolean;
-  direction: "down" | "up";
+  direction: { vertical: "down" | "up"; horizontal: "left" | "right" };
   toggle: () => void;
   close: () => void;
 }

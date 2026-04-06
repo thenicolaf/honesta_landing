@@ -49,6 +49,30 @@ export async function uploadImage(
   return publicUrl;
 }
 
+/**
+ * Parse form images from FormData: existing URLs (string) pass through,
+ * new files (File) are uploaded to Storage. Returns URLs in DOM order.
+ */
+export async function parseFormImages(
+  formData: FormData,
+  fieldName: string,
+  slug: string,
+  bucket: StorageBucket,
+): Promise<string[]> {
+  const entries = formData.getAll(fieldName);
+  const urls: string[] = [];
+
+  for (const entry of entries) {
+    if (typeof entry === "string" && entry.trim()) {
+      urls.push(entry.trim());
+    } else if (entry instanceof File && entry.size > 0) {
+      urls.push(await uploadImage(entry, slug, bucket));
+    }
+  }
+
+  return urls;
+}
+
 export async function deleteImage(
   url: string,
   bucket: StorageBucket = "products",

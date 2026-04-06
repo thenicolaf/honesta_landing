@@ -7,6 +7,7 @@ import {
   FormNumberInput,
   FormSelect,
   FormCheckbox,
+  FormDatePicker,
   FormError,
   Button,
 } from "@/shared/ui";
@@ -22,13 +23,6 @@ const DISCOUNT_TYPE_OPTIONS = [
   { value: "percentage", label: "Percentage (%)" },
   { value: "fixed", label: "Fixed (AED)" },
 ];
-
-function toDatetimeLocal(iso: string) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
 
 interface PromotionFormProps {
   promotion?: PromotionWithProducts;
@@ -49,7 +43,23 @@ export function PromotionForm({ promotion, products }: PromotionFormProps) {
     state?.values?.discount_type ?? promotion?.discount_type ?? "percentage",
   );
   const [discountValue, setDiscountValue] = useState(
-    parseFloat(state?.values?.discount_value ?? "") || (promotion?.discount_value ?? 0),
+    parseFloat(state?.values?.discount_value ?? "") ||
+      (promotion?.discount_value ?? 0),
+  );
+
+  const [startsAt, setStartsAt] = useState<Date | undefined>(() =>
+    state?.values?.starts_at
+      ? new Date(state.values.starts_at)
+      : promotion
+        ? new Date(promotion.starts_at)
+        : undefined,
+  );
+  const [endsAt, setEndsAt] = useState<Date | undefined>(() =>
+    state?.values?.ends_at
+      ? new Date(state.values.ends_at)
+      : promotion
+        ? new Date(promotion.ends_at)
+        : undefined,
   );
 
   return (
@@ -60,7 +70,9 @@ export function PromotionForm({ promotion, products }: PromotionFormProps) {
         </p>
 
         <div>
-          <FormLabel htmlFor="promo-name">Name *</FormLabel>
+          <FormLabel htmlFor="promo-name" required>
+            Name
+          </FormLabel>
           <FormInput
             id="promo-name"
             name="name"
@@ -83,14 +95,18 @@ export function PromotionForm({ promotion, products }: PromotionFormProps) {
             />
           </div>
           <div>
-            <FormLabel htmlFor="promo-discount-value">Discount Value *</FormLabel>
+            <FormLabel htmlFor="promo-discount-value" required>
+              Discount Value
+            </FormLabel>
             <FormNumberInput
               id="promo-discount-value"
               name="discount_value"
               min={0}
               max={discountType === "percentage" ? 100 : undefined}
               step={1}
-              placeholder={discountType === "percentage" ? "e.g. 20" : "e.g. 10"}
+              placeholder={
+                discountType === "percentage" ? "e.g. 20" : "e.g. 10"
+              }
               value={discountValue}
               onValueChange={setDiscountValue}
               state={state?.fieldErrors?.discount_value ? "error" : "default"}
@@ -100,38 +116,39 @@ export function PromotionForm({ promotion, products }: PromotionFormProps) {
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <FormLabel htmlFor="promo-starts">Start Date *</FormLabel>
-            <FormInput
-              id="promo-starts"
-              name="starts_at"
-              type="datetime-local"
-              defaultValue={
-                state?.values?.starts_at ??
-                (promotion ? toDatetimeLocal(promotion.starts_at) : "")
-              }
-              state={state?.fieldErrors?.starts_at ? "error" : "default"}
-            />
-            <FormError message={state?.fieldErrors?.starts_at} />
-          </div>
-          <div>
-            <FormLabel htmlFor="promo-ends">End Date *</FormLabel>
-            <FormInput
-              id="promo-ends"
-              name="ends_at"
-              type="datetime-local"
-              defaultValue={
-                state?.values?.ends_at ??
-                (promotion ? toDatetimeLocal(promotion.ends_at) : "")
-              }
-              state={state?.fieldErrors?.ends_at ? "error" : "default"}
-            />
-            <FormError message={state?.fieldErrors?.ends_at} />
-          </div>
+          <FormDatePicker
+            id="promo-starts"
+            name="starts_at"
+            label="Start Date"
+            placeholder="When promotion begins"
+            showTime
+            required
+            clearable
+            value={startsAt}
+            onValueChange={setStartsAt}
+            minDate={new Date()}
+            maxDate={endsAt}
+            state={state?.fieldErrors?.starts_at ? "error" : "default"}
+            errorMessage={state?.fieldErrors?.starts_at}
+          />
+          <FormDatePicker
+            id="promo-ends"
+            name="ends_at"
+            label="End Date"
+            placeholder="When promotion ends"
+            showTime
+            required
+            clearable
+            value={endsAt}
+            onValueChange={setEndsAt}
+            minDate={startsAt ?? new Date()}
+            state={state?.fieldErrors?.ends_at ? "error" : "default"}
+            errorMessage={state?.fieldErrors?.ends_at}
+          />
         </div>
 
         <div>
-          <FormLabel>Products *</FormLabel>
+          <FormLabel required>Products</FormLabel>
           <ProductPicker
             name="product_ids"
             options={products}
