@@ -8,6 +8,7 @@ import {
   ProductHeader,
   ProductTitle,
   ProductTags,
+  ProductIngredients,
   ProductFreeFrom,
   ProductDetails,
   ProductNote,
@@ -25,6 +26,7 @@ export function AdminProductCard({ product }: { product: AdminDbProduct }) {
     tagline,
     tags,
     freeFrom,
+    ingredients,
     benefits,
     nutrition,
     servingIdeas,
@@ -42,6 +44,7 @@ export function AdminProductCard({ product }: { product: AdminDbProduct }) {
         title={product.title}
         tagline={tagline}
         sale={!!promotion}
+        mark={product.mark}
         topRight={
           product.in_stock === false ? (
             <Badge
@@ -62,11 +65,13 @@ export function AdminProductCard({ product }: { product: AdminDbProduct }) {
         <AdminVariantBadges
           variants={product.product_variants}
           promotion={promotion}
+          mark={product.mark}
           size="xs"
         />
 
         <ProductTags tags={tags} />
         <ProductFreeFrom freeFrom={freeFrom} />
+        <ProductIngredients ingredients={ingredients} />
         <ProductNote note={product.note ?? undefined} truncate />
         <ProductDetails
           benefits={benefits}

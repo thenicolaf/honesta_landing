@@ -3,15 +3,22 @@ import { formatDateTime } from "@/shared/ui/Table";
 import { calculateDiscountedPrice } from "@/shared/utils/calculateDiscount";
 import type { Product } from "@/sections/products/types";
 
+const MARK_PRICE_COLOR: Record<string, string> = {
+  best_seller: "text-red-700",
+  new: "text-moss",
+};
+
 interface AdminVariantBadgesProps {
   variants: { id: string; weight_g: number; price: string }[];
   promotion?: Product["promotion"];
+  mark?: "standard" | "best_seller" | "new";
   size?: "xs" | "sm";
 }
 
 export function AdminVariantBadges({
   variants,
   promotion,
+  mark,
   size = "xs",
 }: AdminVariantBadgesProps) {
   if (!variants || variants.length === 0) return null;
@@ -41,7 +48,7 @@ export function AdminVariantBadges({
                   <span className="text-orange font-semibold">AED {discounted.toFixed(2)}</span>
                 </>
               ) : (
-                <span className="text-earth font-semibold">AED {base.toFixed(2)}</span>
+                <span className={`${(mark && MARK_PRICE_COLOR[mark]) ?? "text-earth"} font-semibold`}>AED {base.toFixed(2)}</span>
               )}
             </Badge>
           );

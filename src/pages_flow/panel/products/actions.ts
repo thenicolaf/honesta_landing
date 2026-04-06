@@ -21,12 +21,14 @@ interface ProductValues {
   image_url: string;
   images: string;
   in_stock: string;
+  mark: string;
   category_id: string;
   tagIds: string;
   freeFromIds: string;
   occasionIds: string;
   servingIdeaIds: string;
   benefitIds: string;
+  ingredientIds: string;
   [key: string]: string;
 }
 
@@ -37,6 +39,7 @@ export interface ProductState {
     title?: string;
     variants?: string;
     category_id?: string;
+    ingredientIds?: string;
     images?: string;
   };
   values?: Partial<ProductValues>;
@@ -72,6 +75,7 @@ async function insertJunctionRows(
   const occasionIds = parseIds(values.occasionIds ?? null);
   const servingIdeaIds = parseIds(values.servingIdeaIds ?? null);
   const benefitIds = parseIds(values.benefitIds ?? null);
+  const ingredientIds = parseIds(values.ingredientIds ?? null);
 
   const inserts: PromiseLike<unknown>[] = [];
 
@@ -122,6 +126,16 @@ async function insertJunctionRows(
       ),
     );
 
+  if (ingredientIds.length)
+    inserts.push(
+      supabaseAdmin.from("product_ingredients").insert(
+        ingredientIds.map((ingredient_id) => ({
+          product_id: productId,
+          ingredient_id,
+        })),
+      ),
+    );
+
   await Promise.all(inserts);
 }
 
@@ -141,6 +155,7 @@ async function deleteJunctionRows(productId: string) {
       .delete()
       .eq("product_id", productId),
     supabaseAdmin.from("product_benefits").delete().eq("product_id", productId),
+    supabaseAdmin.from("product_ingredients").delete().eq("product_id", productId),
   ]);
 }
 
@@ -181,6 +196,10 @@ function validateProduct(values: Partial<ProductValues>) {
 
   if (!values.category_id?.trim()) {
     fieldErrors.category_id = "Category is required";
+  }
+
+  if (parseIds(values.ingredientIds ?? null).length === 0) {
+    fieldErrors.ingredientIds = "At least one ingredient is required";
   }
 
   return Object.keys(fieldErrors).length > 0 ? fieldErrors : null;
@@ -230,6 +249,7 @@ async function parseProductValues(
     image_url,
     images,
     in_stock: values.in_stock === "true",
+    mark: values.mark || "new",
     category_id: values.category_id || null,
     nutrition: JSON.parse((formData.get("nutrition") as string) || "{}") as NutritionJson,
   };

@@ -38,7 +38,7 @@ export function VariantsSection({ product, state }: SectionProps) {
           >
             <div>
               {i === 0 && (
-                <FormLabel htmlFor={`v-weight-${i}`}>Weight (g) *</FormLabel>
+                <FormLabel htmlFor={`v-weight-${i}`} required>Weight (g)</FormLabel>
               )}
               <FormNumberInput
                 id={`v-weight-${i}`}
@@ -53,7 +53,7 @@ export function VariantsSection({ product, state }: SectionProps) {
             </div>
             <div>
               {i === 0 && (
-                <FormLabel htmlFor={`v-price-${i}`}>Price (AED) *</FormLabel>
+                <FormLabel htmlFor={`v-price-${i}`} required>Price (AED)</FormLabel>
               )}
               <FormNumberInput
                 id={`v-price-${i}`}

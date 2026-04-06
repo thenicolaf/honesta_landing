@@ -8,6 +8,7 @@ import type { Product } from "@/sections/products/types";
 import {
   ProductHeader,
   ProductTags,
+  ProductIngredients,
   ProductFreeFrom,
   ProductPriceAndCart,
   ProductExpandedDetails,
@@ -38,6 +39,7 @@ export function ProductDetailPage({
     tagline,
     tags,
     freeFrom,
+    ingredients,
     image_url,
     benefits,
     nutrition,
@@ -76,6 +78,8 @@ export function ProductDetailPage({
             image_url={image_url}
             images={product.images}
             title={title}
+            sale={!!product.promotion}
+            mark={product.mark}
           />
 
           {/* Content column */}
@@ -114,6 +118,7 @@ export function ProductDetailPage({
 
             <ProductTags tags={tags} />
             <ProductFreeFrom freeFrom={freeFrom} />
+            <ProductIngredients ingredients={ingredients} />
             <ProductNote note={product.note} />
 
             <ProductExpandedDetails

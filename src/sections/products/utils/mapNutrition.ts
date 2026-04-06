@@ -15,6 +15,7 @@ export interface MappedAdminProduct {
   tagline: string;
   tags: string[];
   freeFrom: string[];
+  ingredients: string[];
   benefits: Benefit[];
   nutrition: NutritionInfo | undefined;
   servingIdeas: string[];
@@ -36,6 +37,9 @@ export function mapAdminProduct(product: AdminDbProduct): MappedAdminProduct {
     tags: product.product_tags.map((pt) => pt.tag_options.label),
     freeFrom: product.product_free_froms.map(
       (pf) => pf.free_from_options.label,
+    ),
+    ingredients: (product.product_ingredients ?? []).map(
+      (pi) => pi.ingredient_options.label,
     ),
     benefits: product.product_benefits.map((pb) => pb.benefits),
     nutrition: mapNutrition(product.nutrition),

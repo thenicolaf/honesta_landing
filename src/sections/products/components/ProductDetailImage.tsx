@@ -2,18 +2,22 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Gallery, Lightbox } from "@/shared/ui";
+import { Badge, Gallery, Lightbox } from "@/shared/ui";
 
 interface ProductDetailImageProps {
   image_url: string;
   images?: string[];
   title: string;
+  sale?: boolean;
+  mark?: "standard" | "best_seller" | "new";
 }
 
 export function ProductDetailImage({
   image_url,
   images = [],
   title,
+  sale,
+  mark,
 }: ProductDetailImageProps) {
   const allImages = [image_url, ...images].filter(Boolean);
   const restImages = allImages.slice(1);
@@ -43,6 +47,25 @@ export function ProductDetailImage({
           sizes="(max-width: 768px) 100vw, 50vw"
           priority
         />
+        {(sale || (mark && mark !== "standard")) && (
+          <div className="absolute top-4 left-4 z-10 flex gap-2">
+            {sale && (
+              <Badge variant="counter" size="sm">
+                SALE
+              </Badge>
+            )}
+            {mark === "best_seller" && (
+              <Badge variant="counter" size="sm" className="bg-red-700!">
+                BEST SELLER
+              </Badge>
+            )}
+            {mark === "new" && (
+              <Badge variant="counter" size="sm" className="bg-moss!">
+                NEW
+              </Badge>
+            )}
+          </div>
+        )}
       </button>
 
       {/* Rest of images in gallery */}

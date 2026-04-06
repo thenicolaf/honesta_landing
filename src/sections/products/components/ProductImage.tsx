@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Badge, Button, Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui";
+import {
+  Badge,
+  Button,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/shared/ui";
 import { IconInfo } from "@/shared/icons";
 import { cn } from "@/shared/utils/cn";
 
@@ -14,6 +20,8 @@ interface ProductImageProps {
   topRight?: React.ReactNode;
   /** Show SALE badge in top-left corner */
   sale?: boolean;
+  /** Product mark — shows colored badge (best_seller / new); standard = hidden */
+  mark?: "standard" | "best_seller" | "new";
 }
 
 export function ProductImage({
@@ -22,6 +30,7 @@ export function ProductImage({
   tagline,
   topRight,
   sale,
+  mark,
 }: ProductImageProps) {
   const [showTagline, setShowTagline] = useState(false);
 
@@ -39,16 +48,32 @@ export function ProductImage({
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
         />
       ) : (
-        <div className={cn(
-          "w-full h-full bg-sand transition-transform duration-500",
-          showTagline && "scale-105",
-        )} />
+        <div
+          className={cn(
+            "w-full h-full bg-sand transition-transform duration-500",
+            showTagline && "scale-105",
+          )}
+        />
       )}
 
-      {sale && (
-        <Badge variant="counter" size="sm" className="absolute top-3 left-3 z-20">
-          SALE
-        </Badge>
+      {(sale || (mark && mark !== "standard")) && (
+        <div className="absolute top-3 left-3 z-20 flex gap-1.5">
+          {sale && (
+            <Badge variant="counter" size="sm">
+              SALE
+            </Badge>
+          )}
+          {mark === "best_seller" && (
+            <Badge variant="counter" size="sm" className="bg-red-700!">
+              BEST SELLER
+            </Badge>
+          )}
+          {mark === "new" && (
+            <Badge variant="counter" size="sm" className="bg-moss!">
+              NEW
+            </Badge>
+          )}
+        </div>
       )}
 
       {topRight}

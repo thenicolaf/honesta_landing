@@ -1,10 +1,10 @@
 import type { Product } from "../types";
 
-export type ProductSortKey = "" | "promotions" | "best-sellers" | "category";
+export type ProductSortKey = "" | "promotions" | "best_sellers" | "new";
 
 interface Sortable {
   promotion?: unknown;
-  totalSold?: number;
+  mark?: "standard" | "best_seller" | "new";
   category: string;
 }
 
@@ -13,19 +13,14 @@ function compareBySortKey<T extends Sortable>(a: T, b: T, sortKey: ProductSortKe
     case "promotions":
       return (b.promotion ? 1 : 0) - (a.promotion ? 1 : 0);
 
-    case "best-sellers":
-      return (b.totalSold ?? 0) - (a.totalSold ?? 0);
+    case "best_sellers":
+      return (b.mark === "best_seller" ? 1 : 0) - (a.mark === "best_seller" ? 1 : 0);
 
-    case "category":
-      return a.category.localeCompare(b.category);
+    case "new":
+      return (b.mark === "new" ? 1 : 0) - (a.mark === "new" ? 1 : 0);
 
-    default: {
-      const promoDiff = (b.promotion ? 1 : 0) - (a.promotion ? 1 : 0);
-      if (promoDiff !== 0) return promoDiff;
-      const salesDiff = (b.totalSold ?? 0) - (a.totalSold ?? 0);
-      if (salesDiff !== 0) return salesDiff;
+    default:
       return a.category.localeCompare(b.category);
-    }
   }
 }
 

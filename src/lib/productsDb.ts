@@ -9,6 +9,7 @@ const PRODUCTS_SELECT = `
   product_serving_ideas(serving_idea_id, serving_idea_options(id, label)),
   product_occasions(occasion_id, occasion_options(id, label)),
   product_benefits(benefit_id, benefits(id, name, description)),
+  product_ingredients(ingredient_id, ingredient_options(id, label)),
   promotion_products(promotions(name, discount_type, discount_value, starts_at, ends_at, is_active)),
   product_variants(id, weight_g, price)
 `;
@@ -21,6 +22,7 @@ export type AdminDbProduct = Omit<
   | "product_serving_ideas"
   | "product_occasions"
   | "product_benefits"
+  | "product_ingredients"
 > & {
   categories: { id: string; slug: string; name: string } | null;
   product_tags: { tag_id: number; tag_options: { id: number; label: string } }[];
@@ -28,6 +30,7 @@ export type AdminDbProduct = Omit<
   product_serving_ideas: { serving_idea_id: number; serving_idea_options: { id: number; label: string } }[];
   product_occasions: { occasion_id: number; occasion_options: { id: number; label: string } }[];
   product_benefits: { benefit_id: number; benefits: { id: number; name: string; description: string } }[];
+  product_ingredients: { ingredient_id: number; ingredient_options: { id: number; label: string } }[];
 };
 
 const PUBLIC_PRODUCTS_SELECT = `
@@ -38,6 +41,7 @@ const PUBLIC_PRODUCTS_SELECT = `
   product_serving_ideas(serving_idea_options(label)),
   product_occasions(occasion_options(label)),
   product_benefits(benefits(name, description)),
+  product_ingredients(ingredient_options(label)),
   promotion_products(promotions(name, discount_type, discount_value, starts_at, ends_at, is_active)),
   product_variants(id, weight_g, price)
 `;
@@ -111,6 +115,7 @@ export interface ProductFormOptions {
   freeFromOptions: { id: number; label: string }[];
   occasionOptions: { id: number; label: string }[];
   servingIdeaOptions: { id: number; label: string }[];
+  ingredientOptions: { id: number; label: string }[];
   benefits: { id: number; name: string; description: string }[];
 }
 
@@ -132,13 +137,14 @@ export async function getProductSalesMap(): Promise<Record<string, number>> {
 }
 
 export async function getProductFormOptions(): Promise<ProductFormOptions> {
-  const [categories, tagOptions, freeFromOptions, occasionOptions, servingIdeaOptions, benefits] =
+  const [categories, tagOptions, freeFromOptions, occasionOptions, servingIdeaOptions, ingredientOptions, benefits] =
     await Promise.all([
       supabaseAdmin.from("categories").select("id, name, slug").order("sort_order"),
       supabaseAdmin.from("tag_options").select("id, label").order("label"),
       supabaseAdmin.from("free_from_options").select("id, label").order("label"),
       supabaseAdmin.from("occasion_options").select("id, label").order("label"),
       supabaseAdmin.from("serving_idea_options").select("id, label").order("label"),
+      supabaseAdmin.from("ingredient_options").select("id, label").order("label"),
       supabaseAdmin.from("benefits").select("id, name, description").order("name"),
     ]);
 
@@ -148,6 +154,7 @@ export async function getProductFormOptions(): Promise<ProductFormOptions> {
     freeFromOptions: (freeFromOptions.data ?? []) as { id: number; label: string }[],
     occasionOptions: (occasionOptions.data ?? []) as { id: number; label: string }[],
     servingIdeaOptions: (servingIdeaOptions.data ?? []) as { id: number; label: string }[],
+    ingredientOptions: (ingredientOptions.data ?? []) as { id: number; label: string }[],
     benefits: (benefits.data ?? []) as { id: number; name: string; description: string }[],
   };
 }

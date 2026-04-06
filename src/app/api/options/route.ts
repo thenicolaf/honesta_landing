@@ -9,6 +9,7 @@ const ENTITY_MAP: Record<string, { table: string; column: string }> = {
   free_from: { table: "free_from_options", column: "label" },
   occasions: { table: "occasion_options", column: "label" },
   serving_ideas: { table: "serving_idea_options", column: "label" },
+  ingredients: { table: "ingredient_options", column: "label" },
 };
 
 async function authorize() {

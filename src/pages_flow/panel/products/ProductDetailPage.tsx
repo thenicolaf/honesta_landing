@@ -6,6 +6,7 @@ import type { AdminDbProduct } from "@/lib/productsDb";
 import {
   ProductHeader,
   ProductTags,
+  ProductIngredients,
   ProductFreeFrom,
   ProductExpandedDetails,
   ProductDetailImage,
@@ -30,6 +31,7 @@ function ProductDetailContent({ product }: ProductDetailPageProps) {
     tagline,
     tags,
     freeFrom,
+    ingredients,
     benefits,
     nutrition,
     servingIdeas,
@@ -67,6 +69,8 @@ function ProductDetailContent({ product }: ProductDetailPageProps) {
           image_url={product.image_url ?? ""}
           images={(product.images as string[] | null) ?? []}
           title={product.title}
+          sale={!!promotion}
+          mark={product.mark}
         />
 
         {/* Content column */}
@@ -88,11 +92,13 @@ function ProductDetailContent({ product }: ProductDetailPageProps) {
           <AdminVariantBadges
             variants={product.product_variants}
             promotion={promotion}
+            mark={product.mark}
             size="sm"
           />
 
           <ProductTags tags={tags} />
           <ProductFreeFrom freeFrom={freeFrom} />
+          <ProductIngredients ingredients={ingredients} />
           <ProductNote note={product.note ?? undefined} />
 
           <ProductExpandedDetails
