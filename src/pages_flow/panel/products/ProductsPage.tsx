@@ -119,7 +119,7 @@ function ProductsPageInner({
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row sm:items-end gap-3 mb-6">
+      <div className="flex flex-col gap-3 mb-6 2xl:flex-row 2xl:items-end">
         <FormInput
           type="text"
           placeholder="Search by name, tag, category..."
@@ -128,39 +128,19 @@ function ProductsPageInner({
           clearable
           onClear={() => searchFilter.onValueChange("")}
           startIcon={<Search size={14} />}
-          wrapperClassName="w-full sm:flex-1"
+          wrapperClassName="w-full 2xl:flex-1"
           className="h-9 text-sm bg-white-warm! border-earth/15! hover:border-earth/35!"
         />
 
-        <Select
-          value={statusFilter.value}
-          onValueChange={statusFilter.onValueChange}
-          options={STATUS_ITEMS}
-          clearable
-        >
-          <SelectTrigger className="w-full sm:w-44 h-9">
-            <SelectValue placeholder="All Statuses" />
-          </SelectTrigger>
-          <SelectContent>
-            {(options) =>
-              options.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))
-            }
-          </SelectContent>
-        </Select>
-
-        {categoryItems.length > 1 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 2xl:contents">
           <Select
-            value={categoryFilter.value}
-            onValueChange={categoryFilter.onValueChange}
-            options={categoryItems}
+            value={statusFilter.value}
+            onValueChange={statusFilter.onValueChange}
+            options={STATUS_ITEMS}
             clearable
           >
-            <SelectTrigger className="w-full sm:w-56 h-9">
-              <SelectValue placeholder="All Categories" />
+            <SelectTrigger className="w-full 2xl:w-44 h-9">
+              <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
               {(options) =>
@@ -172,48 +152,70 @@ function ProductsPageInner({
               }
             </SelectContent>
           </Select>
-        )}
 
-        <Select
-          value={markFilter.value}
-          onValueChange={markFilter.onValueChange}
-          options={MARK_ITEMS}
-          clearable
-        >
-          <SelectTrigger className="w-full sm:w-44 h-9">
-            <SelectValue placeholder="All Marks" />
-          </SelectTrigger>
-          <SelectContent>
-            {(options) =>
-              options.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))
-            }
-          </SelectContent>
-        </Select>
+          {categoryItems.length > 1 && (
+            <Select
+              value={categoryFilter.value}
+              onValueChange={categoryFilter.onValueChange}
+              options={categoryItems}
+              clearable
+            >
+              <SelectTrigger className="w-full 2xl:w-56 h-9">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                {(options) =>
+                  options.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))
+                }
+              </SelectContent>
+            </Select>
+          )}
 
-        <Select
-          value={effectiveSort}
-          onValueChange={sortFilter.onValueChange}
-          options={SORT_OPTIONS}
-          clearable
-        >
-          <SelectTrigger className={cn("w-full sm:w-48 h-9", sortDisabled && "opacity-50 pointer-events-none")}>
-            <ArrowUpDown size={12} className="shrink-0 mr-1.5 text-earth/40" />
-            <SelectValue placeholder="By Category" className="mr-auto" />
-          </SelectTrigger>
-          <SelectContent>
-            {(options) =>
-              options.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))
-            }
-          </SelectContent>
-        </Select>
+          <Select
+            value={markFilter.value}
+            onValueChange={markFilter.onValueChange}
+            options={MARK_ITEMS}
+            clearable
+          >
+            <SelectTrigger className="w-full 2xl:w-44 h-9">
+              <SelectValue placeholder="All Marks" />
+            </SelectTrigger>
+            <SelectContent>
+              {(options) =>
+                options.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))
+              }
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={effectiveSort}
+            onValueChange={sortFilter.onValueChange}
+            options={SORT_OPTIONS}
+            clearable
+          >
+            <SelectTrigger className={cn("w-full 2xl:w-48 h-9", sortDisabled && "opacity-50 pointer-events-none")}>
+              <ArrowUpDown size={12} className="shrink-0 mr-1.5 text-earth/40" />
+              <SelectValue placeholder="By Category" className="mr-auto" />
+            </SelectTrigger>
+            <SelectContent>
+              {(options) =>
+                options.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))
+              }
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {sorted.length === 0 ? (

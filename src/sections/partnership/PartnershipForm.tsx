@@ -9,6 +9,10 @@ import {
   FormSelect,
   FormTextarea,
   FormError,
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleChevron,
+  CollapsibleContent,
 } from "@/shared/ui";
 import { AddressWithMap } from "@/shared/ui";
 import { parseAddress } from "@/shared/utils/address";
@@ -122,18 +126,42 @@ export function PartnershipForm() {
         </div>
 
         {/* Right column: address with map */}
-        <AddressWithMap
-          {...parseAddress(state?.values?.address)}
-          defaultLat={state?.values?.lat}
-          defaultLng={state?.values?.lng}
-          required={false}
-          fieldErrors={{
-            emirate: state?.fieldErrors?.emirate,
-            city: state?.fieldErrors?.addressCity,
-            area: state?.fieldErrors?.addressArea,
-            buildingName: state?.fieldErrors?.addressBuilding,
-          }}
-        />
+        <div className="lg:hidden">
+          <Collapsible>
+            <CollapsibleTrigger className="flex items-center gap-2 w-full font-body font-semibold text-2xs uppercase tracking-[0.12em] text-earth/50 py-2">
+              Add address
+              <CollapsibleChevron className="text-earth/40" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-2">
+              <AddressWithMap
+                {...parseAddress(state?.values?.address)}
+                defaultLat={state?.values?.lat}
+                defaultLng={state?.values?.lng}
+                required={false}
+                fieldErrors={{
+                  emirate: state?.fieldErrors?.emirate,
+                  city: state?.fieldErrors?.addressCity,
+                  area: state?.fieldErrors?.addressArea,
+                  buildingName: state?.fieldErrors?.addressBuilding,
+                }}
+              />
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
+        <div className="hidden lg:block">
+          <AddressWithMap
+            {...parseAddress(state?.values?.address)}
+            defaultLat={state?.values?.lat}
+            defaultLng={state?.values?.lng}
+            required={false}
+            fieldErrors={{
+              emirate: state?.fieldErrors?.emirate,
+              city: state?.fieldErrors?.addressCity,
+              area: state?.fieldErrors?.addressArea,
+              buildingName: state?.fieldErrors?.addressBuilding,
+            }}
+          />
+        </div>
       </div>
 
       {state?.error && (

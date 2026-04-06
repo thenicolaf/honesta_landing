@@ -7,7 +7,7 @@ export function CategorySection({ product, options, state }: SectionProps) {
       <SectionLabel>Category</SectionLabel>
 
       <div>
-        <FormLabel>Category *</FormLabel>
+        <FormLabel required>Category</FormLabel>
         <FormSelect
           name="category_id"
           placeholder="Select category"

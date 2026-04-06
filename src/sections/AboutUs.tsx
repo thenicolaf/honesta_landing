@@ -1,9 +1,8 @@
 "use client";
 
 import { motion } from "motion/react";
-import { GraduationCap, ShoppingBag, Sparkles } from "lucide-react";
+import { GraduationCap, Sparkles } from "lucide-react";
 import {
-  Button,
   Card,
   Collapsible,
   CollapsibleTrigger,
@@ -18,7 +17,6 @@ import {
   IconCleanLabel,
   IconNoSugar,
 } from "@/shared/icons";
-import { HashLink } from "./navbar";
 import { useAboutExpanded } from "./about/AboutExpandedProvider";
 
 const fadeUp = {
@@ -102,7 +100,10 @@ export function AboutUs() {
 
           <h2
             className="font-display font-bold italic text-heading leading-tight mb-8 animate-hero-fade-up"
-            style={{ fontSize: "clamp(2rem, 4vw, 3rem)", animationDelay: "0.18s" }}
+            style={{
+              fontSize: "clamp(2rem, 4vw, 3rem)",
+              animationDelay: "0.18s",
+            }}
           >
             A Taste You Can Trust
           </h2>
@@ -120,7 +121,7 @@ export function AboutUs() {
         </div>
 
         {/* ── Collapsible details ─────────────────────── */}
-        <Collapsible className="mb-16 lg:mb-20" open={expanded} onOpenChange={setExpanded}>
+        <Collapsible open={expanded} onOpenChange={setExpanded}>
           <CollapsibleContent>
             <div className="flex flex-col gap-12 lg:gap-16 pt-6">
               {/* Why HONESTA? */}
@@ -316,32 +317,6 @@ export function AboutUs() {
             <CollapsibleChevron />
           </CollapsibleTrigger>
         </Collapsible>
-
-        {/* ── CTA ─────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="text-center"
-        >
-          <HashLink href="/#products" className="group">
-            <Button
-              as="button"
-              type="button"
-              variant="primary"
-              size="lg"
-              endIcon={
-                <ShoppingBag
-                  className="w-5 h-5 transition-transform duration-300 group-hover:translate-y-0.5"
-                  strokeWidth={1.5}
-                />
-              }
-            >
-              Explore Honest Sweets
-            </Button>
-          </HashLink>
-        </motion.div>
       </div>
     </section>
   );

@@ -3,16 +3,17 @@
 import Image from "next/image";
 import { Button } from "@/shared/ui";
 import { HashLink } from "../navbar";
-import { useAboutExpanded } from "../about/AboutExpandedProvider";
-import { BookOpen, ShoppingBag } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 
 export function HeroContent() {
-  const { expandAndScroll } = useAboutExpanded();
   return (
     <div className="relative h-full mx-auto max-w-7xl px-6 lg:px-10 flex items-center justify-center">
       <div className="max-w-lg pt-20 text-center relative">
         {/* Logo */}
-        <div className="animate-hero-fade-up" style={{ animationDelay: "0.1s" }}>
+        <div
+          className="animate-hero-fade-up"
+          style={{ animationDelay: "0.1s" }}
+        >
           <Image
             src="/honesta_logo.svg"
             alt="Honesta logo"
@@ -26,71 +27,53 @@ export function HeroContent() {
         {/* Brand name */}
         <h1
           className="font-display font-bold text-heading leading-none mt-6 animate-hero-fade-up"
-          style={{ fontSize: "clamp(3rem, 8vw, 6rem)", animationDelay: "0.28s" }}
+          style={{
+            fontSize: "clamp(3rem, 8vw, 6rem)",
+            animationDelay: "0.28s",
+          }}
         >
           HONESTA
         </h1>
 
         {/* Tagline */}
         <p
-          className="font-body font-semibold uppercase tracking-[0.2em] text-heading text-sm sm:text-base mt-6 mb-2 animate-hero-fade-up"
+          className="font-body font-semibold uppercase tracking-[0.2em] text-heading text-sm sm:text-base mt-6 mb-10 animate-hero-fade-up"
           style={{ animationDelay: "0.46s" }}
         >
-          Natural. Healthy. Family.
-        </p>
-
-        {/* Subtitle */}
-        <p
-          className="font-display italic text-earth/60 text-lg sm:text-xl mb-10 animate-hero-fade-up"
-          style={{ animationDelay: "0.64s" }}
-        >
-          Embracing a healthy life together
+          No Sugar. 100% Natural Snacks
         </p>
 
         {/* CTA */}
         <div
-          className="flex flex-col items-center gap-6 animate-hero-fade-up"
-          style={{ animationDelay: "0.82s" }}
+          className="flex flex-col items-center gap-4 animate-hero-fade-up"
+          style={{ animationDelay: "0.64s" }}
         >
-          <HashLink
-            href="/#about"
-            className="group"
-            onClick={(e) => {
-              e.preventDefault();
-              expandAndScroll();
-            }}
-          >
+          <HashLink href="/#products" className="group">
             <Button
               as="button"
               type="button"
               variant="primary"
               size="lg"
               endIcon={
-                <BookOpen
+                <ShoppingBag
                   className="w-5 h-5 transition-transform duration-300 group-hover:translate-y-0.5"
                   strokeWidth={1.5}
                 />
               }
             >
-              Discover Our Story
+              Shop Natural Snacks
             </Button>
           </HashLink>
 
-          <HashLink href="/#products" className="group">
+          <HashLink href="/?mark=best_seller#products" className="group">
             <Button
               as="button"
               type="button"
               variant="outline"
               size="md"
               className="font-display italic capitalize"
-              endIcon={
-                <ShoppingBag
-                  className="w-4 h-4 transition-transform duration-300 group-hover:translate-y-0.5"
-                  strokeWidth={1.5}
-                />
-              }
             >
-              Explore Honest Sweets
+              Shop Best Sellers
             </Button>
           </HashLink>
         </div>

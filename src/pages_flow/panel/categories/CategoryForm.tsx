@@ -35,7 +35,7 @@ export function CategoryForm({ category }: CategoryFormProps) {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <FormLabel htmlFor="cat-name">Name *</FormLabel>
+            <FormLabel htmlFor="cat-name" required>Name</FormLabel>
             <FormInput
               id="cat-name"
               name="name"

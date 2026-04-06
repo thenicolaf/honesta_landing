@@ -162,7 +162,7 @@ function ProductGridInner({
   return (
     <>
       <motion.div
-        className="mb-10 flex flex-col sm:flex-row sm:items-end items-stretch gap-4"
+        className="mb-10 flex flex-col gap-3 lg:flex-row lg:items-end"
         initial={{ opacity: 0, y: 12 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-40px" }}
@@ -176,78 +176,80 @@ function ProductGridInner({
           clearable
           onClear={() => searchFilter.onValueChange("")}
           startIcon={<Search size={14} />}
-          wrapperClassName="w-full sm:flex-1"
+          wrapperClassName="w-full lg:flex-1"
           className="h-9 text-sm bg-white-warm! border-earth/15! hover:border-earth/35!"
         />
 
-        <Select
-          value={categoryFilter.value}
-          onValueChange={categoryFilter.onValueChange}
-          options={(categories ?? []).map((c) => ({
-            value: c.value,
-            label: c.label,
-          }))}
-          clearable
-        >
-          <SelectTrigger className="w-full sm:w-56 h-9">
-            <SelectValue placeholder="All Categories" />
-          </SelectTrigger>
-          <SelectContent>
-            {(options) =>
-              options.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))
-            }
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={markFilter.value}
-          onValueChange={markFilter.onValueChange}
-          options={MARK_ITEMS}
-          clearable
-        >
-          <SelectTrigger className="w-full sm:w-44 h-9">
-            <SelectValue placeholder="All" />
-          </SelectTrigger>
-          <SelectContent>
-            {(options) =>
-              options.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))
-            }
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={effectiveSort}
-          onValueChange={sortFilter.onValueChange}
-          options={SORT_OPTIONS}
-          clearable
-        >
-          <SelectTrigger
-            className={cn(
-              "w-full sm:w-48 h-9",
-              sortDisabled && "opacity-50 pointer-events-none",
-            )}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:contents">
+          <Select
+            value={categoryFilter.value}
+            onValueChange={categoryFilter.onValueChange}
+            options={(categories ?? []).map((c) => ({
+              value: c.value,
+              label: c.label,
+            }))}
+            clearable
           >
-            <ArrowUpDown size={12} className="shrink-0 mr-1.5 text-earth/40" />
-            <SelectValue placeholder="By Category" className="mr-auto" />
-          </SelectTrigger>
-          <SelectContent>
-            {(options) =>
-              options.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))
-            }
-          </SelectContent>
-        </Select>
+            <SelectTrigger className="w-full lg:w-56 h-9">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              {(options) =>
+                options.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))
+              }
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={markFilter.value}
+            onValueChange={markFilter.onValueChange}
+            options={MARK_ITEMS}
+            clearable
+          >
+            <SelectTrigger className="w-full lg:w-44 h-9">
+              <SelectValue placeholder="All" />
+            </SelectTrigger>
+            <SelectContent>
+              {(options) =>
+                options.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))
+              }
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={effectiveSort}
+            onValueChange={sortFilter.onValueChange}
+            options={SORT_OPTIONS}
+            clearable
+          >
+            <SelectTrigger
+              className={cn(
+                "w-full lg:w-48 h-9",
+                sortDisabled && "opacity-50 pointer-events-none",
+              )}
+            >
+              <ArrowUpDown size={12} className="shrink-0 mr-1.5 text-earth/40" />
+              <SelectValue placeholder="By Category" className="mr-auto" />
+            </SelectTrigger>
+            <SelectContent>
+              {(options) =>
+                options.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))
+              }
+            </SelectContent>
+          </Select>
+        </div>
       </motion.div>
       {sorted.length === 0 ? (
         <ProductEmptyState />

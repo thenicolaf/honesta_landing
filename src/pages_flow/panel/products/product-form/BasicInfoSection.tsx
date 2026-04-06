@@ -38,7 +38,7 @@ export function BasicInfoSection({ product, state }: SectionProps) {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <FormLabel htmlFor="p-title">Title *</FormLabel>
+          <FormLabel htmlFor="p-title" required>Title</FormLabel>
           <FormInput
             id="p-title"
             name="title"
