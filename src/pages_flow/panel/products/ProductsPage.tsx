@@ -74,10 +74,8 @@ function ProductsPageInner({
   const searchFilter = useFilterBar("search");
   const markFilter = useFilterBar("mark");
 
-  const hasPromo = products.some((p) => findActivePromotion(p.promotion_products));
-  const defaultSort: ProductSortKey = hasPromo ? "promotions" : "best_sellers";
   const sortDisabled = markFilter.value !== "";
-  const effectiveSort = sortDisabled ? "" : (sortFilter.value || defaultSort) as ProductSortKey;
+  const effectiveSort = sortDisabled ? "" : (sortFilter.value || "") as ProductSortKey;
 
   const sorted = useMemo(() => {
     const searchVal = searchFilter.value.toLowerCase();
@@ -196,7 +194,7 @@ function ProductsPageInner({
           </Select>
 
           <Select
-            value={effectiveSort}
+            value={sortFilter.value}
             onValueChange={sortFilter.onValueChange}
             options={SORT_OPTIONS}
             clearable
