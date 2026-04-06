@@ -17,6 +17,7 @@ export interface DbProduct {
   product_serving_ideas: { serving_idea_options: { label: string } }[];
   product_occasions: { occasion_options: { label: string } }[];
   product_benefits: { benefits: { name: string; description: string } }[];
+  product_ingredients: { ingredient_options: { label: string } }[];
   promotion_products: {
     promotions: {
       name: string;

@@ -6,6 +6,7 @@ import type { AdminDbProduct } from "@/lib/productsDb";
 import {
   ProductHeader,
   ProductTags,
+  ProductIngredients,
   ProductFreeFrom,
   ProductExpandedDetails,
   ProductDetailImage,
@@ -30,6 +31,7 @@ function ProductDetailContent({ product }: ProductDetailPageProps) {
     tagline,
     tags,
     freeFrom,
+    ingredients,
     benefits,
     nutrition,
     servingIdeas,
@@ -96,6 +98,7 @@ function ProductDetailContent({ product }: ProductDetailPageProps) {
 
           <ProductTags tags={tags} />
           <ProductFreeFrom freeFrom={freeFrom} />
+          <ProductIngredients ingredients={ingredients} />
           <ProductNote note={product.note ?? undefined} />
 
           <ProductExpandedDetails

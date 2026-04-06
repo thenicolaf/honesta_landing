@@ -8,6 +8,7 @@ import {
   ProductHeader,
   ProductTitle,
   ProductTags,
+  ProductIngredients,
   ProductFreeFrom,
   ProductDetails,
   ProductNote,
@@ -25,6 +26,7 @@ export function AdminProductCard({ product }: { product: AdminDbProduct }) {
     tagline,
     tags,
     freeFrom,
+    ingredients,
     benefits,
     nutrition,
     servingIdeas,
@@ -69,6 +71,7 @@ export function AdminProductCard({ product }: { product: AdminDbProduct }) {
 
         <ProductTags tags={tags} />
         <ProductFreeFrom freeFrom={freeFrom} />
+        <ProductIngredients ingredients={ingredients} />
         <ProductNote note={product.note ?? undefined} truncate />
         <ProductDetails
           benefits={benefits}

@@ -7,6 +7,7 @@ import { createProduct, updateProduct, type ProductState } from "./actions";
 import { BasicInfoSection } from "./product-form/BasicInfoSection";
 import { VariantsSection } from "./product-form/VariantsSection";
 import { CategorySection } from "./product-form/CategorySection";
+import { IngredientsSection } from "./product-form/IngredientsSection";
 import { TagsSection } from "./product-form/TagsSection";
 import { BenefitsSection } from "./product-form/BenefitsSection";
 import { NutritionSection } from "./product-form/NutritionSection";
@@ -31,6 +32,7 @@ export function ProductForm({ product, options }: ProductFormProps) {
       <BasicInfoSection {...sectionProps} />
       <VariantsSection {...sectionProps} />
       <CategorySection {...sectionProps} />
+      <IngredientsSection {...sectionProps} />
       <TagsSection {...sectionProps} />
       <BenefitsSection {...sectionProps} />
       <NutritionSection {...sectionProps} />

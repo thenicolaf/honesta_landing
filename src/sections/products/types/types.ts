@@ -30,6 +30,8 @@ export interface Product {
   tags: string[];
   /** Allergen / additive free-from list, e.g. ["added sugar", "preservatives"] */
   freeFrom: string[];
+  /** Product ingredients */
+  ingredients: string[];
   /** URL to Supabase Storage, e.g. "https://….supabase.co/storage/v1/object/public/…" */
   image_url: string;
   /** All product images (ordered), image_url = images[0] */

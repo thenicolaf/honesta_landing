@@ -2,6 +2,7 @@ export { ProductImage } from "./ProductImage";
 export { ProductHeader } from "./ProductHeader";
 export { ProductTitle } from "./ProductTitle";
 export { ProductTags } from "./ProductTags";
+export { ProductIngredients } from "./ProductIngredients";
 export { ProductFreeFrom } from "./ProductFreeFrom";
 export {
   ProductDetails,

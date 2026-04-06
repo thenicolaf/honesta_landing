@@ -45,6 +45,7 @@ export function mapDbProducts(
       category: p.categories?.name ?? "",
       tags: p.product_tags.map((pt) => pt.tag_options.label),
       freeFrom: p.product_free_froms.map((pf) => pf.free_from_options.label),
+      ingredients: (p.product_ingredients ?? []).map((pi) => pi.ingredient_options.label),
       servingIdeas: p.product_serving_ideas.map(
         (ps) => ps.serving_idea_options.label,
       ),
