@@ -4,6 +4,7 @@ import {
   useState,
   useRef,
   useCallback,
+  useLayoutEffect,
   Children,
   cloneElement,
   isValidElement,
@@ -150,8 +151,9 @@ export function TooltipTrigger({
 // ─── TooltipContent ──────────────────────────────────────────────────────────
 
 const OFFSET = 6;
+const VIEWPORT_PAD = 8;
 
-const positionStyles: Record<TooltipSide, string> = {
+const basePositionStyles: Record<TooltipSide, string> = {
   top: "bottom-full mb-1.5 left-1/2 -translate-x-1/2",
   bottom: "top-full mt-1.5 left-1/2 -translate-x-1/2",
   left: "right-full mr-1.5 top-1/2 -translate-y-1/2",
@@ -175,7 +177,58 @@ export function TooltipContent({
   className,
 }: TooltipContentProps) {
   const { open, hide, resolvedSide } = useTooltip();
+  const contentRef = useRef<HTMLDivElement>(null);
   const offset = initialOffset[resolvedSide];
+  const isHorizontalSide =
+    resolvedSide === "top" || resolvedSide === "bottom";
+
+  // Clamp to viewport after mount / resize — no state, direct DOM mutation.
+  // Uses offsetWidth / offsetParent so measurements are NOT affected by
+  // motion's `scale` transform in the enter animation.
+  const clamp = useCallback(() => {
+    const el = contentRef.current;
+    const parent = el?.offsetParent as HTMLElement | null;
+    if (!el || !parent || !isHorizontalSide) return;
+
+    // Reset previous inline positioning so we measure from CSS baseline
+    el.style.left = "";
+    el.style.right = "";
+    el.style.transform = "";
+
+    const parentRect = parent.getBoundingClientRect();
+    const width = el.offsetWidth;
+    // CSS baseline: left:50% then -translate-x-1/2 → el's viewport left =
+    // parentLeft + parent.width/2 - width/2. Compute without relying on
+    // getBoundingClientRect (which reflects the animated scale).
+    const baseLeft =
+      parentRect.left + parent.offsetWidth / 2 - width / 2;
+    const baseRight = baseLeft + width;
+    const vw = window.innerWidth;
+
+    const overflowLeft = VIEWPORT_PAD - baseLeft;
+    const overflowRight = baseRight - (vw - VIEWPORT_PAD);
+
+    if (overflowLeft > 0 || overflowRight > 0) {
+      let desiredLeft = baseLeft;
+      if (overflowRight > 0) desiredLeft -= overflowRight;
+      if (desiredLeft < VIEWPORT_PAD) desiredLeft = VIEWPORT_PAD;
+
+      el.style.left = `${desiredLeft - parentRect.left}px`;
+      el.style.right = "auto";
+      el.style.transform = "none";
+    }
+  }, [isHorizontalSide]);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    clamp();
+    window.addEventListener("resize", clamp);
+    window.addEventListener("scroll", clamp, true);
+    return () => {
+      window.removeEventListener("resize", clamp);
+      window.removeEventListener("scroll", clamp, true);
+    };
+  }, [open, clamp]);
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -187,6 +240,7 @@ export function TooltipContent({
     <AnimatePresence initial={false}>
       {open && (
         <motion.div
+          ref={contentRef}
           role="tooltip"
           onClick={handleClick}
           initial={{ opacity: 0, x: offset.x, y: offset.y, scale: 0.95 }}
@@ -195,7 +249,7 @@ export function TooltipContent({
           transition={{ duration: 0.15, ease: "easeOut" }}
           className={cn(
             "absolute z-50",
-            positionStyles[resolvedSide],
+            basePositionStyles[resolvedSide],
             "rounded-lg px-2.5 py-1.5 bg-earth text-white-warm text-2xs font-body whitespace-nowrap shadow-md",
             className,
           )}

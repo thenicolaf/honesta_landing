@@ -31,18 +31,19 @@ export function FormCheckbox({
   const checked = isControlled ? controlledChecked : internalChecked;
 
   return (
-    <div className={className}>
+    <>
       <input type="hidden" name={name} value={String(checked)} />
       <Checkbox
         id={id}
         checked={checked}
         disabled={disabled}
         label={label}
+        className={className}
         onChange={(e) => {
           if (!isControlled) setInternalChecked(e.target.checked);
           onChange?.(e);
         }}
       />
-    </div>
+    </>
   );
 }

@@ -19,14 +19,16 @@ interface CheckoutPageProps {
   defaultValues?: Partial<CustomerInfo>;
   addresses?: UserAddress[];
   deliverySettings: DeliverySetting[];
+  isAuthenticated: boolean;
 }
 
 export function CheckoutPage({
   defaultValues,
   addresses,
   deliverySettings,
+  isAuthenticated,
 }: CheckoutPageProps) {
-  const { items, total, isHydrated } = useCart();
+  const { items, total, appliedPromoCode, isHydrated } = useCart();
   const [emirate, setEmirate] = useState(
     extractEmirateFromAddress(defaultValues?.address ?? "", addresses),
   );
@@ -40,7 +42,7 @@ export function CheckoutPage({
     : undefined;
 
   const [state, formAction] = useActionState(
-    submitCheckout.bind(null, items),
+    submitCheckout.bind(null, items, appliedPromoCode?.code ?? null),
     null,
   );
 
@@ -86,8 +88,10 @@ export function CheckoutPage({
               defaultValues={defaultValues}
               addresses={addresses}
               fieldErrors={state?.fieldErrors}
+              promoCodeError={state?.promoCodeError}
               emirateWarning={emirateWarning}
               totalWithDelivery={total + delivery.fee}
+              isAuthenticated={isAuthenticated}
               onEmirateChange={setEmirate}
               belowMinimum={delivery.belowMinimum}
               minimumOrder={delivery.minimumOrder}
@@ -103,6 +107,12 @@ export function CheckoutPage({
                 (s) => s.emirate.toLowerCase() === emirate.toLowerCase(),
               )?.delivery_fee
             }
+            freeThreshold={
+              deliverySettings.find(
+                (s) => s.emirate.toLowerCase() === emirate.toLowerCase(),
+              )?.free_delivery_threshold ?? undefined
+            }
+            emirate={emirate}
           />
         </div>
       </div>

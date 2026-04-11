@@ -2,6 +2,8 @@ export type OrderItem = {
   id: string;
   name: string;
   price: number;
+  original_price: number | null;
+  promo_discount: number;
   quantity: number;
 };
 
@@ -11,6 +13,10 @@ export type Order = {
   subtotal: number;
   delivery_fee: number;
   total: number;
+  promotion_discount: number;
+  promo_code_id: string | null;
+  promo_discount: number;
+  promo_code?: { code: string } | null;
   address: string;
   created_at: string;
   order_items: OrderItem[];

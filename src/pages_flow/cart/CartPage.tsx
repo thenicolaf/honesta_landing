@@ -5,15 +5,20 @@ import { useCart } from "@/providers";
 import { EmptyCart } from "./EmptyCart";
 import { CartGrid } from "./ui/CartGrid";
 import { CartSummary } from "./ui/CartSummary";
+import { PromoCodeBlock } from "./ui/PromoCodeBlock";
 import { Button, PageLoader } from "@/shared/ui";
 import { HashLink } from "@/sections/navbar";
 import type { DeliverySetting } from "@/lib/deliveryDb";
 
 interface CartPageProps {
   deliverySettings: DeliverySetting[];
+  isAuthenticated: boolean;
 }
 
-export function CartPage({ deliverySettings }: CartPageProps) {
+export function CartPage({
+  deliverySettings,
+  isAuthenticated,
+}: CartPageProps) {
   const { items, isHydrated } = useCart();
 
   if (!isHydrated) {
@@ -51,6 +56,7 @@ export function CartPage({ deliverySettings }: CartPageProps) {
         </h1>
 
         <CartGrid />
+        <PromoCodeBlock isAuthenticated={isAuthenticated} />
         <CartSummary deliverySettings={deliverySettings} />
       </div>
     </main>

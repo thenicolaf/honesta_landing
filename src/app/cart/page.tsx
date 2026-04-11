@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CartPage } from "@/pages_flow/cart";
 import { getDeliverySettings } from "@/lib/deliveryDb";
+import { createSupabaseServerClient } from "@/lib/supabase.server";
 
 export const metadata: Metadata = {
   title: "Cart",
@@ -9,6 +10,18 @@ export const metadata: Metadata = {
 };
 
 export default async function CartRoute() {
-  const deliverySettings = await getDeliverySettings();
-  return <CartPage deliverySettings={deliverySettings} />;
+  const [deliverySettings, supabase] = await Promise.all([
+    getDeliverySettings(),
+    createSupabaseServerClient(),
+  ]);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  return (
+    <CartPage
+      deliverySettings={deliverySettings}
+      isAuthenticated={!!user}
+    />
+  );
 }

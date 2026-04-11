@@ -5,9 +5,9 @@ import { cn } from "@/shared/utils/cn";
 import { IconCheck } from "@/shared/icons";
 
 const sizeMap = {
-  sm: { box: "w-3.5 h-3.5 rounded", icon: "w-2.5 h-2.5" },
-  md: { box: "w-4.5 h-4.5 rounded-md", icon: "w-3 h-3" },
-  lg: { box: "w-5.5 h-5.5 rounded-md", icon: "w-3.5 h-3.5" },
+  sm: { size: "w-3.5 h-3.5", radius: "rounded", icon: "w-2.5 h-2.5" },
+  md: { size: "w-4.5 h-4.5", radius: "rounded-md", icon: "w-3 h-3" },
+  lg: { size: "w-5.5 h-5.5", radius: "rounded-md", icon: "w-3.5 h-3.5" },
 } as const;
 
 const boxVariants = cva(
@@ -39,8 +39,10 @@ const boxVariants = cva(
 
 type Size = keyof typeof sizeMap;
 
-interface CheckboxProps
-  extends Omit<React.ComponentPropsWithRef<"input">, "type" | "size"> {
+interface CheckboxProps extends Omit<
+  React.ComponentPropsWithRef<"input">,
+  "type" | "size"
+> {
   size?: Size;
   label?: React.ReactNode;
 }
@@ -58,7 +60,13 @@ export function Checkbox({
   const s = sizeMap[size];
 
   const content = (
-    <span className={cn("relative inline-flex", disabled ? "cursor-not-allowed" : "cursor-pointer")}>
+    <span
+      className={cn(
+        "relative inline-flex items-center justify-center leading-none align-middle",
+        s.size,
+        disabled ? "cursor-not-allowed" : "cursor-pointer",
+      )}
+    >
       <input
         ref={ref}
         id={id}
@@ -71,12 +79,11 @@ export function Checkbox({
       <span
         className={cn(
           boxVariants({ checked: !!checked, disabled: !!disabled }),
-          s.box,
+          "absolute inset-0",
+          s.radius,
         )}
       >
-        {checked && (
-          <IconCheck className={cn(s.icon, "text-white-warm")} />
-        )}
+        {checked && <IconCheck className={cn(s.icon, "text-white-warm")} />}
       </span>
     </span>
   );
@@ -87,7 +94,7 @@ export function Checkbox({
     <label
       htmlFor={id}
       className={cn(
-        "inline-flex items-center gap-2",
+        "inline-flex w-max items-center gap-2",
         disabled ? "cursor-not-allowed" : "cursor-pointer",
         className,
       )}

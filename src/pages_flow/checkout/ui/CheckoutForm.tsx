@@ -12,6 +12,7 @@ import {
 } from "@/shared/ui";
 import { SubmitButton } from "./SubmitButton";
 import { AddressSelector } from "./AddressSelector";
+import { PromoCodeInput } from "@/pages_flow/cart/ui/PromoCodeInput";
 import Link from "next/link";
 import { CustomerInfo } from "@/shared/types";
 import type { CustomerErrors } from "@/shared/utils/validateCustomer";
@@ -22,8 +23,10 @@ interface CheckoutFormProps {
   defaultValues?: Partial<CustomerInfo>;
   addresses?: UserAddress[];
   fieldErrors?: CustomerErrors;
+  promoCodeError?: string;
   emirateWarning?: string;
   totalWithDelivery: number;
+  isAuthenticated: boolean;
   onEmirateChange?: (emirate: string) => void;
   belowMinimum?: boolean;
   minimumOrder?: number | null;
@@ -34,8 +37,10 @@ export function CheckoutForm({
   defaultValues = {},
   addresses,
   fieldErrors,
+  promoCodeError,
   emirateWarning,
   totalWithDelivery,
+  isAuthenticated,
   onEmirateChange,
   belowMinimum,
   minimumOrder,
@@ -140,6 +145,16 @@ export function CheckoutForm({
           defaultValue={defaultValues.notes}
           placeholder="Any special instructions for delivery..."
         />
+      </div>
+
+      {/* Promo code */}
+      <div>
+        <FormLabel>Promo code</FormLabel>
+        <PromoCodeInput
+          isAuthenticated={isAuthenticated}
+          loginRedirect="/checkout"
+        />
+        {promoCodeError && <FormError message={promoCodeError} />}
       </div>
 
       <FormCheckbox

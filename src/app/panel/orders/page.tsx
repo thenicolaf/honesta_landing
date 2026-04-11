@@ -9,7 +9,7 @@ export default async function Page() {
 
   const { data: ordersData } = await supabaseAdmin
     .from("orders")
-    .select("*, order_items(*)")
+    .select("*, order_items(*), promo_code:promo_codes(code)")
     .eq("user_id", user!.id)
     .order("created_at", { ascending: false });
 

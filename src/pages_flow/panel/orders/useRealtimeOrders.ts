@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import type { AdminOrder } from "@/pages_flow/orders/types";
 
 export function useRealtimeOrders(initial: AdminOrder[]) {
   const [orders, setOrders] = useState(initial);
   const supabaseRef = useRef(createSupabaseBrowserClient());
+  const router = useRouter();
 
   useEffect(() => {
     setOrders(initial);
@@ -20,27 +22,13 @@ export function useRealtimeOrders(initial: AdminOrder[]) {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "orders" },
-        (payload) => {
-          const row = payload.new as Record<string, unknown>;
-          const order: AdminOrder = {
-            id: row.id as string,
-            status: row.status as string,
-            subtotal: row.subtotal as number,
-            delivery_fee: row.delivery_fee as number,
-            total: row.total as number,
-            address: row.address as string,
-            created_at: row.created_at as string,
-            first_name: row.first_name as string,
-            last_name: row.last_name as string,
-            email: row.email as string,
-            phone: row.phone as string,
-            notes: (row.notes as string) ?? null,
-            gender: null,
-            birthday: null,
-            is_fulfilled: (row.is_fulfilled as boolean) ?? false,
-            order_items: [],
-          };
-          setOrders((prev) => [order, ...prev]);
+        () => {
+          // The `orders` insert fires before `order_items` land in the DB
+          // (they're written in a separate insert by createOrderWithItems),
+          // so we can't safely merge the row here. Instead, re-run the
+          // server component which already selects the full shape with
+          // order_items + promo_code join.
+          router.refresh();
         },
       )
       .on(
@@ -54,9 +42,13 @@ export function useRealtimeOrders(initial: AdminOrder[]) {
                 ? {
                     ...o,
                     status: row.status as string,
-                    is_fulfilled: (row.is_fulfilled as boolean) ?? o.is_fulfilled,
+                    is_fulfilled:
+                      (row.is_fulfilled as boolean) ?? o.is_fulfilled,
                     total: (row.total as number) ?? o.total,
                     subtotal: (row.subtotal as number) ?? o.subtotal,
+                    promotion_discount:
+                      (row.promotion_discount as number) ??
+                      o.promotion_discount,
                   }
                 : o,
             ),
@@ -76,7 +68,7 @@ export function useRealtimeOrders(initial: AdminOrder[]) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [router]);
 
   return orders;
 }
