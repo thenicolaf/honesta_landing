@@ -15,21 +15,25 @@ import { createSupabaseServerClient } from "@/lib/supabase.server";
 import { createNotification } from "@/lib/notificationsDb";
 import { getDeliverySettingByEmirate } from "@/lib/deliveryDb";
 import { calculateDelivery } from "@/shared/utils/calculateDelivery";
+import { validatePromoCode } from "@/lib/promoCodeApply";
+import { getCartTotals } from "@/lib/cart";
+import { getPerItemPromoDiscounts } from "@/shared/utils/recalculatePromoDiscount";
+import type { AppliedPromoCode } from "@/lib/promoCodeApply";
 
 export interface CheckoutState {
   error?: string;
   fieldErrors?: CustomerErrors;
+  promoCodeError?: string;
   values?: Partial<CustomerInfo>;
 }
 
 export async function submitCheckout(
   items: CartItem[],
+  promoCode: string | null,
   _prevState: CheckoutState | null,
   formData: FormData,
 ): Promise<CheckoutState | null> {
   const customer = Object.fromEntries(formData) as Partial<CustomerInfo>;
-
-  console.log("[submitCheckout] formData entries:", Object.fromEntries(formData));
 
   const cookieStore = await cookies();
 
@@ -50,13 +54,39 @@ export async function submitCheckout(
 
   const fieldErrors = validateCustomer(customer);
   if (fieldErrors) {
-    console.log("[submitCheckout] validation errors:", fieldErrors);
     return { fieldErrors, values: customer };
   }
 
   // 2. Calculate delivery fee server-side (authoritative)
   const emirate = (formData.get("emirate") as string)?.trim() || "Dubai";
-  const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+
+  // 3. Validate and apply promo code (if present). Re-runs all checks
+  // server-side using the actual user, items, and current DB state.
+  let promoCodeId: string | null = null;
+  let promoDiscount = 0;
+  let appliedCode: AppliedPromoCode | null = null;
+  const submittedPromo =
+    promoCode ?? ((formData.get("promo_code") as string | null) ?? null);
+  if (submittedPromo) {
+    const result = await validatePromoCode({
+      code: submittedPromo,
+      items,
+      userId: user?.id ?? null,
+    });
+    if (!result.ok) {
+      return { promoCodeError: result.error, values: customer };
+    }
+    promoCodeId = result.appliedCode.id;
+    promoDiscount = result.appliedCode.discount;
+    appliedCode = result.appliedCode;
+  }
+
+  const perItemPromoDiscounts = getPerItemPromoDiscounts(items, appliedCode);
+
+  const totals = getCartTotals(items, promoDiscount);
+  const subtotal = totals.subtotal;
+  const promotionDiscount = totals.promotionDiscount;
+  const discountedSubtotal = totals.total;
 
   const setting = await getDeliverySettingByEmirate(emirate);
 
@@ -70,7 +100,7 @@ export async function submitCheckout(
   }
 
   const delivery = calculateDelivery(
-    subtotal,
+    discountedSubtotal,
     emirate,
     setting ? [setting] : [],
   );
@@ -84,13 +114,17 @@ export async function submitCheckout(
     };
   }
 
-  const { data: order, error: orderError } = await createOrderWithItems(
+  const { data: order, error: orderError } = await createOrderWithItems({
     items,
     customer,
     subtotal,
-    delivery.fee,
-    user?.id,
-  );
+    deliveryFee: delivery.fee,
+    userId: user?.id,
+    promoCodeId,
+    promoDiscount,
+    promotionDiscount,
+    perItemPromoDiscounts,
+  });
   if (orderError || !order) {
     return { error: orderError ?? "Failed to create order", values: customer };
   }
@@ -99,11 +133,11 @@ export async function submitCheckout(
   await createNotification({
     type: "new_order",
     title: "New order",
-    message: `${customer.firstName} ${customer.lastName} — AED ${order.total}`,
+    message: `${customer.firstName} ${customer.lastName} — AED ${Number(order.total).toFixed(2)}`,
     relatedId: order.id,
   });
 
-  // 3. Create payment
+  // 4. Create payment
   const { paymentUrl, error: paymentError } = await createPaymentForOrder(
     order.id,
     order.total,

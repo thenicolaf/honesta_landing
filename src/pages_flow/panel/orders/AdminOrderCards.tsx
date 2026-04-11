@@ -79,48 +79,108 @@ export function AdminOrderCards({
 
             <DataCardField label="Items">
               <div className="flex flex-col gap-1">
-                {order.order_items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-baseline justify-between gap-3"
-                  >
-                    <span className="text-sm text-earth">
-                      {item.name}
-                      <span className="text-earth/40 ml-1">
-                        ×{item.quantity}
+                {order.order_items.map((item) => {
+                  const hasPromotion =
+                    item.original_price != null &&
+                    item.original_price > item.price;
+                  const promoPerUnit = item.promo_discount ?? 0;
+                  const hasPromoCode = promoPerUnit > 0;
+                  const finalLineTotal =
+                    Math.max(0, item.price - promoPerUnit) * item.quantity;
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex items-start justify-between gap-3"
+                    >
+                      <span className="text-sm text-earth">
+                        {item.name}
+                        <span className="text-earth/40 ml-1">
+                          ×{item.quantity}
+                        </span>
                       </span>
-                    </span>
-                    <span className="text-2xs text-earth/50 whitespace-nowrap">
-                      {formatAed(item.price * item.quantity)}
-                    </span>
-                  </div>
-                ))}
+                      <div className="shrink-0 flex flex-col items-end whitespace-nowrap">
+                        <span
+                          className={
+                            hasPromoCode
+                              ? "text-2xs text-moss font-semibold"
+                              : hasPromotion
+                                ? "text-2xs text-orange font-semibold"
+                                : "text-2xs text-earth/60"
+                          }
+                        >
+                          {formatAed(finalLineTotal)}
+                        </span>
+                        {hasPromoCode && (
+                          <span className="text-2xs text-earth/30 line-through">
+                            {formatAed(item.price * item.quantity)}
+                          </span>
+                        )}
+                        {hasPromotion && (
+                          <span className="text-2xs text-earth/30 line-through">
+                            {formatAed(
+                              (item.original_price ?? 0) * item.quantity,
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </DataCardField>
 
             <DataCardField label="Cost">
-              <div className="flex flex-col gap-0.5">
-                <div className="flex justify-between gap-3">
-                  <span className="text-2xs text-earth/50">Subtotal</span>
-                  <span className="text-2xs text-earth/60">
-                    {formatAed(order.subtotal)}
-                  </span>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <span className="text-2xs text-earth/50">Delivery</span>
-                  <span className="text-2xs text-earth/60">
-                    {formatAed(order.delivery_fee)}
-                  </span>
-                </div>
-                <div className="flex justify-between gap-3 pt-2 border-t border-earth/8 mt-0.5">
-                  <span className="text-sm font-semibold text-earth">
-                    Total
-                  </span>
-                  <span className="text-sm font-semibold text-earth">
-                    {formatAed(order.total)}
-                  </span>
-                </div>
-              </div>
+              {(() => {
+                const promotionDiscount = order.promotion_discount ?? 0;
+                const originalSubtotal = order.subtotal + promotionDiscount;
+                return (
+                  <div className="flex flex-col gap-0.5">
+                    <div className="flex justify-between gap-3">
+                      <span className="text-2xs text-earth/50">Subtotal</span>
+                      <span className="text-2xs text-earth/60">
+                        {formatAed(originalSubtotal)}
+                      </span>
+                    </div>
+                    {promotionDiscount > 0 && (
+                      <div className="flex justify-between gap-3">
+                        <span className="text-2xs text-orange">Promotion</span>
+                        <span className="text-2xs text-orange">
+                          −{formatAed(promotionDiscount)}
+                        </span>
+                      </div>
+                    )}
+                    {order.promo_discount > 0 && (
+                      <div className="flex justify-between gap-3">
+                        <span className="text-2xs text-moss">
+                          Promo
+                          {order.promo_code?.code && (
+                            <span className="font-mono tracking-widest ml-1">
+                              {order.promo_code.code}
+                            </span>
+                          )}
+                        </span>
+                        <span className="text-2xs text-moss">
+                          −{formatAed(order.promo_discount)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between gap-3">
+                      <span className="text-2xs text-earth/50">Delivery</span>
+                      <span className="text-2xs text-earth/60">
+                        {formatAed(order.delivery_fee)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-3 pt-2 border-t border-earth/8 mt-0.5">
+                      <span className="text-sm font-semibold text-earth">
+                        Total
+                      </span>
+                      <span className="text-sm font-semibold text-earth">
+                        {formatAed(order.total)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
             </DataCardField>
 
             <DataCardField label="Address">

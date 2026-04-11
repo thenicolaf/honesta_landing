@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase.server";
 import { OrderStatus } from "@/shared/types";
 import { createNotification } from "@/lib/notificationsDb";
+import { recordPromoCodeRedemption } from "@/lib/promoCodesDb";
+import { clearCartInDb } from "@/lib/cartDb";
 
 const STATUS_MAP: Record<string, OrderStatus> = {
   PURCHASED: OrderStatus.PAID,
@@ -30,12 +32,22 @@ export async function POST(request: NextRequest) {
       .update({ status: newStatus, updated_at: new Date().toISOString() })
       .eq("ngenius_ref", ngeniusRef)
       .neq("status", newStatus)
-      .select("id, total")
+      .select("id, total, promo_code_id, user_id")
       .single();
 
     if (order) {
       const total = `AED ${Number(order.total).toFixed(2)}`;
       if (newStatus === OrderStatus.PAID) {
+        if (order.promo_code_id && order.user_id) {
+          await recordPromoCodeRedemption({
+            promoCodeId: order.promo_code_id as string,
+            orderId: order.id as string,
+            userId: order.user_id as string,
+          });
+        }
+        if (order.user_id) {
+          await clearCartInDb(supabaseAdmin, order.user_id as string);
+        }
         await createNotification({
           type: "order_paid",
           title: "Order paid",

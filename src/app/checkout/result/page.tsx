@@ -10,6 +10,8 @@ import { getOrderStatus } from "@/lib/ngenius";
 import { supabaseAdmin } from "@/lib/supabase.server";
 import { OrderStatus } from "@/shared/types";
 import { createNotification } from "@/lib/notificationsDb";
+import { recordPromoCodeRedemption } from "@/lib/promoCodesDb";
+import { clearCartInDb } from "@/lib/cartDb";
 import { ClearCartOnSuccess } from "./ClearCartOnSuccess";
 
 const SUCCESS_STATES = new Set(["PURCHASED", "CAPTURED"]);
@@ -55,10 +57,26 @@ export default async function CheckoutResultPage({
       })
       .eq("ngenius_ref", ref)
       .neq("status", success ? OrderStatus.PAID : OrderStatus.FAILED)
-      .select("id, total")
+      .select("id, total, promo_code_id, user_id")
       .single();
 
     if (order) {
+      if (success && order.promo_code_id && order.user_id) {
+        await recordPromoCodeRedemption({
+          promoCodeId: order.promo_code_id as string,
+          orderId: order.id as string,
+          userId: order.user_id as string,
+        });
+      }
+
+      // Wipe the user's server-side cart the moment we know the order
+      // was actually paid — CartProvider then loads an empty cart on
+      // mount. For guests we clear localStorage via the inline script
+      // rendered below.
+      if (success && order.user_id) {
+        await clearCartInDb(supabaseAdmin, order.user_id as string);
+      }
+
       const total = `AED ${Number(order.total).toFixed(2)}`;
       await createNotification({
         type: success ? "order_paid" : "order_failed",
@@ -71,7 +89,20 @@ export default async function CheckoutResultPage({
 
   return (
     <main className="grow min-h-160 bg-cream flex items-center justify-center px-4 py-16">
-      <ClearCartOnSuccess success={success} />
+      {success && (
+        <>
+          <script
+            // Synchronously wipes the guest cart from localStorage before
+            // CartProvider mounts and reads it. Safe for authenticated
+            // users too — their cart is already cleared in the DB above,
+            // and the client store just has a stale copy.
+            dangerouslySetInnerHTML={{
+              __html: `try{localStorage.removeItem("honesta_cart");localStorage.removeItem("honesta_promo_code");}catch(e){}`,
+            }}
+          />
+          <ClearCartOnSuccess success={success} />
+        </>
+      )}
       <div className="max-w-md w-full">
         <Card variant="default" padding="lg" className="text-center">
           <div

@@ -60,3 +60,30 @@ export function clearCart(): void {
 export function getTotal(items: CartItem[]): number {
   return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 }
+
+export interface CartTotals {
+  /** Sum of (originalPrice ?? price) × qty — BEFORE any discount */
+  originalSubtotal: number;
+  /** Sum of price × qty — AFTER product promotions, BEFORE promo code */
+  subtotal: number;
+  /** Discount from active product promotions (originalPrice → price) */
+  promotionDiscount: number;
+  /** subtotal − promoDiscount */
+  total: number;
+}
+
+export function getCartTotals(
+  items: CartItem[],
+  promoDiscount = 0,
+): CartTotals {
+  let originalSubtotal = 0;
+  let subtotal = 0;
+  for (const item of items) {
+    const base = item.originalPrice ?? item.price;
+    originalSubtotal += base * item.quantity;
+    subtotal += item.price * item.quantity;
+  }
+  const promotionDiscount = originalSubtotal - subtotal;
+  const total = Math.max(0, subtotal - promoDiscount);
+  return { originalSubtotal, subtotal, promotionDiscount, total };
+}

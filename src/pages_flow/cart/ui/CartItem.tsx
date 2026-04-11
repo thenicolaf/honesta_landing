@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, Tag } from "lucide-react";
 import { Button, Badge, Card, toastInfo } from "@/shared/ui";
 import { formatDateTime } from "@/shared/ui/Table";
+import { cn } from "@/shared/utils/cn";
 import type { CartItem as CartItemType } from "@/sections/products/types";
 
 function stop(e: React.MouseEvent) {
@@ -21,12 +22,23 @@ function WeightBadge({ weight_g }: { weight_g?: number }) {
 
 interface CartItemProps {
   item: CartItemType;
+  promoDiscountPerUnit?: number;
+  promoCodeEndsAt?: string;
   onUpdateQuantity: (variantId: string, quantity: number) => void;
   onRemove: (variantId: string) => void;
 }
 
-export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
+export function CartItem({
+  item,
+  promoDiscountPerUnit = 0,
+  promoCodeEndsAt,
+  onUpdateQuantity,
+  onRemove,
+}: CartItemProps) {
   const hasDiscount = item.originalPrice && item.originalPrice !== item.price;
+  const hasPromoCode = promoDiscountPerUnit > 0;
+  const finalUnitPrice = Math.max(0, item.price - promoDiscountPerUnit);
+  const finalLineTotal = finalUnitPrice * item.quantity;
 
   const quantityControls = (
     <div className="flex items-center gap-2 shrink-0">
@@ -65,12 +77,42 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
     </div>
   );
 
+  const promoHint = hasPromoCode ? (
+    <div className="flex flex-col gap-0.5 mt-0.5">
+      <div className="flex items-center gap-1">
+        <Tag size={10} className="text-moss shrink-0" />
+        <span className="font-body text-2xs text-moss">
+          Promo −AED {promoDiscountPerUnit.toFixed(2)} each
+        </span>
+      </div>
+      {promoCodeEndsAt && (
+        <span className="font-body text-2xs text-earth/40">
+          Until {formatDateTime(promoCodeEndsAt)}
+        </span>
+      )}
+    </div>
+  ) : null;
+
   const lineTotal = (
     <div className="shrink-0 text-right">
-      <p className="font-body font-semibold text-earth whitespace-nowrap text-sm">
-        AED {(item.price * item.quantity).toFixed(2)}
+      <p
+        className={cn(
+          "font-body font-semibold whitespace-nowrap text-sm",
+          hasPromoCode
+            ? "text-moss"
+            : hasDiscount
+              ? "text-orange"
+              : "text-earth",
+        )}
+      >
+        AED {finalLineTotal.toFixed(2)}
       </p>
-      {hasDiscount && (
+      {hasPromoCode && (
+        <p className="font-body text-earth/30 text-xs line-through whitespace-nowrap">
+          AED {(item.price * item.quantity).toFixed(2)}
+        </p>
+      )}
+      {!hasPromoCode && hasDiscount && (
         <p className="font-body text-earth/30 text-xs line-through whitespace-nowrap">
           AED {(item.originalPrice! * item.quantity).toFixed(2)}
         </p>
@@ -123,11 +165,15 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
                   Until {formatDateTime(item.promotionEndsAt)}
                 </span>
               )}
+              {promoHint}
             </div>
           ) : (
-            <p className="font-body font-light text-earth/55 text-xs mt-0.5">
-              AED {item.price.toFixed(2)} each
-            </p>
+            <div>
+              <p className="font-body font-light text-earth/55 text-xs mt-0.5">
+                AED {item.price.toFixed(2)} each
+              </p>
+              {promoHint}
+            </div>
           )}
         </div>
         {quantityControls}
@@ -179,11 +225,15 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
                     Until {formatDateTime(item.promotionEndsAt)}
                   </span>
                 )}
+                {promoHint}
               </div>
             ) : (
-              <p className="font-body font-light text-earth/55 text-xs mt-1">
-                AED {item.price.toFixed(2)} each
-              </p>
+              <div>
+                <p className="font-body font-light text-earth/55 text-xs mt-1">
+                  AED {item.price.toFixed(2)} each
+                </p>
+                {promoHint}
+              </div>
             )}
           </div>
         </div>

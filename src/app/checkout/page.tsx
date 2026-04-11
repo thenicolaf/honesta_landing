@@ -55,6 +55,7 @@ export default async function CheckoutRoute() {
       defaultValues={user ? profileValues : cookieValues}
       addresses={addresses}
       deliverySettings={deliverySettings}
+      isAuthenticated={!!user}
     />
   );
 }

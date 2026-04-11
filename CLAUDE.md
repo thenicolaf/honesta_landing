@@ -217,18 +217,24 @@ Every route segment has a `loading.tsx` that renders:
 **Checkout server action** (`src/pages_flow/checkout/actions.ts`):
 1. Validates `CustomerInfo` (phone must match `^\+971[0-9]{9}$`, UAE format)
 2. Saves customer to `CUSTOMER_COOKIE_KEY` cookie (30 days) for form repopulation
-3. Creates order in Supabase (`orders` + `order_items` with variant_id + price/name/weight_g snapshots)
-4. Calls N-Genius to create a payment, gets back payment URL
-5. Updates order with `ngenius_ref`, then `redirect()` to N-Genius hosted page
+3. Re-validates the applied promo code server-side via `validatePromoCode` from [src/lib/promoCodeApply.ts](src/lib/promoCodeApply.ts) — never trusts client
+4. Computes totals via `getCartTotals(items, promoDiscount)` from [src/lib/cart.ts](src/lib/cart.ts) — returns `{ originalSubtotal, subtotal, promotionDiscount, total }`
+5. Creates order in Supabase (`orders` + `order_items` with variant_id + price/original_price/promo_discount/name/weight_g snapshots and order-level `promo_code_id`/`promo_discount`/`promotion_discount`)
+6. Calls N-Genius to create a payment, gets back payment URL
+7. Updates order with `ngenius_ref`, then `redirect()` to N-Genius hosted page
 
 **Result page** (`src/app/checkout/result/page.tsx`):
 - Server component — polls N-Genius directly for final status
-- Updates `orders.status` → `PAID` or `FAILED`
-- Renders `<ClearCartOnSuccess>` (client component) which clears localStorage cart on success
+- Updates `orders.status` → `PAID` or `FAILED` (idempotent via `.neq("status", newStatus)`)
+- On `PAID`: records promo code redemption, **clears the user's `cart_items` server-side**
+- For guests: renders an inline `<script>` that synchronously wipes `honesta_cart` + `honesta_promo_code` from `localStorage` **before** `CartProvider` mounts and reads it
+- Renders `<ClearCartOnSuccess>` (client component) to flush the in-memory `CartProvider._items` store after a navigation hit
 
 **Webhook** (`src/app/api/payment/webhook/route.ts`):
 - Receives N-Genius events; maps states (PURCHASED/CAPTURED → PAID, FAILED/REVERSED → FAILED/CANCELLED)
 - Validates via `NGENIUS_WEBHOOK_SECRET` header
+- On `PAID`: records promo code redemption (`recordPromoCodeRedemption`) and wipes `cart_items` for the user
+- Both webhook and result-page paths are idempotent — only the **first** transition into `PAID` runs side effects, because the `UPDATE … neq("status", newStatus)` returns no row otherwise. Combined with `UNIQUE(order_id)` on `promo_code_redemptions`, double-redemptions are impossible.
 
 ## Cart System
 
@@ -236,10 +242,38 @@ Every route segment has a `loading.tsx` that renders:
 - **Storage:** localStorage under key `"honesta_cart"`, DB table `cart_items` stores only `(user_id, variant_id, quantity)` — prices computed via join
 - **Provider:** `CartProvider` uses `useSyncExternalStore` — no Zustand/Redux
 - **Hydration:** `isHydrated` flag prevents SSR/client mismatch; server always renders empty cart
-- **Hook:** `useCart()` exposes `items`, `itemCount`, `total`, `addToCart(item)`, `removeFromCart(variantId)`, `updateItemQuantity(variantId, qty)`, `clearCart`, `isHydrated`
-- **CartItem type:** `{ variantId, productId, slug?, name, price, originalPrice?, quantity, image_url?, weight_g }`
+- **Hook:** `useCart()` exposes `items`, `itemCount`, `subtotal`, `total`, `appliedPromoCode`, `promoDiscount`, `addToCart(item)`, `removeFromCart(variantId)`, `updateItemQuantity(variantId, qty)`, `clearCart`, `applyPromoCode(code)`, `removePromoCode()`, `isHydrated`
+- **CartItem type:** `{ variantId, productId, slug?, name, price, originalPrice?, promotionEndsAt?, quantity, image_url?, weight_g }`
 - **Price sync:** `syncCartPrices` queries products with variants + promotions, recalculates prices. `originalPrice` is computed from promotions on the fly, never stored in DB.
 - **DB cart (`cartDb.ts`):** `getCartFromDb` does a join: `cart_items → product_variants → products` (with promotions) to build full CartItem objects. `upsertItemInDb` stores only `(user_id, variant_id, quantity)`.
+- **Totals utility:** [src/lib/cart.ts](src/lib/cart.ts) `getCartTotals(items, promoDiscount)` is the single source of truth for `originalSubtotal` (sum of `originalPrice ?? price`), `subtotal` (after product promotions, before promo code), `promotionDiscount` (`originalSubtotal − subtotal`), and `total` (`subtotal − promoDiscount`). **Don't duplicate `items.reduce` for totals in components — call this helper.** It's used by `CartSummary`, `OrderSummary`, and `submitCheckout`.
+- **Color semantics for prices:** **moss** = promo code discount, **orange** = product promotion, **earth** = no discount. Apply this priority order when rendering line totals (promo > promotion > regular).
+
+## Promo codes
+
+Manual codes a user enters in the cart/checkout to get an extra discount, parallel to the auto-applied `promotions` system.
+
+**Tables:** `promo_codes` (`code text unique`, `scope`, `discount_type`, `discount_value`, `min_order_amount`, `max_uses`, `max_uses_per_user`, `stack_with_promotions`, `starts_at`, `ends_at`, `is_active`), `promo_code_products` (m2m for product-scope codes), `promo_code_users` (empty = available to all signed-in users; non-empty = personal targeting), `promo_code_redemptions` (one row per paid order, `unique(order_id)` enforces idempotency). Codes are exactly 6 characters `[A-Z0-9]` enforced by a CHECK constraint.
+
+**Order columns:** `orders.promo_code_id`, `orders.promo_discount`. Per-item snapshot in `order_items.promo_discount` (per unit).
+
+**Authenticated-only.** Promo codes are completely hidden for guests. The `PromoCodeInput` component shows a "Sign in" CTA when `isAuthenticated=false`. All server actions reject calls without `user.id` via `validatePromoCode`.
+
+**Stacking with product promotions.** Each code has a `stack_with_promotions` flag:
+- `false` (default) = items already on a product promotion are **excluded** from the promo code's eligible subtotal
+- `true` = the code applies on top of the already-discounted price (`item.price`, not `originalPrice`), giving a double discount
+
+**Discount calculation lives in two places — both must stay in sync:**
+- Server: [src/lib/promoCodeApply.ts](src/lib/promoCodeApply.ts) `validatePromoCode({ code, items, userId })` runs status, targeting, min order, usage limits, and computes the final discount. Used by `applyPromoCodeAction` and re-run inside `submitCheckout`.
+- Client: [src/shared/utils/recalculatePromoDiscount.ts](src/shared/utils/recalculatePromoDiscount.ts) — `recalculatePromoDiscount(items, code)` (used by `CartProvider` to derive `promoDiscount` synchronously on every render so quantity changes update the UI instantly without waiting for the server roundtrip), and `getPerItemPromoDiscounts(items, code)` returns a `Map<variantId, discountPerUnit>` for line-item rendering and for persisting per-item snapshots in `order_items.promo_discount`.
+
+**CartProvider re-validation loop.** Whenever `items` change, an effect re-fires `applyPromoCodeAction` to invalidate the code if limits/eligibility broke, **and** to refresh the cached `appliedPromoCode` from the authoritative server response. This is critical: without the refresh, stale fields restored from `localStorage` (e.g. an old `stackWithPromotions` flag after the admin edited the code) keep producing the wrong discount until the user manually re-applies.
+
+**Redemption recording.** `recordPromoCodeRedemption` is called from both the result-page server component **and** the webhook on the first transition into `PAID`. The `unique(order_id)` constraint and the idempotent `UPDATE … neq("status", PAID)` together guarantee exactly one redemption per paid order, regardless of which path runs first.
+
+**RLS.** All four `promo_code*` tables have RLS enabled with admin-only policies. Server actions go through `supabaseAdmin` (service_role bypasses RLS), so regular users never touch these tables directly from the browser. See `src/lib/promoCodesDb.ts` — every query uses `supabaseAdmin`.
+
+**Admin UI.** `/panel/promo-codes` — CRUD by analogy with `/panel/promotions`. The `PromoCodeForm` uses `FormTileRadio` for scope, `FormNumberInput` for all numeric fields, `ProductPicker` (reused from promotions, only when `scope=product`), and `UserPicker` (loads users via `supabaseAdmin.auth.admin.listUsers` joined with `profiles` for name/gender/birthday). The list page shows a status badge: `active | scheduled | exhausted | expired` — `exhausted` (orange) appears when `used_count >= max_uses`. The status helper `getPromoCodeStatus(isActive, startsAt, endsAt, usedCount, maxUses)` is in [src/pages_flow/panel/promo-codes/types.ts](src/pages_flow/panel/promo-codes/types.ts).
 
 ## Auth
 
@@ -278,7 +312,11 @@ Two files, three client instances:
   - `supabaseAdmin` — static service-role client, bypasses RLS (use only in server actions, API routes, and `lib/`)
   - `createSupabaseServerClient()` — async, reads cookies via `@supabase/ssr`; use whenever you need the current user's session
 
-**DB tables:** `orders` (status, is_fulfilled, subtotal, delivery_fee, total, customer fields, ngenius_ref), `order_items` (order_id, variant_id, name, price, weight_g, quantity — snapshots at order time), `products` (image_url, images JSONB `[]`, in_stock, badge, note, nutrition JSONB, status — **no price/weight_g columns**, these live in `product_variants`), `product_variants` (product_id, weight_g, price — one-to-many with products), `categories` (name, slug, audience, tagline, description, image_url, badge, sort_order), `benefits` (id, name, description — unique on name+description), `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, role `user_role`, gender, birthday, allow_notifications), `cart_items` (user_id, variant_id, quantity — minimal, prices via join), `notifications` (type, title, message, related_id, user_id, audience `user_role` — nullable, NULL = all roles), `notification_reads` (notification_id, user_id, read_at — tracks per-user read status), `push_subscriptions` (user_id, endpoint UNIQUE, p256dh, auth — FK to auth.users + profiles, RLS per user), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id).
+**DB tables:** `orders` (status, is_fulfilled, subtotal, delivery_fee, total, **promotion_discount**, **promo_code_id**, **promo_discount**, customer fields, ngenius_ref), `order_items` (order_id, variant_id, name, price, **original_price** nullable, **promo_discount** per unit, weight_g, quantity — all snapshots at order time so historical orders survive promo/promotion edits), `products` (image_url, images JSONB `[]`, in_stock, badge, note, nutrition JSONB, status — **no price/weight_g columns**, these live in `product_variants`), `product_variants` (product_id, weight_g, price — one-to-many with products), `categories` (name, slug, audience, tagline, description, image_url, badge, sort_order), `benefits` (id, name, description — unique on name+description), `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, role `user_role`, gender, birthday, allow_notifications), `cart_items` (user_id, variant_id, quantity — minimal, prices via join), `notifications` (type, title, message, related_id, user_id, audience `user_role` — nullable, NULL = all roles), `notification_reads` (notification_id, user_id, read_at — tracks per-user read status), `push_subscriptions` (user_id, endpoint UNIQUE, p256dh, auth — FK to auth.users + profiles, RLS per user), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id), `promo_codes` (code, scope, discount_type, discount_value, min_order_amount, max_uses, max_uses_per_user, stack_with_promotions, starts_at, ends_at, is_active — code is exactly 6 `[A-Z0-9]` chars enforced by CHECK), `promo_code_products`, `promo_code_users`, `promo_code_redemptions` (`unique(order_id)`).
+
+**Order display invariant:** `originalSubtotal − promotion_discount − promo_discount + delivery_fee = total`. The order list pages and cards display this breakdown as `Subtotal − Promotion − Promo + Delivery = Total`. Old orders without `original_price`/`promotion_discount` (NULL/0) render correctly without the new lines.
+
+**Realtime orders quirk.** The `INSERT` event on `orders` fires **before** the `order_items` rows are written by `createOrderWithItems` (separate insert). [src/pages_flow/panel/orders/useRealtimeOrders.ts](src/pages_flow/panel/orders/useRealtimeOrders.ts) handles this by calling `router.refresh()` on INSERT instead of merging the payload — the server component re-runs its query with the full `order_items(*) + promo_code(code)` join. UPDATE/DELETE merge directly without refresh.
 
 ## Design system
 
@@ -316,6 +354,8 @@ Grain texture: add class `noise` + `relative` on a section — the `.noise::afte
 ## UI component rule
 
 **Always use components from `@/shared/ui` instead of raw HTML elements.** Never use `<button>`, `<a>`, `<input>`, `<select>`, `<textarea>` directly — use `Button`, `FormInput`, `FormSelect`, `FormTextarea`, etc. This ensures consistent styling across the entire site.
+
+**`Button` is mandatory for every clickable control** — including icon-only buttons, tooltip triggers, small helper actions, and any `type="button"`. Use `variant="text"` + `size="icon"` for minimal styling when needed. Never render a raw `<button>` element, even for "just an icon" cases.
 
 ## Shared UI components
 
