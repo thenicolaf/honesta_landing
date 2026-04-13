@@ -141,31 +141,37 @@ export async function createPromoCodeAction(
   const fieldErrors = validate(values);
   if (fieldErrors) return { fieldErrors, values };
 
-  const productIds =
-    values.scope === "product" ? parseStringArray(values.product_ids_raw) : [];
-  const userIds = parseStringArray(values.user_ids_raw);
+  try {
+    const productIds =
+      values.scope === "product" ? parseStringArray(values.product_ids_raw) : [];
+    const userIds = parseStringArray(values.user_ids_raw);
 
-  const { error } = await createPromoCode(
-    {
-      code: values.code,
-      scope: values.scope as "cart" | "product",
-      discount_type: values.discount_type as "percentage" | "fixed",
-      discount_value: parseFloat(values.discount_value),
-      min_order_amount: parseOptionalNumber(values.min_order_amount),
-      max_uses: parseOptionalInt(values.max_uses),
-      max_uses_per_user: parseOptionalInt(values.max_uses_per_user),
-      stack_with_promotions: values.stack_with_promotions,
-      starts_at: new Date(values.starts_at).toISOString(),
-      ends_at: new Date(values.ends_at).toISOString(),
-      is_active: values.is_active,
-    },
-    productIds,
-    userIds,
-  );
+    const { error } = await createPromoCode(
+      {
+        code: values.code,
+        scope: values.scope as "cart" | "product",
+        discount_type: values.discount_type as "percentage" | "fixed",
+        discount_value: parseFloat(values.discount_value),
+        min_order_amount: parseOptionalNumber(values.min_order_amount),
+        max_uses: parseOptionalInt(values.max_uses),
+        max_uses_per_user: parseOptionalInt(values.max_uses_per_user),
+        stack_with_promotions: values.stack_with_promotions,
+        starts_at: new Date(values.starts_at).toISOString(),
+        ends_at: new Date(values.ends_at).toISOString(),
+        is_active: values.is_active,
+      },
+      productIds,
+      userIds,
+    );
 
-  if (error) return { error, values };
+    if (error) return { error, values };
 
-  redirect("/panel/promo-codes?toast=created");
+    redirect("/panel/promo-codes?toast=created");
+  } catch (err) {
+    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
+    console.error("Create promo code error:", err);
+    return { error: "Something went wrong. Please try again.", values };
+  }
 }
 
 export async function updatePromoCodeAction(
@@ -177,36 +183,47 @@ export async function updatePromoCodeAction(
   const fieldErrors = validate(values);
   if (fieldErrors) return { fieldErrors, values };
 
-  const productIds =
-    values.scope === "product" ? parseStringArray(values.product_ids_raw) : [];
-  const userIds = parseStringArray(values.user_ids_raw);
+  try {
+    const productIds =
+      values.scope === "product" ? parseStringArray(values.product_ids_raw) : [];
+    const userIds = parseStringArray(values.user_ids_raw);
 
-  const { error } = await updatePromoCode(
-    id,
-    {
-      code: values.code,
-      scope: values.scope as "cart" | "product",
-      discount_type: values.discount_type as "percentage" | "fixed",
-      discount_value: parseFloat(values.discount_value),
-      min_order_amount: parseOptionalNumber(values.min_order_amount),
-      max_uses: parseOptionalInt(values.max_uses),
-      max_uses_per_user: parseOptionalInt(values.max_uses_per_user),
-      stack_with_promotions: values.stack_with_promotions,
-      starts_at: new Date(values.starts_at).toISOString(),
-      ends_at: new Date(values.ends_at).toISOString(),
-      is_active: values.is_active,
-    },
-    productIds,
-    userIds,
-  );
+    const { error } = await updatePromoCode(
+      id,
+      {
+        code: values.code,
+        scope: values.scope as "cart" | "product",
+        discount_type: values.discount_type as "percentage" | "fixed",
+        discount_value: parseFloat(values.discount_value),
+        min_order_amount: parseOptionalNumber(values.min_order_amount),
+        max_uses: parseOptionalInt(values.max_uses),
+        max_uses_per_user: parseOptionalInt(values.max_uses_per_user),
+        stack_with_promotions: values.stack_with_promotions,
+        starts_at: new Date(values.starts_at).toISOString(),
+        ends_at: new Date(values.ends_at).toISOString(),
+        is_active: values.is_active,
+      },
+      productIds,
+      userIds,
+    );
 
-  if (error) return { error, values };
+    if (error) return { error, values };
 
-  redirect("/panel/promo-codes?toast=updated");
+    redirect("/panel/promo-codes?toast=updated");
+  } catch (err) {
+    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
+    console.error("Update promo code error:", err);
+    return { error: "Something went wrong. Please try again.", values };
+  }
 }
 
 export async function deletePromoCodeAction(
   id: string,
 ): Promise<{ error?: string }> {
-  return deletePromoCodeDb(id);
+  try {
+    return await deletePromoCodeDb(id);
+  } catch (err) {
+    console.error("Delete promo code error:", err);
+    return { error: "Something went wrong. Please try again." };
+  }
 }

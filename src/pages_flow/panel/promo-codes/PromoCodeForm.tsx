@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useEffect, useRef } from "react";
 import { Info, RefreshCw } from "lucide-react";
 import {
   FormLabel,
@@ -13,6 +13,7 @@ import {
   FormTileRadioItem,
   FormError,
   Button,
+  toastError,
   Tooltip,
   TooltipTrigger,
   TooltipContent,
@@ -54,6 +55,14 @@ export function PromoCodeForm({
     PromoCodeState | null,
     FormData
   >(action, null);
+
+  const prevState = useRef(state);
+  useEffect(() => {
+    if (state === prevState.current) return;
+    prevState.current = state;
+    if (state?.error) toastError(state.error);
+    if (state?.fieldErrors) toastError("Please fill in the required fields");
+  }, [state]);
 
   const [code, setCode] = useState(
     state?.values?.code ?? promoCode?.code ?? "",

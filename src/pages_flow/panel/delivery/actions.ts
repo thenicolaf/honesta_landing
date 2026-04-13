@@ -82,21 +82,26 @@ export async function saveEmirateSetting(
     return { fieldErrors, values };
   }
 
-  const { error } = await updateDeliverySetting(id, {
-    delivery_fee: values.fee,
-    free_delivery_threshold: values.threshold,
-    minimum_order: values.minimum,
-    delivery_days: values.days,
-    is_active: values.is_active,
-  });
+  try {
+    const { error } = await updateDeliverySetting(id, {
+      delivery_fee: values.fee,
+      free_delivery_threshold: values.threshold,
+      minimum_order: values.minimum,
+      delivery_days: values.days,
+      is_active: values.is_active,
+    });
 
-  if (error) {
-    return { error: `Failed to save: ${error}`, values };
+    if (error) {
+      return { error: `Failed to save: ${error}`, values };
+    }
+
+    revalidatePath("/panel/delivery");
+    revalidatePath("/cart");
+    revalidatePath("/checkout");
+
+    return { success: true };
+  } catch (err) {
+    console.error("Save emirate setting error:", err);
+    return { error: "Something went wrong. Please try again.", values };
   }
-
-  revalidatePath("/panel/delivery");
-  revalidatePath("/cart");
-  revalidatePath("/checkout");
-
-  return { success: true };
 }

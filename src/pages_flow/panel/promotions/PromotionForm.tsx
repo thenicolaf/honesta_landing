@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useEffect, useRef } from "react";
 import {
   FormLabel,
   FormInput,
@@ -10,6 +10,7 @@ import {
   FormDatePicker,
   FormError,
   Button,
+  toastError,
 } from "@/shared/ui";
 import { ProductPicker, type ProductOption } from "./ProductPicker";
 import type { PromotionWithProducts } from "@/lib/promotionsDb";
@@ -38,6 +39,14 @@ export function PromotionForm({ promotion, products }: PromotionFormProps) {
     PromotionState | null,
     FormData
   >(action, null);
+
+  const prevState = useRef(state);
+  useEffect(() => {
+    if (state === prevState.current) return;
+    prevState.current = state;
+    if (state?.error) toastError(state.error);
+    if (state?.fieldErrors) toastError("Please fill in the required fields");
+  }, [state]);
 
   const [discountType, setDiscountType] = useState(
     state?.values?.discount_type ?? promotion?.discount_type ?? "percentage",

@@ -88,20 +88,26 @@ export async function createAddressAction(
     return { fieldErrors, values };
   }
 
-  const { user } = await requireUser();
+  try {
+    const { user } = await requireUser();
 
-  const { error } = await createAddress(user.id, {
-    label: values.label || undefined,
-    address: values.address!,
-    coordinates: parseCoordinates(values),
-    is_default: false,
-  });
+    const { error } = await createAddress(user.id, {
+      label: values.label || undefined,
+      address: values.address!,
+      coordinates: parseCoordinates(values),
+      is_default: false,
+    });
 
-  if (error) {
-    return { error, values };
+    if (error) {
+      return { error, values };
+    }
+
+    return { success: true };
+  } catch (err) {
+    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
+    console.error("Create address error:", err);
+    return { error: "Something went wrong. Please try again.", values };
   }
-
-  return { success: true };
 }
 
 export async function updateAddressAction(
@@ -116,31 +122,49 @@ export async function updateAddressAction(
     return { fieldErrors, values };
   }
 
-  const { user } = await requireUser();
+  try {
+    const { user } = await requireUser();
 
-  const { error } = await updateAddress(id, user.id, {
-    label: values.label || undefined,
-    address: values.address!,
-    coordinates: parseCoordinates(values),
-  });
+    const { error } = await updateAddress(id, user.id, {
+      label: values.label || undefined,
+      address: values.address!,
+      coordinates: parseCoordinates(values),
+    });
 
-  if (error) {
-    return { error, values };
+    if (error) {
+      return { error, values };
+    }
+
+    return { success: true };
+  } catch (err) {
+    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
+    console.error("Update address error:", err);
+    return { error: "Something went wrong. Please try again.", values };
   }
-
-  return { success: true };
 }
 
 export async function deleteAddressAction(
   id: string,
 ): Promise<{ error?: string }> {
-  const { user } = await requireUser();
-  return deleteAddress(id, user.id);
+  try {
+    const { user } = await requireUser();
+    return deleteAddress(id, user.id);
+  } catch (err) {
+    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
+    console.error("Delete address error:", err);
+    return { error: "Something went wrong. Please try again." };
+  }
 }
 
 export async function setDefaultAddressAction(
   id: string,
 ): Promise<{ error?: string }> {
-  const { user } = await requireUser();
-  return setDefaultAddress(id, user.id);
+  try {
+    const { user } = await requireUser();
+    return setDefaultAddress(id, user.id);
+  } catch (err) {
+    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
+    console.error("Set default address error:", err);
+    return { error: "Something went wrong. Please try again." };
+  }
 }

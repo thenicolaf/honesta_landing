@@ -50,6 +50,7 @@ export function EmirateForm({ setting, onDone, onCancel }: EmirateFormProps) {
       onDone?.();
     }
     if (state?.error) toastError(state.error);
+    if (state?.fieldErrors) toastError("Please fill in the required fields");
   }, [state, setting.emirate, onDone]);
 
   return (

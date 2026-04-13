@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import { Skeleton } from "@/shared/ui";
 import { getProductBySlug } from "@/lib/productsDb";
 import { mapDbProducts } from "@/sections/products/utils";
 import { ProductDetailPage } from "@/pages_flow/products/ProductDetailPage";
@@ -36,8 +38,36 @@ const FROM_MAP: Record<string, { href: string; label: string }> = {
   cart: { href: "/cart", label: "Back to cart" },
 };
 
-export default async function Page({ params, searchParams }: Props) {
-  const [{ id }, { from }] = await Promise.all([params, searchParams]);
+function ProductSkeleton() {
+  return (
+    <main className="grow min-h-160 bg-cream pt-24 pb-16">
+      <div className="mx-auto max-w-7xl px-6 lg:px-10">
+        <Skeleton className="h-8 w-40 rounded-full mb-5" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-14">
+          <Skeleton className="aspect-square w-full rounded-2xl" />
+          <div className="flex flex-col gap-5">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-8 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+            <div className="flex gap-2">
+              <Skeleton className="h-9 w-20 rounded-full" />
+              <Skeleton className="h-9 w-20 rounded-full" />
+            </div>
+            <Skeleton className="h-6 w-28" />
+            <Skeleton className="h-12 w-full rounded-full" />
+            <div className="flex flex-col gap-2 mt-4">
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-5/6" />
+              <Skeleton className="h-3 w-4/6" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+async function ProductContent({ id, from }: { id: string; from?: string }) {
   const dbProduct = await getProductBySlug(id);
   if (!dbProduct) notFound();
 
@@ -59,8 +89,20 @@ export default async function Page({ params, searchParams }: Props) {
       />
       <ProductDetailPage
         product={product}
-        {...(from && FROM_MAP[from] ? { backHref: FROM_MAP[from].href, backLabel: FROM_MAP[from].label } : {})}
+        {...(from && FROM_MAP[from]
+          ? { backHref: FROM_MAP[from].href, backLabel: FROM_MAP[from].label }
+          : {})}
       />
     </>
+  );
+}
+
+export default async function Page({ params, searchParams }: Props) {
+  const [{ id }, { from }] = await Promise.all([params, searchParams]);
+
+  return (
+    <Suspense fallback={<ProductSkeleton />}>
+      <ProductContent id={id} from={from} />
+    </Suspense>
   );
 }

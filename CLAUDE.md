@@ -122,7 +122,12 @@ src/
 │   └── PageLoader.tsx          # Thin wrapper around <Loader /> for route loading.tsx files
 │
 ├── providers/                  # React context providers + hooks
-│   ├── CartProvider.tsx        # useSyncExternalStore-based cart state (hydration-safe)
+│   ├── cart/                   # Cart system (decomposed)
+│   │   ├── store.ts            # External store + promo persistence (pure functions, 0 React)
+│   │   ├── useCartSync.ts      # Load from DB/localStorage + syncPrices
+│   │   ├── useCartPromo.ts     # Promo code state, restore, re-validation, apply/remove
+│   │   ├── useCartActions.ts   # addToCart, removeFromCart, updateQuantity, clearCart
+│   │   └── CartProvider.tsx    # Thin composition of hooks + computed values
 │   ├── FavoritesProvider.tsx   # useSyncExternalStore-based favorites state + useOptimistic
 │   ├── notifications/          # Notification system (decomposed)
 │   │   ├── NotificationsProvider.tsx  # Thin provider composing hooks
@@ -193,7 +198,7 @@ All panel routes live under `/panel` and share an authenticated layout:
 - `AdminLayout` — server component, reads user via `createSupabaseServerClient()`, passes `email` to `AdminSidebar`
 - `AdminSidebar` — responsive: horizontal on mobile, sticky vertical on desktop; contains `AdminNav` + sign-out button
 - `AdminNav` — client component with route-aware active underline
-- `AdminPageHeader` — reusable header with "My Account" label + dynamic `title` prop
+- `AdminPageHeader` — reusable header with configurable `label` prop (default "My Account", use "Admin Panel" for admin pages) + dynamic `title` prop + optional `actions` slot (right-aligned)
 
 **Protected routes:** `src/proxy.ts` guards all `/panel/*` routes — unauthenticated users are redirected to `/login?next={pathname}`. User routes (`/panel/profile`, `/panel/favorites`, `/panel/orders`) are whitelisted for any authenticated user; all other `/panel/*` routes require `role=admin`.
 
@@ -206,11 +211,11 @@ All panel routes live under `/panel` and share an authenticated layout:
 
 ## Loading pattern
 
-Every route segment has a `loading.tsx` that renders:
-```tsx
-<main className="grow"><PageLoader /></main>
-```
-`PageLoader` lives in `src/pages_flow/PageLoader.tsx` and is re-exported from `@/shared/ui`.
+Pages use **Suspense + Skeleton** instead of `loading.tsx`. Each page wraps async server components in `<Suspense fallback={<SomeSkeleton />}>`. Skeleton components live in `src/shared/ui/Skeleton.tsx`: `Skeleton`, `SkeletonCard`, `SkeletonGrid`, `SkeletonProductGrid`, `SkeletonSection`. Page-specific skeletons (e.g. `CartSkeleton`, `ProfileSkeleton`, `OrdersSkeleton`) are defined inline in the page file or co-located.
+
+**Do NOT create `loading.tsx` files** — they override Suspense fallbacks. Use inline `<Suspense>` with custom skeleton components instead.
+
+`PageLoader` (`src/pages_flow/PageLoader.tsx`) is only used for auth route `loading.tsx` files.
 
 ## E-commerce & Payment Flow
 
@@ -363,7 +368,7 @@ All use `class-variance-authority` (cva) for variants + `cn()` for className mer
 
 Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React context internally; sub-components access it via a `use*` hook. Follow this same pattern when adding new compound components.
 
-- **`Button`** — defaults to `<a>`, pass `as="button"` for `<button>`. Internal links (starting with `/`, no `#`) automatically use `next/link` `Link` for client-side navigation. Hash links fall back to `<a>`. Supports `ref` prop (React 19 ref-as-prop). Variants: `primary | secondary | outline | text`. Colors: `primary | error | warning | default`. Sizes: `icon | inline | sm | md | lg`. `buttonVariants` is also exported for applying Button styles to non-Button elements (e.g. `HashLink`).
+- **`Button`** — defaults to `<a>` via `next/link` `Link` for all hrefs (internal, external, hash). Pass `as="button"` for `<button>`. Supports `ref` prop (React 19 ref-as-prop). Variants: `primary | secondary | outline | text`. Colors: `primary | error | warning | default`. Sizes: `icon | inline | sm | md | lg`. `buttonVariants` is also exported for applying Button styles to non-Button elements (e.g. `HashLink`). **Never nest `<button>` inside `HashLink`** — use `HashLink` with `buttonVariants` className instead.
 - **`Badge`** — inline label/tag. Variants: `natural` (moss green) | `warm` (sand) | `outline`. Sizes: `xs | sm | md`.
 - **`Card`** — wrapper with 16px radius. Variants: `default` (white-warm) | `sand` | `outline` | `dark` (earth bg).
 - **`TagToolbar` / `TagToolbarItem`** — single-select pill filter bar (`role="radiogroup"`). Controlled or uncontrolled via `value`/`onValueChange`/`defaultValue`. Empty string `""` means "All".
@@ -625,18 +630,30 @@ export async function updateFoo(
 - Always return `attempt` (incremented counter) — used as form `key` to reset field states after submission
 - Never use `supabaseAdmin` for auth-identity operations — use `createSupabaseServerClient()` instead
 - Actions that need the current user must call `createSupabaseServerClient()` and redirect to `/login` if no session
+- **All actions must have try-catch.** `redirect()` throws `NEXT_REDIRECT` — rethrow it: `if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;`. Catch returns `{ error: "Something went wrong. Please try again.", values }`.
+- **All forms must show toast on errors.** In the `useEffect` that watches `state`, add: `if (state?.error) toastError(state.error); if (state?.fieldErrors) toastError("Please fill in the required fields");`
 
 ## Animations
 
-Import as:
-
-```ts
-import { motion } from "motion/react";
-```
-
-Standard patterns: `initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}` with `staggerChildren` for groups. Hero parallax via `useScroll` + `useTransform`.
+Import as `import { motion } from "motion/react";`. Used in Navbar (scroll-driven header opacity) and below-the-fold sections (PhilosophyBlock, PartnershipCTA). **Prefer CSS animations over motion/react for above-the-fold content** — Hero uses CSS `@keyframes` + `animation-timeline: scroll()` for parallax (0 JS). AboutUs and CategoryGrid use CSS `animate-hero-fade-up` / `animate-about-stagger` classes defined in `globals.css`.
 
 Any section that uses `motion` hooks (`useScroll`, `useTransform`) must add `"use client"` at the top of the file.
+
+## Query caching
+
+Use `React.cache()` for Supabase queries called from multiple server components in the same render. Already cached: `getCategories`, `getPublishedProducts`, `getProductSalesMap`, `getProductBySlug`, `getProductFormOptions`, `getDeliverySettings`, `getPromotions`, `getPromotionProductOptions`. Wrap new shared queries the same way:
+
+```ts
+import { cache } from "react";
+export const getFoo = cache(async (): Promise<Foo[]> => { ... });
+```
+
+## Search optimization
+
+Product/order/inquiry list pages use a shared pattern for search:
+1. **Pre-computed search index** — `buildSearchIndex(items)` builds lowercase haystack once per data change, not on every keystroke
+2. **`useDeferredValue`** — defers search input so typing stays responsive while filtering catches up
+3. **Filter hook** — `useFilteredProducts`, `useFilteredAdminProducts`, `useFilteredOrders`, `useFilteredInquiries` encapsulate search index + deferred value + all filter logic
 
 ## Hydration safety
 
@@ -644,11 +661,11 @@ Any section that uses `motion` hooks (`useScroll`, `useTransform`) must add `"us
 
 ## Navigation & scroll
 
-- **`HashLink`** (`src/sections/navbar/HashLink.tsx`) — custom `<a>` that handles smooth scroll for hash links. Same-page: `scrollIntoView({ behavior: "smooth" })`. Cross-page: `router.push()` + `MutationObserver` to wait for target element.
-- **`ScrollToTop`** (`src/app/_components/ScrollToTop.tsx`) — scrolls to top on pathname change (skips hash navigation and initial render).
-- **`RestoreScroll`** (`src/app/_components/RestoreScroll.tsx`) — restores scroll position after page reload. Works with `beforeunload` script in `<head>` that saves `scrollY` to sessionStorage.
-- **`HashTracker`** (`src/app/_components/HashTracker.tsx`) — rendered in home page `page.tsx` (not root layout), updates URL hash based on which section is in viewport via `IntersectionObserver` with `rootMargin: "-30% 0px -70% 0px"`. On initial load with hash (e.g. `/#products`), suppresses hash updates and scrolls to the target section via `scrollIntoView({ behavior: "instant" })`. Uses retry polling (200ms) to find Suspense-deferred sections.
-- **Active nav links** — `useActiveHash()` hook (`src/sections/navbar/useActiveHash.ts`) polls `window.location.hash` for desktop/mobile nav highlighting.
+- **CSS `scroll-behavior: smooth`** in `globals.css` handles all smooth scrolling natively.
+- **`HashLink`** (`src/sections/navbar/HashLink.tsx`) — wraps `next/link` `Link` with `scroll={false}`. Same-page: `router.push(path)` + `requestAnimationFrame` → `scrollIntoView`. Cross-page: `router.push(path)` + `MutationObserver` waits for target element → `scrollIntoView`. Dispatches `hashchange` event for `useActiveHash`.
+- **`HashTracker`** (`src/app/_components/HashTracker.tsx`) — scroll-spy on home page. Uses `IntersectionObserver` to update URL hash as user scrolls through sections. `MutationObserver` handles Suspense-deferred sections. Dispatches `hashchange` event (no polling).
+- **`useActiveHash`** (`src/sections/navbar/useActiveHash.ts`) — `useSyncExternalStore` listening for `hashchange` + `popstate` events (no polling).
+- **Scroll restoration** — inline `<script>` in `layout.tsx` with `history.scrollRestoration = "manual"` + sessionStorage save/restore (needed because native restoration fails with Suspense streaming).
 - **Navigation links** — shared source of truth in `src/shared/consts/navLinks.ts`. `SectionId` enum (`Hero`, `Categories`, `Products`, `Story`, `About`, `Contact`), `SECTION_IDS = Object.values(SectionId)` (used by `HashTracker`), `NAV_LINKS` and `TAB_LINKS` (typed with `NavLink<T>` generic). Used by Navbar, NavMobileTabBar, Footer, and HashTracker.
 
 ## Product sorting

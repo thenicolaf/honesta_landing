@@ -1,7 +1,11 @@
+import { Suspense } from "react";
 import { createSupabaseServerClient, supabaseAdmin } from "@/lib/supabase.server";
-import { FavoritesPage } from "@/pages_flow/favorites/FavoritesPage";
+import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
+import { SkeletonProductGrid } from "@/shared/ui";
+import { mapDbProducts } from "@/sections/products/utils/mapDbProducts";
+import { FavoritesGrid } from "@/pages_flow/favorites/FavoritesGrid";
 
-export default async function Page() {
+async function FavoritesContent() {
   const supabaseServer = await createSupabaseServerClient();
   const {
     data: { user },
@@ -35,5 +39,18 @@ export default async function Page() {
         ).data ?? []
       : [];
 
-  return <FavoritesPage rawProducts={productsData} />;
+  const products = mapDbProducts(productsData);
+
+  return <FavoritesGrid allProducts={products} />;
+}
+
+export default function Page() {
+  return (
+    <>
+      <AdminPageHeader title="Favorites" />
+      <Suspense fallback={<SkeletonProductGrid count={6} />}>
+        <FavoritesContent />
+      </Suspense>
+    </>
+  );
 }

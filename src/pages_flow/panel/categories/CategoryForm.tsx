@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import {
   FormLabel,
   FormInput,
@@ -8,6 +8,7 @@ import {
   FormUploadZone,
   FormError,
   Button,
+  toastError,
 } from "@/shared/ui";
 import type { DbCategory } from "@/sections/categories/types";
 import { createCategory, updateCategory, type CategoryState } from "./actions";
@@ -25,6 +26,14 @@ export function CategoryForm({ category }: CategoryFormProps) {
     CategoryState | null,
     FormData
   >(action, null);
+
+  const prevState = useRef(state);
+  useEffect(() => {
+    if (state === prevState.current) return;
+    prevState.current = state;
+    if (state?.error) toastError(state.error);
+    if (state?.fieldErrors) toastError("Please fill in the required fields");
+  }, [state]);
 
   return (
     <form action={dispatch} className="flex flex-col gap-6">

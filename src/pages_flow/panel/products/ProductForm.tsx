@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
-import { Button } from "@/shared/ui";
+import { useActionState, useEffect, useRef } from "react";
+import { Button, toastError } from "@/shared/ui";
 import type { AdminDbProduct, ProductFormOptions } from "@/lib/productsDb";
 import { createProduct, updateProduct, type ProductState } from "./actions";
 import { BasicInfoSection } from "./product-form/BasicInfoSection";
@@ -25,6 +25,14 @@ export function ProductForm({ product, options }: ProductFormProps) {
     FormData
   >(action, null);
 
+  const prevState = useRef(state);
+  useEffect(() => {
+    if (state === prevState.current) return;
+    prevState.current = state;
+    if (state?.error) toastError(state.error);
+    if (state?.fieldErrors) toastError("Please fill in the required fields");
+  }, [state]);
+
   const sectionProps = { product, options, state };
 
   return (
@@ -36,10 +44,6 @@ export function ProductForm({ product, options }: ProductFormProps) {
       <TagsSection {...sectionProps} />
       <BenefitsSection {...sectionProps} />
       <NutritionSection {...sectionProps} />
-
-      {state?.error && (
-        <p className="font-body text-red-500 text-2xs">{state.error}</p>
-      )}
 
       <div className="flex items-center justify-end gap-3 pt-2">
         <Button

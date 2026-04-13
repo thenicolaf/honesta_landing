@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { CartPage } from "@/pages_flow/cart";
+import { CartSkeleton } from "@/pages_flow/cart/ui/CartSkeleton";
 import { getDeliverySettings } from "@/lib/deliveryDb";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
 
@@ -9,7 +11,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function CartRoute() {
+async function CartContent() {
   const [deliverySettings, { data: { user } }] = await Promise.all([
     getDeliverySettings(),
     createSupabaseServerClient().then((s) => s.auth.getUser()),
@@ -20,5 +22,13 @@ export default async function CartRoute() {
       deliverySettings={deliverySettings}
       isAuthenticated={!!user}
     />
+  );
+}
+
+export default function CartRoute() {
+  return (
+    <Suspense fallback={<CartSkeleton />}>
+      <CartContent />
+    </Suspense>
   );
 }

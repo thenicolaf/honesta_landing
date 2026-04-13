@@ -3,13 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { Plus, Trash2, Pencil } from "lucide-react";
+import { Trash2, Pencil } from "lucide-react";
 import {
   Button,
   Badge,
   Card,
   EmptyState,
-  ToastFromUrl,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -144,55 +143,32 @@ const STATUS_ORDER: Record<PromotionStatus, number> = {
   expired: 2,
 };
 
-export function PromotionsPage({ promotions }: { promotions: Promotion[] }) {
-  const sortedPromotions = [...promotions].sort((a, b) => {
+export function PromotionList({ promotions }: { promotions: Promotion[] }) {
+  if (promotions.length === 0) {
+    return (
+      <EmptyState
+        label="No promotions yet"
+        description="Create one to start offering discounts."
+        action={{
+          label: "New Promotion",
+          href: "/panel/promotions/create",
+          variant: "primary",
+        }}
+      />
+    );
+  }
+
+  const sorted = [...promotions].sort((a, b) => {
     const sa = STATUS_ORDER[getPromotionStatus(a.is_active, a.starts_at, a.ends_at)];
     const sb = STATUS_ORDER[getPromotionStatus(b.is_active, b.starts_at, b.ends_at)];
     return sa - sb;
   });
 
   return (
-    <>
-      <ToastFromUrl />
-
-      <div className="flex items-center justify-between gap-4 mb-2">
-        <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-moss">
-          Admin Panel
-        </p>
-        <Button
-          as="a"
-          href="/panel/promotions/create"
-          variant="primary"
-          size="sm"
-          startIcon={<Plus size={14} />}
-        >
-          New Promotion
-        </Button>
-      </div>
-      <h1
-        className="font-display font-bold italic text-heading mb-6 leading-tight"
-        style={{ fontSize: "clamp(1.75rem, 4vw, 2.5rem)" }}
-      >
-        Promotions
-      </h1>
-
-      {promotions.length === 0 ? (
-        <EmptyState
-          label="No promotions yet"
-          description="Create one to start offering discounts."
-          action={{
-            label: "New Promotion",
-            href: "/panel/promotions/create",
-            variant: "primary",
-          }}
-        />
-      ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-          {sortedPromotions.map((promo) => (
-            <PromotionCard key={promo.id} promo={promo} />
-          ))}
-        </div>
-      )}
-    </>
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+      {sorted.map((promo) => (
+        <PromotionCard key={promo.id} promo={promo} />
+      ))}
+    </div>
   );
 }

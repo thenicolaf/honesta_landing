@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { supabaseAdmin } from "./supabase.server";
 
 export type Promotion = {
@@ -17,13 +18,37 @@ export type PromotionWithProducts = Promotion & {
 
 // ─── Queries ────────────────────────────────────────────────────────────────
 
-export async function getPromotions(): Promise<Promotion[]> {
+export const getPromotions = cache(async (): Promise<Promotion[]> => {
   const { data } = await supabaseAdmin
     .from("promotions")
     .select("*")
     .order("created_at", { ascending: false });
   return (data ?? []) as Promotion[];
-}
+});
+
+export type PromotionProductOption = {
+  value: string;
+  label: string;
+  price: number;
+};
+
+export const getPromotionProductOptions = cache(async (): Promise<PromotionProductOption[]> => {
+  const { data } = await supabaseAdmin
+    .from("products")
+    .select("id, title, product_variants(price)")
+    .eq("status", "published")
+    .order("title");
+
+  return (data ?? []).map((p) => {
+    const prices = ((p as { product_variants: { price: string }[] }).product_variants ?? [])
+      .map((v) => Number(v.price));
+    return {
+      value: p.id,
+      label: p.title,
+      price: prices.length > 0 ? Math.min(...prices) : 0,
+    };
+  });
+});
 
 export async function getPromotionById(
   id: string,

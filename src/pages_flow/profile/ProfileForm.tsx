@@ -48,6 +48,7 @@ export function ProfileForm({ defaultValues, onDone }: ProfileFormProps) {
       onDone?.();
     }
     if (state?.error) toastError(state.error);
+    if (state?.fieldErrors) toastError("Please fill in the required fields");
   }, [state, onDone]);
 
   return (

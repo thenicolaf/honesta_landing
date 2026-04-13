@@ -147,7 +147,7 @@ export const getProductSalesMap = cache(async (): Promise<Record<string, number>
   return map;
 });
 
-export async function getProductFormOptions(): Promise<ProductFormOptions> {
+export const getProductFormOptions = cache(async (): Promise<ProductFormOptions> => {
   const [categories, tagOptions, freeFromOptions, occasionOptions, servingIdeaOptions, ingredientOptions, benefits] =
     await Promise.all([
       supabaseAdmin.from("categories").select("id, name, slug").order("sort_order"),
@@ -168,4 +168,4 @@ export async function getProductFormOptions(): Promise<ProductFormOptions> {
     ingredientOptions: (ingredientOptions.data ?? []) as { id: number; label: string }[],
     benefits: (benefits.data ?? []) as { id: number; name: string; description: string }[],
   };
-}
+});

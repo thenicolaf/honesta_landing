@@ -6,7 +6,8 @@ import { EmptyCart } from "./EmptyCart";
 import { CartGrid } from "./ui/CartGrid";
 import { CartSummary } from "./ui/CartSummary";
 import { PromoCodeBlock } from "./ui/PromoCodeBlock";
-import { buttonVariants, PageLoader } from "@/shared/ui";
+import { buttonVariants } from "@/shared/ui";
+import { CartSkeleton } from "./ui/CartSkeleton";
 import { HashLink } from "@/sections/navbar";
 import type { DeliverySetting } from "@/lib/deliveryDb";
 
@@ -22,7 +23,7 @@ export function CartPage({
   const { items, isHydrated } = useCart();
 
   if (!isHydrated) {
-    return <PageLoader />;
+    return <CartSkeleton />;
   }
 
   if (items.length === 0) {

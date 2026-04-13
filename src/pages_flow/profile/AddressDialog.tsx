@@ -76,6 +76,7 @@ function AddressDialogForm({
       router.refresh();
     }
     if (state?.error) toastError(state.error);
+    if (state?.fieldErrors) toastError("Please fill in the required fields");
   }, [state, close, router, isEdit]);
 
   const defaultLabel = state?.values?.label ?? editAddress?.label ?? undefined;
