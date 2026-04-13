@@ -10,9 +10,9 @@ import {
   NotificationsProvider,
 } from "@/providers";
 import { ToastProvider, CookieConsent } from "@/shared/ui";
-import { ScrollToTop } from "./_components/ScrollToTop";
-import { RestoreScroll } from "./_components/RestoreScroll";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
+import { getCartItemCount } from "@/lib/cartDb";
+import { getUnreadCount } from "@/lib/notificationsDb";
 import { COOKIE_CONSENT_KEY } from "@/shared/consts";
 import { cookies } from "next/headers";
 
@@ -45,33 +45,44 @@ export default async function RootLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: profile } = user
-    ? await supabase
-        .from("profiles")
-        .select("role, allow_notifications")
-        .eq("id", user.id)
-        .single()
-    : { data: null };
+  const [{ data: profile }, cartItemCount, unreadNotificationCount] = user
+    ? await Promise.all([
+        supabase
+          .from("profiles")
+          .select("role, allow_notifications")
+          .eq("id", user.id)
+          .single(),
+        getCartItemCount(supabase, user.id),
+        supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single()
+          .then(({ data }) =>
+            data?.role
+              ? getUnreadCount(user.id, data.role, user.created_at)
+              : 0,
+          ),
+      ])
+    : [{ data: null }, 0, 0];
 
   return (
     <html lang="en">
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `try{window.addEventListener("beforeunload",function(){sessionStorage.setItem("scroll:"+location.pathname+location.hash,String(scrollY))})}catch(e){}`,
-          }}
-        />
-      </head>
+      <head />
       <body
         className={`${cormorant.variable} ${jost.variable} antialiased flex flex-col min-h-screen`}
         suppressHydrationWarning
       >
-        <CartProvider userId={user?.id ?? null}>
+        <CartProvider
+          userId={user?.id ?? null}
+          initialItemCount={cartItemCount}
+        >
           <FavoritesProvider userId={user?.id ?? null}>
             <NotificationsProvider
               role={profile?.role ?? null}
               userId={user?.id}
               allowNotifications={profile?.allow_notifications ?? true}
+              initialUnreadCount={unreadNotificationCount}
             >
               <Navbar
                 user={user ? { email: user.email! } : null}
@@ -82,8 +93,6 @@ export default async function RootLayout({
             </NotificationsProvider>
           </FavoritesProvider>
         </CartProvider>
-        <ScrollToTop />
-        <RestoreScroll />
         <ToastProvider />
         <CookieConsent show={!hasConsent} />
         <script

@@ -1,40 +1,44 @@
 import type { Metadata } from "next";
 import { Card, Button } from "@/shared/ui";
+import { supabaseAdmin } from "@/lib/supabase.server";
+import { OrderStatus } from "@/shared/types";
+import { createNotification } from "@/lib/notificationsDb";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
-import { supabaseAdmin } from "@/lib/supabase.server";
-import { OrderStatus } from "@/shared/types";
-import { createNotification } from "@/lib/notificationsDb";
+
+async function cancelOrder(orderRef: string) {
+  const { data: order } = await supabaseAdmin
+    .from("orders")
+    .update({
+      status: OrderStatus.CANCELLED,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("ngenius_ref", orderRef)
+    .neq("status", OrderStatus.CANCELLED)
+    .select("id, total")
+    .single();
+
+  if (order) {
+    await createNotification({
+      type: "order_cancelled",
+      title: "Order cancelled",
+      message: `AED ${Number(order.total).toFixed(2)}`,
+      relatedId: order.id,
+    });
+  }
+}
 
 export default async function CheckoutCancelPage({
   searchParams,
 }: {
   searchParams: Promise<{ ref?: string }>;
 }) {
-  const { ref } = await searchParams;
+  const { ref: orderRef } = await searchParams;
 
-  if (ref) {
-    const { data: order } = await supabaseAdmin
-      .from("orders")
-      .update({
-        status: OrderStatus.CANCELLED,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("ngenius_ref", ref)
-      .neq("status", OrderStatus.CANCELLED)
-      .select("id, total")
-      .single();
-
-    if (order) {
-      await createNotification({
-        type: "order_cancelled",
-        title: "Order cancelled",
-        message: `AED ${Number(order.total).toFixed(2)}`,
-        relatedId: order.id,
-      });
-    }
+  if (orderRef) {
+    await cancelOrder(orderRef);
   }
 
   return (

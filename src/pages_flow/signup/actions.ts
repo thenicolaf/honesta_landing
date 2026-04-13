@@ -73,28 +73,34 @@ export async function signUp(
     return { fieldErrors, values };
   }
 
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { first_name: firstName, last_name: lastName },
-    },
-  });
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { first_name: firstName, last_name: lastName },
+      },
+    });
 
-  if (error) {
-    return { error: mapSignupError(error.message), values };
-  }
-
-  if (data.user) {
-    const profileError = await createProfile(data.user.id, firstName, lastName);
-    if (profileError) {
-      return {
-        error:
-          "Account created but profile setup failed. Please update your profile later.",
-        values,
-      };
+    if (error) {
+      return { error: mapSignupError(error.message), values };
     }
-  }
 
-  redirect(`/verify-email?email=${encodeURIComponent(email)}`);
+    if (data.user) {
+      const profileError = await createProfile(data.user.id, firstName, lastName);
+      if (profileError) {
+        return {
+          error:
+            "Account created but profile setup failed. Please update your profile later.",
+          values,
+        };
+      }
+    }
+
+    redirect(`/verify-email?email=${encodeURIComponent(email)}`);
+  } catch (err) {
+    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
+    console.error("Signup error:", err);
+    return { error: "Something went wrong. Please try again.", values };
+  }
 }

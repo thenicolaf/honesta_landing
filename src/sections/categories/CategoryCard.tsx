@@ -1,40 +1,28 @@
-"use client";
-
 import Image from "next/image";
-import { motion } from "motion/react";
 import { Badge } from "@/shared/ui";
 import { IconLeaf } from "@/shared/icons";
-import { useFilterBar } from "@/providers/FilterProvider";
+import { HashLink } from "../navbar";
 import type { CategoryCard as CategoryCardData } from "./types";
-import { CATEGORY_UI_MAP, cardVariants } from "./consts";
+import { CATEGORY_UI_MAP } from "./consts";
 
 export function CategoryCard({
-  audience,
   slug,
   name,
   tagline,
   description,
+  audience,
   image_url,
   badge,
+  href,
 }: CategoryCardData) {
-  const categoryFilter = useFilterBar("category");
-
   const { Icon, placeholderBg } = CATEGORY_UI_MAP[slug] ?? {
     Icon: IconLeaf,
     placeholderBg: "bg-earth/10",
   };
 
   return (
-    <motion.button
-      type="button"
-      onClick={() => {
-        categoryFilter.onValueChange(slug);
-        document
-          .getElementById("products")
-          ?.scrollIntoView({ behavior: "smooth" });
-      }}
-      variants={cardVariants}
-      transition={{ duration: 0.55, ease: "easeOut" }}
+    <HashLink
+      href={href}
       className="group flex flex-col rounded-[16px] overflow-hidden bg-white-warm hover:shadow-lg transition-shadow duration-300 text-left cursor-pointer"
     >
       {/* Image / placeholder */}
@@ -97,6 +85,6 @@ export function CategoryCard({
           </span>
         </div>
       </div>
-    </motion.button>
+    </HashLink>
   );
 }

@@ -1,11 +1,5 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-
-export const metadata: Metadata = {
-  title: "Checkout",
-  description: "Complete your order for natural dried fruits delivery in UAE.",
-  robots: { index: false, follow: false },
-};
 import { CheckoutPage } from "@/pages_flow/checkout";
 import { CUSTOMER_COOKIE_KEY } from "@/shared/consts";
 import { CustomerInfo } from "@/shared/types";
@@ -13,8 +7,19 @@ import { createSupabaseServerClient } from "@/lib/supabase.server";
 import { getUserAddresses } from "@/lib/addressesDb";
 import { getDeliverySettings } from "@/lib/deliveryDb";
 
+export const metadata: Metadata = {
+  title: "Checkout",
+  description: "Complete your order for natural dried fruits delivery in UAE.",
+  robots: { index: false, follow: false },
+};
+
 export default async function CheckoutRoute() {
-  const cookieStore = await cookies();
+  const [cookieStore, supabase, deliverySettings] = await Promise.all([
+    cookies(),
+    createSupabaseServerClient(),
+    getDeliverySettings(),
+  ]);
+
   const raw = cookieStore.get(CUSTOMER_COOKIE_KEY)?.value;
   let cookieValues: Partial<CustomerInfo> = {};
   if (raw) {
@@ -25,7 +30,6 @@ export default async function CheckoutRoute() {
     }
   }
 
-  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -34,21 +38,21 @@ export default async function CheckoutRoute() {
   let addresses: Awaited<ReturnType<typeof getUserAddresses>> = [];
 
   if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("first_name, last_name, phone")
-      .eq("id", user.id)
-      .single();
+    const [{ data: profile }, userAddresses] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("first_name, last_name, phone")
+        .eq("id", user.id)
+        .single(),
+      getUserAddresses(user.id),
+    ]);
 
     if (profile?.first_name) profileValues.firstName = profile.first_name;
     if (profile?.last_name) profileValues.lastName = profile.last_name;
     if (profile?.phone) profileValues.phone = profile.phone;
     if (user.email) profileValues.email = user.email;
-
-    addresses = await getUserAddresses(user.id);
+    addresses = userAddresses;
   }
-
-  const deliverySettings = await getDeliverySettings();
 
   return (
     <CheckoutPage

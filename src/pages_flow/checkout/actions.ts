@@ -35,6 +35,7 @@ export async function submitCheckout(
 ): Promise<CheckoutState | null> {
   const customer = Object.fromEntries(formData) as Partial<CustomerInfo>;
 
+  try {
   const cookieStore = await cookies();
 
   // 1. Check auth — authorized users' data comes from DB, not cookies
@@ -149,4 +150,10 @@ export async function submitCheckout(
   }
 
   redirect(paymentUrl);
+  } catch (err) {
+    // redirect() throws a special Next.js error — rethrow it
+    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
+    console.error("Checkout error:", err);
+    return { error: "Something went wrong. Please try again.", values: customer };
+  }
 }

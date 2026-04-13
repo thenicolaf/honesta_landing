@@ -49,9 +49,10 @@ export function useRealtimeNotifications(
   role: string | null,
   userId: string | undefined,
   allowNotifications: boolean,
+  initialUnreadCount = 0,
 ) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
   const [isLoading, setIsLoading] = useState(active);
   const supabaseRef = useRef(createSupabaseBrowserClient());
   const allowRef = useRef(allowNotifications);

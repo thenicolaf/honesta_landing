@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
-import { Button } from "@/shared/ui";
+import { buttonVariants } from "@/shared/ui";
 import { HashLink } from "@/sections/navbar";
 import type { Product } from "@/sections/products/types";
 import {
@@ -59,17 +59,12 @@ export function ProductDetailPage({
     <main className="grow min-h-160 bg-cream pt-24 pb-16">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         {/* Back link */}
-        <HashLink href={backHref}>
-          <Button
-            as="button"
-            type="button"
-            variant="outline"
-            size="sm"
-            startIcon={<ArrowLeft size={14} />}
-            className="mb-5"
-          >
-            {backLabel}
-          </Button>
+        <HashLink
+          href={backHref}
+          className={buttonVariants({ variant: "outline", size: "sm" }) + " mb-5 inline-flex"}
+        >
+          <ArrowLeft size={14} className="mr-2" />
+          {backLabel}
         </HashLink>
 
         {/* Two-column layout */}

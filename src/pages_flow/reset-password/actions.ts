@@ -60,33 +60,37 @@ export async function resetPassword(
     return { fieldErrors, values };
   }
 
-  const supabase = await createSupabaseServerClient();
+  try {
+    const supabase = await createSupabaseServerClient();
 
-  // Verify the recovery OTP — this also creates a session
-  const { error: verifyError } = await supabase.auth.verifyOtp({
-    email,
-    token: otp,
-    type: "recovery",
-  });
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email,
+      token: otp,
+      type: "recovery",
+    });
 
-  if (verifyError) {
-    return {
-      error: "Invalid or expired code. Please try again.",
-      values,
-    };
+    if (verifyError) {
+      return {
+        error: "Invalid or expired code. Please try again.",
+        values,
+      };
+    }
+
+    const { error: updateError } = await supabase.auth.updateUser({
+      password,
+    });
+
+    if (updateError) {
+      return {
+        error: "Failed to update password. Please try again.",
+        values,
+      };
+    }
+
+    redirect("/");
+  } catch (err) {
+    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
+    console.error("Reset password error:", err);
+    return { error: "Something went wrong. Please try again.", values };
   }
-
-  // Update the password (session is active after verifyOtp)
-  const { error: updateError } = await supabase.auth.updateUser({
-    password,
-  });
-
-  if (updateError) {
-    return {
-      error: "Failed to update password. Please try again.",
-      values,
-    };
-  }
-
-  redirect("/");
 }

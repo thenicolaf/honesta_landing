@@ -35,6 +35,7 @@
 html {
   /* offset for the fixed navbar: h-16 mobile → h-20 desktop */
   scroll-padding-top: 5rem;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -132,6 +133,34 @@ body {
 .animate-hero-fade-up {
   animation: hero-fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+/* ─── Hero parallax (CSS scroll-driven, 0 JS) ─── */
+@keyframes hero-parallax {
+  from { transform: translateY(0); }
+  to   { transform: translateY(120px); }
+}
+
+.animate-hero-parallax {
+  animation: hero-parallax linear both;
+  animation-timeline: scroll();
+  animation-range: 0px 600px;
+}
+
+/* ─── About section stagger (CSS-only, sequential fade-up) ─── */
+.animate-about-stagger {
+  animation: hero-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--stagger, 0) * 0.1s);
+}
+
+/* Auto-assign stagger index via sibling position */
+.animate-about-stagger:nth-child(1)  { --stagger: 1; }
+.animate-about-stagger:nth-child(2)  { --stagger: 2; }
+.animate-about-stagger:nth-child(3)  { --stagger: 3; }
+.animate-about-stagger:nth-child(4)  { --stagger: 4; }
+.animate-about-stagger:nth-child(5)  { --stagger: 5; }
+.animate-about-stagger:nth-child(6)  { --stagger: 6; }
+.animate-about-stagger:nth-child(n+7) { --stagger: 7; }
+
 
 /* ─── Toast animations ─── */
 .toast-enter {

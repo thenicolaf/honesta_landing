@@ -203,28 +203,15 @@ export function Button({
   }
 
   const anchorProps = props as React.AnchorHTMLAttributes<HTMLAnchorElement>;
-  const href = anchorProps.href;
-
-  if (href && href.startsWith("/") && !href.includes("#")) {
-    return (
-      <Link
-        ref={ref as React.Ref<HTMLAnchorElement>}
-        href={href}
-        className={classes}
-        {...anchorProps}
-      >
-        {content}
-      </Link>
-    );
-  }
 
   return (
-    <a
+    <Link
       ref={ref as React.Ref<HTMLAnchorElement>}
+      href={anchorProps.href ?? "#"}
       className={classes}
       {...anchorProps}
     >
       {content}
-    </a>
+    </Link>
   );
 }

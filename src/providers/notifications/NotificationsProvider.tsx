@@ -27,6 +27,7 @@ export function NotificationsProvider({
   role = null,
   userId,
   allowNotifications = true,
+  initialUnreadCount = 0,
 }: NotificationsProviderProps) {
   const active = !!role && !!userId;
   const [pushState, setPushState] = useState<PushState>("unsupported");
@@ -38,7 +39,7 @@ export function NotificationsProvider({
     markAsRead,
     markAllAsRead,
     refresh,
-  } = useRealtimeNotifications(active, role, userId, allowNotifications);
+  } = useRealtimeNotifications(active, role, userId, allowNotifications, initialUnreadCount);
 
   const { subscribeToPush, unsubscribeFromPush } = useServiceWorker(
     active,

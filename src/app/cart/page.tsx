@@ -10,13 +10,10 @@ export const metadata: Metadata = {
 };
 
 export default async function CartRoute() {
-  const [deliverySettings, supabase] = await Promise.all([
+  const [deliverySettings, { data: { user } }] = await Promise.all([
     getDeliverySettings(),
-    createSupabaseServerClient(),
+    createSupabaseServerClient().then((s) => s.auth.getUser()),
   ]);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   return (
     <CartPage

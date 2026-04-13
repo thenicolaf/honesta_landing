@@ -11,6 +11,19 @@ function stop(e: React.MouseEvent) {
   e.preventDefault();
 }
 
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function ItemImage({ src, alt, size }: { src: string; alt: string; size: number }) {
+  return (
+    <div
+      className="relative rounded-xl overflow-hidden shrink-0 bg-sand"
+      style={{ width: size, height: size }}
+    >
+      <Image src={src} alt={alt} fill className="object-cover" sizes={`${size}px`} />
+    </div>
+  );
+}
+
 function WeightBadge({ weight_g }: { weight_g?: number }) {
   if (!weight_g) return null;
   return (
@@ -19,6 +32,159 @@ function WeightBadge({ weight_g }: { weight_g?: number }) {
     </Badge>
   );
 }
+
+function DiscountBadge({ original, current }: { original: number; current: number }) {
+  return (
+    <Badge variant="counter" size="pill">
+      -{Math.round(((original - current) / original) * 100)}%
+    </Badge>
+  );
+}
+
+function PromotionPrice({ price, originalPrice, endsAt }: {
+  price: number;
+  originalPrice: number;
+  endsAt?: string;
+}) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="font-body font-semibold text-orange text-xs">
+          AED {price.toFixed(2)} each
+        </span>
+        <span className="font-body text-earth/30 text-xs line-through">
+          AED {originalPrice.toFixed(2)}
+        </span>
+        <DiscountBadge original={originalPrice} current={price} />
+      </div>
+      {endsAt && (
+        <span className="font-body text-2xs text-earth/40">
+          Until {formatDateTime(endsAt)}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function RegularPrice({ price }: { price: number }) {
+  return (
+    <p className="font-body font-light text-earth/55 text-xs mt-0.5">
+      AED {price.toFixed(2)} each
+    </p>
+  );
+}
+
+function PromoHint({ discount, endsAt }: { discount: number; endsAt?: string }) {
+  return (
+    <div className="flex flex-col gap-0.5 mt-0.5">
+      <div className="flex items-center gap-1">
+        <Tag size={10} className="text-moss shrink-0" />
+        <span className="font-body text-2xs text-moss">
+          Promo −AED {discount.toFixed(2)} each
+        </span>
+      </div>
+      {endsAt && (
+        <span className="font-body text-2xs text-earth/40">
+          Until {formatDateTime(endsAt)}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function QuantityControls({ variantId, quantity, onUpdate, onRemove }: {
+  variantId: string;
+  quantity: number;
+  onUpdate: (variantId: string, quantity: number) => void;
+  onRemove: (variantId: string) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2 shrink-0">
+      <Button
+        as="button"
+        variant="outline"
+        size="icon"
+        onClick={(e) => {
+          stop(e);
+          if (quantity === 1) {
+            onRemove(variantId);
+            toastInfo("Removed from cart");
+          } else {
+            onUpdate(variantId, quantity - 1);
+          }
+        }}
+        aria-label="Decrease quantity"
+      >
+        <Minus className="w-3.5 h-3.5" />
+      </Button>
+      <span className="font-body font-semibold text-earth text-sm w-4 text-center">
+        {quantity}
+      </span>
+      <Button
+        as="button"
+        variant="primary"
+        size="icon"
+        onClick={(e) => {
+          stop(e);
+          onUpdate(variantId, quantity + 1);
+        }}
+        aria-label="Increase quantity"
+      >
+        <Plus className="w-3.5 h-3.5" />
+      </Button>
+    </div>
+  );
+}
+
+function LineTotal({ amount, strikethrough, color }: {
+  amount: number;
+  strikethrough?: number;
+  color: "moss" | "orange" | "earth";
+}) {
+  return (
+    <div className="shrink-0 text-right">
+      <p className={cn("font-body font-semibold whitespace-nowrap text-sm", `text-${color}`)}>
+        AED {amount.toFixed(2)}
+      </p>
+      {strikethrough != null && (
+        <p className="font-body text-earth/30 text-xs line-through whitespace-nowrap">
+          AED {strikethrough.toFixed(2)}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ─── Price info block (shared between desktop/mobile) ─────────────────────────
+
+function PriceInfo({ item, promoHint }: {
+  item: CartItemType;
+  promoHint: React.ReactNode;
+}) {
+  const hasDiscount = item.originalPrice && item.originalPrice !== item.price;
+
+  if (hasDiscount) {
+    return (
+      <div className="flex flex-col gap-0.5 mt-0.5">
+        <PromotionPrice
+          price={item.price}
+          originalPrice={item.originalPrice!}
+          endsAt={item.promotionEndsAt}
+        />
+        {promoHint}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <RegularPrice price={item.price} />
+      {promoHint}
+    </div>
+  );
+}
+
+// ─── CartItem ─────────────────────────────────────────────────────────────────
 
 interface CartItemProps {
   item: CartItemType;
@@ -35,106 +201,27 @@ export function CartItem({
   onUpdateQuantity,
   onRemove,
 }: CartItemProps) {
-  const hasDiscount = item.originalPrice && item.originalPrice !== item.price;
   const hasPromoCode = promoDiscountPerUnit > 0;
+  const hasDiscount = item.originalPrice && item.originalPrice !== item.price;
   const finalUnitPrice = Math.max(0, item.price - promoDiscountPerUnit);
   const finalLineTotal = finalUnitPrice * item.quantity;
 
-  const quantityControls = (
-    <div className="flex items-center gap-2 shrink-0">
-      <Button
-        as="button"
-        variant="outline"
-        size="icon"
-        onClick={(e) => {
-          stop(e);
-          if (item.quantity === 1) {
-            onRemove(item.variantId);
-            toastInfo("Removed from cart");
-          } else {
-            onUpdateQuantity(item.variantId, item.quantity - 1);
-          }
-        }}
-        aria-label="Decrease quantity"
-      >
-        <Minus className="w-3.5 h-3.5" />
-      </Button>
-      <span className="font-body font-semibold text-earth text-sm w-4 text-center">
-        {item.quantity}
-      </span>
-      <Button
-        as="button"
-        variant="primary"
-        size="icon"
-        onClick={(e) => {
-          stop(e);
-          onUpdateQuantity(item.variantId, item.quantity + 1);
-        }}
-        aria-label="Increase quantity"
-      >
-        <Plus className="w-3.5 h-3.5" />
-      </Button>
-    </div>
-  );
+  const lineTotalColor = hasPromoCode ? "moss" : hasDiscount ? "orange" : "earth";
+  const lineTotalStrike = hasPromoCode
+    ? item.price * item.quantity
+    : hasDiscount
+      ? item.originalPrice! * item.quantity
+      : undefined;
 
   const promoHint = hasPromoCode ? (
-    <div className="flex flex-col gap-0.5 mt-0.5">
-      <div className="flex items-center gap-1">
-        <Tag size={10} className="text-moss shrink-0" />
-        <span className="font-body text-2xs text-moss">
-          Promo −AED {promoDiscountPerUnit.toFixed(2)} each
-        </span>
-      </div>
-      {promoCodeEndsAt && (
-        <span className="font-body text-2xs text-earth/40">
-          Until {formatDateTime(promoCodeEndsAt)}
-        </span>
-      )}
-    </div>
+    <PromoHint discount={promoDiscountPerUnit} endsAt={promoCodeEndsAt} />
   ) : null;
-
-  const lineTotal = (
-    <div className="shrink-0 text-right">
-      <p
-        className={cn(
-          "font-body font-semibold whitespace-nowrap text-sm",
-          hasPromoCode
-            ? "text-moss"
-            : hasDiscount
-              ? "text-orange"
-              : "text-earth",
-        )}
-      >
-        AED {finalLineTotal.toFixed(2)}
-      </p>
-      {hasPromoCode && (
-        <p className="font-body text-earth/30 text-xs line-through whitespace-nowrap">
-          AED {(item.price * item.quantity).toFixed(2)}
-        </p>
-      )}
-      {!hasPromoCode && hasDiscount && (
-        <p className="font-body text-earth/30 text-xs line-through whitespace-nowrap">
-          AED {(item.originalPrice! * item.quantity).toFixed(2)}
-        </p>
-      )}
-    </div>
-  );
 
   const card = (
     <Card variant="default" padding="sm">
-      {/* Desktop: single row */}
+      {/* Desktop */}
       <div className="hidden sm:flex items-center gap-4">
-        {item.image_url && (
-          <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-sand">
-            <Image
-              src={item.image_url}
-              alt={item.name}
-              fill
-              className="object-cover"
-              sizes="64px"
-            />
-          </div>
-        )}
+        {item.image_url && <ItemImage src={item.image_url} alt={item.name} size={64} />}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <p className="font-body font-semibold text-earth text-sm leading-snug truncate">
@@ -142,58 +229,21 @@ export function CartItem({
             </p>
             <WeightBadge weight_g={item.weight_g} />
           </div>
-          {hasDiscount ? (
-            <div className="flex flex-col gap-0.5 mt-0.5">
-              <div className="flex items-center gap-2">
-                <span className="font-body font-semibold text-orange text-xs">
-                  AED {item.price.toFixed(2)} each
-                </span>
-                <span className="font-body text-earth/30 text-xs line-through">
-                  AED {item.originalPrice!.toFixed(2)}
-                </span>
-                <Badge variant="counter" size="pill">
-                  -
-                  {Math.round(
-                    ((item.originalPrice! - item.price) / item.originalPrice!) *
-                      100,
-                  )}
-                  %
-                </Badge>
-              </div>
-              {item.promotionEndsAt && (
-                <span className="font-body text-2xs text-earth/40">
-                  Until {formatDateTime(item.promotionEndsAt)}
-                </span>
-              )}
-              {promoHint}
-            </div>
-          ) : (
-            <div>
-              <p className="font-body font-light text-earth/55 text-xs mt-0.5">
-                AED {item.price.toFixed(2)} each
-              </p>
-              {promoHint}
-            </div>
-          )}
+          <PriceInfo item={item} promoHint={promoHint} />
         </div>
-        {quantityControls}
-        {lineTotal}
+        <QuantityControls
+          variantId={item.variantId}
+          quantity={item.quantity}
+          onUpdate={onUpdateQuantity}
+          onRemove={onRemove}
+        />
+        <LineTotal amount={finalLineTotal} strikethrough={lineTotalStrike} color={lineTotalColor} />
       </div>
 
-      {/* Mobile: two rows */}
+      {/* Mobile */}
       <div className="sm:hidden">
         <div className="flex items-start gap-3">
-          {item.image_url && (
-            <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-sand">
-              <Image
-                src={item.image_url}
-                alt={item.name}
-                fill
-                className="object-cover"
-                sizes="56px"
-              />
-            </div>
-          )}
+          {item.image_url && <ItemImage src={item.image_url} alt={item.name} size={56} />}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
               <p className="font-body font-semibold text-earth text-sm leading-snug line-clamp-2">
@@ -201,45 +251,17 @@ export function CartItem({
               </p>
               <WeightBadge weight_g={item.weight_g} />
             </div>
-            {hasDiscount ? (
-              <div className="flex flex-col gap-0.5 mt-1">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="font-body font-semibold text-orange text-xs">
-                    AED {item.price.toFixed(2)}
-                  </span>
-                  <span className="font-body text-earth/30 text-xs line-through">
-                    AED {item.originalPrice!.toFixed(2)}
-                  </span>
-                  <Badge variant="counter" size="pill">
-                    -
-                    {Math.round(
-                      ((item.originalPrice! - item.price) /
-                        item.originalPrice!) *
-                        100,
-                    )}
-                    %
-                  </Badge>
-                </div>
-                {item.promotionEndsAt && (
-                  <span className="font-body text-2xs text-earth/40">
-                    Until {formatDateTime(item.promotionEndsAt)}
-                  </span>
-                )}
-                {promoHint}
-              </div>
-            ) : (
-              <div>
-                <p className="font-body font-light text-earth/55 text-xs mt-1">
-                  AED {item.price.toFixed(2)} each
-                </p>
-                {promoHint}
-              </div>
-            )}
+            <PriceInfo item={item} promoHint={promoHint} />
           </div>
         </div>
         <div className="flex items-center justify-between mt-3">
-          {quantityControls}
-          {lineTotal}
+          <QuantityControls
+            variantId={item.variantId}
+            quantity={item.quantity}
+            onUpdate={onUpdateQuantity}
+            onRemove={onRemove}
+          />
+          <LineTotal amount={finalLineTotal} strikethrough={lineTotalStrike} color={lineTotalColor} />
         </div>
       </div>
     </Card>

@@ -1,7 +1,8 @@
+import { cache } from "react";
 import { supabaseAdmin } from "@/lib/supabase.server";
 import type { DbCategory } from "@/sections/categories/types";
 
-export async function getCategories(): Promise<DbCategory[]> {
+export const getCategories = cache(async (): Promise<DbCategory[]> => {
   const { data, error } = await supabaseAdmin
     .from("categories")
     .select("*")
@@ -10,7 +11,7 @@ export async function getCategories(): Promise<DbCategory[]> {
   if (error || !data) return [];
 
   return data as DbCategory[];
-}
+});
 
 export async function getCategoryById(id: string): Promise<DbCategory | null> {
   const { data, error } = await supabaseAdmin

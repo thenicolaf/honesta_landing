@@ -1,6 +1,3 @@
-"use client";
-
-import Image from "next/image";
 import { Button } from "@/shared/ui";
 import { HashLink } from "../navbar";
 import { ShoppingBag } from "lucide-react";
@@ -9,17 +6,18 @@ export function HeroContent() {
   return (
     <div className="relative h-full mx-auto max-w-7xl px-6 lg:px-10 flex items-center justify-center">
       <div className="max-w-lg pt-20 text-center relative">
-        {/* Logo */}
+        {/* Logo — plain <img> for SVG (next/image adds overhead without benefit) */}
         <div
           className="animate-hero-fade-up"
           style={{ animationDelay: "0.1s" }}
         >
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src="/honesta_logo.svg"
             alt="Honesta logo"
             width={256}
             height={256}
-            priority
+            fetchPriority="high"
             className="size-52 sm:size-64 mx-auto"
           />
         </div>

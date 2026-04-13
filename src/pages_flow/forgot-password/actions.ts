@@ -31,11 +31,17 @@ export async function requestPasswordReset(
     return { fieldErrors: { email: emailError }, values: { email } };
   }
 
-  const { error } = await supabase.auth.resetPasswordForEmail(email);
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
 
-  if (error) {
+    if (error) {
+      return { error: "Something went wrong. Please try again.", values: { email } };
+    }
+
+    redirect(`/reset-password?email=${encodeURIComponent(email)}`);
+  } catch (err) {
+    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
+    console.error("Forgot password error:", err);
     return { error: "Something went wrong. Please try again.", values: { email } };
   }
-
-  redirect(`/reset-password?email=${encodeURIComponent(email)}`);
 }

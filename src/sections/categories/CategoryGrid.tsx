@@ -1,8 +1,4 @@
-"use client";
-
-import { motion } from "motion/react";
 import { CategoryCard } from "./CategoryCard";
-import { containerVariants } from "./consts";
 import type { DbCategory, CategoryCard as CategoryCardData } from "./types";
 
 export function CategoryGrid({
@@ -26,13 +22,7 @@ export function CategoryGrid({
     <section id="categories" className="bg-sand py-20 md:py-28">
       <div className="mx-auto max-w-screen-2xl px-6 lg:px-10">
         {/* Section header */}
-        <motion.div
-          className="mb-14 text-center"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-        >
+        <div className="mb-14 text-center">
           <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-moss mb-4">
             Collections
           </p>
@@ -42,20 +32,14 @@ export function CategoryGrid({
           >
             Find your perfect snack
           </h2>
-        </motion.div>
+        </div>
 
         {/* Cards grid */}
-        <motion.div
-          className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-60px" }}
-        >
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {categories.map((card) => (
             <CategoryCard key={card.name} {...card} />
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

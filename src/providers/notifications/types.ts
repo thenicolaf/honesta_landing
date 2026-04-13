@@ -19,4 +19,5 @@ export interface NotificationsProviderProps {
   role?: string | null;
   userId?: string;
   allowNotifications?: boolean;
+  initialUnreadCount?: number;
 }

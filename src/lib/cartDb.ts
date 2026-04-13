@@ -23,6 +23,19 @@ type CartDbRow = {
   };
 };
 
+export async function getCartItemCount(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<number> {
+  const { data } = await supabase
+    .from("cart_items")
+    .select("quantity")
+    .eq("user_id", userId);
+
+  if (!data) return 0;
+  return data.reduce((sum, row) => sum + row.quantity, 0);
+}
+
 export async function getCartFromDb(
   supabase: SupabaseClient,
 ): Promise<CartItem[]> {
