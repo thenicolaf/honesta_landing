@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "../Select";
 import type { FieldVariantProps } from "./shared";
+import { useFormReset } from "./useFormReset";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -146,6 +147,10 @@ export function FormPhoneInput({
     },
   );
 
+  const resetRef = useFormReset<HTMLDivElement>(() =>
+    setInternalValue(undefined),
+  );
+
   const value = controlledValue !== undefined
     ? (controlledValue.replace(/\s/g, "") as Value)
     : internalValue;
@@ -157,6 +162,7 @@ export function FormPhoneInput({
 
   return (
     <div
+      ref={resetRef}
       className={cn(
         "relative flex items-center rounded-xl border bg-cream transition-colors",
         "focus-within:border-orange",

@@ -12,6 +12,7 @@ import {
 import { AddressSuggestInput } from "@/shared/ui/AddressSuggestInput";
 import { UAE_EMIRATES } from "@/shared/consts";
 import { composeAddress, displayAddress } from "@/shared/utils/address";
+import { useFormReset } from "@/shared/ui/Form/useFormReset";
 
 const DUBAI_CENTER = { lat: 25.2048, lng: 55.2708 };
 const LIBRARIES: ["places"] = ["places"];
@@ -112,6 +113,16 @@ export function AddressWithMap({
   const [area, setAreaState] = useState(defaultArea);
   const [buildingName, setBuildingNameState] = useState(defaultBuildingName);
   const [flatNumber, setFlatNumber] = useState(defaultFlatNumber);
+
+  const resetRef = useFormReset<HTMLDivElement>(() => {
+    setEmirateState(resolvedDefaultEmirate);
+    setCityState(defaultCity);
+    setAreaState(defaultArea);
+    setBuildingNameState(defaultBuildingName);
+    setFlatNumber(defaultFlatNumber);
+    setCenter(initPos);
+    setMarkerPos(initPos);
+  });
 
   // Set emirate + notify parent (no cascade, used by resolvePlace & onMapClick)
   function setEmirate(value: string) {
@@ -318,7 +329,7 @@ export function AddressWithMap({
   };
 
   return (
-    <div>
+    <div ref={resetRef}>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {/* Emirate */}
         <div className="sm:col-span-2">

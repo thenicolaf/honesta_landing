@@ -9,6 +9,7 @@ import {
   SelectContent,
   SelectItem,
 } from "../Select";
+import { useFormReset } from "./useFormReset";
 
 type FormSelectOption =
   | string
@@ -48,6 +49,10 @@ export function FormSelect({
   const isControlled = controlledValue !== undefined;
   const value = isControlled ? controlledValue : internalValue;
 
+  const resetRef = useFormReset<HTMLDivElement>(() =>
+    setInternalValue(defaultValue),
+  );
+
   const handleChange = (v: string) => {
     if (!isControlled) setInternalValue(v);
     onValueChange?.(v);
@@ -58,7 +63,7 @@ export function FormSelect({
   );
 
   return (
-    <div className={className}>
+    <div ref={resetRef} className={className}>
       <input type="hidden" id={id} name={name} value={value} />
       <Select
         value={value}
