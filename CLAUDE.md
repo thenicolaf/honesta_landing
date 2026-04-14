@@ -641,8 +641,7 @@ export interface FooState {
   fieldErrors?: {           // per-field validation errors
     name?: string;
   };
-  values?: Partial<FooInfo>; // echo back form values for repopulation
-  attempt?: number;          // incremented each submission, used as form key
+  values?: Partial<FooInfo>; // echo back form values for repopulation on error
 }
 
 // 2. Action signature for useActionState: (_prevState, formData) => Promise<State>
@@ -652,18 +651,16 @@ export async function createFoo(
 ): Promise<FooState> {
   const name = (formData.get("name") as string)?.trim();
 
-  const attempt = (_prevState?.attempt ?? 0) + 1;
-
   // 3. Collect field errors into an object, return early if any
   const fieldErrors: FooState["fieldErrors"] = {};
   if (!name) fieldErrors.name = "Name is required";
-  if (Object.keys(fieldErrors).length > 0) return { fieldErrors, values: { name }, attempt };
+  if (Object.keys(fieldErrors).length > 0) return { fieldErrors, values: { name } };
 
   // 4. DB call
   const { error } = await supabaseAdmin.from("foos").insert({ name });
-  if (error) return { error: "Failed to save. Please try again.", values: { name }, attempt };
+  if (error) return { error: "Failed to save. Please try again.", values: { name } };
 
-  return { success: true, attempt };
+  return { success: true };
 }
 
 // 5. For actions bound with .bind(null, id), id comes before _prevState
@@ -679,12 +676,24 @@ export async function updateFoo(
 - State interface exported from the same `actions.ts` file
 - Validation collects all field errors before returning — never throw, always return state
 - Top-level DB errors go in `error`, field-level errors go in `fieldErrors`
-- **Always return `values` on every error path** — forms use `key={state?.attempt ?? 0}` which remounts the form, so `defaultValue={state?.values?.fieldName}` is needed to preserve user input
-- Always return `attempt` (incremented counter) — used as form `key` to reset field states after submission
+- **Always return `values` on every error path** so `defaultValue={state?.values?.fieldName}` repopulates user input. On success, omit `values` — fields are cleared via the native form-reset pathway (see "Form reset after submit" below).
 - Never use `supabaseAdmin` for auth-identity operations — use `createSupabaseServerClient()` instead
 - Actions that need the current user must call `createSupabaseServerClient()` and redirect to `/login` if no session
 - **All actions must have try-catch.** `redirect()` throws `NEXT_REDIRECT` — rethrow it: `if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;`. Catch returns `{ error: "Something went wrong. Please try again.", values }`.
 - **All forms must show toast on errors.** In the `useEffect` that watches `state`, add: `if (state?.error) toastError(state.error); if (state?.fieldErrors) toastError("Please fill in the required fields");`
+
+## Form reset after submit
+
+React 19 dispatches a native `reset` event on `<form action={fn}>` after a successful server action — this auto-clears uncontrolled `<input>` / `<textarea>` elements. Custom **controlled** components (which hold state in React, so their DOM-level reset is a no-op) hook into the same lifecycle via [useFormReset](src/shared/ui/Form/useFormReset.ts):
+
+```ts
+const resetRef = useFormReset<HTMLDivElement>(() => setInternalValue(defaultValue));
+return <div ref={resetRef}>…</div>;
+```
+
+The hook attaches a `reset` listener to the nearest ancestor `<form>` (found via `closest("form")`) and runs the callback to clear internal state.
+
+Already wired into `FormPhoneInput`, `FormSelect`, `AddressWithMap` — any new controlled form component that holds its own state must do the same. On validation error the `reset` event is NOT fired, so `state.values` repopulation still works. **Do not** add `key={state?.attempt}` remount patterns on forms — this is the wrong idiom and is no longer used in this codebase.
 
 ## Animations
 
