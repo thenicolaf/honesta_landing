@@ -44,7 +44,7 @@ function ProductSkeleton() {
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <Skeleton className="h-8 w-40 rounded-full mb-5" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-14">
-          <Skeleton className="aspect-square w-full rounded-2xl" />
+          <Skeleton className="aspect-3/2 w-full rounded-[16px]" />
           <div className="flex flex-col gap-5">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-8 w-3/4" />

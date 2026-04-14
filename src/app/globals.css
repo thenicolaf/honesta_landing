@@ -135,15 +135,22 @@ body {
 }
 
 /* ─── Hero parallax (CSS scroll-driven, 0 JS) ─── */
+/* Safari (as of 2026) does not support `animation-timeline: scroll()`.
+   Without the @supports guard, the shorthand animation runs with default
+   0s duration and `both` fill mode → jumps to the `to` keyframe and
+   pushes the hero images 120px down permanently. Gate the rule so
+   non-supporting browsers get no animation (identity transform). */
 @keyframes hero-parallax {
   from { transform: translateY(0); }
   to   { transform: translateY(120px); }
 }
 
-.animate-hero-parallax {
-  animation: hero-parallax linear both;
-  animation-timeline: scroll();
-  animation-range: 0px 600px;
+@supports (animation-timeline: scroll()) {
+  .animate-hero-parallax {
+    animation: hero-parallax linear both;
+    animation-timeline: scroll();
+    animation-range: 0px 600px;
+  }
 }
 
 /* ─── About section stagger (CSS-only, sequential fade-up) ─── */
