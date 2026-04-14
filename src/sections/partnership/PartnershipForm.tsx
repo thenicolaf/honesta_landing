@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import { Button, toastSuccess, toastError } from "@/shared/ui";
 import {
   FormLabel,
@@ -14,8 +15,12 @@ import {
   CollapsibleChevron,
   CollapsibleContent,
 } from "@/shared/ui";
-import { AddressWithMap } from "@/shared/ui";
 import { parseAddress } from "@/shared/utils/address";
+
+const AddressWithMap = dynamic(
+  () => import("@/shared/ui/AddressWithMap").then((m) => m.AddressWithMap),
+  { ssr: false },
+);
 import { submitPartnershipInquiry, type PartnershipState } from "./actions";
 import { BUSINESS_TYPES } from "./consts";
 

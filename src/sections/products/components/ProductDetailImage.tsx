@@ -2,7 +2,17 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Badge, Gallery, Lightbox } from "@/shared/ui";
+import dynamic from "next/dynamic";
+import { Badge } from "@/shared/ui";
+
+const Gallery = dynamic(
+  () => import("@/shared/ui/Gallery").then((m) => m.Gallery),
+  { ssr: false },
+);
+const Lightbox = dynamic(
+  () => import("@/shared/ui/Lightbox").then((m) => m.Lightbox),
+  { ssr: false },
+);
 
 interface ProductDetailImageProps {
   image_url: string;
@@ -76,13 +86,15 @@ export function ProductDetailImage({
         />
       )}
 
-      {/* Shared lightbox for all images */}
-      <Lightbox
-        open={lightboxIndex >= 0}
-        onClose={() => setLightboxIndex(-1)}
-        slides={allImages.map((src, i) => ({ src, alt: `${title} ${i + 1}` }))}
-        index={lightboxIndex}
-      />
+      {/* Shared lightbox for all images — mounted lazily on first open */}
+      {lightboxIndex >= 0 && (
+        <Lightbox
+          open
+          onClose={() => setLightboxIndex(-1)}
+          slides={allImages.map((src, i) => ({ src, alt: `${title} ${i + 1}` }))}
+          index={lightboxIndex}
+        />
+      )}
     </div>
   );
 }

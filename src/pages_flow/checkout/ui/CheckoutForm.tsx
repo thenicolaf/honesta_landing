@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import {
   FormLabel,
   FormInput,
@@ -8,8 +9,12 @@ import {
   FormTextarea,
   FormError,
   FormCheckbox,
-  AddressWithMap,
 } from "@/shared/ui";
+
+const AddressWithMap = dynamic(
+  () => import("@/shared/ui/AddressWithMap").then((m) => m.AddressWithMap),
+  { ssr: false },
+);
 import { SubmitButton } from "./SubmitButton";
 import { AddressSelector } from "./AddressSelector";
 import { PromoCodeInput } from "@/pages_flow/cart/ui/PromoCodeInput";
