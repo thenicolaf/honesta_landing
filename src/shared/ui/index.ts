@@ -139,6 +139,7 @@ export { getNotificationStyle, getNotificationHref } from "./NotificationTypeCon
 export { Popover, PopoverTrigger, PopoverContent, usePopover } from "./Popover";
 export { Tooltip, TooltipTrigger, TooltipContent, useTooltip, type TooltipSide } from "./Tooltip";
 export { ToastFromUrl } from "./ToastFromUrl";
+export { ViewModeToggle } from "./ViewModeToggle";
 export {
   MultiSelect,
   MultiSelectTrigger,
