@@ -11,6 +11,7 @@ export {
   BenefitsList,
   NutritionTable,
   ServingIdeas,
+  hasDetailsContent,
 } from "./ProductDetails";
 export { ProductDetailImage } from "./ProductDetailImage";
 export { ProductTagline } from "./ProductTagline";

@@ -477,6 +477,57 @@ Products have a **main image** (`image_url`) and an optional **gallery** (`image
 - **Promotions** — `src/lib/promotionsDb.ts` handles CRUD. Promotions have `discount_type` (percentage | fixed), `discount_value`, date range, and `is_active` flag. Linked to products via `promotion_products` join table. Status is computed client-side via `getPromotionStatus()` (active | scheduled | expired) based on `is_active` + dates. Promotion list sorts active first.
 - **Order fulfillment** — `orders.is_fulfilled` boolean field. Admin toggles via `FulfilledToggle` checkbox component (`src/pages_flow/panel/orders/FulfilledToggle.tsx`) with server action. Filterable in admin orders view (Fulfilled / Unfulfilled).
 
+## View-mode system (card / row)
+
+Shared toggle that lets users switch between a detailed card grid and a compact row grid. Used on admin **categories**, **products**, **favorites** and public **categories**, **products** sections.
+
+- **Provider:** [src/providers/ViewModeProvider.tsx](src/providers/ViewModeProvider.tsx) — context with `{ mode: "row" | "card", setMode }`. `setMode` writes a cookie so the preference persists across reloads.
+- **Toggle UI:** [src/shared/ui/ViewModeToggle.tsx](src/shared/ui/ViewModeToggle.tsx) — `FormTileRadio` with `Rows3` / `LayoutGrid` icons. Placed in `AdminPageHeader.actions` on admin pages or alongside filters in public toolbars.
+- **Server-side reader:** [src/shared/utils/readViewModeCookie.ts](src/shared/utils/readViewModeCookie.ts) — `readViewModeCookie(cookieKey, defaultMode?)` called in async server components to hydrate `initialMode` synchronously (no flash on first render).
+- **Cookies** (in [src/shared/consts.ts](src/shared/consts.ts)):
+  - `CATEGORIES_VIEW_COOKIE` shared between `/panel/categories` and `/` categories section.
+  - `PRODUCTS_VIEW_COOKIE` shared between `/panel/products`, `/panel/favorites`, and `/` products section.
+- **Default mode:** `"row"` (`DEFAULT_VIEW_MODE` in provider).
+
+Integration pattern (same on every page):
+1. Server page reads the cookie, wraps content in `<ViewModeProvider cookieKey={...} initialMode={...}>`.
+2. Add `<ViewModeToggle />` in `AdminPageHeader.actions` (admin) or the section toolbar (public).
+3. Inner client grid uses `useViewMode()` to pick the grid class and conditionally renders card vs row component.
+4. Suspense fallback uses a view-aware skeleton (see below) fed the same `initialMode`.
+
+### Row variants
+
+Row components mirror each other structurally: `flex flex-col h-full p-3 sm:p-4 rounded-2xl` outer, `grow flow-root` content wrapper with a `float-left` image (`aspect-4/3`, responsive widths `w-36 sm:w-48 md:w-60 lg:w-64 xl:w-52 2xl:w-56`) and wrapping text beside/below it. Admin rows pin an action footer; public rows pin `ProductPriceAndCart`. Overlay badges on the image switch to `size="xs"` with `sm:px-3! sm:py-1! sm:text-2xs!` so they shrink on narrow screens instead of covering the photo.
+
+- Categories: [src/pages_flow/panel/categories/AdminCategoryRow.tsx](src/pages_flow/panel/categories/AdminCategoryRow.tsx) + [src/sections/categories/CategoryCardRow.tsx](src/sections/categories/CategoryCardRow.tsx).
+- Products: [src/pages_flow/panel/products/AdminProductRow.tsx](src/pages_flow/panel/products/AdminProductRow.tsx) + [src/sections/products/ProductItemRow.tsx](src/sections/products/ProductItemRow.tsx).
+
+### Grid breakpoints
+
+Grid class maps live in single-source files so the skeleton and the real grid stay in lock-step (Tailwind must see the literal strings in the scanned file).
+
+- **Categories** — `PUBLIC_CATEGORY_GRID_CLASS` in [src/app/page.tsx](src/app/page.tsx); `ADMIN_CATEGORY_GRID_CLASS` inline in [src/pages_flow/panel/categories/SortableCategoryGrid.tsx](src/pages_flow/panel/categories/SortableCategoryGrid.tsx) and [src/app/panel/categories/page.tsx](src/app/panel/categories/page.tsx).
+- **Products** — `GRID_CLASS` (keyed by `"admin" | "public"`) in [src/sections/products/ProductGridSkeleton.tsx](src/sections/products/ProductGridSkeleton.tsx). `PUBLIC_PRODUCT_GRID_CLASS` is re-exported and imported by [src/sections/products/ProductGrid.tsx](src/sections/products/ProductGrid.tsx) and `FavoritesGrid.tsx`. Admin product grid class lives in [src/pages_flow/panel/products/ProductsPage.tsx](src/pages_flow/panel/products/ProductsPage.tsx) as `ADMIN_PRODUCT_GRID_CLASS`.
+- **Row breakpoint shorthand:**
+  - Admin products row: `xl:grid-cols-2` (2 cols at 1280+, otherwise 1).
+  - Public products row: `min-[1150px]:grid-cols-2` (arbitrary breakpoint).
+  - Admin categories row: `2xl:grid-cols-2`; public categories row: `lg:grid-cols-2`.
+
+### Skeletons
+
+Skeletons live next to the real components and accept `mode: ViewMode` so they can render the same layout the data will produce:
+
+- [src/sections/categories/CategoryGridSkeleton.tsx](src/sections/categories/CategoryGridSkeleton.tsx) — takes `mode` + `gridClassName` (the grid class lives in the page that owns the breakpoints, e.g. admin vs public).
+- [src/sections/products/ProductGridSkeleton.tsx](src/sections/products/ProductGridSkeleton.tsx) — takes `mode` + `variant: "admin" | "public"` + `count`. Internal `GRID_CLASS` map is the single source of truth for product grid breakpoints.
+
+Other list pages have their own hand-rolled skeletons that copy the real card markup (so placeholders line up with the real layout, preventing a layout shift):
+
+- [src/pages_flow/panel/promotions/PromotionsSkeleton.tsx](src/pages_flow/panel/promotions/PromotionsSkeleton.tsx)
+- [src/pages_flow/panel/promo-codes/PromoCodesSkeleton.tsx](src/pages_flow/panel/promo-codes/PromoCodesSkeleton.tsx)
+- [src/pages_flow/panel/delivery/DeliverySkeleton.tsx](src/pages_flow/panel/delivery/DeliverySkeleton.tsx)
+
+**Rule of thumb:** when creating a new list page, copy the real card's outer classes (`rounded-[16px]`, `bg-white-warm`, `shadow-sm`, padding) into the skeleton and use inner `<Skeleton>` blocks sized close to the real text/buttons. Do not reach for the generic `SkeletonGrid` / `SkeletonProductGrid` — they don't match new card shapes.
+
 ## Category Sorting
 
 Categories have a `sort_order` integer column. Order is controlled via drag-and-drop in admin `/panel/categories`.

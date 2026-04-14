@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Hero, PhilosophyBlock, AboutUs, PartnershipCTA } from "@/sections";
 import { CategoryGridSkeleton } from "@/sections/categories/CategoryGridSkeleton";
 import { AboutExpandedProvider } from "@/sections/about/AboutExpandedProvider";
-import { Skeleton, SkeletonProductGrid } from "@/shared/ui";
+import { Skeleton } from "@/shared/ui";
+import { ProductGridSkeleton } from "@/sections/products/ProductGridSkeleton";
 import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvider";
 import { CategoriesSection, ProductsSection } from "@/pages_flow/home";
 import { HashTracker } from "./_components/HashTracker";
@@ -10,7 +11,7 @@ import { Suspense } from "react";
 import { getCategories } from "@/lib/categoriesDb";
 import { buildHomeStructuredData } from "./home-structured-data";
 import { readViewModeCookie } from "@/shared/utils/readViewModeCookie";
-import { CATEGORIES_VIEW_COOKIE } from "@/shared/consts";
+import { CATEGORIES_VIEW_COOKIE, PRODUCTS_VIEW_COOKIE } from "@/shared/consts";
 import type { ViewMode } from "@/providers/ViewModeProvider";
 
 const PUBLIC_CATEGORY_GRID_CLASS: Record<ViewMode, string> = {
@@ -70,7 +71,7 @@ function CategoriesSkeleton({ mode }: { mode: ViewMode }) {
   );
 }
 
-function ProductsSkeleton() {
+function ProductsSkeleton({ mode }: { mode: ViewMode }) {
   return (
     <section className="bg-white-warm py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
@@ -79,17 +80,21 @@ function ProductsSkeleton() {
           <Skeleton className="h-8 w-56 mx-auto mb-3" />
           <Skeleton className="h-4 w-40 mx-auto" />
         </div>
-        <Skeleton className="h-9 w-full mb-10" />
-        <SkeletonProductGrid count={6} />
+        <div className="mb-10 flex items-center gap-3">
+          <Skeleton className="h-9 grow" />
+          <Skeleton className="h-9 w-20 rounded-xl" />
+        </div>
+        <ProductGridSkeleton mode={mode} variant="public" count={6} />
       </div>
     </section>
   );
 }
 
 export default async function Home() {
-  const [categories, categoriesViewMode] = await Promise.all([
+  const [categories, categoriesViewMode, productsViewMode] = await Promise.all([
     getCategories(),
     readViewModeCookie(CATEGORIES_VIEW_COOKIE),
+    readViewModeCookie(PRODUCTS_VIEW_COOKIE),
   ]);
   const siteUrl = process.env.PUBLIC_BASE_URL!;
 
@@ -103,7 +108,7 @@ export default async function Home() {
         <Suspense fallback={<CategoriesSkeleton mode={categoriesViewMode} />}>
           <CategoriesSection />
         </Suspense>
-        <Suspense fallback={<ProductsSkeleton />}>
+        <Suspense fallback={<ProductsSkeleton mode={productsViewMode} />}>
           <ProductsSection />
         </Suspense>
       </SearchParamsFilterProvider>

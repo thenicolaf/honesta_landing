@@ -117,7 +117,7 @@ interface DetailsContentProps {
   occasions?: string[];
 }
 
-function hasDetailsContent({
+export function hasDetailsContent({
   benefits,
   nutrition,
   servingIdeas,
@@ -158,12 +158,36 @@ function DetailsContent({
 
 // ─── ProductExpandedDetails ──────────────────────────────────────────────────
 
-export function ProductExpandedDetails(props: DetailsContentProps) {
-  if (!hasDetailsContent(props)) return null;
+export function ProductExpandedDetails({
+  benefits,
+  nutrition,
+  servingIdeas,
+  occasions,
+}: DetailsContentProps) {
+  if (!hasDetailsContent({ benefits, nutrition, servingIdeas, occasions }))
+    return null;
 
   return (
     <div className="flex flex-col gap-6 pt-5 border-t border-parchment/50">
-      <DetailsContent {...props} />
+      {/* Benefits ul is overridden to a 2-column grid so short descriptions
+          don't leave large empty space on the right. */}
+      {benefits && benefits.length > 0 && (
+        <div className="[&_ul]:grid [&_ul]:grid-cols-2 [&_ul]:gap-x-4 [&_ul]:gap-y-2.5">
+          <BenefitsList benefits={benefits} />
+        </div>
+      )}
+      {nutrition && <NutritionTable nutrition={nutrition} />}
+      {((servingIdeas && servingIdeas.length > 0) ||
+        (occasions && occasions.length > 0)) && (
+        <div className="grid grid-cols-2 gap-4">
+          {servingIdeas && servingIdeas.length > 0 && (
+            <ServingIdeas servingIdeas={servingIdeas} />
+          )}
+          {occasions && occasions.length > 0 && (
+            <ProductOccasions occasions={occasions} />
+          )}
+        </div>
+      )}
     </div>
   );
 }

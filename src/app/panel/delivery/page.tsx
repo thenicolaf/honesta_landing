@@ -1,9 +1,10 @@
 import { Suspense } from "react";
 import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
-import { SkeletonGrid, DeliveryInfo } from "@/shared/ui";
+import { DeliveryInfo } from "@/shared/ui";
 import { formatDeliveryDaysRange } from "@/shared/utils/calculateDelivery";
 import { getDeliverySettings } from "@/lib/deliveryDb";
 import { EmirateCard } from "@/pages_flow/panel/delivery/EmirateCard";
+import { DeliverySkeleton } from "@/pages_flow/panel/delivery/DeliverySkeleton";
 
 async function DeliveryContent() {
   const settings = await getDeliverySettings();
@@ -26,7 +27,7 @@ export default function Page() {
   return (
     <>
       <AdminPageHeader title="Delivery Settings" label="Admin Panel" />
-      <Suspense fallback={<SkeletonGrid count={7} className="grid-cols-1 sm:grid-cols-2 xl:grid-cols-3" />}>
+      <Suspense fallback={<DeliverySkeleton count={7} />}>
         <DeliveryContent />
       </Suspense>
     </>

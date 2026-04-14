@@ -1,9 +1,10 @@
 import { Suspense } from "react";
 import { Plus } from "lucide-react";
-import { Button, SkeletonGrid, ToastFromUrl } from "@/shared/ui";
+import { Button, ToastFromUrl } from "@/shared/ui";
 import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
 import { getPromoCodes } from "@/lib/promoCodesDb";
 import { PromoCodeList } from "@/pages_flow/panel/promo-codes/PromoCodesPage";
+import { PromoCodesSkeleton } from "@/pages_flow/panel/promo-codes/PromoCodesSkeleton";
 
 async function PromoCodesContent() {
   const promoCodes = await getPromoCodes();
@@ -29,7 +30,7 @@ export default function Page() {
         }
       />
 
-      <Suspense fallback={<SkeletonGrid count={6} className="grid-cols-1 sm:grid-cols-2 xl:grid-cols-3" />}>
+      <Suspense fallback={<PromoCodesSkeleton count={6} />}>
         <PromoCodesContent />
       </Suspense>
     </>
