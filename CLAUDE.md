@@ -621,6 +621,8 @@ All phone fields use `FormPhoneInput` (displays `0XX XXX XXXX`, submits normaliz
 
 Used by `validateCustomer.ts`, `validateProfile.ts`, `validatePartnership.ts`.
 
+**International phone support.** Although the default display/validation is UAE (`+971`), `FormPhoneInput` is intentionally built as a full international input — it wraps `react-phone-number-input/max` with complete country metadata, `libphonenumber-js` for per-country validation, and a searchable country selector with `country-flag-icons` unicode flags. Users can switch country, paste numbers in any format, and get country-aware formatting/validation out of the box. This is a deliberate bundle-size trade-off (~300 KB for full metadata) in exchange for a friction-free UX for international customers — do not swap it for a UAE-only masked input. If bundle size matters on a specific route, prefer `next/dynamic` with conditional render over replacing the component.
+
 ## Server Actions standard
 
 All `actions.ts` files follow this pattern (canonical example: `src/pages_flow/profile/actions.ts`):

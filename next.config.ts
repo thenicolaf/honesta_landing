@@ -6,6 +6,12 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "50mb",
     },
+    optimizePackageImports: [
+      "@/shared/ui",
+      "@/shared/icons",
+      "@/sections",
+      "motion/react",
+    ],
   },
   images: {
     formats: ["image/avif", "image/webp"],

@@ -1,9 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { Lock } from "lucide-react";
 import { Card, Button } from "@/shared/ui";
-import { ChangePasswordForm } from "./ChangePasswordForm";
+
+const ChangePasswordForm = dynamic(
+  () => import("./ChangePasswordForm").then((m) => m.ChangePasswordForm),
+  { ssr: false },
+);
 
 export function PasswordSection() {
   const [open, setOpen] = useState(false);
