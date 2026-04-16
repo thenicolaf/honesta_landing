@@ -1,6 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase.server";
 
-const ALLOWED_BUCKETS = ["products", "categories"] as const;
+const ALLOWED_BUCKETS = ["products", "categories", "mixes"] as const;
 export type StorageBucket = (typeof ALLOWED_BUCKETS)[number];
 
 function assertBucket(bucket: string): asserts bucket is StorageBucket {

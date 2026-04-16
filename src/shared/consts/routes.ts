@@ -13,6 +13,7 @@ export const ADMIN_ROUTES: RouteItem[] = [
   { href: "/panel", label: "Dashboard" },
   { href: "/panel/categories", label: "Categories" },
   { href: "/panel/products", label: "Products" },
+  { href: "/panel/mixes", label: "Mixes" },
   { href: "/panel/all-orders", label: "All Orders" },
   { href: "/panel/partnerships", label: "Partnerships" },
   { href: "/panel/promotions", label: "Promotions" },
