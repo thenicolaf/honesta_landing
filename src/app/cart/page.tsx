@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { CartPage } from "@/pages_flow/cart";
 import { CartSkeleton } from "@/pages_flow/cart/ui/CartSkeleton";
 import { getDeliverySettings } from "@/lib/deliveryDb";
+import { getActivePromotionsMap } from "@/lib/promotionsDb";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
 
 export const metadata: Metadata = {
@@ -12,15 +13,18 @@ export const metadata: Metadata = {
 };
 
 async function CartContent() {
-  const [deliverySettings, { data: { user } }] = await Promise.all([
-    getDeliverySettings(),
-    createSupabaseServerClient().then((s) => s.auth.getUser()),
-  ]);
+  const [deliverySettings, { data: { user } }, activePromotions] =
+    await Promise.all([
+      getDeliverySettings(),
+      createSupabaseServerClient().then((s) => s.auth.getUser()),
+      getActivePromotionsMap(),
+    ]);
 
   return (
     <CartPage
       deliverySettings={deliverySettings}
       isAuthenticated={!!user}
+      activePromotions={activePromotions}
     />
   );
 }

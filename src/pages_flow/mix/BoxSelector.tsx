@@ -29,7 +29,7 @@ export function BoxSelector({ boxes, selectedId, onSelect }: BoxSelectorProps) {
                 : "border-transparent hover:shadow-md",
             )}
           >
-            <div className="relative aspect-4/3 bg-sand">
+            <div className="relative w-full aspect-4/3 bg-sand">
               {box.image_url ? (
                 <Image
                   src={box.image_url}

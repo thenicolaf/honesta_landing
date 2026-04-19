@@ -16,6 +16,10 @@ export function useCartPromo(
 ) {
   const [appliedPromoCode, setAppliedPromoCode] =
     useState<AppliedPromoCode | null>(null);
+  const appliedPromoCodeRef = useRef<AppliedPromoCode | null>(null);
+  useEffect(() => {
+    appliedPromoCodeRef.current = appliedPromoCode;
+  }, [appliedPromoCode]);
 
   // Load stored promo on mount; reset on user change
   const lastUserIdRef = useRef<string | null | undefined>(undefined);
@@ -70,5 +74,23 @@ export function useCartPromo(
     storePromo(null);
   }, []);
 
-  return { appliedPromoCode, applyPromoCode, removePromoCode };
+  const revalidatePromo = useCallback(async () => {
+    const current = appliedPromoCodeRef.current;
+    if (!current) return;
+    const result = await applyPromoCodeAction(current.code, getItems());
+    if (!result.ok) {
+      setAppliedPromoCode(null);
+      storePromo(null);
+      return;
+    }
+    setAppliedPromoCode(result.appliedCode);
+    storePromo(result.appliedCode);
+  }, []);
+
+  return {
+    appliedPromoCode,
+    applyPromoCode,
+    removePromoCode,
+    revalidatePromo,
+  };
 }

@@ -26,6 +26,44 @@ export const getPromotions = cache(async (): Promise<Promotion[]> => {
   return (data ?? []) as Promotion[];
 });
 
+export type ActivePromotion = {
+  discount_type: "percentage" | "fixed";
+  discount_value: number;
+  ends_at: string;
+};
+export type ActivePromotionsMap = Record<string, ActivePromotion>;
+
+export const getActivePromotionsMap = cache(
+  async (): Promise<ActivePromotionsMap> => {
+    const nowIso = new Date().toISOString();
+    const { data } = await supabaseAdmin
+      .from("promotions")
+      .select(
+        "discount_type, discount_value, starts_at, ends_at, is_active, promotion_products(product_id)",
+      )
+      .eq("is_active", true)
+      .lte("starts_at", nowIso)
+      .gt("ends_at", nowIso);
+
+    const map: ActivePromotionsMap = {};
+    for (const promo of (data ?? []) as Array<{
+      discount_type: "percentage" | "fixed";
+      discount_value: number;
+      ends_at: string;
+      promotion_products: { product_id: string }[];
+    }>) {
+      for (const link of promo.promotion_products ?? []) {
+        map[link.product_id] = {
+          discount_type: promo.discount_type,
+          discount_value: Number(promo.discount_value),
+          ends_at: promo.ends_at,
+        };
+      }
+    }
+    return map;
+  },
+);
+
 export type PromotionProductOption = {
   value: string;
   label: string;

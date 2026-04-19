@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useLayoutEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useCart } from "@/providers";
 import { EmptyCart } from "./EmptyCart";
@@ -10,17 +11,28 @@ import { buttonVariants } from "@/shared/ui";
 import { CartSkeleton } from "./ui/CartSkeleton";
 import { HashLink } from "@/sections/navbar";
 import type { DeliverySetting } from "@/lib/deliveryDb";
+import type { ActivePromotionsMap } from "@/lib/promotionsDb";
 
 interface CartPageProps {
   deliverySettings: DeliverySetting[];
   isAuthenticated: boolean;
+  activePromotions: ActivePromotionsMap;
 }
 
 export function CartPage({
   deliverySettings,
   isAuthenticated,
+  activePromotions,
 }: CartPageProps) {
-  const { items, isHydrated } = useCart();
+  const { items, isHydrated, refresh, applyServerPromotions } = useCart();
+
+  useLayoutEffect(() => {
+    applyServerPromotions(activePromotions);
+  }, [activePromotions, applyServerPromotions]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
 
   if (!isHydrated) {
     return <CartSkeleton />;

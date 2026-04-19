@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useCart } from "@/providers";
 import { CheckoutFormSection } from "./ui/CheckoutFormSection";
 import { OrderSummary } from "./ui/OrderSummary";
@@ -13,12 +13,14 @@ import { parseAddress } from "@/shared/utils/address";
 import type { CustomerInfo } from "@/shared/types";
 import type { UserAddress } from "@/lib/addressesDb";
 import type { DeliverySetting } from "@/lib/deliveryDb";
+import type { ActivePromotionsMap } from "@/lib/promotionsDb";
 
 interface CheckoutPageProps {
   defaultValues?: Partial<CustomerInfo>;
   addresses?: UserAddress[];
   deliverySettings: DeliverySetting[];
   isAuthenticated: boolean;
+  activePromotions: ActivePromotionsMap;
 }
 
 export function CheckoutPage({
@@ -26,11 +28,21 @@ export function CheckoutPage({
   addresses,
   deliverySettings,
   isAuthenticated,
+  activePromotions,
 }: CheckoutPageProps) {
-  const { items, total, isHydrated } = useCart();
+  const { items, total, isHydrated, refresh, applyServerPromotions } =
+    useCart();
   const [emirate, setEmirate] = useState(() =>
     extractEmirateFromAddress(defaultValues?.address ?? "", addresses),
   );
+
+  useLayoutEffect(() => {
+    applyServerPromotions(activePromotions);
+  }, [activePromotions, applyServerPromotions]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
 
   const delivery = calculateDelivery(total, emirate, deliverySettings);
 
