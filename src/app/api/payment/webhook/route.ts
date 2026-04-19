@@ -4,6 +4,7 @@ import { OrderStatus } from "@/shared/types";
 import { createNotification } from "@/lib/notificationsDb";
 import { recordPromoCodeRedemption } from "@/lib/promoCodesDb";
 import { clearCartAndCleanup } from "@/lib/cartDb";
+import { cleanupOrphanedMixVariants } from "@/pages_flow/mix/actions";
 
 const STATUS_MAP: Record<string, OrderStatus> = {
   PURCHASED: OrderStatus.PAID,
@@ -47,6 +48,16 @@ export async function POST(request: NextRequest) {
         }
         if (order.user_id) {
           await clearCartAndCleanup(supabaseAdmin, order.user_id as string);
+        }
+        const { data: orderItems } = await supabaseAdmin
+          .from("order_items")
+          .select("variant_id")
+          .eq("order_id", order.id);
+        const variantIds = (orderItems ?? [])
+          .map((i) => i.variant_id)
+          .filter((id): id is string => !!id);
+        if (variantIds.length > 0) {
+          await cleanupOrphanedMixVariants(variantIds);
         }
         await createNotification({
           type: "order_paid",

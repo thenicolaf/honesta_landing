@@ -11,6 +11,7 @@ import { formatAed, formatDateTime } from "@/shared/ui/Table";
 import { IconReceipt } from "@/shared/icons";
 import { StatusBadge } from "./StatusBadge";
 import { CopyOrderId } from "./CopyOrderId";
+import { OrderMixComposition } from "./OrderMixComposition";
 import { displayAddress } from "@/shared/utils/address";
 import type { Order } from "../types";
 
@@ -30,13 +31,16 @@ function ItemLine({ item }: { item: Order["order_items"][number] }) {
       : "text-earth/60";
 
   return (
-    <div className="flex items-center justify-between gap-2">
-      <span className="text-2xs text-earth truncate">
-        {item.name} <span className="text-earth/40">×{item.quantity}</span>
-      </span>
-      <span className={`text-2xs shrink-0 ${priceColor}`}>
-        {formatAed(finalLineTotal)}
-      </span>
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-2xs text-earth truncate">
+          {item.name} <span className="text-earth/40">×{item.quantity}</span>
+        </span>
+        <span className={`text-2xs shrink-0 ${priceColor}`}>
+          {formatAed(finalLineTotal)}
+        </span>
+      </div>
+      <OrderMixComposition items={item.mix_composition} />
     </div>
   );
 }
@@ -107,7 +111,7 @@ export function OrderCards({ orders }: { orders: Order[] }) {
           </DataCardHeader>
 
           <DataCardBody className="gap-0 flex-1">
-            <div className="flex flex-col gap-0.5 grow">
+            <div className="flex flex-col gap-2 grow mb-2">
               {order.order_items.map((item) => (
                 <ItemLine key={item.id} item={item} />
               ))}

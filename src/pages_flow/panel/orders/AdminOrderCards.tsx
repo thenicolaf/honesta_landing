@@ -12,6 +12,7 @@ import { formatAed, formatDateTime } from "@/shared/ui/Table";
 import { IconReceipt } from "@/shared/icons";
 import { StatusBadge } from "@/pages_flow/orders/ui/StatusBadge";
 import { CopyOrderId } from "@/pages_flow/orders/ui/CopyOrderId";
+import { OrderMixComposition } from "@/pages_flow/orders/ui/OrderMixComposition";
 import type { AdminOrder } from "@/pages_flow/orders/types";
 import { FulfilledToggle } from "./FulfilledToggle";
 
@@ -30,13 +31,16 @@ function ItemLine({ item }: { item: AdminOrder["order_items"][number] }) {
       : "text-earth/60";
 
   return (
-    <div className="flex items-center justify-between gap-2">
-      <span className="text-2xs text-earth truncate">
-        {item.name} <span className="text-earth/40">×{item.quantity}</span>
-      </span>
-      <span className={`text-2xs shrink-0 ${priceColor}`}>
-        {formatAed(finalLineTotal)}
-      </span>
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-2xs text-earth truncate">
+          {item.name} <span className="text-earth/40">×{item.quantity}</span>
+        </span>
+        <span className={`text-2xs shrink-0 ${priceColor}`}>
+          {formatAed(finalLineTotal)}
+        </span>
+      </div>
+      <OrderMixComposition items={item.mix_composition} />
     </div>
   );
 }
@@ -133,7 +137,7 @@ export function AdminOrderCards({
           <DataCardBody className="gap-0 flex-1">
             <CustomerInfo order={order} />
 
-            <div className="flex flex-col gap-0.5 mt-2">
+            <div className="flex flex-col gap-2 mt-2 mb-2">
               {order.order_items.map((item) => (
                 <ItemLine key={item.id} item={item} />
               ))}

@@ -5,6 +5,7 @@ import { OrderStatus } from "@/shared/types";
 import { createNotification } from "@/lib/notificationsDb";
 import { recordPromoCodeRedemption } from "@/lib/promoCodesDb";
 import { clearCartAndCleanup } from "@/lib/cartDb";
+import { cleanupOrphanedMixVariants } from "@/pages_flow/mix/actions";
 import { ClearCartOnSuccess } from "./ClearCartOnSuccess";
 import { ResultCard, MissingRefCard } from "./ui";
 
@@ -57,6 +58,19 @@ async function settleOrder(orderRef: string, success: boolean) {
       relatedId: order.id,
     }),
   ]);
+
+  if (success) {
+    const { data: orderItems } = await supabaseAdmin
+      .from("order_items")
+      .select("variant_id")
+      .eq("order_id", order.id);
+    const variantIds = (orderItems ?? [])
+      .map((i) => i.variant_id)
+      .filter((id): id is string => !!id);
+    if (variantIds.length > 0) {
+      await cleanupOrphanedMixVariants(variantIds);
+    }
+  }
 }
 
 export default async function CheckoutResultPage({
