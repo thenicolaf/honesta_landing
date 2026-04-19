@@ -422,6 +422,15 @@ Typography pattern: display H1 → `font-display font-bold italic`, H2–H3 → 
 
 Grain texture: add class `noise` + `relative` on a section — the `.noise::after` pseudo-element in `globals.css` renders a CSS-only SVG texture (no PNG).
 
+**Color semantics for product attribute lists** (rendered inside `ProductDetails` / `ProductExpandedDetails`, collapsed by default in cards/rows, expanded on detail pages):
+- **Tags** — `text-moss` + `bg-moss` bullet — natural qualities, positive signal
+- **Free From** — red `✕` prefix (`text-red-600`) on `text-earth/55` text — warning / absence marker
+- **Ingredients** — `text-earth/90` + bright `bg-orange` bullet (1.5px, not 1px) — factual composition, deliberately more prominent than Serving
+- **Serving Ideas** ("How to Enjoy") — `text-orange/85` + `bg-orange/60` bullet — warm hint
+- **Occasions** — `text-earth/65` + `bg-earth/25` bullet — neutral context
+
+The 2×2 grid layout inside Details/ExpandedDetails is: Tags | Free From / Serving | Occasions. On detail pages Ingredients appears full-width between Nutrition and the 2×2 grid.
+
 ## Icons
 
 **Rule: every SVG icon — including decorative ones — lives in `src/shared/icons/` as its own file and is exported from `src/shared/icons/index.ts`.**
@@ -547,7 +556,7 @@ Products have a **main image** (`image_url`) and an optional **gallery** (`image
 - **Product badge** — optional `badge` text field on both `products` and `categories` tables. Displayed via `Badge` component in `ProductHeader` and category cards. If empty/null, badge is hidden.
 - **Nutrition** — dynamic fields stored as `Record<string, { name: string; value: number }>` in `products.nutrition` JSONB. Admin form (`NutritionSection`) allows adding/removing fields via Popover form. Default 8 fields (Calories, Carbs, etc.) pre-populated for new products. `NutritionTable` in public UI iterates `Object.values(nutrition)`.
 - **Benefits** — managed via `BenefitsSection` with `MultiSelect` compound component. Supports inline creation (Popover form with name + description) and deletion. API: `POST/DELETE /api/options` with `entityType: "benefits"`. Benefits table: `benefits(id, name, description)`.
-- **Product fields** `servingIdeas`, `occasions` are rendered in collapsible detail sections on product cards and detail pages.
+- **Product fields** `servingIdeas`, `occasions`, `tags`, `freeFrom` are all rendered **inside the collapsible Details block** on product cards/rows (not exposed on the card body). On detail pages (`ProductExpandedDetails`, public + admin) they're joined by `ingredients` — the 2×2 grid is Tags / FreeFrom / Serving / Occasions, with Ingredients full-width between Nutrition and the grid. On cards/rows `ingredients` stays visible above `ProductNote` (the one exception). Section wrappers with uppercase labels: `ProductTagsSection`, `ProductFreeFromSection`, `ProductIngredientsSection` (all in [ProductDetails.tsx](src/sections/products/components/ProductDetails.tsx)). `hasDetailsContent` considers all six fields when deciding whether to show the Details trigger.
 - **Promotions** — `src/lib/promotionsDb.ts` handles CRUD. Promotions have `discount_type` (percentage | fixed), `discount_value`, date range, and `is_active` flag. Linked to products via `promotion_products` join table. Status is computed client-side via `getPromotionStatus()` (active | scheduled | expired) based on `is_active` + dates. Promotion list sorts active first.
 - **Order fulfillment** — `orders.is_fulfilled` boolean field. Admin toggles via `FulfilledToggle` checkbox component (`src/pages_flow/panel/orders/FulfilledToggle.tsx`) with server action. Filterable in admin orders view (Fulfilled / Unfulfilled).
 
@@ -826,10 +835,17 @@ Product/order/inquiry list pages use a shared pattern for search:
 **Product detail pages** (`src/app/products/[id]/page.tsx`):
 - **Product schema** — with `AggregateOffer` for multi-variant pricing, promotion `priceValidUntil`, `additionalProperty` for tags/freeFrom, all images.
 - **BreadcrumbList** — Home → Category → Product.
-- Structured data builders in `src/app/products/[id]/structured-data.ts`.
+- Structured data builders in `src/app/products/[id]/structured-data.ts`. `buildDescription(dbProduct, product)` is **shared between `generateMetadata` and the Product JSON-LD** so the meta-description and schema description stay in sync (tagline + tags + `Free from: …`).
+- `generateMetadata` returns `alternates.canonical` per-slug, `twitter` card (summary_large_image), `keywords` from `product.tags`, `openGraph.images` = full `[image_url, ...images]`, `openGraph.url` per-slug.
 - **Back navigation** — `FROM_MAP` maps `?from=` param to back button href/label (e.g. `?from=favorites` → "Back to favorites", `?from=cart` → "Back to cart"). Default: "Back to products" → `/#products`.
 
-**Indexing** — private routes have `robots: { index: false }`: `(auth)/*`, `/cart`, `/checkout/*`, `/panel/*`. `robots.ts` disallows these paths for crawlers. Sitemap includes only `/` and `/products/*`.
+**Mix page** (`src/app/mix/page.tsx`):
+- `generateMetadata` sets canonical `${siteUrl}/mix`, OG/Twitter image = first active `mix_box.image_url` (fallback to root `/og-image.jpg` if no active boxes).
+- `CollectionPage` JSON-LD with `ItemList` of active boxes + `BreadcrumbList` — both from `src/app/mix/structured-data.ts` (`buildMixCollectionJsonLd`, `buildMixBreadcrumbJsonLd`). Individual boxes are **not** separate URLs — they live under `/mix?box={slug}` query params, so only `/mix` is in sitemap (avoids canonical conflicts).
+
+**Indexing** — private routes have `robots: { index: false }`: `(auth)/*`, `/cart`, `/checkout/*`, `/panel/*`. `robots.ts` disallows these paths for crawlers. Sitemap (`src/app/sitemap.ts`) includes `/`, `/mix`, and `/products/*`.
+
+**Production `PUBLIC_BASE_URL`** — `metadataBase` in [src/app/metadata.ts](src/app/metadata.ts) reads this env var. If it's unset or points to `localhost`, all `og:image`/`canonical`/JSON-LD URLs become broken in production and crawlers fall back to the root-layout defaults (which looks like "generic site info instead of page info"). Always set this to the live origin in `.env.production`.
 
 ## Error pages
 
