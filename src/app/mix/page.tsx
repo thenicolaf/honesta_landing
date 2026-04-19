@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Skeleton, EmptyState, buttonVariants } from "@/shared/ui";
@@ -5,8 +6,44 @@ import { getActiveMixBoxes } from "@/lib/mixBoxesDb";
 import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvider";
 import { MixBuilderPage } from "@/pages_flow/mix/MixBuilderPage";
 import { HashLink } from "@/sections/navbar";
+import {
+  buildMixCollectionJsonLd,
+  buildMixBreadcrumbJsonLd,
+} from "./structured-data";
+
+const MIX_DESCRIPTION =
+  "Build your own HONESTA dried-fruit mix. Pick a box, fill each cell with fruit of your choice — natural, no sugar, no additives.";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const siteUrl = process.env.PUBLIC_BASE_URL!;
+  const mixUrl = `${siteUrl}/mix`;
+  const boxes = await getActiveMixBoxes();
+  const ogImage = boxes.find((b) => b.image_url)?.image_url ?? undefined;
+
+  return {
+    title: "Build Your Mix",
+    description: MIX_DESCRIPTION,
+    alternates: { canonical: mixUrl },
+    openGraph: {
+      title: "Build Your Mix — HONESTA",
+      description: MIX_DESCRIPTION,
+      url: mixUrl,
+      siteName: "HONESTA",
+      locale: "en_US",
+      type: "website",
+      images: ogImage ? [{ url: ogImage }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Build Your Mix — HONESTA",
+      description: MIX_DESCRIPTION,
+      images: ogImage ? [ogImage] : undefined,
+    },
+  };
+}
 
 async function MixContent() {
+  const siteUrl = process.env.PUBLIC_BASE_URL!;
   const boxes = await getActiveMixBoxes();
 
   if (boxes.length === 0) {
@@ -23,7 +60,24 @@ async function MixContent() {
     );
   }
 
-  return <MixBuilderPage boxes={boxes} />;
+  const collectionJsonLd = buildMixCollectionJsonLd(boxes, siteUrl);
+  const breadcrumbJsonLd = buildMixBreadcrumbJsonLd(siteUrl);
+
+  return (
+    <>
+      {collectionJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
+        />
+      )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <MixBuilderPage boxes={boxes} />
+    </>
+  );
 }
 
 function MixSkeleton() {

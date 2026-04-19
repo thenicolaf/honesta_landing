@@ -5,7 +5,11 @@ import { Skeleton } from "@/shared/ui";
 import { getProductBySlug } from "@/lib/productsDb";
 import { mapDbProducts } from "@/sections/products/utils";
 import { ProductDetailPage } from "@/pages_flow/products/ProductDetailPage";
-import { buildProductJsonLd, buildBreadcrumbJsonLd } from "./structured-data";
+import {
+  buildProductJsonLd,
+  buildBreadcrumbJsonLd,
+  buildDescription,
+} from "./structured-data";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -17,18 +21,34 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const dbProduct = await getProductBySlug(id);
   if (!dbProduct) return {};
 
-  const description =
-    dbProduct.tagline ??
-    `${dbProduct.title} — natural dried fruit by HONESTA. No sugar. No additives.`;
+  const siteUrl = process.env.PUBLIC_BASE_URL!;
+  const [product] = mapDbProducts([dbProduct]);
+  const description = buildDescription(dbProduct, product);
+  const productUrl = `${siteUrl}/products/${dbProduct.slug}`;
+  const ogImages = [
+    dbProduct.image_url,
+    ...((dbProduct.images as string[] | null) ?? []),
+  ].filter((u): u is string => !!u);
 
   return {
     title: dbProduct.title,
     description,
+    keywords: product.tags.length > 0 ? product.tags : undefined,
+    alternates: { canonical: productUrl },
     openGraph: {
       title: dbProduct.title,
       description,
-      images: dbProduct.image_url ? [{ url: dbProduct.image_url }] : [],
+      url: productUrl,
+      siteName: "HONESTA",
+      locale: "en_US",
       type: "website",
+      images: ogImages.length > 0 ? ogImages.map((url) => ({ url })) : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: dbProduct.title,
+      description,
+      images: ogImages.length > 0 ? ogImages : undefined,
     },
   };
 }
