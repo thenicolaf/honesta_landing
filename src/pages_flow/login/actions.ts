@@ -51,15 +51,21 @@ export async function signIn(
     return { fieldErrors, values };
   }
 
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-  if (error) {
-    return { error: mapAuthError(error.message), values };
+    if (error) {
+      return { error: mapAuthError(error.message), values };
+    }
+
+    redirect(next.startsWith("/") ? next : "/");
+  } catch (err) {
+    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
+    console.error("Login error:", err);
+    return { error: "Something went wrong. Please try again.", values };
   }
-
-  redirect(next.startsWith("/") ? next : "/");
 }

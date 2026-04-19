@@ -118,3 +118,21 @@ function toProps(p: AddressParts): ParsedAddressProps {
     defaultFlatNumber: p.flatNumber || undefined,
   };
 }
+
+/**
+ * Maps per-field `CustomerErrors` (flat, keyed by form input name) to the
+ * `AddressFieldErrors` shape consumed by `<AddressWithMap>`.
+ */
+export function mapAddressFieldErrors(fieldErrors?: {
+  emirate?: string;
+  addressCity?: string;
+  addressArea?: string;
+  addressBuilding?: string;
+}) {
+  return {
+    emirate: fieldErrors?.emirate,
+    city: fieldErrors?.addressCity,
+    area: fieldErrors?.addressArea,
+    buildingName: fieldErrors?.addressBuilding,
+  };
+}

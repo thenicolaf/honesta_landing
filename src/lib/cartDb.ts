@@ -18,10 +18,24 @@ type CartDbRow = {
       title: string;
       slug: string;
       image_url: string | null;
+      status: string;
       promotion_products: { promotions: PromotionRow | PromotionRow[] }[];
     };
   };
 };
+
+export async function getCartItemCount(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<number> {
+  const { data } = await supabase
+    .from("cart_items")
+    .select("quantity")
+    .eq("user_id", userId);
+
+  if (!data) return 0;
+  return data.reduce((sum, row) => sum + row.quantity, 0);
+}
 
 export async function getCartFromDb(
   supabase: SupabaseClient,
@@ -32,7 +46,7 @@ export async function getCartFromDb(
       `variant_id, quantity,
        product_variants(
          id, weight_g, price, product_id,
-         products(title, slug, image_url,
+         products(title, slug, image_url, status,
            promotion_products(promotions(discount_type, discount_value, starts_at, ends_at, is_active))
          )
        )`,
@@ -40,11 +54,71 @@ export async function getCartFromDb(
 
   if (error || !data) return [];
 
-  return (data as unknown as CartDbRow[]).map((row) => {
+  const rows = data as unknown as CartDbRow[];
+
+  const mixVariantIds = rows
+    .filter((r) => r.product_variants.products.status === "system")
+    .map((r) => r.product_variants.id);
+
+  type MixCellRow = {
+    variant_id: string;
+    preset_id: string;
+    mix_box_presets: {
+      weight_g: number;
+      price: string;
+      product: { title: string; image_url: string | null } | null;
+    };
+  };
+
+  const mixCellsMap = new Map<
+    string,
+    CartItem["mixItems"]
+  >();
+
+  if (mixVariantIds.length > 0) {
+    const { data: cells } = await supabase
+      .from("mix_variant_cells")
+      .select(
+        "variant_id, preset_id, mix_box_presets:preset_id(weight_g, price, product:products(title, image_url))",
+      )
+      .in("variant_id", mixVariantIds);
+
+    if (cells) {
+      const grouped = new Map<string, Map<string, { name: string; image_url?: string; count: number; weight_g: number; price: number }>>();
+      for (const cell of cells as unknown as MixCellRow[]) {
+        if (!grouped.has(cell.variant_id)) grouped.set(cell.variant_id, new Map());
+        const presetMap = grouped.get(cell.variant_id)!;
+        const preset = cell.mix_box_presets;
+        const product = preset.product as unknown;
+        const prod = (Array.isArray(product) ? product[0] : product) as { title: string; image_url: string | null } | null;
+        const key = cell.preset_id;
+        const existing = presetMap.get(key);
+        if (existing) {
+          existing.count++;
+        } else {
+          presetMap.set(key, {
+            name: prod?.title ?? "—",
+            image_url: prod?.image_url ?? undefined,
+            count: 1,
+            weight_g: preset.weight_g,
+            price: Number(preset.price),
+          });
+        }
+      }
+      for (const [variantId, presetMap] of grouped) {
+        mixCellsMap.set(variantId, Array.from(presetMap.values()));
+      }
+    }
+  }
+
+  return rows.map((row) => {
     const v = row.product_variants;
     const product = v.products;
+    const isMix = product.status === "system";
     const originalPrice = Number(v.price);
-    const activePromo = findActivePromotion(product.promotion_products);
+    const activePromo = isMix
+      ? null
+      : findActivePromotion(product.promotion_products);
 
     const price = activePromo
       ? calculateDiscountedPrice(
@@ -54,7 +128,7 @@ export async function getCartFromDb(
         )
       : originalPrice;
 
-    return {
+    const item: CartItem = {
       variantId: v.id,
       productId: v.product_id,
       slug: product.slug,
@@ -66,6 +140,13 @@ export async function getCartFromDb(
       image_url: product.image_url ?? undefined,
       weight_g: v.weight_g,
     };
+
+    if (isMix) {
+      item.isMix = true;
+      item.mixItems = mixCellsMap.get(v.id);
+    }
+
+    return item;
   });
 }
 
@@ -115,4 +196,29 @@ export async function clearCartInDb(
   userId: string,
 ): Promise<void> {
   await supabase.from("cart_items").delete().eq("user_id", userId);
+}
+
+/**
+ * Clears the user's cart and cleans up orphaned mix-variants in a single pass.
+ * Use this instead of clearCartInDb after checkout or when clearing the cart from the user's side.
+ */
+export async function clearCartAndCleanup(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<void> {
+  const { data } = await supabase
+    .from("cart_items")
+    .select("variant_id")
+    .eq("user_id", userId);
+
+  const variantIds = (data ?? []).map((r) => r.variant_id as string);
+
+  await supabase.from("cart_items").delete().eq("user_id", userId);
+
+  if (variantIds.length > 0) {
+    const { cleanupOrphanedMixVariants } = await import(
+      "@/pages_flow/mix/actions"
+    );
+    await cleanupOrphanedMixVariants(variantIds);
+  }
 }

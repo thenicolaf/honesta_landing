@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Card, DeliveryInfo } from "@/shared/ui";
+import { Button, buttonVariants, Card, DeliveryInfo } from "@/shared/ui";
 import { useCart } from "@/providers";
 import { getCartTotals } from "@/lib/cart";
 import { formatDeliveryDaysRange } from "@/shared/utils/calculateDelivery";
@@ -89,16 +89,11 @@ export function CartSummary({ deliverySettings }: CartSummaryProps) {
         <Button className="w-full" href="/checkout">
           Proceed to Checkout
         </Button>
-        <HashLink href="/#products" className="text-center">
-          <Button
-            variant={"text"}
-            type="button"
-            as="button"
-            size={"sm"}
-            className="text-earth/50 hover:text-orange mx-auto"
-          >
-            Continue Shopping
-          </Button>
+        <HashLink
+          href="/#products"
+          className={buttonVariants({ variant: "text", size: "sm" }) + " text-earth/50 hover:text-orange mx-auto"}
+        >
+          Continue Shopping
         </HashLink>
       </div>
     </>

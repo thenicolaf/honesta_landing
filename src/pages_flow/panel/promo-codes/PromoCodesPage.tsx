@@ -2,14 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2, Pencil } from "lucide-react";
+import { Trash2, Pencil } from "lucide-react";
 import {
   Button,
   Badge,
   Card,
   CopyText,
   EmptyState,
-  ToastFromUrl,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -167,77 +166,36 @@ const STATUS_ORDER: Record<PromoCodeStatus, number> = {
   expired: 3,
 };
 
-export function PromoCodesPage({
+export function PromoCodeList({
   promoCodes,
 }: {
   promoCodes: PromoCodeListItem[];
 }) {
+  if (promoCodes.length === 0) {
+    return (
+      <EmptyState
+        label="No promo codes yet"
+        description="Create one to give customers a discount."
+        action={{
+          label: "New Promo Code",
+          href: "/panel/promo-codes/create",
+          variant: "primary",
+        }}
+      />
+    );
+  }
+
   const sorted = [...promoCodes].sort((a, b) => {
-    const sa =
-      STATUS_ORDER[
-        getPromoCodeStatus(
-          a.is_active,
-          a.starts_at,
-          a.ends_at,
-          a.used_count,
-          a.max_uses,
-        )
-      ];
-    const sb =
-      STATUS_ORDER[
-        getPromoCodeStatus(
-          b.is_active,
-          b.starts_at,
-          b.ends_at,
-          b.used_count,
-          b.max_uses,
-        )
-      ];
+    const sa = STATUS_ORDER[getPromoCodeStatus(a.is_active, a.starts_at, a.ends_at, a.used_count, a.max_uses)];
+    const sb = STATUS_ORDER[getPromoCodeStatus(b.is_active, b.starts_at, b.ends_at, b.used_count, b.max_uses)];
     return sa - sb;
   });
 
   return (
-    <>
-      <ToastFromUrl />
-
-      <div className="flex items-center justify-between gap-4 mb-2">
-        <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-moss">
-          Admin Panel
-        </p>
-        <Button
-          as="a"
-          href="/panel/promo-codes/create"
-          variant="primary"
-          size="sm"
-          startIcon={<Plus size={14} />}
-        >
-          New Promo Code
-        </Button>
-      </div>
-      <h1
-        className="font-display font-bold italic text-heading mb-6 leading-tight"
-        style={{ fontSize: "clamp(1.75rem, 4vw, 2.5rem)" }}
-      >
-        Promo Codes
-      </h1>
-
-      {promoCodes.length === 0 ? (
-        <EmptyState
-          label="No promo codes yet"
-          description="Create one to give customers a discount."
-          action={{
-            label: "New Promo Code",
-            href: "/panel/promo-codes/create",
-            variant: "primary",
-          }}
-        />
-      ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-          {sorted.map((promo) => (
-            <PromoCodeCard key={promo.id} promo={promo} />
-          ))}
-        </div>
-      )}
-    </>
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+      {sorted.map((promo) => (
+        <PromoCodeCard key={promo.id} promo={promo} />
+      ))}
+    </div>
   );
 }

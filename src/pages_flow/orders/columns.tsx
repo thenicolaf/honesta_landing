@@ -10,6 +10,7 @@ import { CopyText } from "@/shared/ui";
 import { displayAddress } from "@/shared/utils/address";
 import { StatusBadge } from "./ui/StatusBadge";
 import { CopyOrderId } from "./ui/CopyOrderId";
+import { OrderMixComposition } from "./ui/OrderMixComposition";
 import type { Order, AdminOrder } from "./types";
 import { FulfilledToggle } from "@/pages_flow/panel/orders/FulfilledToggle";
 
@@ -46,7 +47,7 @@ export const itemsColumn: ColumnDef<Order, OrderKey> = {
   key: "items",
   header: "Items",
   cell: (o) => (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-3">
       {o.order_items.map((item) => {
         const hasPromotion =
           item.original_price != null && item.original_price > item.price;
@@ -55,43 +56,43 @@ export const itemsColumn: ColumnDef<Order, OrderKey> = {
         const finalLineTotal =
           Math.max(0, item.price - promoPerUnit) * item.quantity;
         return (
-          <div
-            key={item.id}
-            className="flex items-start justify-between gap-3"
-          >
-            <span className="text-sm text-earth">
-              {item.name}
-              <span className="text-earth/40 ml-1">×{item.quantity}</span>
-            </span>
-            <div className="shrink-0 flex flex-col items-end whitespace-nowrap">
-              <span
-                className={
-                  hasPromoCode
-                    ? "text-2xs text-moss font-semibold"
-                    : hasPromotion
-                      ? "text-2xs text-orange font-semibold"
-                      : "text-2xs text-earth/60"
-                }
-              >
-                {formatAed(finalLineTotal)}
+          <div key={item.id} className="flex flex-col gap-1">
+            <div className="flex items-start justify-between gap-3">
+              <span className="text-sm text-earth">
+                {item.name}
+                <span className="text-earth/40 ml-1">×{item.quantity}</span>
               </span>
-              {hasPromoCode && (
-                <span className="text-2xs text-earth/30 line-through">
-                  {formatAed(item.price * item.quantity)}
+              <div className="shrink-0 flex flex-col items-end whitespace-nowrap">
+                <span
+                  className={
+                    hasPromoCode
+                      ? "text-2xs text-moss font-semibold"
+                      : hasPromotion
+                        ? "text-2xs text-orange font-semibold"
+                        : "text-2xs text-earth/60"
+                  }
+                >
+                  {formatAed(finalLineTotal)}
                 </span>
-              )}
-              {hasPromotion && (
-                <span className="text-2xs text-earth/30 line-through">
-                  {formatAed((item.original_price ?? 0) * item.quantity)}
-                </span>
-              )}
+                {hasPromoCode && (
+                  <span className="text-2xs text-earth/30 line-through">
+                    {formatAed(item.price * item.quantity)}
+                  </span>
+                )}
+                {hasPromotion && (
+                  <span className="text-2xs text-earth/30 line-through">
+                    {formatAed((item.original_price ?? 0) * item.quantity)}
+                  </span>
+                )}
+              </div>
             </div>
+            <OrderMixComposition items={item.mix_composition} />
           </div>
         );
       })}
     </div>
   ),
-  headerClassName: "min-w-56",
+  headerClassName: "min-w-80",
 };
 
 export const pricingColumn: ColumnDef<Order, OrderKey> = {

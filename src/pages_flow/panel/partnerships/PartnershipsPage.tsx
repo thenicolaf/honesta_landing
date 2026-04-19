@@ -1,45 +1,22 @@
 "use client";
 
-import { useMemo } from "react";
-import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
 import { DataTable, DataCardPagination } from "@/shared/ui";
 import { Handshake } from "lucide-react";
-import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvider";
-import { useFilterBar } from "@/providers/FilterProvider";
 import { inquiryColumns } from "./columns";
-import { filterInquiries } from "./helpers";
+import { useFilteredInquiries } from "./useFilteredInquiries";
 import { useInquiriesTable } from "./useInquiriesTable";
 import { useRealtimeInquiries } from "./useRealtimeInquiries";
 import { InquiryFilters } from "./InquiryFilters";
 import { InquiryCards } from "./InquiryCards";
 import type { PartnershipInquiry } from "./types";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const FILTER_KEYS = [
-  "search",
-  "type",
-  "sortKey",
-  "sortDir",
-  "page",
-  "pageSize",
-];
-
-// ─── Inner (consumes filter context) ──────────────────────────────────────────
-
-function PartnershipsInner({
+export function PartnershipsInner({
   inquiries: initial,
 }: {
   inquiries: PartnershipInquiry[];
 }) {
   const inquiries = useRealtimeInquiries(initial);
-  const searchFilter = useFilterBar("search");
-  const typeFilter = useFilterBar("type");
-
-  const filtered = useMemo(
-    () => filterInquiries(inquiries, typeFilter.value, searchFilter.value),
-    [inquiries, typeFilter.value, searchFilter.value],
-  );
+  const { filtered, searchFilter, typeFilter } = useFilteredInquiries(inquiries);
 
   const { paginatedData, sort, onSort, pagination } = useInquiriesTable(
     filtered,
@@ -80,24 +57,6 @@ function PartnershipsInner({
           emptyDescription={emptyDescription}
         />
       </div>
-    </>
-  );
-}
-
-// ─── PartnershipsPage ─────────────────────────────────────────────────────────
-
-export function PartnershipsPage({
-  inquiries,
-}: {
-  inquiries: PartnershipInquiry[];
-}) {
-  return (
-    <>
-      <AdminPageHeader title="Partnerships" />
-
-      <SearchParamsFilterProvider keys={FILTER_KEYS}>
-        <PartnershipsInner inquiries={inquiries} />
-      </SearchParamsFilterProvider>
     </>
   );
 }

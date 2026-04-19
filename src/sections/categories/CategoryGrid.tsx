@@ -1,8 +1,9 @@
 "use client";
 
-import { motion } from "motion/react";
+import { ViewModeToggle } from "@/shared/ui";
+import { useViewMode } from "@/providers/ViewModeProvider";
 import { CategoryCard } from "./CategoryCard";
-import { containerVariants } from "./consts";
+import { CategoryCardRow } from "./CategoryCardRow";
 import type { DbCategory, CategoryCard as CategoryCardData } from "./types";
 
 export function CategoryGrid({
@@ -10,6 +11,8 @@ export function CategoryGrid({
 }: {
   categories?: DbCategory[];
 }) {
+  const { mode } = useViewMode();
+
   const categories: CategoryCardData[] = (dbCategories ?? []).map((c) => ({
     id: c.id,
     name: c.name,
@@ -22,17 +25,16 @@ export function CategoryGrid({
     href: `/?category=${c.slug}#products`,
   }));
 
+  const gridClass =
+    mode === "row"
+      ? "grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-2 lg:gap-6"
+      : "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
+
   return (
     <section id="categories" className="bg-sand py-20 md:py-28">
       <div className="mx-auto max-w-screen-2xl px-6 lg:px-10">
         {/* Section header */}
-        <motion.div
-          className="mb-14 text-center"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-        >
+        <div className="mb-10 text-center">
           <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-moss mb-4">
             Collections
           </p>
@@ -42,20 +44,23 @@ export function CategoryGrid({
           >
             Find your perfect snack
           </h2>
-        </motion.div>
+        </div>
+
+        {/* View toggle */}
+        <div className="mb-6 flex justify-end">
+          <ViewModeToggle />
+        </div>
 
         {/* Cards grid */}
-        <motion.div
-          className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-60px" }}
-        >
-          {categories.map((card) => (
-            <CategoryCard key={card.name} {...card} />
-          ))}
-        </motion.div>
+        <div className={gridClass}>
+          {categories.map((card) =>
+            mode === "row" ? (
+              <CategoryCardRow key={card.name} {...card} />
+            ) : (
+              <CategoryCard key={card.name} {...card} />
+            ),
+          )}
+        </div>
       </div>
     </section>
   );

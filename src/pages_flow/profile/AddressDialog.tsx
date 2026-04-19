@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import {
   Dialog,
   DialogContent,
@@ -9,12 +10,16 @@ import {
   DialogTitle,
   FormLabel,
   FormInput,
-  AddressWithMap,
   Button,
   toastSuccess,
   toastError,
   useDialog,
 } from "@/shared/ui";
+
+const AddressWithMap = dynamic(
+  () => import("@/shared/ui/AddressWithMap").then((m) => m.AddressWithMap),
+  { ssr: false },
+);
 import {
   createAddressAction,
   updateAddressAction,
@@ -76,6 +81,7 @@ function AddressDialogForm({
       router.refresh();
     }
     if (state?.error) toastError(state.error);
+    if (state?.fieldErrors) toastError("Please fill in the required fields");
   }, [state, close, router, isEdit]);
 
   const defaultLabel = state?.values?.label ?? editAddress?.label ?? undefined;

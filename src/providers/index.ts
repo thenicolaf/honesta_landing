@@ -1,4 +1,4 @@
-export { CartProvider, useCart } from "./CartProvider";
+export { CartProvider, useCart } from "./cart";
 export { FavoritesProvider, useFavorites } from "./FavoritesProvider";
 export {
   FilterProvider,

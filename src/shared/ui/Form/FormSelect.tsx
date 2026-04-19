@@ -9,6 +9,7 @@ import {
   SelectContent,
   SelectItem,
 } from "../Select";
+import { useFormReset } from "./useFormReset";
 
 type FormSelectOption =
   | string
@@ -24,6 +25,8 @@ interface FormSelectProps {
   options: FormSelectOption[];
   state?: "default" | "error";
   clearable?: boolean;
+  searchable?: boolean;
+  disabled?: boolean;
   className?: string;
   /** Extra classes applied to the trigger button. */
   triggerClassName?: string;
@@ -40,6 +43,8 @@ export function FormSelect({
   options,
   state,
   clearable = false,
+  searchable = false,
+  disabled = false,
   className,
   triggerClassName,
   onValueChange,
@@ -47,6 +52,10 @@ export function FormSelect({
   const [internalValue, setInternalValue] = useState(defaultValue);
   const isControlled = controlledValue !== undefined;
   const value = isControlled ? controlledValue : internalValue;
+
+  const resetRef = useFormReset<HTMLDivElement>(() =>
+    setInternalValue(defaultValue),
+  );
 
   const handleChange = (v: string) => {
     if (!isControlled) setInternalValue(v);
@@ -58,15 +67,17 @@ export function FormSelect({
   );
 
   return (
-    <div className={className}>
+    <div ref={resetRef} className={className}>
       <input type="hidden" id={id} name={name} value={value} />
       <Select
         value={value}
         onValueChange={handleChange}
         options={normalized}
         clearable={clearable}
+        searchable={searchable}
       >
         <SelectTrigger
+          disabled={disabled}
           className={cn(
             "w-full rounded-xl px-4 h-10 text-sm bg-cream",
             triggerClassName,

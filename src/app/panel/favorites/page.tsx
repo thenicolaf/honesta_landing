@@ -1,7 +1,15 @@
+import { Suspense } from "react";
 import { createSupabaseServerClient, supabaseAdmin } from "@/lib/supabase.server";
-import { FavoritesPage } from "@/pages_flow/favorites/FavoritesPage";
+import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
+import { ViewModeToggle } from "@/shared/ui";
+import { mapDbProducts } from "@/sections/products/utils/mapDbProducts";
+import { FavoritesGrid } from "@/pages_flow/favorites/FavoritesGrid";
+import { ViewModeProvider } from "@/providers/ViewModeProvider";
+import { readViewModeCookie } from "@/shared/utils/readViewModeCookie";
+import { PRODUCTS_VIEW_COOKIE } from "@/shared/consts";
+import { ProductGridSkeleton } from "@/sections/products";
 
-export default async function Page() {
+async function FavoritesContent() {
   const supabaseServer = await createSupabaseServerClient();
   const {
     data: { user },
@@ -35,5 +43,35 @@ export default async function Page() {
         ).data ?? []
       : [];
 
-  return <FavoritesPage rawProducts={productsData} />;
+  const products = mapDbProducts(productsData);
+
+  return <FavoritesGrid allProducts={products} />;
+}
+
+export default async function Page() {
+  const initialMode = await readViewModeCookie(PRODUCTS_VIEW_COOKIE);
+
+  return (
+    <ViewModeProvider
+      cookieKey={PRODUCTS_VIEW_COOKIE}
+      initialMode={initialMode}
+    >
+      <AdminPageHeader
+        title="Favorites"
+        label="Admin Panel"
+        actions={<ViewModeToggle />}
+      />
+      <Suspense
+        fallback={
+          <ProductGridSkeleton
+            mode={initialMode}
+            variant="public"
+            count={6}
+          />
+        }
+      >
+        <FavoritesContent />
+      </Suspense>
+    </ViewModeProvider>
+  );
 }

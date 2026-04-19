@@ -3,13 +3,97 @@ import type { CartItem } from "@/sections/products/types/types";
 import type { CustomerInfo } from "@/shared/types";
 import { OrderStatus } from "@/shared/types";
 
+export type MixCompositionEntry = {
+  name: string;
+  image_url: string | null;
+  count: number;
+  weight_g: number;
+  price: number;
+};
+
+/** A row ready to be inserted into `order_items` — no further transformation. */
+export interface OrderItemRow {
+  variant_id: string | null;
+  name: string;
+  price: number;
+  original_price: number | null;
+  promo_discount: number;
+  quantity: number;
+  weight_g: number;
+  mix_composition: MixCompositionEntry[] | null;
+}
+
+/**
+ * Loads mix_composition snapshots from `mix_variant_cells` for the given variantIds.
+ * Used by the cart → checkout flow where mix variants already exist in the DB.
+ * Admin manual orders build their composition inline and do not call this.
+ */
+export async function buildMixCompositionMap(
+  variantIds: string[],
+): Promise<Map<string, MixCompositionEntry[]>> {
+  const result = new Map<string, MixCompositionEntry[]>();
+  if (variantIds.length === 0) return result;
+
+  const { data: variants } = await supabaseAdmin
+    .from("product_variants")
+    .select("id, products!inner(status)")
+    .in("id", variantIds)
+    .eq("products.status", "system");
+
+  const mixVariantIds = (variants ?? []).map((v) => v.id);
+  if (mixVariantIds.length === 0) return result;
+
+  const { data: cells } = await supabaseAdmin
+    .from("mix_variant_cells")
+    .select(
+      "variant_id, preset_id, mix_box_presets:preset_id(weight_g, price, product:products(title, image_url))",
+    )
+    .in("variant_id", mixVariantIds);
+
+  type CellRow = {
+    variant_id: string;
+    preset_id: string;
+    mix_box_presets: {
+      weight_g: number;
+      price: string | number;
+      product: { title: string; image_url: string | null } | { title: string; image_url: string | null }[] | null;
+    };
+  };
+
+  for (const row of (cells ?? []) as unknown as CellRow[]) {
+    const preset = row.mix_box_presets;
+    const rawProduct = preset.product as unknown;
+    const product = (
+      Array.isArray(rawProduct) ? rawProduct[0] : rawProduct
+    ) as { title: string; image_url: string | null } | null;
+
+    const list = result.get(row.variant_id) ?? [];
+    const existing = list.find((e) => e.name === (product?.title ?? "—"));
+    if (existing) {
+      existing.count++;
+    } else {
+      list.push({
+        name: product?.title ?? "—",
+        image_url: product?.image_url ?? null,
+        count: 1,
+        weight_g: preset.weight_g,
+        price: Number(preset.price),
+      });
+    }
+    result.set(row.variant_id, list);
+  }
+
+  return result;
+}
+
 interface OrderResult {
   id: string;
   total: number;
 }
 
 interface CreateOrderParams {
-  items: CartItem[];
+  /** Pre-built rows ready for insert. Callers assemble these — no hidden DB lookups. */
+  items: OrderItemRow[];
   customer: Partial<CustomerInfo>;
   subtotal: number;
   deliveryFee: number;
@@ -17,8 +101,30 @@ interface CreateOrderParams {
   promoCodeId?: string | null;
   promoDiscount?: number;
   promotionDiscount?: number;
-  /** Map of variantId → per-unit promo code discount (0 for ineligible) */
-  perItemPromoDiscounts?: Map<string, number>;
+  /** Defaults to OrderStatus.PENDING. Pass OrderStatus.PAID for manual admin orders. */
+  status?: OrderStatus;
+}
+
+/**
+ * Converts a CartItem (cart/checkout flow) into an OrderItemRow using the authoritative
+ * mix_composition snapshot from `mix_variant_cells` (via buildMixCompositionMap).
+ * Admin manual orders build OrderItemRow directly with an inline mix_composition snapshot.
+ */
+export function cartItemToOrderRow(
+  item: CartItem,
+  mixCompositionMap: Map<string, MixCompositionEntry[]>,
+  perItemPromoDiscounts?: Map<string, number>,
+): OrderItemRow {
+  return {
+    variant_id: item.variantId,
+    name: item.name,
+    price: item.price,
+    original_price: item.originalPrice ?? null,
+    promo_discount: perItemPromoDiscounts?.get(item.variantId) ?? 0,
+    quantity: item.quantity,
+    weight_g: item.weight_g,
+    mix_composition: mixCompositionMap.get(item.variantId) ?? null,
+  };
 }
 
 export async function createOrderWithItems({
@@ -30,7 +136,7 @@ export async function createOrderWithItems({
   promoCodeId = null,
   promoDiscount = 0,
   promotionDiscount = 0,
-  perItemPromoDiscounts,
+  status = OrderStatus.PENDING,
 }: CreateOrderParams): Promise<{
   data: OrderResult | null;
   error: string | null;
@@ -41,7 +147,7 @@ export async function createOrderWithItems({
   const { data: order, error: orderError } = await supabaseAdmin
     .from("orders")
     .insert({
-      status: OrderStatus.PENDING,
+      status,
       subtotal,
       delivery_fee: deliveryFee,
       total,
@@ -65,18 +171,18 @@ export async function createOrderWithItems({
 
   if (orderError) return { data: null, error: orderError.message };
 
-  await supabaseAdmin.from("order_items").insert(
-    items.map((item) => ({
-      order_id: order.id,
-      variant_id: item.variantId,
-      name: item.name,
-      price: item.price,
-      original_price: item.originalPrice ?? null,
-      promo_discount: perItemPromoDiscounts?.get(item.variantId) ?? 0,
-      quantity: item.quantity,
-      weight_g: item.weight_g,
-    })),
-  );
+  const { error: itemsError } = await supabaseAdmin
+    .from("order_items")
+    .insert(items.map((row) => ({ ...row, order_id: order.id })));
+
+  if (itemsError) {
+    console.error("order_items insert failed:", itemsError);
+    await supabaseAdmin.from("orders").delete().eq("id", order.id);
+    return {
+      data: null,
+      error: `Failed to save order items: ${itemsError.message}`,
+    };
+  }
 
   return { data: { id: order.id, total }, error: null };
 }

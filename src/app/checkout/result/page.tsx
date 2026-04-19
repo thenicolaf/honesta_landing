@@ -1,47 +1,91 @@
 import type { Metadata } from "next";
-import { Card, Button } from "@/shared/ui";
-
-export const metadata: Metadata = {
-  robots: { index: false, follow: false },
-};
-import { IconCheckCircle, IconAlertCircle } from "@/shared/icons";
-import { cn } from "@/shared/utils/cn";
 import { getOrderStatus } from "@/lib/ngenius";
 import { supabaseAdmin } from "@/lib/supabase.server";
 import { OrderStatus } from "@/shared/types";
 import { createNotification } from "@/lib/notificationsDb";
 import { recordPromoCodeRedemption } from "@/lib/promoCodesDb";
-import { clearCartInDb } from "@/lib/cartDb";
+import { clearCartAndCleanup } from "@/lib/cartDb";
+import { cleanupOrphanedMixVariants } from "@/pages_flow/mix/actions";
+import { formatOrderNotificationMessage } from "@/lib/orderNotifications";
 import { ClearCartOnSuccess } from "./ClearCartOnSuccess";
+import { ResultCard, MissingRefCard } from "./ui";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 const SUCCESS_STATES = new Set(["PURCHASED", "CAPTURED"]);
 const FAIL_STATES = new Set(["FAILED", "DECLINED"]);
+
+async function resolvePaymentState(orderRef: string) {
+  try {
+    const order = await getOrderStatus(orderRef);
+    return order?._embedded?.payment?.[0]?.state as string | undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+async function settleOrder(orderRef: string, success: boolean) {
+  const newStatus = success ? OrderStatus.PAID : OrderStatus.FAILED;
+
+  const { data: order } = await supabaseAdmin
+    .from("orders")
+    .update({ status: newStatus, updated_at: new Date().toISOString() })
+    .eq("ngenius_ref", orderRef)
+    .neq("status", newStatus)
+    .select(
+      "id, total, promo_code_id, user_id, first_name, last_name, order_items(name, quantity, variant_id)",
+    )
+    .single();
+
+  if (!order) return;
+
+  const items = (order.order_items ?? []) as Array<{
+    name: string;
+    quantity: number;
+    variant_id: string | null;
+  }>;
+
+  await Promise.all([
+    success && order.promo_code_id && order.user_id
+      ? recordPromoCodeRedemption({
+          promoCodeId: order.promo_code_id as string,
+          orderId: order.id as string,
+          userId: order.user_id as string,
+        })
+      : null,
+    success && order.user_id
+      ? clearCartAndCleanup(supabaseAdmin, order.user_id as string)
+      : null,
+    createNotification({
+      type: success ? "order_paid" : "order_failed",
+      title: success ? "Order paid" : "Payment failed",
+      message: formatOrderNotificationMessage(order, items),
+      relatedId: order.id,
+    }),
+  ]);
+
+  if (success) {
+    const variantIds = items
+      .map((i) => i.variant_id)
+      .filter((id): id is string => !!id);
+    if (variantIds.length > 0) {
+      await cleanupOrphanedMixVariants(variantIds);
+    }
+  }
+}
 
 export default async function CheckoutResultPage({
   searchParams,
 }: {
   searchParams: Promise<{ ref?: string }>;
 }) {
-  const { ref } = await searchParams;
+  const { ref: orderRef } = await searchParams;
 
-  if (!ref) {
-    return (
-      <main className="grow min-h-160 bg-cream flex items-center justify-center px-4 py-16">
-        <Card variant="default" padding="lg" className="max-w-md w-full text-center">
-          <p className="font-body text-earth mb-6">Missing order reference.</p>
-          <Button href="/">Back to Home</Button>
-        </Card>
-      </main>
-    );
-  }
+  if (!orderRef) return <MissingRefCard />;
 
-  let paymentState: string | undefined;
-  try {
-    const order = await getOrderStatus(ref);
-    paymentState = order?._embedded?.payment?.[0]?.state;
-  } catch {
-    // treat as failed payment
-  }
+  const paymentState = await resolvePaymentState(orderRef);
 
   const success = paymentState ? SUCCESS_STATES.has(paymentState) : false;
   const settled = paymentState
@@ -49,42 +93,7 @@ export default async function CheckoutResultPage({
     : false;
 
   if (settled) {
-    const { data: order } = await supabaseAdmin
-      .from("orders")
-      .update({
-        status: success ? OrderStatus.PAID : OrderStatus.FAILED,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("ngenius_ref", ref)
-      .neq("status", success ? OrderStatus.PAID : OrderStatus.FAILED)
-      .select("id, total, promo_code_id, user_id")
-      .single();
-
-    if (order) {
-      if (success && order.promo_code_id && order.user_id) {
-        await recordPromoCodeRedemption({
-          promoCodeId: order.promo_code_id as string,
-          orderId: order.id as string,
-          userId: order.user_id as string,
-        });
-      }
-
-      // Wipe the user's server-side cart the moment we know the order
-      // was actually paid — CartProvider then loads an empty cart on
-      // mount. For guests we clear localStorage via the inline script
-      // rendered below.
-      if (success && order.user_id) {
-        await clearCartInDb(supabaseAdmin, order.user_id as string);
-      }
-
-      const total = `AED ${Number(order.total).toFixed(2)}`;
-      await createNotification({
-        type: success ? "order_paid" : "order_failed",
-        title: success ? "Order paid" : "Payment failed",
-        message: total,
-        relatedId: order.id,
-      });
-    }
+    await settleOrder(orderRef, success);
   }
 
   return (
@@ -92,10 +101,6 @@ export default async function CheckoutResultPage({
       {success && (
         <>
           <script
-            // Synchronously wipes the guest cart from localStorage before
-            // CartProvider mounts and reads it. Safe for authenticated
-            // users too — their cart is already cleared in the DB above,
-            // and the client store just has a stale copy.
             dangerouslySetInnerHTML={{
               __html: `try{localStorage.removeItem("honesta_cart");localStorage.removeItem("honesta_promo_code");}catch(e){}`,
             }}
@@ -103,50 +108,7 @@ export default async function CheckoutResultPage({
           <ClearCartOnSuccess success={success} />
         </>
       )}
-      <div className="max-w-md w-full">
-        <Card variant="default" padding="lg" className="text-center">
-          <div
-            className={cn(
-              "w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center",
-              success ? "bg-moss/10" : "bg-orange/10",
-            )}
-          >
-            {success ? (
-              <IconCheckCircle className="w-8 h-8 text-moss" />
-            ) : (
-              <IconAlertCircle className="w-8 h-8 text-orange" />
-            )}
-          </div>
-
-          <h1 className="font-display font-semibold text-heading text-2xl mb-2">
-            {success ? "Payment Successful" : "Payment Failed"}
-          </h1>
-
-          <p className="font-body font-light text-earth/60 text-sm mb-2">
-            {success
-              ? "Your order has been confirmed. We'll deliver soon!"
-              : "Something went wrong with your payment. Please try again."}
-          </p>
-
-          {paymentState && (
-            <p className="font-body text-xs text-earth/40 mb-1">
-              Status: {paymentState}
-            </p>
-          )}
-          <p className="font-body text-xs text-earth/30 mb-8 break-all">
-            Ref: {ref}
-          </p>
-
-          <div className="flex flex-col gap-3">
-            <Button href="/">Back to Home</Button>
-            {!success && (
-              <Button href="/cart" variant="outline">
-                Back to Cart
-              </Button>
-            )}
-          </div>
-        </Card>
-      </div>
+      <ResultCard success={success} paymentState={paymentState} orderRef={orderRef} />
     </main>
   );
 }

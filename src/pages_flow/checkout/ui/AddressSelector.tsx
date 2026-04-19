@@ -1,14 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "motion/react";
 import {
   AddressCard,
-  AddressWithMap,
   FormError,
   Card,
 } from "@/shared/ui";
 import type { AddressFieldErrors } from "@/shared/ui/AddressWithMap";
+
+const AddressWithMap = dynamic(
+  () => import("@/shared/ui/AddressWithMap").then((m) => m.AddressWithMap),
+  { ssr: false },
+);
 import { parseAddress } from "@/shared/utils/address";
 import { MapPin } from "lucide-react";
 import { cn } from "@/shared/utils/cn";

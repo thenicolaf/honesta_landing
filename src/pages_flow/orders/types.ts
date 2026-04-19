@@ -1,3 +1,5 @@
+import type { MixCompositionEntry } from "@/lib/orders";
+
 export type OrderItem = {
   id: string;
   name: string;
@@ -5,6 +7,7 @@ export type OrderItem = {
   original_price: number | null;
   promo_discount: number;
   quantity: number;
+  mix_composition: MixCompositionEntry[] | null;
 };
 
 export type Order = {

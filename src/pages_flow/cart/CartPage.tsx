@@ -1,28 +1,41 @@
 "use client";
 
+import { useEffect, useLayoutEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useCart } from "@/providers";
 import { EmptyCart } from "./EmptyCart";
 import { CartGrid } from "./ui/CartGrid";
 import { CartSummary } from "./ui/CartSummary";
 import { PromoCodeBlock } from "./ui/PromoCodeBlock";
-import { Button, PageLoader } from "@/shared/ui";
+import { buttonVariants } from "@/shared/ui";
+import { CartSkeleton } from "./ui/CartSkeleton";
 import { HashLink } from "@/sections/navbar";
 import type { DeliverySetting } from "@/lib/deliveryDb";
+import type { ActivePromotionsMap } from "@/lib/promotionsDb";
 
 interface CartPageProps {
   deliverySettings: DeliverySetting[];
   isAuthenticated: boolean;
+  activePromotions: ActivePromotionsMap;
 }
 
 export function CartPage({
   deliverySettings,
   isAuthenticated,
+  activePromotions,
 }: CartPageProps) {
-  const { items, isHydrated } = useCart();
+  const { items, isHydrated, refresh, applyServerPromotions } = useCart();
+
+  useLayoutEffect(() => {
+    applyServerPromotions(activePromotions);
+  }, [activePromotions, applyServerPromotions]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
 
   if (!isHydrated) {
-    return <PageLoader />;
+    return <CartSkeleton />;
   }
 
   if (items.length === 0) {
@@ -32,17 +45,12 @@ export function CartPage({
   return (
     <main className="grow min-h-160 bg-cream pt-24 pb-16 px-4">
       <div className="mx-auto max-w-2xl">
-        <HashLink href="/#products">
-          <Button
-            as="button"
-            type="button"
-            variant="outline"
-            size="sm"
-            startIcon={<ArrowLeft size={14} />}
-            className="mb-5"
-          >
-            Back to products
-          </Button>
+        <HashLink
+          href="/#products"
+          className={buttonVariants({ variant: "outline", size: "sm" }) + " mb-5 inline-flex"}
+        >
+          <ArrowLeft size={14} className="mr-2" />
+          Back to products
         </HashLink>
 
         <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-moss mb-3 text-center">

@@ -4,5 +4,6 @@ export * from "./categories";
 export * from "./products";
 export { PhilosophyBlock } from "./PhilosophyBlock";
 export { AboutUs } from "./AboutUs";
+export { MixCTA } from "./MixCTA";
 export * from "./partnership";
 export { Footer } from "./Footer";

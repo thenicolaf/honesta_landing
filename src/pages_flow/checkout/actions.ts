@@ -3,16 +3,23 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import type { CartItem } from "@/sections/products/types/types";
-import { CUSTOMER_COOKIE_KEY, COOKIE_CONSENT_KEY } from "@/shared/consts";
+import {
+  CUSTOMER_COOKIE_KEY,
+  COOKIE_CONSENT_KEY,
+  DEFAULT_EMIRATE,
+} from "@/shared/consts";
 import type { CustomerInfo } from "@/shared/types";
 import {
   validateCustomer,
   type CustomerErrors,
 } from "@/shared/utils/validateCustomer";
-import { createOrderWithItems } from "@/lib/orders";
+import {
+  buildMixCompositionMap,
+  cartItemToOrderRow,
+  createOrderWithItems,
+} from "@/lib/orders";
 import { createPaymentForOrder } from "@/lib/payments";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
-import { createNotification } from "@/lib/notificationsDb";
 import { getDeliverySettingByEmirate } from "@/lib/deliveryDb";
 import { calculateDelivery } from "@/shared/utils/calculateDelivery";
 import { validatePromoCode } from "@/lib/promoCodeApply";
@@ -35,6 +42,7 @@ export async function submitCheckout(
 ): Promise<CheckoutState | null> {
   const customer = Object.fromEntries(formData) as Partial<CustomerInfo>;
 
+  try {
   const cookieStore = await cookies();
 
   // 1. Check auth — authorized users' data comes from DB, not cookies
@@ -58,7 +66,8 @@ export async function submitCheckout(
   }
 
   // 2. Calculate delivery fee server-side (authoritative)
-  const emirate = (formData.get("emirate") as string)?.trim() || "Dubai";
+  const emirate =
+    (formData.get("emirate") as string)?.trim() || DEFAULT_EMIRATE;
 
   // 3. Validate and apply promo code (if present). Re-runs all checks
   // server-side using the actual user, items, and current DB state.
@@ -114,8 +123,15 @@ export async function submitCheckout(
     };
   }
 
+  const mixCompositionMap = await buildMixCompositionMap(
+    items.map((i) => i.variantId),
+  );
+  const orderRows = items.map((i) =>
+    cartItemToOrderRow(i, mixCompositionMap, perItemPromoDiscounts),
+  );
+
   const { data: order, error: orderError } = await createOrderWithItems({
-    items,
+    items: orderRows,
     customer,
     subtotal,
     deliveryFee: delivery.fee,
@@ -123,19 +139,10 @@ export async function submitCheckout(
     promoCodeId,
     promoDiscount,
     promotionDiscount,
-    perItemPromoDiscounts,
   });
   if (orderError || !order) {
     return { error: orderError ?? "Failed to create order", values: customer };
   }
-
-  // Notify admin
-  await createNotification({
-    type: "new_order",
-    title: "New order",
-    message: `${customer.firstName} ${customer.lastName} — AED ${Number(order.total).toFixed(2)}`,
-    relatedId: order.id,
-  });
 
   // 4. Create payment
   const { paymentUrl, error: paymentError } = await createPaymentForOrder(
@@ -149,4 +156,10 @@ export async function submitCheckout(
   }
 
   redirect(paymentUrl);
+  } catch (err) {
+    // redirect() throws a special Next.js error — rethrow it
+    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
+    console.error("Checkout error:", err);
+    return { error: "Something went wrong. Please try again.", values: customer };
+  }
 }

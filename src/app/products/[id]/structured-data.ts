@@ -1,7 +1,7 @@
 import type { DbProduct } from "@/sections/products/types/db-types";
 import type { Product } from "@/sections/products/types";
 
-function buildDescription(dbProduct: DbProduct, product: Product): string {
+export function buildDescription(dbProduct: DbProduct, product: Product): string {
   return (
     [
       dbProduct.tagline,

@@ -5,10 +5,7 @@ import { SECTION_IDS } from "@/shared/consts/navLinks";
 
 export function HashTracker() {
   useEffect(() => {
-    const initialHash = window.location.hash;
-    let currentHash = initialHash;
-    let suppressUpdates = !!initialHash;
-    let scrolledToTarget = false;
+    let currentHash = window.location.hash;
     const tracked = new Set<string>();
 
     const io = new IntersectionObserver(
@@ -17,38 +14,20 @@ export function HashTracker() {
           if (!entry.isIntersecting) continue;
 
           const id = entry.target.id;
-
-          // Target section entered viewport — scroll succeeded, resume tracking
-          if (suppressUpdates && `#${id}` === initialHash) {
-            suppressUpdates = false;
-            scrolledToTarget = true;
-          }
-
-          // Don't update URL while waiting to scroll to initial hash
-          if (suppressUpdates) continue;
-
           const newHash = id === "hero" ? "" : `#${id}`;
 
           if (currentHash !== newHash) {
             currentHash = newHash;
             const base = window.location.pathname + window.location.search;
             window.history.replaceState(null, "", newHash ? `${base}${newHash}` : base);
+            window.dispatchEvent(new HashChangeEvent("hashchange"));
           }
         }
       },
       { rootMargin: "-30% 0px -70% 0px" },
     );
 
-    function scrollToInitialHash() {
-      if (scrolledToTarget || !initialHash) return;
-      const el = document.getElementById(initialHash.slice(1));
-      if (el) {
-        scrolledToTarget = true;
-        el.scrollIntoView({ behavior: "instant" });
-      }
-    }
-
-    function trackSections() {
+    function trackSections(): boolean {
       for (const id of SECTION_IDS) {
         if (tracked.has(id)) continue;
         const el = document.getElementById(id);
@@ -60,30 +39,19 @@ export function HashTracker() {
       return tracked.size === SECTION_IDS.length;
     }
 
-    // Initial attempt
-    trackSections();
-    scrollToInitialHash();
-
-    // Retry for Suspense-deferred sections
-    if (!trackSections() || (initialHash && !scrolledToTarget)) {
-      const retryId = setInterval(() => {
-        trackSections();
-        scrollToInitialHash();
-        if (tracked.size === SECTION_IDS.length && (!initialHash || scrolledToTarget)) {
-          clearInterval(retryId);
-        }
-      }, 200);
-      setTimeout(() => clearInterval(retryId), 5000);
+    // Watch for Suspense-deferred sections appearing in the DOM
+    let mo: MutationObserver | undefined;
+    if (!trackSections()) {
+      mo = new MutationObserver(() => {
+        if (trackSections()) mo!.disconnect();
+      });
+      mo.observe(document.body, { childList: true, subtree: true });
+      setTimeout(() => mo!.disconnect(), 5000);
     }
-
-    // Safety: stop suppressing after 3s if target never appeared
-    const safetyTimer = suppressUpdates
-      ? setTimeout(() => { suppressUpdates = false; }, 3000)
-      : undefined;
 
     return () => {
       io.disconnect();
-      if (safetyTimer) clearTimeout(safetyTimer);
+      mo?.disconnect();
     };
   }, []);
 

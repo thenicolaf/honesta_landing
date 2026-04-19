@@ -13,6 +13,8 @@ interface ProductPriceAndCartProps {
     "id" | "slug" | "title" | "price" | "image_url" | "in_stock" | "promotion" | "mark"
   >;
   selectedVariant?: ProductVariant;
+  /** Optional node rendered just before the primary action (e.g. a secondary icon-button). */
+  actionPrefix?: React.ReactNode;
 }
 
 function stop(e: React.MouseEvent) {
@@ -20,7 +22,7 @@ function stop(e: React.MouseEvent) {
   e.preventDefault();
 }
 
-export function ProductPriceAndCart({ product, selectedVariant }: ProductPriceAndCartProps) {
+export function ProductPriceAndCart({ product, selectedVariant, actionPrefix }: ProductPriceAndCartProps) {
   const { items, addToCart, updateItemQuantity, removeFromCart } = useCart();
 
   const variantPrice = selectedVariant?.price;
@@ -48,26 +50,32 @@ export function ProductPriceAndCart({ product, selectedVariant }: ProductPriceAn
     return (
       <div className="mt-auto flex items-center justify-between gap-3 pt-1">
         <ProductPrice price={variantPrice!} promotion={variantPromotion} mark={product.mark} />
-        <Badge variant="outline" size="md">
-          Out of Stock
-        </Badge>
+        <div className="flex items-center gap-2">
+          {actionPrefix}
+          <Badge variant="outline" size="md">
+            Out of Stock
+          </Badge>
+        </div>
       </div>
     );
   }
 
   if (variantPrice == null || product.id == null || !selectedVariant) {
     return (
-      <Button
-        href={process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        variant="outline"
-        size="sm"
-        className="mt-auto w-full"
-        onClick={stop}
-      >
-        Order via Instagram
-      </Button>
+      <div className="mt-auto flex items-center gap-2">
+        {actionPrefix}
+        <Button
+          href={process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="outline"
+          size="sm"
+          className="grow"
+          onClick={stop}
+        >
+          Order via Instagram
+        </Button>
+      </div>
     );
   }
 
@@ -107,6 +115,7 @@ export function ProductPriceAndCart({ product, selectedVariant }: ProductPriceAn
       <div className="mt-auto flex items-center justify-between gap-3 pt-1">
         <ProductPrice price={variantPrice} promotion={variantPromotion} mark={product.mark} />
         <div className="flex items-center gap-2">
+          {actionPrefix}
           <Button
             as="button"
             variant="outline"
@@ -136,9 +145,12 @@ export function ProductPriceAndCart({ product, selectedVariant }: ProductPriceAn
   return (
     <div className="mt-auto flex items-center justify-between gap-3 pt-1">
       <ProductPrice price={variantPrice} promotion={variantPromotion} mark={product.mark} />
-      <Button as="button" variant="primary" size="sm" onClick={handleAdd}>
-        Add to Cart
-      </Button>
+      <div className="flex items-center gap-2">
+        {actionPrefix}
+        <Button as="button" variant="primary" size="sm" onClick={handleAdd}>
+          Add to Cart
+        </Button>
+      </div>
     </div>
   );
 }

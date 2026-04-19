@@ -5,9 +5,6 @@ import { Badge, Button } from "@/shared/ui";
 import type { AdminDbProduct } from "@/lib/productsDb";
 import {
   ProductHeader,
-  ProductTags,
-  ProductIngredients,
-  ProductFreeFrom,
   ProductExpandedDetails,
   ProductDetailImage,
   ProductTagline,
@@ -96,9 +93,6 @@ function ProductDetailContent({ product }: ProductDetailPageProps) {
             size="sm"
           />
 
-          <ProductTags tags={tags} />
-          <ProductFreeFrom freeFrom={freeFrom} />
-          <ProductIngredients ingredients={ingredients} />
           <ProductNote note={product.note ?? undefined} />
 
           <ProductExpandedDetails
@@ -106,6 +100,9 @@ function ProductDetailContent({ product }: ProductDetailPageProps) {
             nutrition={nutrition}
             servingIdeas={servingIdeas}
             occasions={occasions}
+            tags={tags}
+            freeFrom={freeFrom}
+            ingredients={ingredients}
           />
 
           {/* Admin actions */}

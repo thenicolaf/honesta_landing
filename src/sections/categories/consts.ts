@@ -27,12 +27,3 @@ export const CATEGORY_UI_MAP: Record<
   },
 };
 
-export const containerVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.14, delayChildren: 0.05 } },
-};
-
-export const cardVariants = {
-  hidden: { opacity: 0, y: 32 },
-  visible: { opacity: 1, y: 0 },
-};

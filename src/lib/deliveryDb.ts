@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { supabaseAdmin } from "./supabase.server";
 
 export type DeliverySetting = {
@@ -13,13 +14,13 @@ export type DeliverySetting = {
 
 // ─── Queries ────────────────────────────────────────────────────────────────
 
-export async function getDeliverySettings(): Promise<DeliverySetting[]> {
+export const getDeliverySettings = cache(async (): Promise<DeliverySetting[]> => {
   const { data } = await supabaseAdmin
     .from("delivery_settings")
     .select("*")
     .order("emirate");
   return (data ?? []) as DeliverySetting[];
-}
+});
 
 export async function getDeliverySettingByEmirate(
   emirate: string,

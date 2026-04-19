@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { supabase, supabaseAdmin } from "@/lib/supabase.server";
 import type { DbProduct } from "@/sections/products/types/db-types";
 
@@ -46,7 +47,17 @@ const PUBLIC_PRODUCTS_SELECT = `
   product_variants(id, weight_g, price)
 `;
 
-export async function getProductBySlug(slug: string): Promise<DbProduct | null> {
+export const getPublishedProducts = cache(async (): Promise<DbProduct[]> => {
+  const { data, error } = await supabase
+    .from("products")
+    .select(PUBLIC_PRODUCTS_SELECT)
+    .eq("status", "published")
+    .order("created_at");
+  if (error || !data) return [];
+  return data as DbProduct[];
+});
+
+export const getProductBySlug = cache(async (slug: string): Promise<DbProduct | null> => {
   const { data, error } = await supabase
     .from("products")
     .select(PUBLIC_PRODUCTS_SELECT)
@@ -55,7 +66,7 @@ export async function getProductBySlug(slug: string): Promise<DbProduct | null> 
     .single();
   if (error || !data) return null;
   return data as DbProduct;
-}
+});
 
 export async function getPublishedSlugs(): Promise<{ slug: string; updated_at: string }[]> {
   const { data } = await supabase
@@ -86,7 +97,8 @@ export async function getAdminProducts(
 ): Promise<AdminDbProduct[]> {
   let query = supabaseAdmin
     .from("products")
-    .select(PRODUCTS_SELECT);
+    .select(PRODUCTS_SELECT)
+    .neq("status", "system");
 
   if (filter?.status) {
     query = query.eq("status", filter.status);
@@ -119,7 +131,7 @@ export interface ProductFormOptions {
   benefits: { id: number; name: string; description: string }[];
 }
 
-export async function getProductSalesMap(): Promise<Record<string, number>> {
+export const getProductSalesMap = cache(async (): Promise<Record<string, number>> => {
   const { data } = await supabaseAdmin
     .from("order_items")
     .select("quantity, variant_id, orders!inner(status), product_variants!inner(product_id)")
@@ -134,9 +146,9 @@ export async function getProductSalesMap(): Promise<Record<string, number>> {
     }
   }
   return map;
-}
+});
 
-export async function getProductFormOptions(): Promise<ProductFormOptions> {
+export const getProductFormOptions = cache(async (): Promise<ProductFormOptions> => {
   const [categories, tagOptions, freeFromOptions, occasionOptions, servingIdeaOptions, ingredientOptions, benefits] =
     await Promise.all([
       supabaseAdmin.from("categories").select("id, name, slug").order("sort_order"),
@@ -157,4 +169,4 @@ export async function getProductFormOptions(): Promise<ProductFormOptions> {
     ingredientOptions: (ingredientOptions.data ?? []) as { id: number; label: string }[],
     benefits: (benefits.data ?? []) as { id: number; name: string; description: string }[],
   };
-}
+});

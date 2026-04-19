@@ -7,9 +7,7 @@ import {
   ProductImage,
   ProductHeader,
   ProductTitle,
-  ProductTags,
   ProductIngredients,
-  ProductFreeFrom,
   ProductDetails,
   ProductPriceAndCart,
   ProductVariantSelector,
@@ -84,15 +82,15 @@ export function ProductItem({ product, from }: ProductItemProps) {
             />
           </div>
         )}
-        <ProductTags tags={tags} />
-        <ProductFreeFrom freeFrom={freeFrom} />
         <ProductIngredients ingredients={ingredients} />
-        <ProductNote note={product.note} truncate />
+        <ProductNote note={product.note} />
         <ProductDetails
           benefits={benefits}
           nutrition={nutrition}
           servingIdeas={servingIdeas}
           occasions={occasions}
+          tags={tags}
+          freeFrom={freeFrom}
         />
         <ProductPriceAndCart
           product={product}

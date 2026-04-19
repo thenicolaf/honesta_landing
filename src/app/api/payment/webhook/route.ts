@@ -3,7 +3,9 @@ import { supabaseAdmin } from "@/lib/supabase.server";
 import { OrderStatus } from "@/shared/types";
 import { createNotification } from "@/lib/notificationsDb";
 import { recordPromoCodeRedemption } from "@/lib/promoCodesDb";
-import { clearCartInDb } from "@/lib/cartDb";
+import { clearCartAndCleanup } from "@/lib/cartDb";
+import { cleanupOrphanedMixVariants } from "@/pages_flow/mix/actions";
+import { formatOrderNotificationMessage } from "@/lib/orderNotifications";
 
 const STATUS_MAP: Record<string, OrderStatus> = {
   PURCHASED: OrderStatus.PAID,
@@ -32,11 +34,19 @@ export async function POST(request: NextRequest) {
       .update({ status: newStatus, updated_at: new Date().toISOString() })
       .eq("ngenius_ref", ngeniusRef)
       .neq("status", newStatus)
-      .select("id, total, promo_code_id, user_id")
+      .select(
+        "id, total, promo_code_id, user_id, first_name, last_name, order_items(name, quantity, variant_id)",
+      )
       .single();
 
     if (order) {
-      const total = `AED ${Number(order.total).toFixed(2)}`;
+      const items = (order.order_items ?? []) as Array<{
+        name: string;
+        quantity: number;
+        variant_id: string | null;
+      }>;
+      const message = formatOrderNotificationMessage(order, items);
+
       if (newStatus === OrderStatus.PAID) {
         if (order.promo_code_id && order.user_id) {
           await recordPromoCodeRedemption({
@@ -46,26 +56,32 @@ export async function POST(request: NextRequest) {
           });
         }
         if (order.user_id) {
-          await clearCartInDb(supabaseAdmin, order.user_id as string);
+          await clearCartAndCleanup(supabaseAdmin, order.user_id as string);
+        }
+        const variantIds = items
+          .map((i) => i.variant_id)
+          .filter((id): id is string => !!id);
+        if (variantIds.length > 0) {
+          await cleanupOrphanedMixVariants(variantIds);
         }
         await createNotification({
           type: "order_paid",
           title: "Order paid",
-          message: total,
+          message,
           relatedId: order.id,
         });
       } else if (newStatus === OrderStatus.FAILED) {
         await createNotification({
           type: "order_failed",
           title: "Payment failed",
-          message: total,
+          message,
           relatedId: order.id,
         });
       } else if (newStatus === OrderStatus.CANCELLED) {
         await createNotification({
           type: "order_cancelled",
           title: "Order cancelled",
-          message: total,
+          message,
           relatedId: order.id,
         });
       }

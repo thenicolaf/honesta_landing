@@ -32,16 +32,22 @@ export async function verifyOtp(
     return { error: "Please enter a valid 6-digit code." };
   }
 
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.auth.verifyOtp({
-    email,
-    token,
-    type: "email",
-  });
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: "email",
+    });
 
-  if (error) {
-    return { error: "Invalid or expired code. Please try again." };
+    if (error) {
+      return { error: "Invalid or expired code. Please try again." };
+    }
+
+    redirect("/");
+  } catch (err) {
+    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
+    console.error("Verify email error:", err);
+    return { error: "Something went wrong. Please try again." };
   }
-
-  redirect("/");
 }

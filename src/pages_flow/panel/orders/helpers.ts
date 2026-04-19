@@ -4,7 +4,6 @@ import type { AdminOrder } from "@/pages_flow/orders/types";
 // ─── Status filter options ──────────────────────────────────────────────────
 
 export const ORDER_STATUS_OPTIONS = [
-  { value: OrderStatus.PENDING, label: "Pending" },
   { value: OrderStatus.PAID, label: "Paid" },
   { value: OrderStatus.FAILED, label: "Failed" },
   { value: OrderStatus.CANCELLED, label: "Cancelled" },

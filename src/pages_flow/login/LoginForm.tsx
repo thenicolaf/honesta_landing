@@ -32,6 +32,7 @@ export function LoginForm({ next }: { next: string }) {
     if (state === prevState.current) return;
     prevState.current = state;
     if (state?.error) toastError(state.error);
+    if (state?.fieldErrors) toastError("Please fill in the required fields");
   }, [state]);
 
   return (

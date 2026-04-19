@@ -2,10 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { Pencil, User, Phone, Users, Cake } from "lucide-react";
 import { Card, Button } from "@/shared/ui";
-import { ProfileForm } from "./ProfileForm";
 import { formatPhoneDisplay } from "@/shared/utils/validatePhone";
+
+const ProfileForm = dynamic(
+  () => import("./ProfileForm").then((m) => m.ProfileForm),
+  { ssr: false },
+);
 
 interface ProfileData {
   first_name: string | null;

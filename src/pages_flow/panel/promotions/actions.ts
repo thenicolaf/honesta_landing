@@ -95,40 +95,42 @@ export async function createPromotionAction(
   const fieldErrors = validate(values);
   if (fieldErrors) return { fieldErrors, values };
 
-  const productIds = parseProductIds(values.product_ids_raw);
+  try {
+    const productIds = parseProductIds(values.product_ids_raw);
 
-  const { error } = await createPromotion(
-    {
-      name: values.name,
-      discount_type: values.discount_type as "percentage" | "fixed",
-      discount_value: parseFloat(values.discount_value),
-      starts_at: new Date(values.starts_at).toISOString(),
-      ends_at: new Date(values.ends_at).toISOString(),
-      is_active: values.is_active,
-    },
-    productIds,
-  );
+    const { error } = await createPromotion(
+      {
+        name: values.name,
+        discount_type: values.discount_type as "percentage" | "fixed",
+        discount_value: parseFloat(values.discount_value),
+        starts_at: new Date(values.starts_at).toISOString(),
+        ends_at: new Date(values.ends_at).toISOString(),
+        is_active: values.is_active,
+      },
+      productIds,
+    );
 
-  if (error) return { error, values };
+    if (error) return { error, values };
 
-  const startsAtIso = new Date(values.starts_at).toISOString();
-  const endsAtIso = new Date(values.ends_at).toISOString();
-  const newStatus = getPromotionStatus(
-    values.is_active,
-    startsAtIso,
-    endsAtIso,
-  );
+    const startsAtIso = new Date(values.starts_at).toISOString();
+    const endsAtIso = new Date(values.ends_at).toISOString();
+    const newStatus = getPromotionStatus(values.is_active, startsAtIso, endsAtIso);
 
-  if (newStatus === "active") {
-    await createNotification({
-      type: "new_promotion",
-      title: "New promotion",
-      message: `${values.name} — ${values.discount_value}${values.discount_type === "percentage" ? "%" : " AED"} off`,
-      audience: null,
-    });
+    if (newStatus === "active") {
+      await createNotification({
+        type: "new_promotion",
+        title: "New promotion",
+        message: `${values.name} — ${values.discount_value}${values.discount_type === "percentage" ? "%" : " AED"} off`,
+        audience: null,
+      });
+    }
+
+    redirect("/panel/promotions?toast=created");
+  } catch (err) {
+    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
+    console.error("Create promotion error:", err);
+    return { error: "Something went wrong. Please try again.", values };
   }
-
-  redirect("/panel/promotions?toast=created");
 }
 
 export async function updatePromotionAction(
@@ -140,54 +142,63 @@ export async function updatePromotionAction(
   const fieldErrors = validate(values);
   if (fieldErrors) return { fieldErrors, values };
 
-  const productIds = parseProductIds(values.product_ids_raw);
+  try {
+    const productIds = parseProductIds(values.product_ids_raw);
 
-  const { data: current } = await supabaseAdmin
-    .from("promotions")
-    .select("is_active, starts_at, ends_at")
-    .eq("id", id)
-    .single();
+    const { data: current } = await supabaseAdmin
+      .from("promotions")
+      .select("is_active, starts_at, ends_at")
+      .eq("id", id)
+      .single();
 
-  const { error } = await updatePromotion(
-    id,
-    {
-      name: values.name,
-      discount_type: values.discount_type as "percentage" | "fixed",
-      discount_value: parseFloat(values.discount_value),
-      starts_at: new Date(values.starts_at).toISOString(),
-      ends_at: new Date(values.ends_at).toISOString(),
-      is_active: values.is_active,
-    },
-    productIds,
-  );
+    const { error } = await updatePromotion(
+      id,
+      {
+        name: values.name,
+        discount_type: values.discount_type as "percentage" | "fixed",
+        discount_value: parseFloat(values.discount_value),
+        starts_at: new Date(values.starts_at).toISOString(),
+        ends_at: new Date(values.ends_at).toISOString(),
+        is_active: values.is_active,
+      },
+      productIds,
+    );
 
-  if (error) return { error, values };
+    if (error) return { error, values };
 
-  const oldStatus = current
-    ? getPromotionStatus(current.is_active, current.starts_at, current.ends_at)
-    : null;
-  const newStartsAtIso = new Date(values.starts_at).toISOString();
-  const newEndsAtIso = new Date(values.ends_at).toISOString();
-  const newStatus = getPromotionStatus(
-    values.is_active,
-    newStartsAtIso,
-    newEndsAtIso,
-  );
+    const oldStatus = current
+      ? getPromotionStatus(current.is_active, current.starts_at, current.ends_at)
+      : null;
+    const newStatus = getPromotionStatus(
+      values.is_active,
+      new Date(values.starts_at).toISOString(),
+      new Date(values.ends_at).toISOString(),
+    );
 
-  if (newStatus === "active" && oldStatus !== "active") {
-    await createNotification({
-      type: "new_promotion",
-      title: "New promotion",
-      message: `${values.name} — ${values.discount_value}${values.discount_type === "percentage" ? "%" : " AED"} off`,
-      audience: null,
-    });
+    if (newStatus === "active" && oldStatus !== "active") {
+      await createNotification({
+        type: "new_promotion",
+        title: "New promotion",
+        message: `${values.name} — ${values.discount_value}${values.discount_type === "percentage" ? "%" : " AED"} off`,
+        audience: null,
+      });
+    }
+
+    redirect("/panel/promotions?toast=updated");
+  } catch (err) {
+    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
+    console.error("Update promotion error:", err);
+    return { error: "Something went wrong. Please try again.", values };
   }
-
-  redirect("/panel/promotions?toast=updated");
 }
 
 export async function deletePromotionAction(
   id: string,
 ): Promise<{ error?: string }> {
-  return deletePromotionDb(id);
+  try {
+    return await deletePromotionDb(id);
+  } catch (err) {
+    console.error("Delete promotion error:", err);
+    return { error: "Something went wrong. Please try again." };
+  }
 }

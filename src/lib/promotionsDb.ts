@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { supabaseAdmin } from "./supabase.server";
 
 export type Promotion = {
@@ -17,13 +18,75 @@ export type PromotionWithProducts = Promotion & {
 
 // ─── Queries ────────────────────────────────────────────────────────────────
 
-export async function getPromotions(): Promise<Promotion[]> {
+export const getPromotions = cache(async (): Promise<Promotion[]> => {
   const { data } = await supabaseAdmin
     .from("promotions")
     .select("*")
     .order("created_at", { ascending: false });
   return (data ?? []) as Promotion[];
-}
+});
+
+export type ActivePromotion = {
+  discount_type: "percentage" | "fixed";
+  discount_value: number;
+  ends_at: string;
+};
+export type ActivePromotionsMap = Record<string, ActivePromotion>;
+
+export const getActivePromotionsMap = cache(
+  async (): Promise<ActivePromotionsMap> => {
+    const nowIso = new Date().toISOString();
+    const { data } = await supabaseAdmin
+      .from("promotions")
+      .select(
+        "discount_type, discount_value, starts_at, ends_at, is_active, promotion_products(product_id)",
+      )
+      .eq("is_active", true)
+      .lte("starts_at", nowIso)
+      .gt("ends_at", nowIso);
+
+    const map: ActivePromotionsMap = {};
+    for (const promo of (data ?? []) as Array<{
+      discount_type: "percentage" | "fixed";
+      discount_value: number;
+      ends_at: string;
+      promotion_products: { product_id: string }[];
+    }>) {
+      for (const link of promo.promotion_products ?? []) {
+        map[link.product_id] = {
+          discount_type: promo.discount_type,
+          discount_value: Number(promo.discount_value),
+          ends_at: promo.ends_at,
+        };
+      }
+    }
+    return map;
+  },
+);
+
+export type PromotionProductOption = {
+  value: string;
+  label: string;
+  price: number;
+};
+
+export const getPromotionProductOptions = cache(async (): Promise<PromotionProductOption[]> => {
+  const { data } = await supabaseAdmin
+    .from("products")
+    .select("id, title, product_variants(price)")
+    .eq("status", "published")
+    .order("title");
+
+  return (data ?? []).map((p) => {
+    const prices = ((p as { product_variants: { price: string }[] }).product_variants ?? [])
+      .map((v) => Number(v.price));
+    return {
+      value: p.id,
+      label: p.title,
+      price: prices.length > 0 ? Math.min(...prices) : 0,
+    };
+  });
+});
 
 export async function getPromotionById(
   id: string,

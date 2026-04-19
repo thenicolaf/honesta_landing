@@ -7,6 +7,114 @@ import { getCartTotals } from "@/lib/cart";
 import { getPerItemPromoDiscounts } from "@/shared/utils/recalculatePromoDiscount";
 import { formatDeliveryDays } from "@/shared/utils/calculateDelivery";
 import { cn } from "@/shared/utils/cn";
+import type { CartItem } from "@/sections/products/types";
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function SummaryRow({ label, value, color = "earth", bold = false }: {
+  label: React.ReactNode;
+  value: React.ReactNode;
+  color?: "earth" | "moss" | "orange";
+  bold?: boolean;
+}) {
+  return (
+    <div className="flex justify-between items-center">
+      <span className={cn(
+        "font-body text-sm",
+        bold ? "font-semibold text-earth text-base" : `font-light text-${color === "earth" ? "earth/60" : color}`,
+      )}>
+        {label}
+      </span>
+      <span className={cn(
+        "font-body font-semibold",
+        bold ? "text-orange text-lg" : `text-${color} text-sm`,
+      )}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function OrderLineItem({ item, promoPerUnit, promoCodeEndsAt }: {
+  item: CartItem;
+  promoPerUnit: number;
+  promoCodeEndsAt?: string;
+}) {
+  const hasPromoCode = promoPerUnit > 0;
+  const hasPromotion = item.originalPrice != null && item.originalPrice !== item.price;
+  const finalLineTotal = Math.max(0, item.price - promoPerUnit) * item.quantity;
+
+  const priceColor = hasPromoCode ? "text-moss" : hasPromotion ? "text-orange" : "text-earth";
+  const strikeAmount = hasPromoCode
+    ? item.price * item.quantity
+    : hasPromotion
+      ? item.originalPrice! * item.quantity
+      : undefined;
+
+  return (
+    <div className="flex justify-between items-start gap-2">
+      <div className="flex-1 min-w-0">
+        <p className="font-body font-light text-earth text-sm leading-snug">
+          {item.name}
+          {item.weight_g ? ` (${item.weight_g}g)` : ""}
+        </p>
+        <p className="font-body font-light text-earth/45 text-xs">
+          × {item.quantity}
+        </p>
+        {item.promotionEndsAt && (
+          <p className="font-body text-2xs text-earth/40">
+            Until {formatDateTime(item.promotionEndsAt)}
+          </p>
+        )}
+        {hasPromoCode && promoCodeEndsAt && (
+          <p className="font-body text-2xs text-earth/40">
+            Until {formatDateTime(promoCodeEndsAt)}
+          </p>
+        )}
+      </div>
+      <div className="shrink-0 text-right">
+        <span className={cn("font-body font-semibold text-sm", priceColor)}>
+          AED {finalLineTotal.toFixed(2)}
+        </span>
+        {strikeAmount != null && (
+          <p className="font-body text-earth/30 text-xs line-through">
+            AED {strikeAmount.toFixed(2)}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DeliveryRow({ fee, isFree, originalFee }: {
+  fee: number;
+  isFree: boolean;
+  originalFee?: number;
+}) {
+  return (
+    <div className="flex justify-between items-center">
+      <span className="font-body font-light text-earth/60 text-sm">
+        Delivery
+      </span>
+      {isFree ? (
+        <span className="flex items-center gap-1.5">
+          <span className="font-body text-earth/40 text-sm line-through">
+            AED {originalFee}
+          </span>
+          <span className="font-body font-semibold text-moss text-sm">
+            FREE
+          </span>
+        </span>
+      ) : (
+        <span className="font-body font-semibold text-earth text-sm">
+          AED {fee}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ─── OrderSummary ─────────────────────────────────────────────────────────────
 
 interface OrderSummaryProps {
   deliveryFee: number;
@@ -42,129 +150,48 @@ export function OrderSummary({
           Order Summary
         </p>
 
+        {/* Line items */}
         <div className="flex flex-col gap-3 mb-4">
-          {items.map((item) => {
-            const promoPerUnit =
-              perItemPromoDiscounts.get(item.variantId) ?? 0;
-            const hasPromoCodeDiscount = promoPerUnit > 0;
-            const finalLineTotal =
-              Math.max(0, item.price - promoPerUnit) * item.quantity;
-            const hasPromotion =
-              item.originalPrice != null && item.originalPrice !== item.price;
-
-            return (
-              <div
-                key={item.variantId}
-                className="flex justify-between items-start gap-2"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="font-body font-light text-earth text-sm leading-snug">
-                    {item.name}
-                    {item.weight_g ? ` (${item.weight_g}g)` : ""}
-                  </p>
-                  <p className="font-body font-light text-earth/45 text-xs">
-                    × {item.quantity}
-                  </p>
-                  {item.promotionEndsAt && (
-                    <p className="font-body text-2xs text-earth/40">
-                      Until {formatDateTime(item.promotionEndsAt)}
-                    </p>
-                  )}
-                  {hasPromoCodeDiscount && appliedPromoCode?.endsAt && (
-                    <p className="font-body text-2xs text-earth/40">
-                      Until {formatDateTime(appliedPromoCode.endsAt)}
-                    </p>
-                  )}
-                </div>
-                <div className="shrink-0 text-right">
-                  <span
-                    className={cn(
-                      "font-body font-semibold text-sm",
-                      hasPromoCodeDiscount
-                        ? "text-moss"
-                        : hasPromotion
-                          ? "text-orange"
-                          : "text-earth",
-                    )}
-                  >
-                    AED {finalLineTotal.toFixed(2)}
-                  </span>
-                  {hasPromoCodeDiscount ? (
-                    <p className="font-body text-earth/30 text-xs line-through">
-                      AED {(item.price * item.quantity).toFixed(2)}
-                    </p>
-                  ) : (
-                    hasPromotion && (
-                      <p className="font-body text-earth/30 text-xs line-through">
-                        AED {(item.originalPrice! * item.quantity).toFixed(2)}
-                      </p>
-                    )
-                  )}
-                </div>
-              </div>
-            );
-          })}
+          {items.map((item) => (
+            <OrderLineItem
+              key={item.variantId}
+              item={item}
+              promoPerUnit={perItemPromoDiscounts.get(item.variantId) ?? 0}
+              promoCodeEndsAt={appliedPromoCode?.endsAt}
+            />
+          ))}
         </div>
 
+        {/* Totals */}
         <div className="border-t border-parchment/60 pt-3 flex flex-col gap-2">
-          <div className="flex justify-between items-center">
-            <span className="font-body font-light text-earth/60 text-sm">
-              Subtotal
-            </span>
-            <span className="font-body font-semibold text-earth text-sm">
-              AED {originalSubtotal.toFixed(2)}
-            </span>
-          </div>
+          <SummaryRow
+            label="Subtotal"
+            value={`AED ${originalSubtotal.toFixed(2)}`}
+          />
           {promotionDiscount > 0 && (
-            <div className="flex justify-between items-center">
-              <span className="font-body font-light text-moss text-sm">
-                Discount
-              </span>
-              <span className="font-body font-semibold text-moss text-sm">
-                −AED {promotionDiscount.toFixed(2)}
-              </span>
-            </div>
+            <SummaryRow
+              label="Discount"
+              value={`−AED ${promotionDiscount.toFixed(2)}`}
+              color="moss"
+            />
           )}
           {appliedPromoCode && promoDiscount > 0 && (
-            <div className="flex justify-between items-center">
-              <span className="font-body font-light text-moss text-sm">
-                Promo code{" "}
-                <span className="font-mono tracking-widest">
-                  {appliedPromoCode.code}
-                </span>
-              </span>
-              <span className="font-body font-semibold text-moss text-sm">
-                −AED {promoDiscount.toFixed(2)}
-              </span>
-            </div>
+            <SummaryRow
+              label={<>Promo code <span className="font-mono tracking-widest">{appliedPromoCode.code}</span></>}
+              value={`−AED ${promoDiscount.toFixed(2)}`}
+              color="moss"
+            />
           )}
-          <div className="flex justify-between items-center">
-            <span className="font-body font-light text-earth/60 text-sm">
-              Delivery
-            </span>
-            {isFreeDelivery ? (
-              <span className="flex items-center gap-1.5">
-                <span className="font-body text-earth/40 text-sm line-through">
-                  AED {originalFee}
-                </span>
-                <span className="font-body font-semibold text-moss text-sm">
-                  FREE
-                </span>
-              </span>
-            ) : (
-              <span className="font-body font-semibold text-earth text-sm">
-                AED {deliveryFee}
-              </span>
-            )}
-          </div>
-          <div className="flex justify-between items-center pt-1">
-            <span className="font-body font-semibold text-earth text-base">
-              Total
-            </span>
-            <span className="font-body font-semibold text-orange text-lg">
-              AED {(total + deliveryFee).toFixed(2)}
-            </span>
-          </div>
+          <DeliveryRow
+            fee={deliveryFee}
+            isFree={isFreeDelivery}
+            originalFee={originalFee}
+          />
+          <SummaryRow
+            label="Total"
+            value={`AED ${(total + deliveryFee).toFixed(2)}`}
+            bold
+          />
         </div>
 
         <div className="mt-3 pt-3 border-t border-parchment/60">

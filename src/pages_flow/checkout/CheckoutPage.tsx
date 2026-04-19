@@ -1,25 +1,26 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useCart } from "@/providers";
-import { submitCheckout } from "./actions";
-import { CheckoutForm } from "./ui/CheckoutForm";
+import { CheckoutFormSection } from "./ui/CheckoutFormSection";
 import { OrderSummary } from "./ui/OrderSummary";
-import { CustomerInfo } from "@/shared/types";
 import { EmptyCart } from "@/pages_flow/cart/EmptyCart";
 import { Loader } from "@/shared/ui/Loader";
-import { Button, toastError } from "@/shared/ui";
+import { Button } from "@/shared/ui";
 import { IconChevron } from "@/shared/icons";
-import type { UserAddress } from "@/lib/addressesDb";
-import type { DeliverySetting } from "@/lib/deliveryDb";
 import { calculateDelivery } from "@/shared/utils/calculateDelivery";
 import { parseAddress } from "@/shared/utils/address";
+import type { CustomerInfo } from "@/shared/types";
+import type { UserAddress } from "@/lib/addressesDb";
+import type { DeliverySetting } from "@/lib/deliveryDb";
+import type { ActivePromotionsMap } from "@/lib/promotionsDb";
 
 interface CheckoutPageProps {
   defaultValues?: Partial<CustomerInfo>;
   addresses?: UserAddress[];
   deliverySettings: DeliverySetting[];
   isAuthenticated: boolean;
+  activePromotions: ActivePromotionsMap;
 }
 
 export function CheckoutPage({
@@ -27,31 +28,23 @@ export function CheckoutPage({
   addresses,
   deliverySettings,
   isAuthenticated,
+  activePromotions,
 }: CheckoutPageProps) {
-  const { items, total, appliedPromoCode, isHydrated } = useCart();
-  const [emirate, setEmirate] = useState(
+  const { items, total, isHydrated, refresh, applyServerPromotions } =
+    useCart();
+  const [emirate, setEmirate] = useState(() =>
     extractEmirateFromAddress(defaultValues?.address ?? "", addresses),
   );
 
-  const delivery = calculateDelivery(total, emirate, deliverySettings);
-  const disabledEmirates = deliverySettings
-    .filter((s) => !s.is_active)
-    .map((s) => s.emirate);
-  const emirateWarning = disabledEmirates.includes(emirate)
-    ? `Delivery to ${emirate} is currently unavailable. Please select another emirate.`
-    : undefined;
+  useLayoutEffect(() => {
+    applyServerPromotions(activePromotions);
+  }, [activePromotions, applyServerPromotions]);
 
-  const [state, formAction] = useActionState(
-    submitCheckout.bind(null, items, appliedPromoCode?.code ?? null),
-    null,
-  );
-
-  const prevState = useRef(state);
   useEffect(() => {
-    if (state === prevState.current) return;
-    prevState.current = state;
-    if (state?.error) toastError(state.error);
-  }, [state]);
+    void refresh();
+  }, [refresh]);
+
+  const delivery = calculateDelivery(total, emirate, deliverySettings);
 
   if (!isHydrated) {
     return (
@@ -83,21 +76,14 @@ export function CheckoutPage({
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
-          <form action={formAction} className="flex flex-col gap-5">
-            <CheckoutForm
-              defaultValues={defaultValues}
-              addresses={addresses}
-              fieldErrors={state?.fieldErrors}
-              promoCodeError={state?.promoCodeError}
-              emirateWarning={emirateWarning}
-              totalWithDelivery={total + delivery.fee}
-              isAuthenticated={isAuthenticated}
-              onEmirateChange={setEmirate}
-              belowMinimum={delivery.belowMinimum}
-              minimumOrder={delivery.minimumOrder}
-              disabledEmirates={disabledEmirates}
-            />
-          </form>
+          <CheckoutFormSection
+            defaultValues={defaultValues}
+            addresses={addresses}
+            deliverySettings={deliverySettings}
+            isAuthenticated={isAuthenticated}
+            emirate={emirate}
+            onEmirateChange={setEmirate}
+          />
           <OrderSummary
             deliveryFee={delivery.fee}
             isFreeDelivery={delivery.isFreeDelivery}

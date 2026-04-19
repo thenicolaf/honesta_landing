@@ -72,23 +72,28 @@ export async function updateProfile(
     return { fieldErrors, values: profile };
   }
 
-  const { supabase, user } = await requireUser();
+  try {
+    const { supabase, user } = await requireUser();
 
-  const { error } = await supabase.from("profiles").upsert({
-    id: user.id,
-    first_name: profile.firstName!.trim(),
-    last_name: profile.lastName!.trim(),
-    phone: profile.phone!.trim(),
-    gender: profile.gender || null,
-    birthday: profile.birthday || null,
-    updated_at: new Date().toISOString(),
-  });
+    const { error } = await supabase.from("profiles").upsert({
+      id: user.id,
+      first_name: profile.firstName!.trim(),
+      last_name: profile.lastName!.trim(),
+      phone: profile.phone!.trim(),
+      gender: profile.gender || null,
+      birthday: profile.birthday || null,
+      updated_at: new Date().toISOString(),
+    });
 
-  if (error) {
-    return { error: "Failed to save profile. Please try again.", values: profile };
+    if (error) {
+      return { error: "Failed to save profile. Please try again.", values: profile };
+    }
+
+    return { success: true, values: profile };
+  } catch (err) {
+    console.error("Update profile error:", err);
+    return { error: "Something went wrong. Please try again.", values: profile };
   }
-
-  return { success: true, values: profile };
 }
 
 export async function changePassword(
@@ -102,26 +107,30 @@ export async function changePassword(
     return { fieldErrors, values };
   }
 
-  const { supabase, user } = await requireUser();
+  try {
+    const { supabase, user } = await requireUser();
 
-  // Verify current password
-  const { error: signInError } = await supabase.auth.signInWithPassword({
-    email: user.email!,
-    password: values.currentPassword,
-  });
-  if (signInError) {
-    return { error: "Current password is incorrect.", values };
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email!,
+      password: values.currentPassword,
+    });
+    if (signInError) {
+      return { error: "Current password is incorrect.", values };
+    }
+
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: values.newPassword,
+    });
+    if (updateError) {
+      return { error: "Failed to update password. Please try again.", values };
+    }
+
+    return { success: true };
+  } catch (err) {
+    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
+    console.error("Change password error:", err);
+    return { error: "Something went wrong. Please try again.", values };
   }
-
-  // Update password
-  const { error: updateError } = await supabase.auth.updateUser({
-    password: values.newPassword,
-  });
-  if (updateError) {
-    return { error: "Failed to update password. Please try again.", values };
-  }
-
-  return { success: true };
 }
 
 // ─── Notification Settings ───────────────────────────────────────────────────

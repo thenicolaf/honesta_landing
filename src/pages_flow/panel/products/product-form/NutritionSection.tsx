@@ -115,7 +115,7 @@ export function NutritionSection({ product }: SectionProps) {
 
   return (
     <SectionCard>
-      <SectionLabel>Nutrition (per 100 g)</SectionLabel>
+      <SectionLabel>Nutrition facts Per 100g</SectionLabel>
 
       <input
         type="hidden"

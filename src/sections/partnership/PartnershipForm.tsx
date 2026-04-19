@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import { Button, toastSuccess, toastError } from "@/shared/ui";
 import {
   FormLabel,
@@ -14,8 +15,12 @@ import {
   CollapsibleChevron,
   CollapsibleContent,
 } from "@/shared/ui";
-import { AddressWithMap } from "@/shared/ui";
 import { parseAddress } from "@/shared/utils/address";
+
+const AddressWithMap = dynamic(
+  () => import("@/shared/ui/AddressWithMap").then((m) => m.AddressWithMap),
+  { ssr: false },
+);
 import { submitPartnershipInquiry, type PartnershipState } from "./actions";
 import { BUSINESS_TYPES } from "./consts";
 
@@ -31,20 +36,8 @@ export function PartnershipForm() {
     prevState.current = state;
     if (state?.success) toastSuccess("Partnership inquiry sent!");
     if (state?.error) toastError(state.error);
+    if (state?.fieldErrors) toastError("Please fill in the required fields");
   }, [state]);
-
-  if (state?.success) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
-        <p className="font-display font-semibold text-earth text-xl">
-          Thank you!
-        </p>
-        <p className="font-body font-light text-earth/70 text-sm leading-relaxed">
-          We&apos;ll get back to you as soon as possible.
-        </p>
-      </div>
-    );
-  }
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -163,10 +156,6 @@ export function PartnershipForm() {
           />
         </div>
       </div>
-
-      {state?.error && (
-        <p className="font-body text-2xs text-red-500">{state.error}</p>
-      )}
 
       <Button
         as="button"

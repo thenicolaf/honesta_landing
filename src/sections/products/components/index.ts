@@ -8,9 +8,13 @@ export {
   ProductDetails,
   ProductExpandedDetails,
   ProductOccasions,
+  ProductTagsSection,
+  ProductFreeFromSection,
+  ProductIngredientsSection,
   BenefitsList,
   NutritionTable,
   ServingIdeas,
+  hasDetailsContent,
 } from "./ProductDetails";
 export { ProductDetailImage } from "./ProductDetailImage";
 export { ProductTagline } from "./ProductTagline";

@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "motion/react";
 import { GraduationCap, Sparkles } from "lucide-react";
 import {
   Card,
@@ -18,11 +17,6 @@ import {
   IconNoSugar,
 } from "@/shared/icons";
 import { useAboutExpanded } from "./about/AboutExpandedProvider";
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0 },
-};
 
 const audienceCards = [
   {
@@ -125,55 +119,27 @@ export function AboutUs() {
           <CollapsibleContent>
             <div className="flex flex-col gap-12 lg:gap-16 pt-6">
               {/* Why HONESTA? */}
-              <motion.div
-                className="mx-auto max-w-3xl text-center"
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: "-80px" }}
-                variants={{
-                  visible: {
-                    transition: { staggerChildren: 0.13, delayChildren: 0.05 },
-                  },
-                }}
-              >
-                <motion.h3
-                  variants={fadeUp}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
-                  className="font-display font-semibold text-heading mb-4"
+              <div className="mx-auto max-w-3xl text-center">
+                <h3
+                  className="font-display font-semibold text-heading mb-4 animate-about-stagger"
                   style={{ fontSize: "clamp(1.2rem, 2.5vw, 1.6rem)" }}
                 >
                   Why HONESTA?
-                </motion.h3>
-                <motion.p
-                  variants={fadeUp}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
-                  className="font-body font-light text-earth/70 text-base leading-relaxed"
-                >
+                </h3>
+                <p className="font-body font-light text-earth/70 text-base leading-relaxed animate-about-stagger">
                   Our brand name is our promise. In a world overloaded with
                   complex ingredients, we choose purity. We create products that
                   we genuinely enjoy eating ourselves and confidently share with
                   our loved ones.
-                </motion.p>
-              </motion.div>
+                </p>
+              </div>
 
               {/* Trust Badges */}
-              <motion.div
-                className="flex flex-wrap justify-center gap-10 md:gap-6"
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: "-80px" }}
-                variants={{
-                  visible: {
-                    transition: { staggerChildren: 0.15, delayChildren: 0.1 },
-                  },
-                }}
-              >
+              <div className="flex flex-wrap justify-center gap-10 md:gap-6">
                 {badges.map(({ Icon, label, description }) => (
-                  <motion.div
+                  <div
                     key={label}
-                    variants={fadeUp}
-                    transition={{ duration: 0.55, ease: "easeOut" }}
-                    className="flex flex-col items-center gap-3 text-center w-36 md:w-40"
+                    className="flex flex-col items-center gap-3 text-center w-36 md:w-40 animate-about-stagger"
                   >
                     <Icon className="w-12 h-12 text-moss" />
                     <div className="w-8 h-px bg-parchment" />
@@ -183,36 +149,22 @@ export function AboutUs() {
                     <p className="font-body font-light text-sm text-earth/60 leading-snug">
                       {description}
                     </p>
-                  </motion.div>
+                  </div>
                 ))}
-              </motion.div>
+              </div>
+
               {/* ── The Perfect Snack ────────────────────── */}
-              <motion.div
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: "-80px" }}
-                variants={{
-                  visible: {
-                    transition: { staggerChildren: 0.13, delayChildren: 0.05 },
-                  },
-                }}
-              >
-                <motion.h3
-                  variants={fadeUp}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
-                  className="font-display font-semibold text-heading text-center mb-10"
+              <div>
+                <h3
+                  className="font-display font-semibold text-heading text-center mb-10 animate-about-stagger"
                   style={{ fontSize: "clamp(1.2rem, 2.5vw, 1.6rem)" }}
                 >
                   The Perfect Snack for Everyone
-                </motion.h3>
+                </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {audienceCards.map(({ icon: Icon, title, text }) => (
-                    <motion.div
-                      key={title}
-                      variants={fadeUp}
-                      transition={{ duration: 0.6, ease: "easeOut" }}
-                    >
+                    <div key={title} className="animate-about-stagger">
                       <Card variant="default" padding="lg" className="h-full">
                         <Icon className="w-10 h-10 text-orange mb-5" />
                         <h4 className="font-display font-semibold text-heading text-lg mb-3">
@@ -222,38 +174,23 @@ export function AboutUs() {
                           {text}
                         </p>
                       </Card>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
-              </motion.div>
+              </div>
 
               {/* ── Our Approach to Quality ────────────────── */}
-              <motion.div
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: "-80px" }}
-                variants={{
-                  visible: {
-                    transition: { staggerChildren: 0.13, delayChildren: 0.05 },
-                  },
-                }}
-              >
-                <motion.h3
-                  variants={fadeUp}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
-                  className="font-display font-semibold text-heading text-center mb-10"
+              <div>
+                <h3
+                  className="font-display font-semibold text-heading text-center mb-10 animate-about-stagger"
                   style={{ fontSize: "clamp(1.2rem, 2.5vw, 1.6rem)" }}
                 >
                   Our Approach to Quality
-                </motion.h3>
+                </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {qualityCards.map(({ icon: Icon, title, text }) => (
-                    <motion.div
-                      key={title}
-                      variants={fadeUp}
-                      transition={{ duration: 0.6, ease: "easeOut" }}
-                    >
+                    <div key={title} className="animate-about-stagger">
                       <Card variant="sand" padding="lg" className="h-full">
                         <Icon className="w-10 h-10 text-orange mb-5" />
                         <h4 className="font-display font-semibold text-heading text-lg mb-3">
@@ -263,52 +200,34 @@ export function AboutUs() {
                           {text}
                         </p>
                       </Card>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
-              </motion.div>
+              </div>
 
               {/* ── Mission ─────────────────────────────── */}
-              <motion.div
-                className="mx-auto max-w-3xl text-center"
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: "-80px" }}
-                variants={{
-                  visible: {
-                    transition: { staggerChildren: 0.13, delayChildren: 0.05 },
-                  },
-                }}
-              >
-                <motion.h3
-                  variants={fadeUp}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
-                  className="font-display font-semibold text-heading mb-6"
+              <div className="mx-auto max-w-3xl text-center">
+                <h3
+                  className="font-display font-semibold text-heading mb-6 animate-about-stagger"
                   style={{ fontSize: "clamp(1.2rem, 2.5vw, 1.6rem)" }}
                 >
                   Our Mission
-                </motion.h3>
+                </h3>
 
-                <motion.p
-                  variants={fadeUp}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
-                  className="font-body font-light text-earth/70 text-base lg:text-lg leading-relaxed mb-8"
-                >
+                <p className="font-body font-light text-earth/70 text-base lg:text-lg leading-relaxed mb-8 animate-about-stagger">
                   To give people the opportunity to snack right without wasting
                   time studying labels. We are building a community of those who
                   choose honesty&nbsp;&mdash; in food, in relationships, and in
                   life.
-                </motion.p>
+                </p>
 
-                <motion.p
-                  variants={fadeUp}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
-                  className="font-display font-bold italic text-heading"
+                <p
+                  className="font-display font-bold italic text-heading animate-about-stagger"
                   style={{ fontSize: "clamp(1.3rem, 3vw, 1.8rem)" }}
                 >
                   HONESTA&nbsp;&mdash; Honest products for everyone.
-                </motion.p>
-              </motion.div>
+                </p>
+              </div>
             </div>
           </CollapsibleContent>
 

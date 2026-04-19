@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import {
   FormLabel,
   FormInput,
@@ -8,15 +9,19 @@ import {
   FormTextarea,
   FormError,
   FormCheckbox,
-  AddressWithMap,
 } from "@/shared/ui";
+
+const AddressWithMap = dynamic(
+  () => import("@/shared/ui/AddressWithMap").then((m) => m.AddressWithMap),
+  { ssr: false },
+);
 import { SubmitButton } from "./SubmitButton";
 import { AddressSelector } from "./AddressSelector";
 import { PromoCodeInput } from "@/pages_flow/cart/ui/PromoCodeInput";
 import Link from "next/link";
 import { CustomerInfo } from "@/shared/types";
 import type { CustomerErrors } from "@/shared/utils/validateCustomer";
-import { parseAddress } from "@/shared/utils/address";
+import { parseAddress, mapAddressFieldErrors } from "@/shared/utils/address";
 import type { UserAddress } from "@/lib/addressesDb";
 
 interface CheckoutFormProps {
@@ -49,10 +54,8 @@ export function CheckoutForm({
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const addressFieldErrors = {
+    ...mapAddressFieldErrors(fieldErrors),
     emirate: fieldErrors?.emirate ?? emirateWarning,
-    city: fieldErrors?.addressCity,
-    area: fieldErrors?.addressArea,
-    buildingName: fieldErrors?.addressBuilding,
   };
   return (
     <>

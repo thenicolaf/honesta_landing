@@ -291,42 +291,47 @@ export async function updateProductStatus(
   id: string,
   newStatus: "draft" | "published" | "archived",
 ): Promise<Pick<ProductState, "success" | "error">> {
-  const { data: existing } = await supabaseAdmin
-    .from("products")
-    .select("status")
-    .eq("id", id)
-    .single();
-
-  if (!existing) return { error: "Product not found." };
-
-  const allowed = getAllowedTransitions(existing.status);
-  if (!allowed.includes(newStatus)) {
-    return { error: `Cannot change from ${existing.status} to ${newStatus}.` };
-  }
-
-  const { error } = await supabaseAdmin
-    .from("products")
-    .update({ status: newStatus, updated_at: new Date().toISOString() })
-    .eq("id", id);
-
-  if (error) return { error: "Failed to update status." };
-
-  if (newStatus === "published") {
-    const { data: product } = await supabaseAdmin
+  try {
+    const { data: existing } = await supabaseAdmin
       .from("products")
-      .select("title")
+      .select("status")
       .eq("id", id)
       .single();
-    await createNotification({
-      type: "new_product",
-      title: "New product available",
-      message: product?.title ?? "",
-      relatedId: id,
-      audience: null,
-    });
-  }
 
-  return { success: true };
+    if (!existing) return { error: "Product not found." };
+
+    const allowed = getAllowedTransitions(existing.status);
+    if (!allowed.includes(newStatus)) {
+      return { error: `Cannot change from ${existing.status} to ${newStatus}.` };
+    }
+
+    const { error } = await supabaseAdmin
+      .from("products")
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq("id", id);
+
+    if (error) return { error: "Failed to update status." };
+
+    if (newStatus === "published") {
+      const { data: product } = await supabaseAdmin
+        .from("products")
+        .select("title")
+        .eq("id", id)
+        .single();
+      await createNotification({
+        type: "new_product",
+        title: "New product available",
+        message: product?.title ?? "",
+        relatedId: id,
+        audience: null,
+      });
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("Update product status error:", err);
+    return { error: "Something went wrong. Please try again." };
+  }
 }
 
 // ─── Actions ──────────────────────────────────────────────────────────────────
@@ -342,37 +347,42 @@ export async function createProduct(
     return { fieldErrors, values };
   }
 
-  const productData = await parseProductValues(values, formData);
-  const status = (formData.get("status") as string) || "draft";
+  try {
+    const productData = await parseProductValues(values, formData);
+    const status = (formData.get("status") as string) || "draft";
+    const variants = parseVariants(values.variants);
 
-  const variants = parseVariants(values.variants);
+    const { data, error } = await supabaseAdmin
+      .from("products")
+      .insert({ ...productData, status })
+      .select("id")
+      .single();
 
-  const { data, error } = await supabaseAdmin
-    .from("products")
-    .insert({ ...productData, status })
-    .select("id")
-    .single();
+    if (error || !data) {
+      return { error: "Failed to create product. Please try again.", values };
+    }
 
-  if (error || !data) {
-    return { error: "Failed to create product. Please try again.", values };
+    await Promise.all([
+      insertJunctionRows(data.id, values),
+      syncVariants(data.id, variants),
+    ]);
+
+    if (status === "published") {
+      await createNotification({
+        type: "new_product",
+        title: "New product",
+        message: productData.title,
+        relatedId: data.id,
+        audience: null,
+      });
+    }
+
+    redirect("/panel/products?toast=created");
+  } catch (err) {
+    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
+    console.error("Create product error:", err);
+    return { error: "Something went wrong. Please try again.", values };
   }
-
-  await Promise.all([
-    insertJunctionRows(data.id, values),
-    syncVariants(data.id, variants),
-  ]);
-
-  if (status === "published") {
-    await createNotification({
-      type: "new_product",
-      title: "New product",
-      message: productData.title,
-      relatedId: data.id,
-      audience: null,
-    });
-  }
-
-  redirect("/panel/products?toast=created");
 }
 
 export async function updateProduct(
@@ -387,64 +397,71 @@ export async function updateProduct(
     return { fieldErrors, values };
   }
 
-  const productData = await parseProductValues(values, formData);
+  try {
+    const productData = await parseProductValues(values, formData);
 
-  // Fetch old images to clean up removed ones
-  const { data: existing } = await supabaseAdmin
-    .from("products")
-    .select("image_url, images")
-    .eq("id", id)
-    .single();
+    const { data: existing } = await supabaseAdmin
+      .from("products")
+      .select("image_url, images")
+      .eq("id", id)
+      .single();
 
-  const { error } = await supabaseAdmin
-    .from("products")
-    .update({
-      ...productData,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id);
+    const { error } = await supabaseAdmin
+      .from("products")
+      .update({
+        ...productData,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
 
-  if (error) {
-    return { error: "Failed to update product. Please try again.", values };
+    if (error) {
+      return { error: "Failed to update product. Please try again.", values };
+    }
+
+    await cleanupRemovedImages(
+      collectAllUrls(existing?.image_url, existing?.images as string[] | null),
+      collectAllUrls(productData.image_url, productData.images),
+    );
+
+    const variants = parseVariants(values.variants);
+
+    await deleteJunctionRows(id);
+    await Promise.all([
+      insertJunctionRows(id, values),
+      syncVariants(id, variants),
+    ]);
+
+    redirect("/panel/products?toast=updated");
+  } catch (err) {
+    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
+    console.error("Update product error:", err);
+    return { error: "Something went wrong. Please try again.", values };
   }
-
-  // Delete removed images from storage
-  await cleanupRemovedImages(
-    collectAllUrls(existing?.image_url, existing?.images as string[] | null),
-    collectAllUrls(productData.image_url, productData.images),
-  );
-
-  const variants = parseVariants(values.variants);
-
-  await deleteJunctionRows(id);
-  await Promise.all([
-    insertJunctionRows(id, values),
-    syncVariants(id, variants),
-  ]);
-
-  redirect("/panel/products?toast=updated");
 }
 
 export async function deleteProduct(
   id: string,
 ): Promise<Pick<ProductState, "success" | "error">> {
-  // Fetch images before deleting the row
-  const { data: existing } = await supabaseAdmin
-    .from("products")
-    .select("image_url, images")
-    .eq("id", id)
-    .single();
+  try {
+    const { data: existing } = await supabaseAdmin
+      .from("products")
+      .select("image_url, images")
+      .eq("id", id)
+      .single();
 
-  const { error } = await supabaseAdmin.from("products").delete().eq("id", id);
-  if (error) {
-    return { error: "Failed to delete product. Please try again." };
+    const { error } = await supabaseAdmin.from("products").delete().eq("id", id);
+    if (error) {
+      return { error: "Failed to delete product. Please try again." };
+    }
+
+    await cleanupRemovedImages(
+      collectAllUrls(existing?.image_url, existing?.images as string[] | null),
+      [],
+    );
+
+    return { success: true };
+  } catch (err) {
+    console.error("Delete product error:", err);
+    return { error: "Something went wrong. Please try again." };
   }
-
-  // Delete all images from storage
-  await cleanupRemovedImages(
-    collectAllUrls(existing?.image_url, existing?.images as string[] | null),
-    [],
-  );
-
-  return { success: true };
 }
