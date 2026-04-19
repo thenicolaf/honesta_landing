@@ -4,6 +4,7 @@ import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
 import { Skeleton } from "@/shared/ui";
 import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvider";
 import { AllOrdersInner } from "@/pages_flow/panel/orders/AllOrdersPage";
+import { OrderStatus } from "@/shared/types";
 
 const FILTER_KEYS = [
   "search",
@@ -90,6 +91,7 @@ async function AllOrdersContent() {
   const { data: ordersData } = await supabaseAdmin
     .from("orders")
     .select("*, order_items(*), promo_code:promo_codes(code)")
+    .neq("status", OrderStatus.PENDING)
     .order("created_at", { ascending: false });
 
   const orders = ordersData ?? [];

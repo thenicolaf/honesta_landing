@@ -12,7 +12,6 @@ import {
 import { createOrderWithItems } from "@/lib/orders";
 import { createPaymentForOrder } from "@/lib/payments";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
-import { createNotification } from "@/lib/notificationsDb";
 import { getDeliverySettingByEmirate } from "@/lib/deliveryDb";
 import { calculateDelivery } from "@/shared/utils/calculateDelivery";
 import { validatePromoCode } from "@/lib/promoCodeApply";
@@ -129,14 +128,6 @@ export async function submitCheckout(
   if (orderError || !order) {
     return { error: orderError ?? "Failed to create order", values: customer };
   }
-
-  // Notify admin
-  await createNotification({
-    type: "new_order",
-    title: "New order",
-    message: `${customer.firstName} ${customer.lastName} — AED ${Number(order.total).toFixed(2)}`,
-    relatedId: order.id,
-  });
 
   // 4. Create payment
   const { paymentUrl, error: paymentError } = await createPaymentForOrder(

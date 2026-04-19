@@ -3,6 +3,7 @@ import { Card, Button } from "@/shared/ui";
 import { supabaseAdmin } from "@/lib/supabase.server";
 import { OrderStatus } from "@/shared/types";
 import { createNotification } from "@/lib/notificationsDb";
+import { formatOrderNotificationMessage } from "@/lib/orderNotifications";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -17,14 +18,20 @@ async function cancelOrder(orderRef: string) {
     })
     .eq("ngenius_ref", orderRef)
     .neq("status", OrderStatus.CANCELLED)
-    .select("id, total")
+    .select(
+      "id, total, first_name, last_name, order_items(name, quantity)",
+    )
     .single();
 
   if (order) {
+    const items = (order.order_items ?? []) as Array<{
+      name: string;
+      quantity: number;
+    }>;
     await createNotification({
       type: "order_cancelled",
       title: "Order cancelled",
-      message: `AED ${Number(order.total).toFixed(2)}`,
+      message: formatOrderNotificationMessage(order, items),
       relatedId: order.id,
     });
   }

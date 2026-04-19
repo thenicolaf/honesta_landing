@@ -6,6 +6,7 @@ import { createNotification } from "@/lib/notificationsDb";
 import { recordPromoCodeRedemption } from "@/lib/promoCodesDb";
 import { clearCartAndCleanup } from "@/lib/cartDb";
 import { cleanupOrphanedMixVariants } from "@/pages_flow/mix/actions";
+import { formatOrderNotificationMessage } from "@/lib/orderNotifications";
 import { ClearCartOnSuccess } from "./ClearCartOnSuccess";
 import { ResultCard, MissingRefCard } from "./ui";
 
@@ -33,12 +34,18 @@ async function settleOrder(orderRef: string, success: boolean) {
     .update({ status: newStatus, updated_at: new Date().toISOString() })
     .eq("ngenius_ref", orderRef)
     .neq("status", newStatus)
-    .select("id, total, promo_code_id, user_id")
+    .select(
+      "id, total, promo_code_id, user_id, first_name, last_name, order_items(name, quantity, variant_id)",
+    )
     .single();
 
   if (!order) return;
 
-  const total = `AED ${Number(order.total).toFixed(2)}`;
+  const items = (order.order_items ?? []) as Array<{
+    name: string;
+    quantity: number;
+    variant_id: string | null;
+  }>;
 
   await Promise.all([
     success && order.promo_code_id && order.user_id
@@ -54,17 +61,13 @@ async function settleOrder(orderRef: string, success: boolean) {
     createNotification({
       type: success ? "order_paid" : "order_failed",
       title: success ? "Order paid" : "Payment failed",
-      message: total,
+      message: formatOrderNotificationMessage(order, items),
       relatedId: order.id,
     }),
   ]);
 
   if (success) {
-    const { data: orderItems } = await supabaseAdmin
-      .from("order_items")
-      .select("variant_id")
-      .eq("order_id", order.id);
-    const variantIds = (orderItems ?? [])
+    const variantIds = items
       .map((i) => i.variant_id)
       .filter((id): id is string => !!id);
     if (variantIds.length > 0) {

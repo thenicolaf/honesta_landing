@@ -69,7 +69,9 @@ src/
 │   │   ├── partnerships/       # /panel/partnerships (admin only)
 │   │   ├── categories/         # /panel/categories CRUD (admin only)
 │   │   ├── products/           # /panel/products CRUD (admin only)
+│   │   ├── mixes/              # /panel/mixes CRUD — mix constructor (admin only)
 │   │   └── promotions/         # /panel/promotions CRUD (admin only)
+│   ├── mix/                    # /mix — public mix builder page
 │   ├── api/
 │   │   ├── payment/webhook/    # N-Genius webhook → updates order status in Supabase
 │   │   ├── notifications/      # GET/PATCH notifications for admin bell
@@ -87,9 +89,10 @@ src/
 │   ├── orders.ts               # Supabase order creation (orders + order_items tables)
 │   ├── favoritesDb.ts          # Favorites CRUD
 │   ├── cart.ts                 # localStorage cart helpers
-│   ├── cartDb.ts               # Database-backed cart (cart_items table, per-user sync)
+│   ├── cartDb.ts               # Database-backed cart (cart_items table, per-user sync) + clearCartAndCleanup
 │   ├── productsDb.ts           # Admin product queries + form options
 │   ├── categoriesDb.ts         # Category data queries
+│   ├── mixBoxesDb.ts           # Mix boxes + presets queries (admin + public)
 │   ├── promotionsDb.ts         # Promotions CRUD
 │   ├── notificationsDb.ts      # Notifications CRUD + triggers push via pushNotification.ts
 │   ├── pushNotification.ts     # Server-side web-push sending (VAPID, lazy init)
@@ -111,13 +114,15 @@ src/
 │   ├── favorites/              # FavoritesPage + FavoritesGrid
 │   ├── profile/                # ProfilePage + ProfileForm + ChangePasswordForm + SignOutButton + PushNotificationSection
 │   │   └── actions.ts          # updateProfile(), changePassword(), signOut()
-│   ├── orders/                 # OrdersPage + OrderCards (user order history)
+│   ├── orders/                 # OrdersPage + OrderCards (user order history) + OrderMixComposition
+│   ├── mix/                    # MixBuilderPage + BoxSelector + PresetGrid + PresetTile + MixSummary + actions (assembleMix, cleanupOrphanedMixVariants)
 │   ├── panel/
 │   │   ├── dashboard/          # DashboardPage + types (admin statistics)
 │   │   ├── orders/             # AllOrdersPage + AdminOrderCards + filters + useOrdersTable
 │   │   ├── partnerships/       # PartnershipsPage + InquiryCards + filters + useInquiriesTable
 │   │   ├── categories/         # CategoryForm + actions
 │   │   ├── products/           # ProductForm + actions
+│   │   ├── mixes/              # MixForm + MixesPage + SortableMixGrid + actions (auto system product)
 │   │   └── promotions/         # PromotionsPage + PromotionForm + actions
 │   └── PageLoader.tsx          # Thin wrapper around <Loader /> for route loading.tsx files
 │
@@ -139,7 +144,7 @@ src/
 │   └── SearchParamsFilterProvider.tsx  # Syncs FilterProvider state to URL search params (supports multiKeys)
 │
 ├── sections/                   # Landing-page section components
-│   ├── Navbar.tsx, Hero.tsx, PhilosophyBlock.tsx, AboutUs.tsx, PartnershipCTA.tsx, Footer.tsx
+│   ├── Navbar.tsx, Hero.tsx, PhilosophyBlock.tsx, AboutUs.tsx, PartnershipCTA.tsx, MixCTA.tsx, Footer.tsx
 │   ├── partnership/            # actions.ts — submitPartnershipInquiry server action → partnership_inquiries table
 │   ├── categories/             # CategoryCard, CategoryGrid, consts, types
 │   └── products/               # ProductGrid, ProductItem, consts, mapDbProducts
@@ -161,6 +166,7 @@ src/
 | Route | Purpose |
 |-------|---------|
 | `/` | Landing page |
+| `/mix` | Mix constructor (public — build your own mix from active boxes) |
 | `/cart` | Shopping cart |
 | `/checkout` | Checkout form (customer info + order summary) |
 | `/checkout/result?ref={orderRef}` | Payment result — polls N-Genius, shows success/failure |
@@ -188,6 +194,9 @@ src/
 | `/panel/products/create` | Create new product (admin only) |
 | `/panel/products/[id]/details` | Product detail view (admin only) |
 | `/panel/products/[id]/edit` | Edit product (admin only) |
+| `/panel/mixes` | Mix box management — DnD reorder (admin only) |
+| `/panel/mixes/create` | Create new mix box (admin only) |
+| `/panel/mixes/[id]/edit` | Edit mix box + presets (admin only) |
 | `/panel/promotions` | Promotion management (admin only) |
 | `/panel/promotions/create` | Create new promotion (admin only) |
 | `/panel/promotions/[id]/edit` | Edit promotion (admin only) |
@@ -231,14 +240,14 @@ Pages use **Suspense + Skeleton** instead of `loading.tsx`. Each page wraps asyn
 **Result page** (`src/app/checkout/result/page.tsx`):
 - Server component — polls N-Genius directly for final status
 - Updates `orders.status` → `PAID` or `FAILED` (idempotent via `.neq("status", newStatus)`)
-- On `PAID`: records promo code redemption, **clears the user's `cart_items` server-side**
+- On `PAID`: records promo code redemption, calls `clearCartAndCleanup(supabaseAdmin, user_id)` for auth users (wipes `cart_items` + cleans up orphan mix-variants from cart), and additionally calls `cleanupOrphanedMixVariants` with `variant_id`s from this order's `order_items` — this covers guest flow where `user_id` is NULL
 - For guests: renders an inline `<script>` that synchronously wipes `honesta_cart` + `honesta_promo_code` from `localStorage` **before** `CartProvider` mounts and reads it
 - Renders `<ClearCartOnSuccess>` (client component) to flush the in-memory `CartProvider._items` store after a navigation hit
 
 **Webhook** (`src/app/api/payment/webhook/route.ts`):
 - Receives N-Genius events; maps states (PURCHASED/CAPTURED → PAID, FAILED/REVERSED → FAILED/CANCELLED)
 - Validates via `NGENIUS_WEBHOOK_SECRET` header
-- On `PAID`: records promo code redemption (`recordPromoCodeRedemption`) and wipes `cart_items` for the user
+- On `PAID`: records promo code redemption (`recordPromoCodeRedemption`), calls `clearCartAndCleanup` for auth users, and `cleanupOrphanedMixVariants` on order's variant_ids (covers guests)
 - Both webhook and result-page paths are idempotent — only the **first** transition into `PAID` runs side effects, because the `UPDATE … neq("status", newStatus)` returns no row otherwise. Combined with `UNIQUE(order_id)` on `promo_code_redemptions`, double-redemptions are impossible.
 
 ## Cart System
@@ -248,7 +257,7 @@ Pages use **Suspense + Skeleton** instead of `loading.tsx`. Each page wraps asyn
 - **Provider:** `CartProvider` uses `useSyncExternalStore` — no Zustand/Redux
 - **Hydration:** `isHydrated` flag prevents SSR/client mismatch; server always renders empty cart
 - **Hook:** `useCart()` exposes `items`, `itemCount`, `subtotal`, `total`, `appliedPromoCode`, `promoDiscount`, `addToCart(item)`, `removeFromCart(variantId)`, `updateItemQuantity(variantId, qty)`, `clearCart`, `applyPromoCode(code)`, `removePromoCode()`, `isHydrated`
-- **CartItem type:** `{ variantId, productId, slug?, name, price, originalPrice?, promotionEndsAt?, quantity, image_url?, weight_g }`
+- **CartItem type:** `{ variantId, productId, slug?, name, price, originalPrice?, promotionEndsAt?, quantity, image_url?, weight_g, isMix?, mixItems? }`. `isMix=true` + `mixItems[]` (snapshot `{ name, image_url, count, weight_g, price }[]`) identify assembled mix boxes — set by `assembleMixAction` (and rebuilt on auth-user cart hydration via `mix_variant_cells` join in `getCartFromDb`).
 - **Price sync:** `syncCartPrices` queries products with variants + promotions, recalculates prices. `originalPrice` is computed from promotions on the fly, never stored in DB.
 - **DB cart (`cartDb.ts`):** `getCartFromDb` does a join: `cart_items → product_variants → products` (with promotions) to build full CartItem objects. `upsertItemInDb` stores only `(user_id, variant_id, quantity)`.
 - **Totals utility:** [src/lib/cart.ts](src/lib/cart.ts) `getCartTotals(items, promoDiscount)` is the single source of truth for `originalSubtotal` (sum of `originalPrice ?? price`), `subtotal` (after product promotions, before promo code), `promotionDiscount` (`originalSubtotal − subtotal`), and `total` (`subtotal − promoDiscount`). **Don't duplicate `items.reduce` for totals in components — call this helper.** It's used by `CartSummary`, `OrderSummary`, and `submitCheckout`.
@@ -279,6 +288,56 @@ Manual codes a user enters in the cart/checkout to get an extra discount, parall
 **RLS.** All four `promo_code*` tables have RLS enabled with admin-only policies. Server actions go through `supabaseAdmin` (service_role bypasses RLS), so regular users never touch these tables directly from the browser. See `src/lib/promoCodesDb.ts` — every query uses `supabaseAdmin`.
 
 **Admin UI.** `/panel/promo-codes` — CRUD by analogy with `/panel/promotions`. The `PromoCodeForm` uses `FormTileRadio` for scope, `FormNumberInput` for all numeric fields, `ProductPicker` (reused from promotions, only when `scope=product`), and `UserPicker` (loads users via `supabaseAdmin.auth.admin.listUsers` joined with `profiles` for name/gender/birthday). The list page shows a status badge: `active | scheduled | exhausted | expired` — `exhausted` (orange) appears when `used_count >= max_uses`. The status helper `getPromoCodeStatus(isActive, startsAt, endsAt, usedCount, maxUses)` is in [src/pages_flow/panel/promo-codes/types.ts](src/pages_flow/panel/promo-codes/types.ts).
+
+## Mix Constructor
+
+Customers can build their own mix boxes: pick a box template (e.g. "Classic 9-cell"), fill each cell with a product from the box's assortment at admin-configured weight/price, then add the assembled mix to cart as a normal product.
+
+### Data model
+
+- **`mix_boxes`** — box templates. `id` is **the same UUID** as the corresponding `products.id`. When admin creates a box, `createMixAction` (in [src/pages_flow/panel/mixes/actions.ts](src/pages_flow/panel/mixes/actions.ts)) first inserts into `products` with `status='system'` using a generated UUID, then inserts into `mix_boxes` with the **same** `id`. This lets us reuse the existing `product_variants` → `products` foreign key path without extra join columns.
+- **`mix_box_presets`** — for a given box, the assortment: `{product_id, weight_g, price}` per cell. `UNIQUE(box_id, product_id)` means each product appears at most once per box (with a fixed weight/price). Different boxes can have different weight/price for the same product.
+- **`mix_variant_cells`** — per-assembled-variant record of which preset is in which cell (`cell_index`). Created by `assembleMixAction` ([src/pages_flow/mix/actions.ts](src/pages_flow/mix/actions.ts)) when a customer clicks "Add to cart".
+- **`products.status = 'system'`** — reserved status for system products auto-created for each mix box. Hidden from all public and admin product queries (e.g. `getAdminProducts` uses `.neq("status", "system")`).
+- **`order_items.mix_composition`** JSONB — snapshot of `{name, image_url, count, weight_g, price}[]` for each mix item at order time. Populated by `buildMixCompositionMap` in [src/lib/orders.ts](src/lib/orders.ts) by reading `mix_variant_cells` for the variant. Independent of `variant_id` — if the variant is later deleted, the snapshot still renders correctly in admin order views.
+
+### Admin flow (`/panel/mixes`)
+
+- List page with DnD reorder (`SortableMixGrid`, pattern from `SortableCategoryGrid`) — drag handle on hover, `reorderMixesAction` batches `sort_order` updates + `revalidatePath`.
+- `MixForm` (CRUD) has two sections: `BasicInfoSection` (name auto-generates slug server-side, description, image via `FormUploadZone` slug="mix" bucket="mixes", cell_count `FormNumberInput`, `is_active` checkbox) and `PresetsSection` (dynamic rows: product `Select` with `searchable`, weight `FormNumberInput`, price `FormNumberInput`, trash button — per-field `FormError` under each input). On mobile Product row and trash are stacked; Weight+Price in a 2-col grid below.
+- `createMixAction` creates system product first (same UUID), then `mix_boxes`, then presets — rolls back on any step failure.
+- `updateMixAction` syncs the system product's title/slug/image on name change; delete cascades via FK.
+
+### Public flow (`/mix`)
+
+- [MixCTA](src/sections/MixCTA.tsx) on home page (`SectionId.Mix`) links to `/mix`. When no active boxes exist, CTA shows "Mixes coming soon" placeholder instead of the button (server reads `getActiveMixBoxes()` in `page.tsx` and passes `hasActiveBoxes` prop).
+- [`/mix` page](src/app/mix/page.tsx) shows `EmptyState` if no boxes, else renders `MixBuilderPage` inside `<SearchParamsFilterProvider keys={["box", "preset"]} multiKeys={["preset"]}>` — **note:** `preset` must be listed in **both** `keys` and `multiKeys`. State lives in URL: `?box=<id>&preset=<id>&preset=<id>...` — selected presets repeat for multi-cell selections.
+- `MixBuilderPage` reads `useFilterBar("box")` + `useFilterBarMulti("preset")`. Layout: `BoxSelector` (grid of boxes, orange outline when selected) → `Collapsible` (opens when box selected) containing `PresetGrid` (grid of presets, `PresetTile` shows image + counter pill in corner + `+/-` buttons) → `Add to cart` button disabled until `totalCells === cell_count`.
+- On "Add to cart": `assembleMixAction(boxId, selections)` validates, inserts new `product_variants(product_id=boxId, weight_g=Σ, price=Σ)` + bulk-inserts `mix_variant_cells` → returns `CartItem` with `isMix: true` and `mixItems: [...]`. Client calls `addToCart(cartItem)` which syncs to cart/localStorage.
+- `MixSummary` — shown always on `/mix` (with skeleton while `!isHydrated`), lists mix items currently in cart with +/- controls, "Clear all" (removes all mix items), and "View cart" link. Composition displayed as `Collapsible` with trigger "COMPOSITION · N ITEMS" and `Badge variant="outline" size="xs"` chips with orange counter pills.
+
+### Orphan variant cleanup
+
+Because each "Add to cart" creates a new `product_variants` row + cells, the DB would grow unbounded if not cleaned up. Strategy: **no dedup, delete immediately when no longer needed**.
+
+- [`cleanupOrphanedMixVariants(variantIds)`](src/pages_flow/mix/actions.ts) — server action. Filters input to only `products.status = 'system'` variants, then bulk DELETEs. `mix_variant_cells` CASCADEs; `order_items.variant_id` becomes NULL via `ON DELETE SET NULL` (snapshot in `mix_composition` preserves the order view).
+- Triggered from multiple spots:
+  - `useCartActions.removeFromCart`, `updateItemQuantity(qty≤0)`, `clearCart` — fire-and-forget `void cleanupOrphanedMixVariants(...)`. Works for auth and guest.
+  - [`clearCartAndCleanup`](src/lib/cartDb.ts) — helper used after successful payment for auth users; selects variant_ids from `cart_items`, deletes, then cleans up.
+  - `result/page.tsx` + webhook — additionally call `cleanupOrphanedMixVariants` on `order_items.variant_id` of the paid order. This covers **guest checkout** (no `user_id`, so `clearCartAndCleanup` is skipped).
+- **FAILED orders**: variants are **kept** — user may retry payment with the same composition still in their cart.
+
+### Mix composition in order views
+
+- [`OrderMixComposition`](src/pages_flow/orders/ui/OrderMixComposition.tsx) — reusable `Collapsible` (trigger "COMPOSITION · N ITEMS") with `Badge variant="outline" size="xs"` chips + counter pills. Used in:
+  - `/panel/orders` (user view) — both mobile cards (`OrderCards.ItemLine`) and desktop table (`columns.tsx itemsColumn`)
+  - `/panel/all-orders` (admin view) — both mobile cards (`AdminOrderCards.ItemLine`) and the same desktop table columns
+- Items column uses `min-w-80` to fit the expanded composition. Cart view uses the same pattern — see `MixComposition` in [CartItem.tsx](src/pages_flow/cart/ui/CartItem.tsx).
+- **Stop-propagation trick:** `CollapsibleTrigger` gets `onClick={stop}` (stopPropagation + preventDefault) to prevent the parent card/row click handler from firing when the user opens the composition.
+
+### Images
+
+Mix box images use the `mixes` Supabase Storage bucket (added to `ALLOWED_BUCKETS` in [src/lib/storage.ts](src/lib/storage.ts)). Must be created in Supabase Dashboard manually, with public read policy.
 
 ## Auth
 
@@ -317,11 +376,15 @@ Two files, three client instances:
   - `supabaseAdmin` — static service-role client, bypasses RLS (use only in server actions, API routes, and `lib/`)
   - `createSupabaseServerClient()` — async, reads cookies via `@supabase/ssr`; use whenever you need the current user's session
 
-**DB tables:** `orders` (status, is_fulfilled, subtotal, delivery_fee, total, **promotion_discount**, **promo_code_id**, **promo_discount**, customer fields, ngenius_ref), `order_items` (order_id, variant_id, name, price, **original_price** nullable, **promo_discount** per unit, weight_g, quantity — all snapshots at order time so historical orders survive promo/promotion edits), `products` (image_url, images JSONB `[]`, in_stock, badge, note, nutrition JSONB, status — **no price/weight_g columns**, these live in `product_variants`), `product_variants` (product_id, weight_g, price — one-to-many with products), `categories` (name, slug, audience, tagline, description, image_url, badge, sort_order), `benefits` (id, name, description — unique on name+description), `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, role `user_role`, gender, birthday, allow_notifications), `cart_items` (user_id, variant_id, quantity — minimal, prices via join), `notifications` (type, title, message, related_id, user_id, audience `user_role` — nullable, NULL = all roles), `notification_reads` (notification_id, user_id, read_at — tracks per-user read status), `push_subscriptions` (user_id, endpoint UNIQUE, p256dh, auth — FK to auth.users + profiles, RLS per user), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id), `promo_codes` (code, scope, discount_type, discount_value, min_order_amount, max_uses, max_uses_per_user, stack_with_promotions, starts_at, ends_at, is_active — code is exactly 6 `[A-Z0-9]` chars enforced by CHECK), `promo_code_products`, `promo_code_users`, `promo_code_redemptions` (`unique(order_id)`).
+**DB tables:** `orders` (status, is_fulfilled, subtotal, delivery_fee, total, **promotion_discount**, **promo_code_id**, **promo_discount**, customer fields, ngenius_ref), `order_items` (order_id, variant_id, name, price, **original_price** nullable, **promo_discount** per unit, weight_g, quantity, **mix_composition** JSONB nullable — snapshot of mix contents — all snapshots at order time so historical orders survive promo/promotion/variant edits), `products` (image_url, images JSONB `[]`, in_stock, badge, note, nutrition JSONB, status `product_status` enum — `draft | published | archived | system`, **no price/weight_g columns**, these live in `product_variants`), `product_variants` (product_id, weight_g, price — one-to-many with products), `categories` (name, slug, audience, tagline, description, image_url, badge, sort_order), `benefits` (id, name, description — unique on name+description), `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, role `user_role`, gender, birthday, allow_notifications), `cart_items` (user_id, variant_id, quantity — minimal, prices via join), `notifications` (type, title, message, related_id, user_id, audience `user_role` — nullable, NULL = all roles), `notification_reads` (notification_id, user_id, read_at — tracks per-user read status), `push_subscriptions` (user_id, endpoint UNIQUE, p256dh, auth — FK to auth.users + profiles, RLS per user), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id), `promo_codes` (code, scope, discount_type, discount_value, min_order_amount, max_uses, max_uses_per_user, stack_with_promotions, starts_at, ends_at, is_active — code is exactly 6 `[A-Z0-9]` chars enforced by CHECK), `promo_code_products`, `promo_code_users`, `promo_code_redemptions` (`unique(order_id)`), `mix_boxes` (id — **same UUID as corresponding `products.id`**, name, slug UNIQUE, description, image_url, cell_count, is_active, sort_order), `mix_box_presets` (box_id, product_id, weight_g, price — `UNIQUE(box_id, product_id)` means each product appears once in a box's assortment), `mix_variant_cells` (variant_id → product_variants CASCADE, cell_index, preset_id → mix_box_presets CASCADE, `UNIQUE(variant_id, cell_index)` — stores what preset sits in each cell of an assembled mix variant).
 
 **Order display invariant:** `originalSubtotal − promotion_discount − promo_discount + delivery_fee = total`. The order list pages and cards display this breakdown as `Subtotal − Promotion − Promo + Delivery = Total`. Old orders without `original_price`/`promotion_discount` (NULL/0) render correctly without the new lines.
 
-**Realtime orders quirk.** The `INSERT` event on `orders` fires **before** the `order_items` rows are written by `createOrderWithItems` (separate insert). [src/pages_flow/panel/orders/useRealtimeOrders.ts](src/pages_flow/panel/orders/useRealtimeOrders.ts) handles this by calling `router.refresh()` on INSERT instead of merging the payload — the server component re-runs its query with the full `order_items(*) + promo_code(code)` join. UPDATE/DELETE merge directly without refresh.
+**Order visibility invariant.** PENDING orders are filtered out of both [src/app/panel/orders/page.tsx](src/app/panel/orders/page.tsx) (user view) and [src/app/panel/all-orders/page.tsx](src/app/panel/all-orders/page.tsx) (admin view) via `.neq("status", OrderStatus.PENDING)` in the Supabase query. The `ORDER_STATUS_OPTIONS` filter in [src/pages_flow/panel/orders/helpers.ts](src/pages_flow/panel/orders/helpers.ts) likewise only lists `Paid | Failed | Cancelled`. A freshly-created order is invisible until N-Genius (via webhook or `/checkout/result`) transitions it to PAID/FAILED/CANCELLED.
+
+**Realtime orders hook.** [src/pages_flow/panel/orders/useRealtimeOrders.ts](src/pages_flow/panel/orders/useRealtimeOrders.ts) holds no local state — it subscribes to Supabase Realtime on `orders` and calls `router.refresh()` on any UPDATE or DELETE. INSERT events are ignored (new orders are always PENDING and hidden anyway; they'll be picked up by the UPDATE that flips their status). This simplicity is deliberate — keeps the hook free of `setState`-in-effect cascades and avoids the old INSERT→order_items race condition.
+
+**Order notification messages.** [src/lib/orderNotifications.ts](src/lib/orderNotifications.ts) — `formatOrderNotificationMessage(order, items)` is the single source of truth for the body of `order_paid` / `order_failed` / `order_cancelled` notifications. Format: `{First Last} · {totalQty} items · {qty}× {name}, … · AED {total}` (first 2 item names, then `+N more`). Callers (`checkout/result`, `api/payment/webhook`, `checkout/cancel`) fetch `first_name, last_name, total, order_items(name, quantity, variant_id)` in a **single** `.select(...)` and pass the row straight to the helper — important for the N-Genius webhook 15-second SLA.
 
 ## Design system
 
@@ -368,7 +431,7 @@ All use `class-variance-authority` (cva) for variants + `cn()` for className mer
 
 Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React context internally; sub-components access it via a `use*` hook. Follow this same pattern when adding new compound components.
 
-- **`Button`** — defaults to `<a>` via `next/link` `Link` for all hrefs (internal, external, hash). Pass `as="button"` for `<button>`. Supports `ref` prop (React 19 ref-as-prop). Variants: `primary | secondary | outline | text`. Colors: `primary | error | warning | default`. Sizes: `icon | inline | sm | md | lg`. `buttonVariants` is also exported for applying Button styles to non-Button elements (e.g. `HashLink`). **Never nest `<button>` inside `HashLink`** — use `HashLink` with `buttonVariants` className instead.
+- **`Button`** — defaults to `<a>` via `next/link` `Link` for all hrefs (internal, external, hash). Pass `as="button"` for `<button>`. Supports `ref` prop (React 19 ref-as-prop). Variants: `primary | secondary | outline | text`. Colors: `primary | error | warning | default`. Sizes: `icon | inline | sm | md | lg`. `buttonVariants` is also exported for applying Button styles to non-Button elements (e.g. `HashLink`). **Never nest `<button>` inside `HashLink`** — use `HashLink` with `buttonVariants` className instead. Disabled state is handled at the base class: `disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none` — no need to add `disabled:*` classes manually per-button. Hover styles auto-disable.
 - **`Badge`** — inline label/tag. Variants: `natural` (moss green) | `warm` (sand) | `outline`. Sizes: `xs | sm | md`.
 - **`Card`** — wrapper with 16px radius. Variants: `default` (white-warm) | `sand` | `outline` | `dark` (earth bg).
 - **`TagToolbar` / `TagToolbarItem`** — single-select pill filter bar (`role="radiogroup"`). Controlled or uncontrolled via `value`/`onValueChange`/`defaultValue`. Empty string `""` means "All".
@@ -487,6 +550,7 @@ Shared toggle that lets users switch between a detailed card grid and a compact 
 - **Cookies** (in [src/shared/consts.ts](src/shared/consts.ts)):
   - `CATEGORIES_VIEW_COOKIE` shared between `/panel/categories` and `/` categories section.
   - `PRODUCTS_VIEW_COOKIE` shared between `/panel/products`, `/panel/favorites`, and `/` products section.
+  - `MIXES_VIEW_COOKIE` for `/panel/mixes`.
 - **Default mode:** `"row"` (`DEFAULT_VIEW_MODE` in provider).
 
 Integration pattern (same on every page):
@@ -548,7 +612,7 @@ Multi-role notification system with Supabase Realtime.
 - `notification_reads` — `(notification_id, user_id)` PK. Presence of row = read. Used for both personal and broadcast notifications.
 - RLS enabled on both tables — users only see notifications targeted to them.
 
-**Notification types:** `new_order`, `order_paid`, `order_failed`, `order_cancelled` (admin), `new_partnership` (admin), `new_promotion`, `new_product`, `new_category` (broadcast to all). Styles in `src/shared/ui/NotificationTypeConfig.tsx`.
+**Notification types:** `order_paid`, `order_failed`, `order_cancelled` (admin), `new_partnership` (admin), `new_promotion`, `new_product`, `new_category` (broadcast to all). Styles in `src/shared/ui/NotificationTypeConfig.tsx`. `new_order` is **legacy** — no longer created (was fired on PENDING-order creation, which created noise for unpaid abandoned checkouts), but its style/icon is kept in `TYPE_STYLES` so historical rows still render. Order-related admin notifications now only fire on the payment state transition (PAID/FAILED/CANCELLED).
 
 **DB layer:** `src/lib/notificationsDb.ts` — `createNotification({ type, title, message?, relatedId?, audience?, userId? })`. Default `audience = "admin"`. Queries use left join on `notification_reads` to compute `is_read`. New users only see notifications created after their registration (`created_at >= user.created_at`).
 
@@ -728,7 +792,7 @@ Product/order/inquiry list pages use a shared pattern for search:
 - **`HashTracker`** (`src/app/_components/HashTracker.tsx`) — scroll-spy on home page. Uses `IntersectionObserver` to update URL hash as user scrolls through sections. `MutationObserver` handles Suspense-deferred sections. Dispatches `hashchange` event (no polling).
 - **`useActiveHash`** (`src/sections/navbar/useActiveHash.ts`) — `useSyncExternalStore` listening for `hashchange` + `popstate` events (no polling).
 - **Scroll restoration** — inline `<script>` in `layout.tsx` with `history.scrollRestoration = "manual"` + sessionStorage save/restore (needed because native restoration fails with Suspense streaming).
-- **Navigation links** — shared source of truth in `src/shared/consts/navLinks.ts`. `SectionId` enum (`Hero`, `Categories`, `Products`, `Story`, `About`, `Contact`), `SECTION_IDS = Object.values(SectionId)` (used by `HashTracker`), `NAV_LINKS` and `TAB_LINKS` (typed with `NavLink<T>` generic). Used by Navbar, NavMobileTabBar, Footer, and HashTracker.
+- **Navigation links** — shared source of truth in `src/shared/consts/navLinks.ts`. `SectionId` enum (`Hero`, `About`, `Mix`, `Categories`, `Products`, `Story`, `Contact`), `SECTION_IDS = Object.values(SectionId)` (used by `HashTracker`), `NAV_LINKS` and `TAB_LINKS` (typed with `NavLink<T>` generic). Used by Navbar, NavMobileTabBar, Footer, and HashTracker.
 
 ## Product sorting
 

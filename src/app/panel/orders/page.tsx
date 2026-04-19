@@ -3,6 +3,7 @@ import { createSupabaseServerClient, supabaseAdmin } from "@/lib/supabase.server
 import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
 import { Skeleton } from "@/shared/ui";
 import { OrdersPage } from "@/pages_flow/orders/OrdersPage";
+import { OrderStatus } from "@/shared/types";
 
 function OrdersSkeleton() {
   return (
@@ -60,6 +61,7 @@ async function OrdersContent() {
     .from("orders")
     .select("*, order_items(*), promo_code:promo_codes(code)")
     .eq("user_id", user!.id)
+    .neq("status", OrderStatus.PENDING)
     .order("created_at", { ascending: false });
 
   return <OrdersPage orders={ordersData ?? []} />;
