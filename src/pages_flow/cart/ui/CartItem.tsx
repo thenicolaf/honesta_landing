@@ -312,6 +312,14 @@ export function CartItem({
     </Card>
   );
 
+  if (item.isMix) {
+    return (
+      <Link href="/mix" className="block">
+        {card}
+      </Link>
+    );
+  }
+
   if (item.slug) {
     return (
       <Link href={`/products/${item.slug}?from=cart`} className="block">

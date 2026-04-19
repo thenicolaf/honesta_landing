@@ -143,11 +143,12 @@ interface SelectTriggerProps {
   children: React.ReactNode;
   placeholder?: string;
   className?: string;
+  disabled?: boolean;
 }
 
-export function SelectTrigger({ children, className }: SelectTriggerProps) {
+export function SelectTrigger({ children, className, disabled }: SelectTriggerProps) {
   const { open, value, clearable, toggle, clear } = useSelect();
-  const showClear = clearable && value !== "";
+  const showClear = clearable && value !== "" && !disabled;
 
   return (
     <button
@@ -156,12 +157,14 @@ export function SelectTrigger({ children, className }: SelectTriggerProps) {
       aria-expanded={open}
       aria-haspopup="listbox"
       onClick={toggle}
+      disabled={disabled}
       className={cn(
         "flex w-full items-center justify-between gap-3 rounded-xl",
         "border border-earth/15 bg-white-warm px-4 py-2.5",
         "font-body text-sm text-earth transition-colors duration-200",
         "cursor-pointer select-none",
         "hover:border-earth/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange/40",
+        "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-earth/15",
         open && "border-earth/35",
         className,
       )}

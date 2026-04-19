@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { supabaseAdmin } from "@/lib/supabase.server";
 import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
-import { Skeleton } from "@/shared/ui";
+import { Skeleton, Button } from "@/shared/ui";
 import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvider";
 import { AllOrdersInner } from "@/pages_flow/panel/orders/AllOrdersPage";
 import { OrderStatus } from "@/shared/types";
@@ -113,7 +113,15 @@ async function AllOrdersContent() {
 export default function Page() {
   return (
     <>
-      <AdminPageHeader title="All Orders" label="Admin Panel" />
+      <AdminPageHeader
+        title="All Orders"
+        label="Admin Panel"
+        actions={
+          <Button href="/panel/all-orders/create" size="sm">
+            New order
+          </Button>
+        }
+      />
       <SearchParamsFilterProvider keys={FILTER_KEYS}>
         <Suspense fallback={<OrdersSkeleton />}>
           <AllOrdersContent />

@@ -16,3 +16,5 @@ export const UAE_EMIRATES = [
   { value: "Sharjah", label: "Sharjah" },
   { value: "Umm Al Quwain", label: "Umm Al Quwain" },
 ] as const;
+
+export const DEFAULT_EMIRATE = "Dubai";

@@ -26,10 +26,10 @@ export function PresetTile({
   return (
     <div
       className={cn(
-        "relative flex flex-col rounded-2xl overflow-hidden bg-white-warm transition-all duration-200",
+        "relative flex flex-col rounded-2xl overflow-hidden bg-white-warm border-2 transition-all duration-200",
         isSelected
-          ? "outline-2 outline-orange shadow-lg"
-          : "hover:shadow-md",
+          ? "border-orange shadow-lg"
+          : "border-transparent hover:shadow-md",
       )}
     >
       {isSelected && (

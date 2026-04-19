@@ -3,13 +3,21 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import type { CartItem } from "@/sections/products/types/types";
-import { CUSTOMER_COOKIE_KEY, COOKIE_CONSENT_KEY } from "@/shared/consts";
+import {
+  CUSTOMER_COOKIE_KEY,
+  COOKIE_CONSENT_KEY,
+  DEFAULT_EMIRATE,
+} from "@/shared/consts";
 import type { CustomerInfo } from "@/shared/types";
 import {
   validateCustomer,
   type CustomerErrors,
 } from "@/shared/utils/validateCustomer";
-import { createOrderWithItems } from "@/lib/orders";
+import {
+  buildMixCompositionMap,
+  cartItemToOrderRow,
+  createOrderWithItems,
+} from "@/lib/orders";
 import { createPaymentForOrder } from "@/lib/payments";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
 import { getDeliverySettingByEmirate } from "@/lib/deliveryDb";
@@ -58,7 +66,8 @@ export async function submitCheckout(
   }
 
   // 2. Calculate delivery fee server-side (authoritative)
-  const emirate = (formData.get("emirate") as string)?.trim() || "Dubai";
+  const emirate =
+    (formData.get("emirate") as string)?.trim() || DEFAULT_EMIRATE;
 
   // 3. Validate and apply promo code (if present). Re-runs all checks
   // server-side using the actual user, items, and current DB state.
@@ -114,8 +123,15 @@ export async function submitCheckout(
     };
   }
 
+  const mixCompositionMap = await buildMixCompositionMap(
+    items.map((i) => i.variantId),
+  );
+  const orderRows = items.map((i) =>
+    cartItemToOrderRow(i, mixCompositionMap, perItemPromoDiscounts),
+  );
+
   const { data: order, error: orderError } = await createOrderWithItems({
-    items,
+    items: orderRows,
     customer,
     subtotal,
     deliveryFee: delivery.fee,
@@ -123,7 +139,6 @@ export async function submitCheckout(
     promoCodeId,
     promoDiscount,
     promotionDiscount,
-    perItemPromoDiscounts,
   });
   if (orderError || !order) {
     return { error: orderError ?? "Failed to create order", values: customer };

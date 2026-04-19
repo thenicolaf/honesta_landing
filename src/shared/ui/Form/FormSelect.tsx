@@ -25,6 +25,8 @@ interface FormSelectProps {
   options: FormSelectOption[];
   state?: "default" | "error";
   clearable?: boolean;
+  searchable?: boolean;
+  disabled?: boolean;
   className?: string;
   /** Extra classes applied to the trigger button. */
   triggerClassName?: string;
@@ -41,6 +43,8 @@ export function FormSelect({
   options,
   state,
   clearable = false,
+  searchable = false,
+  disabled = false,
   className,
   triggerClassName,
   onValueChange,
@@ -70,8 +74,10 @@ export function FormSelect({
         onValueChange={handleChange}
         options={normalized}
         clearable={clearable}
+        searchable={searchable}
       >
         <SelectTrigger
+          disabled={disabled}
           className={cn(
             "w-full rounded-xl px-4 h-10 text-sm bg-cream",
             triggerClassName,

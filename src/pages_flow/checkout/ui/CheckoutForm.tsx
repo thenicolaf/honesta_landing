@@ -21,7 +21,7 @@ import { PromoCodeInput } from "@/pages_flow/cart/ui/PromoCodeInput";
 import Link from "next/link";
 import { CustomerInfo } from "@/shared/types";
 import type { CustomerErrors } from "@/shared/utils/validateCustomer";
-import { parseAddress } from "@/shared/utils/address";
+import { parseAddress, mapAddressFieldErrors } from "@/shared/utils/address";
 import type { UserAddress } from "@/lib/addressesDb";
 
 interface CheckoutFormProps {
@@ -54,10 +54,8 @@ export function CheckoutForm({
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const addressFieldErrors = {
+    ...mapAddressFieldErrors(fieldErrors),
     emirate: fieldErrors?.emirate ?? emirateWarning,
-    city: fieldErrors?.addressCity,
-    area: fieldErrors?.addressArea,
-    buildingName: fieldErrors?.addressBuilding,
   };
   return (
     <>

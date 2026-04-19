@@ -65,7 +65,7 @@ src/
 │   │   ├── profile/page.tsx    # /panel/profile
 │   │   ├── favorites/page.tsx  # /panel/favorites
 │   │   ├── orders/page.tsx     # /panel/orders
-│   │   ├── all-orders/page.tsx # /panel/all-orders (admin only)
+│   │   ├── all-orders/         # /panel/all-orders + /create (admin only)
 │   │   ├── partnerships/       # /panel/partnerships (admin only)
 │   │   ├── categories/         # /panel/categories CRUD (admin only)
 │   │   ├── products/           # /panel/products CRUD (admin only)
@@ -186,6 +186,7 @@ src/
 | `/panel/favorites` | Saved favourite products |
 | `/panel/orders` | Order history |
 | `/panel/all-orders` | All orders management (admin only) |
+| `/panel/all-orders/create` | Manually create a PAID order (admin only) |
 | `/panel/partnerships` | Partnership inquiries (admin only) |
 | `/panel/categories` | Category management (admin only) |
 | `/panel/categories/create` | Create new category (admin only) |
@@ -233,9 +234,12 @@ Pages use **Suspense + Skeleton** instead of `loading.tsx`. Each page wraps asyn
 2. Saves customer to `CUSTOMER_COOKIE_KEY` cookie (30 days) for form repopulation
 3. Re-validates the applied promo code server-side via `validatePromoCode` from [src/lib/promoCodeApply.ts](src/lib/promoCodeApply.ts) — never trusts client
 4. Computes totals via `getCartTotals(items, promoDiscount)` from [src/lib/cart.ts](src/lib/cart.ts) — returns `{ originalSubtotal, subtotal, promotionDiscount, total }`
-5. Creates order in Supabase (`orders` + `order_items` with variant_id + price/original_price/promo_discount/name/weight_g snapshots and order-level `promo_code_id`/`promo_discount`/`promotion_discount`)
-6. Calls N-Genius to create a payment, gets back payment URL
-7. Updates order with `ngenius_ref`, then `redirect()` to N-Genius hosted page
+5. Builds `OrderItemRow[]` via `buildMixCompositionMap(variantIds)` + `cartItemToOrderRow(cartItem, mixMap, perItemPromoDiscounts)` (both from [src/lib/orders.ts](src/lib/orders.ts))
+6. Calls `createOrderWithItems({ items: OrderItemRow[], customer, subtotal, deliveryFee, promoCodeId, promoDiscount, promotionDiscount })` — inserts `orders` + pre-built `order_items` in one pass, no hidden DB lookups
+7. Calls N-Genius to create a payment, gets back payment URL
+8. Updates order with `ngenius_ref`, then `redirect()` to N-Genius hosted page
+
+**`createOrderWithItems` contract** ([src/lib/orders.ts](src/lib/orders.ts)): accepts `items: OrderItemRow[]` (a pre-built shape matching `order_items` columns — `variant_id`, `name`, `price`, `original_price`, `promo_discount`, `quantity`, `weight_g`, `mix_composition`). Callers assemble these rows themselves — for checkout via `cartItemToOrderRow(+buildMixCompositionMap)`, for manual admin orders by constructing rows directly with inline `mix_composition`. The function itself only inserts; it does **not** run a DB join to resolve mix composition.
 
 **Result page** (`src/app/checkout/result/page.tsx`):
 - Server component — polls N-Genius directly for final status
@@ -243,6 +247,13 @@ Pages use **Suspense + Skeleton** instead of `loading.tsx`. Each page wraps asyn
 - On `PAID`: records promo code redemption, calls `clearCartAndCleanup(supabaseAdmin, user_id)` for auth users (wipes `cart_items` + cleans up orphan mix-variants from cart), and additionally calls `cleanupOrphanedMixVariants` with `variant_id`s from this order's `order_items` — this covers guest flow where `user_id` is NULL
 - For guests: renders an inline `<script>` that synchronously wipes `honesta_cart` + `honesta_promo_code` from `localStorage` **before** `CartProvider` mounts and reads it
 - Renders `<ClearCartOnSuccess>` (client component) to flush the in-memory `CartProvider._items` store after a navigation hit
+
+**Manual admin orders** (`src/app/panel/all-orders/create/page.tsx` + `src/pages_flow/panel/orders/manual-order/`):
+- Form composes `OrderItemsPicker` (product/variant/qty rows) + `AdminMixBuilder` (reuses [BoxSelector](src/pages_flow/mix/BoxSelector.tsx) + [PresetGrid](src/pages_flow/mix/PresetGrid.tsx) from `/mix`) + `AddressWithMap` + live summary. All form state is lifted into `ManualOrderForm`.
+- `createManualOrderAction` ([src/pages_flow/panel/orders/manual-order/actions.ts](src/pages_flow/panel/orders/manual-order/actions.ts)) — re-checks `profiles.role='admin'` (defence-in-depth, on top of `proxy.ts`), loads authoritative variant prices + promotions, loads boxes+presets in one query, builds `OrderItemRow[]` directly (inline `mix_composition` for mixes, `variant_id=NULL` for them), inserts with `status=OrderStatus.PAID`.
+- **No N-Genius, no push notification, no cart cleanup** — admin marks a PAID order that already happened off-site (WhatsApp/Instagram/phone).
+- **No `product_variants` / `mix_variant_cells` writes** — the manual flow deliberately bypasses `assembleMixAction` to avoid polluting the DB with single-use mix variants. Composition lives only in `order_items.mix_composition`.
+- `revalidatePath("/panel/all-orders")` + `revalidatePath("/panel")` on success so dashboard stats refresh.
 
 **Webhook** (`src/app/api/payment/webhook/route.ts`):
 - Receives N-Genius events; maps states (PURCHASED/CAPTURED → PAID, FAILED/REVERSED → FAILED/CANCELLED)
@@ -299,7 +310,7 @@ Customers can build their own mix boxes: pick a box template (e.g. "Classic 9-ce
 - **`mix_box_presets`** — for a given box, the assortment: `{product_id, weight_g, price}` per cell. `UNIQUE(box_id, product_id)` means each product appears at most once per box (with a fixed weight/price). Different boxes can have different weight/price for the same product.
 - **`mix_variant_cells`** — per-assembled-variant record of which preset is in which cell (`cell_index`). Created by `assembleMixAction` ([src/pages_flow/mix/actions.ts](src/pages_flow/mix/actions.ts)) when a customer clicks "Add to cart".
 - **`products.status = 'system'`** — reserved status for system products auto-created for each mix box. Hidden from all public and admin product queries (e.g. `getAdminProducts` uses `.neq("status", "system")`).
-- **`order_items.mix_composition`** JSONB — snapshot of `{name, image_url, count, weight_g, price}[]` for each mix item at order time. Populated by `buildMixCompositionMap` in [src/lib/orders.ts](src/lib/orders.ts) by reading `mix_variant_cells` for the variant. Independent of `variant_id` — if the variant is later deleted, the snapshot still renders correctly in admin order views.
+- **`order_items.mix_composition`** JSONB — snapshot of `{name, image_url, count, weight_g, price}[]` for each mix item at order time. Two assembly paths: **cart/checkout flow** — populated by `buildMixCompositionMap` in [src/lib/orders.ts](src/lib/orders.ts) by reading `mix_variant_cells` (authoritative source, since the cart already persisted a variant). **Manual admin flow** — built inline from `mix_box_presets` right in the server action and written directly; `order_items.variant_id = NULL` for these rows (no `product_variants` / `mix_variant_cells` records are created). Both paths produce the same JSONB shape, and `ON DELETE SET NULL` on `variant_id` preserves historical order views regardless.
 
 ### Admin flow (`/panel/mixes`)
 

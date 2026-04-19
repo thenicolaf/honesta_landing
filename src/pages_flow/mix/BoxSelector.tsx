@@ -23,10 +23,10 @@ export function BoxSelector({ boxes, selectedId, onSelect }: BoxSelectorProps) {
             type="button"
             onClick={() => onSelect(box.id)}
             className={cn(
-              "relative flex flex-col rounded-2xl overflow-hidden bg-white-warm transition-all duration-200 text-left",
+              "relative flex flex-col rounded-2xl overflow-hidden bg-white-warm border-2 transition-all duration-200 text-left",
               isSelected
-                ? "outline-2 outline-orange shadow-lg"
-                : "hover:shadow-md",
+                ? "border-orange shadow-lg"
+                : "border-transparent hover:shadow-md",
             )}
           >
             <div className="relative aspect-4/3 bg-sand">
