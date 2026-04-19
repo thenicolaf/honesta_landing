@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import { FilterProvider, useFilter } from "./FilterProvider";
 import type { FilterValues } from "./FilterProvider";
 
@@ -9,7 +9,6 @@ import type { FilterValues } from "./FilterProvider";
 
 function SearchParamsSync({ keys, multiKeys = [] }: { keys: string[]; multiKeys?: string[] }) {
   const { filters, setFilter } = useFilter();
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isInitial = useRef(true);
@@ -43,9 +42,9 @@ function SearchParamsSync({ keys, multiKeys = [] }: { keys: string[]; multiKeys?
     const hash = window.location.hash;
     const url = qs ? `${pathname}?${qs}${hash}` : `${pathname}${hash}`;
 
-    // Sync URL immediately so other code (e.g. HashTracker) sees current search params
+    // Native URL sync — skip router.replace to avoid RSC refetch + Suspense fallback,
+    // which causes layout shift and a smooth scroll-to-top in production builds.
     window.history.replaceState(null, "", url);
-    router.replace(url, { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
