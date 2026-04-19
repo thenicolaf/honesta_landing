@@ -16,15 +16,15 @@ import type { AdminDbProduct } from "@/lib/productsDb";
 import {
   ProductHeader,
   ProductTitle,
-  ProductTags,
   ProductIngredients,
-  ProductFreeFrom,
   ProductNote,
   ProductStatusMenu,
   BenefitsList,
   NutritionTable,
   ServingIdeas,
   ProductOccasions,
+  ProductTagsSection,
+  ProductFreeFromSection,
   hasDetailsContent,
 } from "@/sections/products/components";
 import { mapAdminProduct } from "@/sections/products/utils";
@@ -60,6 +60,8 @@ export function AdminProductRow({ product }: { product: AdminDbProduct }) {
     nutrition,
     servingIdeas,
     occasions,
+    tags,
+    freeFrom,
   });
 
   const actions = (
@@ -167,8 +169,6 @@ export function AdminProductRow({ product }: { product: AdminDbProduct }) {
           size="xs"
         />
 
-        <ProductTags tags={tags} />
-        <ProductFreeFrom freeFrom={freeFrom} />
         <ProductIngredients ingredients={ingredients} />
         <ProductNote note={product.note ?? undefined} />
       </div>
@@ -186,9 +186,17 @@ export function AdminProductRow({ product }: { product: AdminDbProduct }) {
                 </div>
               )}
               {nutrition && <NutritionTable nutrition={nutrition} />}
-              {((servingIdeas && servingIdeas.length > 0) ||
+              {((tags && tags.length > 0) ||
+                (freeFrom && freeFrom.length > 0) ||
+                (servingIdeas && servingIdeas.length > 0) ||
                 (occasions && occasions.length > 0)) && (
                 <div className="grid grid-cols-2 gap-3">
+                  {tags && tags.length > 0 && (
+                    <ProductTagsSection tags={tags} />
+                  )}
+                  {freeFrom && freeFrom.length > 0 && (
+                    <ProductFreeFromSection freeFrom={freeFrom} />
+                  )}
                   {servingIdeas && servingIdeas.length > 0 && (
                     <ServingIdeas servingIdeas={servingIdeas} />
                   )}

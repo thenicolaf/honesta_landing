@@ -4,7 +4,7 @@ export function ProductFreeFrom({ freeFrom }: { freeFrom: string[] }) {
     <ul className="flex flex-wrap gap-x-3 gap-y-1">
       {freeFrom.map((item) => (
         <li key={item} className="font-body font-light text-2xs text-earth/55">
-          ✕ {item}
+          <span className="text-red-600">✕</span> {item}
         </li>
       ))}
     </ul>

@@ -14,9 +14,7 @@ import type { Product } from "./types";
 import {
   ProductHeader,
   ProductTitle,
-  ProductTags,
   ProductIngredients,
-  ProductFreeFrom,
   ProductNote,
   ProductPriceAndCart,
   ProductVariantSelector,
@@ -25,6 +23,8 @@ import {
   NutritionTable,
   ServingIdeas,
   ProductOccasions,
+  ProductTagsSection,
+  ProductFreeFromSection,
   hasDetailsContent,
 } from "./components";
 
@@ -67,6 +67,8 @@ export function ProductItemRow({ product, from }: ProductItemRowProps) {
     nutrition,
     servingIdeas,
     occasions,
+    tags,
+    freeFrom,
   });
 
   const card = (
@@ -146,8 +148,6 @@ export function ProductItemRow({ product, from }: ProductItemRowProps) {
           </div>
         )}
 
-        <ProductTags tags={tags} />
-        <ProductFreeFrom freeFrom={freeFrom} />
         <ProductIngredients ingredients={ingredients} />
         <ProductNote note={product.note} />
       </div>
@@ -162,9 +162,15 @@ export function ProductItemRow({ product, from }: ProductItemRowProps) {
               </div>
             )}
             {nutrition && <NutritionTable nutrition={nutrition} />}
-            {((servingIdeas && servingIdeas.length > 0) ||
+            {((tags && tags.length > 0) ||
+              (freeFrom && freeFrom.length > 0) ||
+              (servingIdeas && servingIdeas.length > 0) ||
               (occasions && occasions.length > 0)) && (
               <div className="grid grid-cols-2 gap-3">
+                {tags && tags.length > 0 && <ProductTagsSection tags={tags} />}
+                {freeFrom && freeFrom.length > 0 && (
+                  <ProductFreeFromSection freeFrom={freeFrom} />
+                )}
                 {servingIdeas && servingIdeas.length > 0 && (
                   <ServingIdeas servingIdeas={servingIdeas} />
                 )}

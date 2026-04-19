@@ -7,9 +7,6 @@ import { HashLink } from "@/sections/navbar";
 import type { Product } from "@/sections/products/types";
 import {
   ProductHeader,
-  ProductTags,
-  ProductIngredients,
-  ProductFreeFrom,
   ProductPriceAndCart,
   ProductExpandedDetails,
   ProductDetailImage,
@@ -111,9 +108,6 @@ export function ProductDetailPage({
               selectedVariant={selectedVariant}
             />
 
-            <ProductTags tags={tags} />
-            <ProductFreeFrom freeFrom={freeFrom} />
-            <ProductIngredients ingredients={ingredients} />
             <ProductNote note={product.note} />
 
             <ProductExpandedDetails
@@ -121,6 +115,9 @@ export function ProductDetailPage({
               nutrition={nutrition}
               servingIdeas={servingIdeas}
               occasions={occasions}
+              tags={tags}
+              freeFrom={freeFrom}
+              ingredients={ingredients}
             />
           </div>
         </div>

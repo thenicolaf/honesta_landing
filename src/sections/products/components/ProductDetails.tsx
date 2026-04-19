@@ -8,6 +8,9 @@ import {
   TooltipContent,
 } from "@/shared/ui";
 import type { Benefit, NutritionInfo } from "../types";
+import { ProductTags } from "./ProductTags";
+import { ProductFreeFrom } from "./ProductFreeFrom";
+import { ProductIngredients } from "./ProductIngredients";
 
 // ─── BenefitsList ─────────────────────────────────────────────────────────────
 
@@ -62,6 +65,52 @@ export function NutritionTable({ nutrition }: { nutrition: NutritionInfo }) {
   );
 }
 
+// ─── ProductTagsSection ──────────────────────────────────────────────────────
+
+export function ProductTagsSection({ tags }: { tags: string[] }) {
+  if (tags.length === 0) return null;
+  return (
+    <div>
+      <p className="font-body font-semibold uppercase tracking-[0.13em] text-2xs text-earth/55 mb-2.5">
+        Tags
+      </p>
+      <ProductTags tags={tags} />
+    </div>
+  );
+}
+
+// ─── ProductFreeFromSection ──────────────────────────────────────────────────
+
+export function ProductFreeFromSection({ freeFrom }: { freeFrom: string[] }) {
+  if (freeFrom.length === 0) return null;
+  return (
+    <div>
+      <p className="font-body font-semibold uppercase tracking-[0.13em] text-2xs text-earth/55 mb-2.5">
+        Free From
+      </p>
+      <ProductFreeFrom freeFrom={freeFrom} />
+    </div>
+  );
+}
+
+// ─── ProductIngredientsSection ───────────────────────────────────────────────
+
+export function ProductIngredientsSection({
+  ingredients,
+}: {
+  ingredients: string[];
+}) {
+  if (ingredients.length === 0) return null;
+  return (
+    <div>
+      <p className="font-body font-semibold uppercase tracking-[0.13em] text-2xs text-earth/55 mb-2.5">
+        Ingredients
+      </p>
+      <ProductIngredients ingredients={ingredients} />
+    </div>
+  );
+}
+
 // ─── ServingIdeas ─────────────────────────────────────────────────────────────
 
 export function ServingIdeas({ servingIdeas }: { servingIdeas: string[] }) {
@@ -74,9 +123,9 @@ export function ServingIdeas({ servingIdeas }: { servingIdeas: string[] }) {
         {servingIdeas.map((idea) => (
           <li
             key={idea}
-            className="flex items-center gap-1.5 font-body font-light text-2xs text-earth/65"
+            className="flex items-center gap-1.5 font-body font-light text-2xs text-orange/85"
           >
-            <span className="w-1 h-1 rounded-full bg-earth/25 inline-block shrink-0" />
+            <span className="w-1 h-1 rounded-full bg-orange/60 inline-block shrink-0" />
             {idea}
           </li>
         ))}
@@ -115,6 +164,9 @@ interface DetailsContentProps {
   nutrition?: NutritionInfo;
   servingIdeas?: string[];
   occasions?: string[];
+  tags?: string[];
+  freeFrom?: string[];
+  ingredients?: string[];
 }
 
 export function hasDetailsContent({
@@ -122,10 +174,30 @@ export function hasDetailsContent({
   nutrition,
   servingIdeas,
   occasions,
+  tags,
+  freeFrom,
+  ingredients,
 }: DetailsContentProps) {
   return (
     (benefits && benefits.length > 0) ||
     nutrition ||
+    (servingIdeas && servingIdeas.length > 0) ||
+    (occasions && occasions.length > 0) ||
+    (tags && tags.length > 0) ||
+    (freeFrom && freeFrom.length > 0) ||
+    (ingredients && ingredients.length > 0)
+  );
+}
+
+function hasGridContent({
+  servingIdeas,
+  occasions,
+  tags,
+  freeFrom,
+}: Pick<DetailsContentProps, "servingIdeas" | "occasions" | "tags" | "freeFrom">) {
+  return (
+    (tags && tags.length > 0) ||
+    (freeFrom && freeFrom.length > 0) ||
     (servingIdeas && servingIdeas.length > 0) ||
     (occasions && occasions.length > 0)
   );
@@ -136,14 +208,23 @@ function DetailsContent({
   nutrition,
   servingIdeas,
   occasions,
+  tags,
+  freeFrom,
+  ingredients,
 }: DetailsContentProps) {
   return (
     <>
       {benefits && benefits.length > 0 && <BenefitsList benefits={benefits} />}
       {nutrition && <NutritionTable nutrition={nutrition} />}
-      {((servingIdeas && servingIdeas.length > 0) ||
-        (occasions && occasions.length > 0)) && (
+      {ingredients && ingredients.length > 0 && (
+        <ProductIngredientsSection ingredients={ingredients} />
+      )}
+      {hasGridContent({ servingIdeas, occasions, tags, freeFrom }) && (
         <div className="grid grid-cols-2 gap-4">
+          {tags && tags.length > 0 && <ProductTagsSection tags={tags} />}
+          {freeFrom && freeFrom.length > 0 && (
+            <ProductFreeFromSection freeFrom={freeFrom} />
+          )}
           {servingIdeas && servingIdeas.length > 0 && (
             <ServingIdeas servingIdeas={servingIdeas} />
           )}
@@ -163,8 +244,21 @@ export function ProductExpandedDetails({
   nutrition,
   servingIdeas,
   occasions,
+  tags,
+  freeFrom,
+  ingredients,
 }: DetailsContentProps) {
-  if (!hasDetailsContent({ benefits, nutrition, servingIdeas, occasions }))
+  if (
+    !hasDetailsContent({
+      benefits,
+      nutrition,
+      servingIdeas,
+      occasions,
+      tags,
+      freeFrom,
+      ingredients,
+    })
+  )
     return null;
 
   return (
@@ -177,9 +271,15 @@ export function ProductExpandedDetails({
         </div>
       )}
       {nutrition && <NutritionTable nutrition={nutrition} />}
-      {((servingIdeas && servingIdeas.length > 0) ||
-        (occasions && occasions.length > 0)) && (
+      {ingredients && ingredients.length > 0 && (
+        <ProductIngredientsSection ingredients={ingredients} />
+      )}
+      {hasGridContent({ servingIdeas, occasions, tags, freeFrom }) && (
         <div className="grid grid-cols-2 gap-4">
+          {tags && tags.length > 0 && <ProductTagsSection tags={tags} />}
+          {freeFrom && freeFrom.length > 0 && (
+            <ProductFreeFromSection freeFrom={freeFrom} />
+          )}
           {servingIdeas && servingIdeas.length > 0 && (
             <ServingIdeas servingIdeas={servingIdeas} />
           )}
