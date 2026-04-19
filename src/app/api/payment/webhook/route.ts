@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase.server";
 import { OrderStatus } from "@/shared/types";
 import { createNotification } from "@/lib/notificationsDb";
 import { recordPromoCodeRedemption } from "@/lib/promoCodesDb";
-import { clearCartInDb } from "@/lib/cartDb";
+import { clearCartAndCleanup } from "@/lib/cartDb";
 
 const STATUS_MAP: Record<string, OrderStatus> = {
   PURCHASED: OrderStatus.PAID,
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
           });
         }
         if (order.user_id) {
-          await clearCartInDb(supabaseAdmin, order.user_id as string);
+          await clearCartAndCleanup(supabaseAdmin, order.user_id as string);
         }
         await createNotification({
           type: "order_paid",

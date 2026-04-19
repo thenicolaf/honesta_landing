@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase.server";
 import { OrderStatus } from "@/shared/types";
 import { createNotification } from "@/lib/notificationsDb";
 import { recordPromoCodeRedemption } from "@/lib/promoCodesDb";
-import { clearCartInDb } from "@/lib/cartDb";
+import { clearCartAndCleanup } from "@/lib/cartDb";
 import { ClearCartOnSuccess } from "./ClearCartOnSuccess";
 import { ResultCard, MissingRefCard } from "./ui";
 
@@ -48,7 +48,7 @@ async function settleOrder(orderRef: string, success: boolean) {
         })
       : null,
     success && order.user_id
-      ? clearCartInDb(supabaseAdmin, order.user_id as string)
+      ? clearCartAndCleanup(supabaseAdmin, order.user_id as string)
       : null,
     createNotification({
       type: success ? "order_paid" : "order_failed",

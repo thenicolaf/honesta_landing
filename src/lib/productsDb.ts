@@ -97,7 +97,8 @@ export async function getAdminProducts(
 ): Promise<AdminDbProduct[]> {
   let query = supabaseAdmin
     .from("products")
-    .select(PRODUCTS_SELECT);
+    .select(PRODUCTS_SELECT)
+    .neq("status", "system");
 
   if (filter?.status) {
     query = query.eq("status", filter.status);

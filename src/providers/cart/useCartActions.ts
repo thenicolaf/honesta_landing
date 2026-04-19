@@ -15,6 +15,7 @@ import {
   updateQuantityInDb,
   clearCartInDb,
 } from "@/lib/cartDb";
+import { cleanupOrphanedMixVariants } from "@/pages_flow/mix/actions";
 import { setStore, getItems, storePromo } from "./store";
 
 export function useCartActions(
@@ -50,6 +51,7 @@ export function useCartActions(
     } else {
       setStore(removeItem(variantId));
     }
+    void cleanupOrphanedMixVariants([variantId]);
   }
 
   function updateItemQuantity(variantId: string, quantity: number) {
@@ -57,6 +59,7 @@ export function useCartActions(
       if (quantity <= 0) {
         setStore(getItems().filter((i) => i.variantId !== variantId));
         removeItemFromDb(supabaseRef.current, userId, variantId);
+        void cleanupOrphanedMixVariants([variantId]);
       } else {
         setStore(
           getItems().map((i) =>
@@ -66,17 +69,26 @@ export function useCartActions(
         updateQuantityInDb(supabaseRef.current, userId, variantId, quantity);
       }
     } else {
-      setStore(updateQuantity(variantId, quantity));
+      if (quantity <= 0) {
+        setStore(updateQuantity(variantId, quantity));
+        void cleanupOrphanedMixVariants([variantId]);
+      } else {
+        setStore(updateQuantity(variantId, quantity));
+      }
     }
   }
 
   const clearCart = useCallback(() => {
+    const variantIds = getItems().map((i) => i.variantId);
     if (userId && supabaseRef.current) {
       setStore([]);
       clearCartInDb(supabaseRef.current, userId);
     } else {
       clearCartStorage();
       setStore([]);
+    }
+    if (variantIds.length > 0) {
+      void cleanupOrphanedMixVariants(variantIds);
     }
     storePromo(null);
     onClearPromo();

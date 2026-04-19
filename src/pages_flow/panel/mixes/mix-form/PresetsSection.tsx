@@ -81,6 +81,7 @@ export function PresetsSection({ mix, options, state }: SectionProps) {
                     onValueChange={(v) => update(i, "product_id", v)}
                     options={productOptions}
                     clearable
+                    searchable
                   >
                     <SelectTrigger
                       className={cn(
@@ -92,7 +93,7 @@ export function PresetsSection({ mix, options, state }: SectionProps) {
                     >
                       <SelectValue placeholder="Select product…" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent searchPlaceholder="Search products…">
                       {(opts) =>
                         opts.map((o) => (
                           <SelectItem

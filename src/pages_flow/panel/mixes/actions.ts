@@ -165,9 +165,27 @@ export async function createMixAction(
     const imageUrl = await resolveImageUrl(formData);
     const presets = parsePresets(values.presets);
 
-    const { data, error } = await supabaseAdmin
+    const sharedId = crypto.randomUUID();
+
+    const { error: productError } = await supabaseAdmin
+      .from("products")
+      .insert({
+        id: sharedId,
+        title: name,
+        slug: `mix-${slug}`,
+        image_url: imageUrl,
+        status: "system",
+        in_stock: true,
+      });
+
+    if (productError) {
+      return { error: "Failed to create mix. Please try again.", values };
+    }
+
+    const { error } = await supabaseAdmin
       .from("mix_boxes")
       .insert({
+        id: sharedId,
         name,
         slug,
         description: values.description?.trim() || null,
@@ -175,11 +193,10 @@ export async function createMixAction(
         cell_count: cellCount,
         is_active: isActive,
         sort_order: sortOrder,
-      })
-      .select("id")
-      .single();
+      });
 
-    if (error || !data) {
+    if (error) {
+      await supabaseAdmin.from("products").delete().eq("id", sharedId);
       return { error: "Failed to create mix. Please try again.", values };
     }
 
@@ -187,7 +204,7 @@ export async function createMixAction(
       .from("mix_box_presets")
       .insert(
         presets.map((p) => ({
-          box_id: data.id,
+          box_id: sharedId,
           product_id: p.product_id,
           weight_g: p.weight_g,
           price: p.price,
@@ -195,7 +212,8 @@ export async function createMixAction(
       );
 
     if (presetsError) {
-      await supabaseAdmin.from("mix_boxes").delete().eq("id", data.id);
+      await supabaseAdmin.from("mix_boxes").delete().eq("id", sharedId);
+      await supabaseAdmin.from("products").delete().eq("id", sharedId);
       return {
         error: "Failed to save presets. Please try again.",
         fieldErrors: { presets: "Each product can appear only once in the box" },
@@ -258,6 +276,16 @@ export async function updateMixAction(
       return { error: "Failed to update mix. Please try again.", values };
     }
 
+    await supabaseAdmin
+      .from("products")
+      .update({
+        title: name,
+        slug: `mix-${slug}`,
+        image_url: newImageUrl,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
     if (
       existing?.image_url &&
       existing.image_url !== newImageUrl
@@ -291,6 +319,8 @@ export async function deleteMixAction(
       .eq("id", id);
 
     if (error) return { error: "Failed to delete mix. Please try again." };
+
+    await supabaseAdmin.from("products").delete().eq("id", id);
 
     if (existing?.image_url) {
       await deleteImage(existing.image_url, "mixes");

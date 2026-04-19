@@ -79,6 +79,18 @@ export const getActiveMixBoxBySlug = cache(
   },
 );
 
+export const getActiveMixBoxes = cache(async (): Promise<MixBox[]> => {
+  const { data, error } = await supabase
+    .from("mix_boxes")
+    .select(MIX_SELECT)
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error || !data) return [];
+  return data as unknown as MixBox[];
+});
+
 export interface MixProductOption {
   id: string;
   title: string;

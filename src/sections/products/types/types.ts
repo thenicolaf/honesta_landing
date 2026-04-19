@@ -86,4 +86,8 @@ export interface CartItem {
   image_url?: string;
   /** variant.weight_g */
   weight_g: number;
+  /** True if this is an assembled mix box */
+  isMix?: boolean;
+  /** Composition breakdown for mix display */
+  mixItems?: { name: string; image_url?: string; count: number; weight_g: number; price: number }[];
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Hero, PhilosophyBlock, AboutUs, PartnershipCTA } from "@/sections";
+import { Hero, PhilosophyBlock, AboutUs, MixCTA, PartnershipCTA } from "@/sections";
 import { CategoryGridSkeleton } from "@/sections/categories/CategoryGridSkeleton";
 import { AboutExpandedProvider } from "@/sections/about/AboutExpandedProvider";
 import { Skeleton } from "@/shared/ui";
@@ -9,6 +9,7 @@ import { CategoriesSection, ProductsSection } from "@/pages_flow/home";
 import { HashTracker } from "./_components/HashTracker";
 import { Suspense } from "react";
 import { getCategories } from "@/lib/categoriesDb";
+import { getActiveMixBoxes } from "@/lib/mixBoxesDb";
 import { buildHomeStructuredData } from "./home-structured-data";
 import { readViewModeCookie } from "@/shared/utils/readViewModeCookie";
 import { CATEGORIES_VIEW_COOKIE, PRODUCTS_VIEW_COOKIE } from "@/shared/consts";
@@ -91,11 +92,13 @@ function ProductsSkeleton({ mode }: { mode: ViewMode }) {
 }
 
 export default async function Home() {
-  const [categories, categoriesViewMode, productsViewMode] = await Promise.all([
-    getCategories(),
-    readViewModeCookie(CATEGORIES_VIEW_COOKIE),
-    readViewModeCookie(PRODUCTS_VIEW_COOKIE),
-  ]);
+  const [categories, categoriesViewMode, productsViewMode, activeMixBoxes] =
+    await Promise.all([
+      getCategories(),
+      readViewModeCookie(CATEGORIES_VIEW_COOKIE),
+      readViewModeCookie(PRODUCTS_VIEW_COOKIE),
+      getActiveMixBoxes(),
+    ]);
   const siteUrl = process.env.PUBLIC_BASE_URL!;
 
   return (
@@ -104,6 +107,7 @@ export default async function Home() {
         <Hero />
         <AboutUs />
       </AboutExpandedProvider>
+      <MixCTA hasActiveBoxes={activeMixBoxes.length > 0} />
       <SearchParamsFilterProvider keys={["category", "sort", "search", "mark"]}>
         <Suspense fallback={<CategoriesSkeleton mode={categoriesViewMode} />}>
           <CategoriesSection />

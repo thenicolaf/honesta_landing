@@ -75,6 +75,7 @@ export async function createOrderWithItems({
       promo_discount: perItemPromoDiscounts?.get(item.variantId) ?? 0,
       quantity: item.quantity,
       weight_g: item.weight_g,
+      mix_composition: item.isMix && item.mixItems ? item.mixItems : null,
     })),
   );
 
