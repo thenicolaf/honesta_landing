@@ -499,6 +499,23 @@ Both views share the same `paginatedData` from hooks like `useOrdersTable` / `us
 - Filter keys typically: `["search", "status"|"type", "sortKey", "sortDir", "page", "pageSize"]`.
 - Always reset `page` filter when changing search/status filters.
 
+## Product card
+
+Public product cards ([ProductItem](src/sections/products/ProductItem.tsx)) and admin product cards ([AdminProductCard](src/pages_flow/panel/products/AdminProductCard.tsx)) share a compact layout modelled on the mix [PresetCard](src/pages_flow/mix/PresetCard.tsx). There is no row variant and no `ViewModeToggle` for products.
+
+Layout (both public + admin):
+- `ProductImage` (aspect-3/2) with overlay badges (SALE / BEST SELLER / NEW, Out-of-stock on admin, FavoriteButton on public)
+- `ProductHeader` (category uppercase + Badge)
+- `ProductTitle`
+- Variants — public uses `ProductVariantSelector` (selectable), admin uses `AdminVariantBadges` (all variants with prices)
+- `IngredientsInline` ([src/sections/products/components/IngredientsInline.tsx](src/sections/products/components/IngredientsInline.tsx)) — uppercase label + `ingredients.join(" · ")` with `line-clamp-2`
+- `ProductNote` with `truncate` (italic blockquote, line-clamp-2 + tooltip on overflow)
+- Footer — public: `ProductPriceAndCart` with `layout="stacked"` (price row on top, full-width Add-to-Cart / `- qty +` counter below); admin: `ProductAdminActions` (Status menu + Edit, full-width).
+
+`ProductPriceAndCart` accepts `layout: "stacked" | "inline"` (default `"inline"` for detail pages, pass `"stacked"` in compact cards). Everything else — promotion math, cart sync, out-of-stock branch, "Order via Instagram" fallback — is shared between layouts.
+
+Rich content (benefits, nutrition, tags, freeFrom, servingIdeas, occasions) is **not** shown on the card — users who want more detail click through to `/products/[slug]`, which renders `ProductExpandedDetails`.
+
 ## Product Variants
 
 Products use a **variant-based pricing model**. Prices and weights live in `product_variants` table, not on `products` directly.
@@ -562,14 +579,13 @@ Products have a **main image** (`image_url`) and an optional **gallery** (`image
 
 ## View-mode system (card / row)
 
-Shared toggle that lets users switch between a detailed card grid and a compact row grid. Used on admin **categories**, **products**, **favorites** and public **categories**, **products** sections.
+Shared toggle that lets users switch between a detailed card grid and a compact row grid. Used on admin **categories** + public **categories** section, and admin **mixes**. Products (public `/`, `/panel/products`, `/panel/favorites`) do **not** use this toggle — they render a single compact card (see **Product card** below), so there is no `PRODUCTS_VIEW_COOKIE` and no `ViewModeToggle` in the products toolbar.
 
 - **Provider:** [src/providers/ViewModeProvider.tsx](src/providers/ViewModeProvider.tsx) — context with `{ mode: "row" | "card", setMode }`. `setMode` writes a cookie so the preference persists across reloads.
 - **Toggle UI:** [src/shared/ui/ViewModeToggle.tsx](src/shared/ui/ViewModeToggle.tsx) — `FormTileRadio` with `Rows3` / `LayoutGrid` icons. Placed in `AdminPageHeader.actions` on admin pages or alongside filters in public toolbars.
 - **Server-side reader:** [src/shared/utils/readViewModeCookie.ts](src/shared/utils/readViewModeCookie.ts) — `readViewModeCookie(cookieKey, defaultMode?)` called in async server components to hydrate `initialMode` synchronously (no flash on first render).
 - **Cookies** (in [src/shared/consts.ts](src/shared/consts.ts)):
   - `CATEGORIES_VIEW_COOKIE` shared between `/panel/categories` and `/` categories section.
-  - `PRODUCTS_VIEW_COOKIE` shared between `/panel/products`, `/panel/favorites`, and `/` products section.
   - `MIXES_VIEW_COOKIE` for `/panel/mixes`.
 - **Default mode:** `"row"` (`DEFAULT_VIEW_MODE` in provider).
 
@@ -581,20 +597,17 @@ Integration pattern (same on every page):
 
 ### Row variants
 
-Row components mirror each other structurally: `flex flex-col h-full p-3 sm:p-4 rounded-2xl` outer, `grow flow-root` content wrapper with a `float-left` image (`aspect-4/3`, responsive widths `w-36 sm:w-48 md:w-60 lg:w-64 xl:w-52 2xl:w-56`) and wrapping text beside/below it. Admin rows pin an action footer; public rows pin `ProductPriceAndCart`. Overlay badges on the image switch to `size="xs"` with `sm:px-3! sm:py-1! sm:text-2xs!` so they shrink on narrow screens instead of covering the photo.
+Category row components mirror each other structurally: `flex flex-col h-full p-3 sm:p-4 rounded-2xl` outer, `grow flow-root` content wrapper with a `float-left` image (`aspect-4/3`, responsive widths `w-36 sm:w-48 md:w-60 lg:w-64 xl:w-52 2xl:w-56`) and wrapping text beside/below it. Overlay badges on the image switch to `size="xs"` with `sm:px-3! sm:py-1! sm:text-2xs!` so they shrink on narrow screens instead of covering the photo.
 
 - Categories: [src/pages_flow/panel/categories/AdminCategoryRow.tsx](src/pages_flow/panel/categories/AdminCategoryRow.tsx) + [src/sections/categories/CategoryCardRow.tsx](src/sections/categories/CategoryCardRow.tsx).
-- Products: [src/pages_flow/panel/products/AdminProductRow.tsx](src/pages_flow/panel/products/AdminProductRow.tsx) + [src/sections/products/ProductItemRow.tsx](src/sections/products/ProductItemRow.tsx).
 
 ### Grid breakpoints
 
 Grid class maps live in single-source files so the skeleton and the real grid stay in lock-step (Tailwind must see the literal strings in the scanned file).
 
 - **Categories** — `PUBLIC_CATEGORY_GRID_CLASS` in [src/app/page.tsx](src/app/page.tsx); `ADMIN_CATEGORY_GRID_CLASS` inline in [src/pages_flow/panel/categories/SortableCategoryGrid.tsx](src/pages_flow/panel/categories/SortableCategoryGrid.tsx) and [src/app/panel/categories/page.tsx](src/app/panel/categories/page.tsx).
-- **Products** — `GRID_CLASS` (keyed by `"admin" | "public"`) in [src/sections/products/ProductGridSkeleton.tsx](src/sections/products/ProductGridSkeleton.tsx). `PUBLIC_PRODUCT_GRID_CLASS` is re-exported and imported by [src/sections/products/ProductGrid.tsx](src/sections/products/ProductGrid.tsx) and `FavoritesGrid.tsx`. Admin product grid class lives in [src/pages_flow/panel/products/ProductsPage.tsx](src/pages_flow/panel/products/ProductsPage.tsx) as `ADMIN_PRODUCT_GRID_CLASS`.
-- **Row breakpoint shorthand:**
-  - Admin products row: `xl:grid-cols-2` (2 cols at 1280+, otherwise 1).
-  - Public products row: `min-[1150px]:grid-cols-2` (arbitrary breakpoint).
+- **Products** — single constant `PRODUCT_GRID_CLASS` in [src/sections/products/ProductGridSkeleton.tsx](src/sections/products/ProductGridSkeleton.tsx) (`grid-cols-2 → 3 → 4 → 5` at `sm/lg/xl`). Reused by public `ProductGrid`, admin `ProductsPage`, and `FavoritesGrid`. `PUBLIC_PRODUCT_GRID_CLASS` is a backward-compatible alias of the same constant.
+- **Row breakpoint shorthand (categories only):**
   - Admin categories row: `2xl:grid-cols-2`; public categories row: `lg:grid-cols-2`.
 
 ### Skeletons
@@ -602,7 +615,7 @@ Grid class maps live in single-source files so the skeleton and the real grid st
 Skeletons live next to the real components and accept `mode: ViewMode` so they can render the same layout the data will produce:
 
 - [src/sections/categories/CategoryGridSkeleton.tsx](src/sections/categories/CategoryGridSkeleton.tsx) — takes `mode` + `gridClassName` (the grid class lives in the page that owns the breakpoints, e.g. admin vs public).
-- [src/sections/products/ProductGridSkeleton.tsx](src/sections/products/ProductGridSkeleton.tsx) — takes `mode` + `variant: "admin" | "public"` + `count`. Internal `GRID_CLASS` map is the single source of truth for product grid breakpoints.
+- [src/sections/products/ProductGridSkeleton.tsx](src/sections/products/ProductGridSkeleton.tsx) — takes `count` only, renders a single compact card variant (public + admin share the same grid). No `mode` / `variant` props.
 
 Other list pages have their own hand-rolled skeletons that copy the real card markup (so placeholders line up with the real layout, preventing a layout shift):
 

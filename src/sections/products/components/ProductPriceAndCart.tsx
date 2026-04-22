@@ -5,7 +5,10 @@ import { Button, Badge, toastSuccess, toastInfo } from "@/shared/ui";
 import { useCart } from "@/providers";
 import { ProductPrice } from "./ProductPrice";
 import { calculateDiscountedPrice } from "@/shared/utils/calculateDiscount";
+import { cn } from "@/shared/utils/cn";
 import type { Product, ProductVariant } from "../types";
+
+type Layout = "inline" | "stacked";
 
 interface ProductPriceAndCartProps {
   product: Pick<
@@ -15,6 +18,11 @@ interface ProductPriceAndCartProps {
   selectedVariant?: ProductVariant;
   /** Optional node rendered just before the primary action (e.g. a secondary icon-button). */
   actionPrefix?: React.ReactNode;
+  /**
+   * inline (default): price and cart controls on the same row (used in detail pages).
+   * stacked: price on its own row above; cart controls below at full width (used in compact cards).
+   */
+  layout?: Layout;
 }
 
 function stop(e: React.MouseEvent) {
@@ -22,12 +30,16 @@ function stop(e: React.MouseEvent) {
   e.preventDefault();
 }
 
-export function ProductPriceAndCart({ product, selectedVariant, actionPrefix }: ProductPriceAndCartProps) {
+export function ProductPriceAndCart({
+  product,
+  selectedVariant,
+  actionPrefix,
+  layout = "inline",
+}: ProductPriceAndCartProps) {
   const { items, addToCart, updateItemQuantity, removeFromCart } = useCart();
 
   const variantPrice = selectedVariant?.price;
 
-  // Compute promotion for selected variant's price
   const variantPromotion = product.promotion && variantPrice != null
     ? {
         ...product.promotion,
@@ -46,13 +58,30 @@ export function ProductPriceAndCart({ product, selectedVariant, actionPrefix }: 
     : undefined;
   const quantity = cartItem?.quantity ?? 0;
 
+  const stacked = layout === "stacked";
+  const rootClass = cn(
+    "mt-auto pt-1",
+    stacked ? "flex flex-col gap-2" : "flex items-center justify-between gap-3",
+  );
+  const controlsClass = cn(
+    "flex items-center gap-2",
+    stacked && "w-full justify-between",
+  );
+
   if (product.in_stock === false) {
     return (
-      <div className="mt-auto flex items-center justify-between gap-3 pt-1">
+      <div className={rootClass}>
         <ProductPrice price={variantPrice!} promotion={variantPromotion} mark={product.mark} />
-        <div className="flex items-center gap-2">
+        <div className={controlsClass}>
           {actionPrefix}
-          <Badge variant="outline" size="md">
+          <Badge
+            variant="outline"
+            size="md"
+            className={cn(
+              "h-8 font-body font-medium uppercase text-xs tracking-widest whitespace-nowrap",
+              stacked && "w-full justify-center",
+            )}
+          >
             Out of Stock
           </Badge>
         </div>
@@ -62,7 +91,7 @@ export function ProductPriceAndCart({ product, selectedVariant, actionPrefix }: 
 
   if (variantPrice == null || product.id == null || !selectedVariant) {
     return (
-      <div className="mt-auto flex items-center gap-2">
+      <div className={cn("mt-auto flex items-center gap-2", stacked && "w-full")}>
         {actionPrefix}
         <Button
           href={process.env.NEXT_PUBLIC_INSTAGRAM_DM_URL}
@@ -112,9 +141,9 @@ export function ProductPriceAndCart({ product, selectedVariant, actionPrefix }: 
 
   if (quantity > 0) {
     return (
-      <div className="mt-auto flex items-center justify-between gap-3 pt-1">
+      <div className={rootClass}>
         <ProductPrice price={variantPrice} promotion={variantPromotion} mark={product.mark} />
-        <div className="flex items-center gap-2">
+        <div className={controlsClass}>
           {actionPrefix}
           <Button
             as="button"
@@ -143,11 +172,17 @@ export function ProductPriceAndCart({ product, selectedVariant, actionPrefix }: 
   }
 
   return (
-    <div className="mt-auto flex items-center justify-between gap-3 pt-1">
+    <div className={rootClass}>
       <ProductPrice price={variantPrice} promotion={variantPromotion} mark={product.mark} />
-      <div className="flex items-center gap-2">
+      <div className={controlsClass}>
         {actionPrefix}
-        <Button as="button" variant="primary" size="sm" onClick={handleAdd}>
+        <Button
+          as="button"
+          variant="primary"
+          size="sm"
+          onClick={handleAdd}
+          className={cn(stacked && "w-full")}
+        >
           Add to Cart
         </Button>
       </div>

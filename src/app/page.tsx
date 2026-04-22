@@ -12,7 +12,7 @@ import { getCategories } from "@/lib/categoriesDb";
 import { getActiveMixBoxes } from "@/lib/mixBoxesDb";
 import { buildHomeStructuredData } from "./home-structured-data";
 import { readViewModeCookie } from "@/shared/utils/readViewModeCookie";
-import { CATEGORIES_VIEW_COOKIE, PRODUCTS_VIEW_COOKIE } from "@/shared/consts";
+import { CATEGORIES_VIEW_COOKIE } from "@/shared/consts";
 import type { ViewMode } from "@/providers/ViewModeProvider";
 
 const PUBLIC_CATEGORY_GRID_CLASS: Record<ViewMode, string> = {
@@ -72,7 +72,7 @@ function CategoriesSkeleton({ mode }: { mode: ViewMode }) {
   );
 }
 
-function ProductsSkeleton({ mode }: { mode: ViewMode }) {
+function ProductsSkeleton() {
   return (
     <section className="bg-white-warm py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
@@ -83,22 +83,19 @@ function ProductsSkeleton({ mode }: { mode: ViewMode }) {
         </div>
         <div className="mb-10 flex items-center gap-3">
           <Skeleton className="h-9 grow" />
-          <Skeleton className="h-9 w-20 rounded-xl" />
         </div>
-        <ProductGridSkeleton mode={mode} variant="public" count={6} />
+        <ProductGridSkeleton count={6} />
       </div>
     </section>
   );
 }
 
 export default async function Home() {
-  const [categories, categoriesViewMode, productsViewMode, activeMixBoxes] =
-    await Promise.all([
-      getCategories(),
-      readViewModeCookie(CATEGORIES_VIEW_COOKIE),
-      readViewModeCookie(PRODUCTS_VIEW_COOKIE),
-      getActiveMixBoxes(),
-    ]);
+  const [categories, categoriesViewMode, activeMixBoxes] = await Promise.all([
+    getCategories(),
+    readViewModeCookie(CATEGORIES_VIEW_COOKIE),
+    getActiveMixBoxes(),
+  ]);
   const siteUrl = process.env.PUBLIC_BASE_URL!;
 
   return (
@@ -112,7 +109,7 @@ export default async function Home() {
         <Suspense fallback={<CategoriesSkeleton mode={categoriesViewMode} />}>
           <CategoriesSection />
         </Suspense>
-        <Suspense fallback={<ProductsSkeleton mode={productsViewMode} />}>
+        <Suspense fallback={<ProductsSkeleton />}>
           <ProductsSection />
         </Suspense>
       </SearchParamsFilterProvider>

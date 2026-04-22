@@ -72,7 +72,7 @@ const badges = [
   },
   {
     Icon: IconNoSugar,
-    label: "No Sugar Added",
+    label: "No Added Sugar",
     description: "Natural sweetness only",
   },
 ];

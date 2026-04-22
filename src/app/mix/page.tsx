@@ -12,7 +12,7 @@ import {
 } from "./structured-data";
 
 const MIX_DESCRIPTION =
-  "Build your own HONESTA dried-fruit mix. Pick a box, fill each cell with fruit of your choice — natural, no sugar, no additives.";
+  "Build your own HONESTA dried-fruit mix. Pick a box, fill each cell with fruit of your choice — natural, no added sugar, no additives.";
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteUrl = process.env.PUBLIC_BASE_URL!;
@@ -125,7 +125,10 @@ export default function MixPage() {
         Build Your Mix
       </h1>
 
-      <SearchParamsFilterProvider keys={["box", "preset"]} multiKeys={["preset"]}>
+      <SearchParamsFilterProvider
+        keys={["box", "preset"]}
+        multiKeys={["preset"]}
+      >
         <Suspense fallback={<MixSkeleton />}>
           <MixContent />
         </Suspense>

@@ -10,7 +10,7 @@ export const structuredData = {
       name: "HONESTA",
       url: siteUrl,
       description:
-        "Handcrafted natural dried fruits. No sugar, no additives. Small batch production.",
+        "Handcrafted natural dried fruits. No added sugar, no additives. Small batch production.",
       sameAs: [instagramUrl],
       address: {
         "@type": "PostalAddress",
@@ -42,9 +42,9 @@ export const structuredData = {
       "@type": "WebPage",
       "@id": `${siteUrl}/#webpage`,
       url: siteUrl,
-      name: "HONESTA — Natural Dried Fruits. No Sugar. No Additives.",
+      name: "HONESTA — Natural Dried Fruits. No Added Sugar. No Additives.",
       description:
-        "Handcrafted dried fruits and pastila. 100% fruit. No sugar. No additives.",
+        "Handcrafted dried fruits and pastila. 100% fruit. No Added sugar. No additives.",
       isPartOf: { "@id": `${siteUrl}/#website` },
       about: { "@id": `${siteUrl}/#organization` },
     },

@@ -38,7 +38,7 @@ export function HeroContent() {
           className="font-body font-semibold uppercase tracking-[0.2em] text-heading text-sm sm:text-base mt-6 mb-10 animate-hero-fade-up"
           style={{ animationDelay: "0.46s" }}
         >
-          No Sugar. 100% Natural Snacks
+          No Added Sugar. 100% Natural Snacks
         </p>
 
         {/* CTA */}

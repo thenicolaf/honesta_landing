@@ -2,12 +2,10 @@
 
 import { EmptyState } from "@/shared/ui";
 import { IconLeaf } from "@/shared/icons";
-import { useViewMode } from "@/providers/ViewModeProvider";
 import { ProductItem } from "./ProductItem";
-import { ProductItemRow } from "./ProductItemRow";
 import { ProductToolbar } from "./ProductToolbar";
 import { useFilteredProducts } from "./useFilteredProducts";
-import { PUBLIC_PRODUCT_GRID_CLASS } from "./ProductGridSkeleton";
+import { PRODUCT_GRID_CLASS } from "./ProductGridSkeleton";
 import type { DbProductGridProps, Product } from "./types";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -32,21 +30,11 @@ function ProductHeader() {
 }
 
 function ProductList({ products }: { products: Product[] }) {
-  const { mode } = useViewMode();
   return (
-    <div className={PUBLIC_PRODUCT_GRID_CLASS[mode]}>
-      {products.map((product) =>
-        mode === "row" ? (
-          <ProductItemRow
-            key={product.id ?? product.title}
-            product={product}
-          />
-        ) : (
-          <div key={product.id ?? product.title} className="h-full">
-            <ProductItem product={product} />
-          </div>
-        ),
-      )}
+    <div className={PRODUCT_GRID_CLASS}>
+      {products.map((product) => (
+        <ProductItem key={product.id ?? product.title} product={product} />
+      ))}
     </div>
   );
 }

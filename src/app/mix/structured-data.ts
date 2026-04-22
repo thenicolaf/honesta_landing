@@ -11,7 +11,7 @@ export function buildMixCollectionJsonLd(boxes: MixBox[], siteUrl: string) {
     "@id": `${mixUrl}#collectionpage`,
     name: "Build Your Mix — HONESTA",
     description:
-      "Build your own HONESTA dried-fruit mix. Pick a box, fill each cell with fruit of your choice — natural, no sugar, no additives.",
+      "Build your own HONESTA dried-fruit mix. Pick a box, fill each cell with fruit of your choice — natural, no added sugar, no additives.",
     url: mixUrl,
     isPartOf: { "@id": `${siteUrl}/#website` },
     mainEntity: {
@@ -38,7 +38,12 @@ export function buildMixBreadcrumbJsonLd(siteUrl: string) {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Home", item: siteUrl },
-      { "@type": "ListItem", position: 2, name: "Build Your Mix", item: mixUrl },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Build Your Mix",
+        item: mixUrl,
+      },
     ],
   };
 }

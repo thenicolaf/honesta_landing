@@ -1,12 +1,3 @@
-import {
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsibleChevron,
-  CollapsibleContent,
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/shared/ui";
 import type { Benefit, NutritionInfo } from "../types";
 import { ProductTags } from "./ProductTags";
 import { ProductFreeFrom } from "./ProductFreeFrom";
@@ -189,6 +180,7 @@ export function hasDetailsContent({
   );
 }
 
+
 function hasGridContent({
   servingIdeas,
   occasions,
@@ -200,40 +192,6 @@ function hasGridContent({
     (freeFrom && freeFrom.length > 0) ||
     (servingIdeas && servingIdeas.length > 0) ||
     (occasions && occasions.length > 0)
-  );
-}
-
-function DetailsContent({
-  benefits,
-  nutrition,
-  servingIdeas,
-  occasions,
-  tags,
-  freeFrom,
-  ingredients,
-}: DetailsContentProps) {
-  return (
-    <>
-      {benefits && benefits.length > 0 && <BenefitsList benefits={benefits} />}
-      {nutrition && <NutritionTable nutrition={nutrition} />}
-      {ingredients && ingredients.length > 0 && (
-        <ProductIngredientsSection ingredients={ingredients} />
-      )}
-      {hasGridContent({ servingIdeas, occasions, tags, freeFrom }) && (
-        <div className="grid grid-cols-2 gap-4">
-          {tags && tags.length > 0 && <ProductTagsSection tags={tags} />}
-          {freeFrom && freeFrom.length > 0 && (
-            <ProductFreeFromSection freeFrom={freeFrom} />
-          )}
-          {servingIdeas && servingIdeas.length > 0 && (
-            <ServingIdeas servingIdeas={servingIdeas} />
-          )}
-          {occasions && occasions.length > 0 && (
-            <ProductOccasions occasions={occasions} />
-          )}
-        </div>
-      )}
-    </>
   );
 }
 
@@ -292,33 +250,3 @@ export function ProductExpandedDetails({
   );
 }
 
-// ─── ProductDetails ───────────────────────────────────────────────────────────
-
-export function ProductDetails(props: DetailsContentProps) {
-  if (!hasDetailsContent(props)) return null;
-
-  return (
-    <Collapsible className="border-t border-parchment/50 pt-3">
-      <Tooltip side="top" className="block">
-        <TooltipTrigger asChild>
-          <CollapsibleTrigger
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-            }}
-            className="flex w-full items-center justify-between gap-2 font-body font-semibold uppercase tracking-[0.12em] text-2xs text-earth/55 hover:text-orange transition-colors duration-200"
-          >
-            Details
-            <CollapsibleChevron />
-          </CollapsibleTrigger>
-        </TooltipTrigger>
-        <TooltipContent>Benefits, nutrition & more</TooltipContent>
-      </Tooltip>
-      <CollapsibleContent>
-        <div className="pt-4 flex flex-col gap-5">
-          <DetailsContent {...props} />
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
-  );
-}

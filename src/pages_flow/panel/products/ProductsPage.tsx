@@ -2,28 +2,17 @@
 
 import { EmptyState } from "@/shared/ui";
 import type { AdminDbProduct } from "@/lib/productsDb";
-import { useViewMode, type ViewMode } from "@/providers/ViewModeProvider";
+import { ADMIN_PRODUCT_GRID_CLASS } from "@/sections/products/ProductGridSkeleton";
 import { useFilteredAdminProducts } from "./useFilteredAdminProducts";
 import { AdminProductToolbar } from "./AdminProductToolbar";
 import { AdminProductCard } from "./AdminProductCard";
-import { AdminProductRow } from "./AdminProductRow";
-
-export const ADMIN_PRODUCT_GRID_CLASS: Record<ViewMode, string> = {
-  card: "grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4",
-  row: "grid grid-cols-1 gap-4 sm:gap-5 xl:grid-cols-2 xl:gap-6",
-};
 
 function AdminProductGrid({ products }: { products: AdminDbProduct[] }) {
-  const { mode } = useViewMode();
   return (
-    <div className={ADMIN_PRODUCT_GRID_CLASS[mode]}>
-      {products.map((product) =>
-        mode === "row" ? (
-          <AdminProductRow key={product.id} product={product} />
-        ) : (
-          <AdminProductCard key={product.id} product={product} />
-        ),
-      )}
+    <div className={ADMIN_PRODUCT_GRID_CLASS}>
+      {products.map((product) => (
+        <AdminProductCard key={product.id} product={product} />
+      ))}
     </div>
   );
 }

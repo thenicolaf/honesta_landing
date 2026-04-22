@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   toastSuccess,
 } from "@/shared/ui";
+import { cn } from "@/shared/utils/cn";
 import { IconChevron } from "@/shared/icons";
 import { ProductStatus } from "@/shared/types";
 import { updateProductStatus } from "@/pages_flow/panel/products/actions";
@@ -28,12 +29,14 @@ interface ProductStatusMenuProps {
   productId: string;
   status: string;
   onDelete?: () => void;
+  className?: string;
 }
 
 export function ProductStatusMenu({
   productId,
   status,
   onDelete,
+  className,
 }: ProductStatusMenuProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -61,7 +64,7 @@ export function ProductStatusMenu({
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu className={cn("w-full", className)}>
       <DropdownMenuTrigger asChild stopPropagation>
         <Button
           as="button"
@@ -71,6 +74,7 @@ export function ProductStatusMenu({
           size="sm"
           endIcon={<IconChevron className="w-3 h-3" />}
           disabled={isPending}
+          className="w-full"
         >
           {config.label}
         </Button>

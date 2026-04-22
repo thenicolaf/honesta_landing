@@ -4,7 +4,7 @@ import { useMemo, useDeferredValue } from "react";
 import { useFilterBar } from "@/providers/FilterProvider";
 import { findActivePromotion } from "@/shared/utils/calculateDiscount";
 import { mapDbProducts, sortProducts, type ProductSortKey } from "./utils";
-import type { DbProduct, Product } from "./types";
+import type { DbProduct } from "./types";
 
 function buildSearchIndex(products: DbProduct[]): string[] {
   return products.map((p) => {

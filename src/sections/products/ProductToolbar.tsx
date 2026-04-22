@@ -8,7 +8,6 @@ import {
   SelectValue,
   SelectContent,
   SelectItem,
-  ViewModeToggle,
 } from "@/shared/ui";
 import { cn } from "@/shared/utils/cn";
 import type { DbProductGridProps } from "./types";
@@ -39,21 +38,17 @@ export function ProductToolbar({
 
   return (
     <div className="mb-10 flex flex-col gap-3 lg:flex-row lg:items-center">
-      {/* Toggle + search share one row on all resolutions */}
-      <div className="flex items-center gap-3 lg:contents">
-        <ViewModeToggle />
-        <FormInput
-          type="text"
-          placeholder="Search by name, tag, category..."
-          value={searchFilter.value}
-          onChange={(e) => searchFilter.onValueChange(e.target.value)}
-          clearable
-          onClear={() => searchFilter.onValueChange("")}
-          startIcon={<Search size={14} />}
-          wrapperClassName="grow lg:flex-1"
-          className="h-9 text-sm bg-white-warm! border-earth/15! hover:border-earth/35!"
-        />
-      </div>
+      <FormInput
+        type="text"
+        placeholder="Search by name, tag, category..."
+        value={searchFilter.value}
+        onChange={(e) => searchFilter.onValueChange(e.target.value)}
+        clearable
+        onClear={() => searchFilter.onValueChange("")}
+        startIcon={<Search size={14} />}
+        wrapperClassName="grow lg:flex-1"
+        className="h-9 text-sm bg-white-warm! border-earth/15! hover:border-earth/35!"
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:contents">
         <Select

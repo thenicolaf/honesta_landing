@@ -9,6 +9,7 @@ import {
   ProductHeader,
   ProductPriceAndCart,
   ProductExpandedDetails,
+  ProductIngredientsSection,
   ProductDetailImage,
   ProductTagline,
   ProductNote,
@@ -95,6 +96,8 @@ export function ProductDetailPage({
 
             <ProductTagline tagline={tagline} />
 
+            <ProductIngredientsSection ingredients={ingredients} />
+
             {product.variants.length > 0 && (
               <ProductVariantSelector
                 variants={product.variants}
@@ -117,7 +120,6 @@ export function ProductDetailPage({
               occasions={occasions}
               tags={tags}
               freeFrom={freeFrom}
-              ingredients={ingredients}
             />
           </div>
         </div>

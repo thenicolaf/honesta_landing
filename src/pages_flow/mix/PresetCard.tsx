@@ -6,7 +6,7 @@ import { Badge, Button } from "@/shared/ui";
 import { cn } from "@/shared/utils/cn";
 import type { MixPreset } from "@/lib/mixBoxesDb";
 
-interface PresetTileProps {
+interface PresetCardProps {
   preset: MixPreset;
   count: number;
   canAdd: boolean;
@@ -14,13 +14,13 @@ interface PresetTileProps {
   onRemove: () => void;
 }
 
-export function PresetTile({
+export function PresetCard({
   preset,
   count,
   canAdd,
   onAdd,
   onRemove,
-}: PresetTileProps) {
+}: PresetCardProps) {
   const isSelected = count > 0;
 
   return (
