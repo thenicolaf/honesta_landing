@@ -21,6 +21,7 @@ export { ProductTagline } from "./ProductTagline";
 export { ProductNote } from "./ProductNote";
 export { NoteButton } from "./NoteButton";
 export { ViewButton } from "./ViewButton";
+export { ShareButton } from "./ShareButton";
 export { ProductPrice } from "./ProductPrice";
 export { ProductPriceAndCart } from "./ProductPriceAndCart";
 export { ProductVariantSelector } from "./ProductVariantSelector";

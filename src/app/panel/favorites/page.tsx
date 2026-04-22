@@ -48,7 +48,7 @@ export default async function Page() {
   return (
     <>
       <AdminPageHeader title="Favorites" label="Admin Panel" />
-      <Suspense fallback={<ProductGridSkeleton count={6} />}>
+      <Suspense fallback={<ProductGridSkeleton variant="admin" count={6} />}>
         <FavoritesContent />
       </Suspense>
     </>

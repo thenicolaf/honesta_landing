@@ -22,7 +22,7 @@ export function ProductHeader({
           {badge}
         </Badge>
       )}
-      {extraBadges}
+      {extraBadges && <div className="ml-auto">{extraBadges}</div>}
     </div>
   );
 }

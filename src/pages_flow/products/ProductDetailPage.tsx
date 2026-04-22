@@ -15,6 +15,7 @@ import {
   ProductNote,
   ProductVariantSelector,
   FavoriteButton,
+  ShareButton,
 } from "@/sections/products/components";
 
 // ─── ProductDetailPage ────────────────────────────────────────────────────────
@@ -109,6 +110,15 @@ export function ProductDetailPage({
             <ProductPriceAndCart
               product={product}
               selectedVariant={selectedVariant}
+              actionSuffix={
+                product.slug ? (
+                  <ShareButton
+                    title={title}
+                    slug={product.slug}
+                    align="right"
+                  />
+                ) : undefined
+              }
             />
 
             <ProductNote note={product.note} />

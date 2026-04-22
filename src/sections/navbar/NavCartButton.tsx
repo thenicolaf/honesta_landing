@@ -17,7 +17,7 @@ export function NavCartButton() {
       <ShoppingCart className="w-5 h-5" strokeWidth={1.5} />
       {itemCount > 0 && (
         <Badge variant="counter" size="pill" className="absolute -top-0.5 -right-0.5">
-          {itemCount > 9 ? "9+" : itemCount}
+          {itemCount > 99 ? "99+" : itemCount}
         </Badge>
       )}
     </Link>

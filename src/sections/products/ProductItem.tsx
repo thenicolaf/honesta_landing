@@ -13,6 +13,7 @@ import {
   NoteButton,
   ViewButton,
   FavoriteButton,
+  ShareButton,
 } from "./components";
 
 interface ProductItemProps {
@@ -93,6 +94,15 @@ export function ProductItem({ product, from }: ProductItemProps) {
           product={product}
           selectedVariant={selectedVariant}
           layout="stacked"
+          actionSuffix={
+            product.slug ? (
+              <ShareButton
+                title={title}
+                slug={product.slug}
+                align="right"
+              />
+            ) : undefined
+          }
         />
       </div>
     </div>

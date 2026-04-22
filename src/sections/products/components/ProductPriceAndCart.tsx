@@ -18,6 +18,8 @@ interface ProductPriceAndCartProps {
   selectedVariant?: ProductVariant;
   /** Optional node rendered just before the primary action (e.g. a secondary icon-button). */
   actionPrefix?: React.ReactNode;
+  /** Optional node rendered just after the primary action (e.g. share icon-button). */
+  actionSuffix?: React.ReactNode;
   /**
    * inline (default): price and cart controls on the same row (used in detail pages).
    * stacked: price on its own row above; cart controls below at full width (used in compact cards).
@@ -34,6 +36,7 @@ export function ProductPriceAndCart({
   product,
   selectedVariant,
   actionPrefix,
+  actionSuffix,
   layout = "inline",
 }: ProductPriceAndCartProps) {
   const { items, addToCart, updateItemQuantity, removeFromCart } = useCart();
@@ -79,11 +82,12 @@ export function ProductPriceAndCart({
             size="md"
             className={cn(
               "h-8 font-body font-medium uppercase text-xs tracking-widest whitespace-nowrap",
-              stacked && "w-full justify-center",
+              stacked && (actionSuffix ? "flex-1 justify-center" : "w-full justify-center"),
             )}
           >
             Out of Stock
           </Badge>
+          {actionSuffix}
         </div>
       </div>
     );
@@ -104,6 +108,7 @@ export function ProductPriceAndCart({
         >
           Order via Instagram
         </Button>
+        {actionSuffix}
       </div>
     );
   }
@@ -145,27 +150,30 @@ export function ProductPriceAndCart({
         <ProductPrice price={variantPrice} promotion={variantPromotion} mark={product.mark} />
         <div className={controlsClass}>
           {actionPrefix}
-          <Button
-            as="button"
-            variant="outline"
-            size="icon"
-            onClick={handleDecrement}
-            aria-label="Decrease quantity"
-          >
-            <Minus className="w-3.5 h-3.5" />
-          </Button>
-          <span className="font-body font-semibold text-earth text-sm w-4 text-center">
-            {quantity}
-          </span>
-          <Button
-            as="button"
-            variant="primary"
-            size="icon"
-            onClick={handleIncrement}
-            aria-label="Increase quantity"
-          >
-            <Plus className="w-3.5 h-3.5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              as="button"
+              variant="outline"
+              size="icon"
+              onClick={handleDecrement}
+              aria-label="Decrease quantity"
+            >
+              <Minus className="w-3.5 h-3.5" />
+            </Button>
+            <span className="font-body font-semibold text-earth text-sm w-4 text-center">
+              {quantity}
+            </span>
+            <Button
+              as="button"
+              variant="primary"
+              size="icon"
+              onClick={handleIncrement}
+              aria-label="Increase quantity"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+          {actionSuffix}
         </div>
       </div>
     );
@@ -181,10 +189,14 @@ export function ProductPriceAndCart({
           variant="primary"
           size="sm"
           onClick={handleAdd}
-          className={cn(stacked && "w-full")}
+          className={cn(
+            "whitespace-nowrap",
+            stacked && (actionSuffix ? "flex-1" : "w-full"),
+          )}
         >
           Add to Cart
         </Button>
+        {actionSuffix}
       </div>
     </div>
   );

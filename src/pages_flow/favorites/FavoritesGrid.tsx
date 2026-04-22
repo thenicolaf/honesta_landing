@@ -4,7 +4,7 @@ import { Card } from "@/shared/ui";
 import { ProductItem } from "@/sections/products/ProductItem";
 import {
   ProductGridSkeleton,
-  PRODUCT_GRID_CLASS,
+  ADMIN_PRODUCT_GRID_CLASS,
 } from "@/sections/products/ProductGridSkeleton";
 import { useFavorites } from "@/providers";
 import type { Product } from "@/sections/products/types";
@@ -14,7 +14,7 @@ export function FavoritesGrid({ allProducts }: { allProducts: Product[] }) {
   const { favorites, isHydrated } = useFavorites();
 
   if (!isHydrated) {
-    return <ProductGridSkeleton count={6} />;
+    return <ProductGridSkeleton variant="admin" count={6} />;
   }
 
   const visible = allProducts.filter((p) => p.id && favorites.includes(p.id));
@@ -28,7 +28,7 @@ export function FavoritesGrid({ allProducts }: { allProducts: Product[] }) {
   }
 
   return (
-    <div className={PRODUCT_GRID_CLASS}>
+    <div className={ADMIN_PRODUCT_GRID_CLASS}>
       {visible.map((product) => (
         <ProductItem key={product.id} product={product} from="favorites" />
       ))}
