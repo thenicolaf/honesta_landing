@@ -2,12 +2,8 @@
 
 import Image from "next/image";
 import {
-  Badge,
   Button,
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsibleChevron,
-  CollapsibleContent,
+  MixCompositionList,
   Skeleton,
 } from "@/shared/ui";
 import { LayoutGrid, Minus, Plus, Trash2 } from "lucide-react";
@@ -120,33 +116,7 @@ export function MixSummary({
                 <p className="font-body font-light text-xs text-earth/55">
                   {item.weight_g}g · AED {item.price.toFixed(2)} each
                 </p>
-                {item.mixItems && item.mixItems.length > 0 && (
-                  <Collapsible className="mt-1">
-                    <CollapsibleTrigger className="inline-flex items-center gap-1.5 font-body font-semibold uppercase tracking-[0.12em] text-2xs text-earth/55 hover:text-orange transition-colors">
-                      Composition ·{" "}
-                      {item.mixItems.reduce((sum, m) => sum + m.count, 0)} items
-                      <CollapsibleChevron />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="flex flex-wrap gap-x-1.5 gap-y-1.5 mt-2 pr-2">
-                        {item.mixItems.map((m, i) => (
-                          <div key={i} className="relative">
-                            <Badge variant="outline" size="xs">
-                              {m.name}
-                            </Badge>
-                            <Badge
-                              variant="counter"
-                              size="pill"
-                              className="absolute -top-1.5 -right-1.5"
-                            >
-                              {m.count}
-                            </Badge>
-                          </div>
-                        ))}
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                )}
+                <MixCompositionList items={item.mixItems} />
               </div>
             </div>
 

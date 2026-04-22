@@ -1,7 +1,23 @@
 export type ProductSales = {
   name: string;
+  weight_g: number;
   quantity: number;
   revenue: number;
+};
+
+export type MixPresetSales = {
+  name: string;
+  image_url: string | null;
+  weight_g: number;
+  count: number;
+  revenue: number;
+};
+
+export type MixSales = {
+  name: string;
+  quantity: number;
+  revenue: number;
+  presets: MixPresetSales[];
 };
 
 export type DashboardStats = {
@@ -12,6 +28,7 @@ export type DashboardStats = {
     totalDelivery: number;
     byStatus: Record<string, number>;
     productSales: ProductSales[];
+    mixSales: MixSales[];
   };
   products: {
     total: number;
@@ -19,6 +36,9 @@ export type DashboardStats = {
     draft: number;
     archived: number;
     outOfStock: number;
+    bestSellers: number;
+    newProducts: number;
+    onPromotion: number;
   };
   categories: {
     total: number;

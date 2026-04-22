@@ -2,7 +2,8 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Archive, Eye, Trash2 } from "lucide-react";
+import { motion } from "motion/react";
+import { Archive, Eye, Trash2, FileText } from "lucide-react";
 import {
   Button,
   DropdownMenu,
@@ -10,30 +11,62 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  useDropdownMenu,
   toastSuccess,
 } from "@/shared/ui";
+import { cn } from "@/shared/utils/cn";
 import { IconChevron } from "@/shared/icons";
 import { ProductStatus } from "@/shared/types";
 import { updateProductStatus } from "@/pages_flow/panel/products/actions";
 
+function AnimatedChevron() {
+  const { open } = useDropdownMenu();
+  return (
+    <motion.span
+      animate={{ rotate: open ? 180 : 0 }}
+      transition={{ duration: 0.22, ease: "easeInOut" }}
+      className="inline-flex"
+    >
+      <IconChevron className="w-3 h-3" />
+    </motion.span>
+  );
+}
+
 type StatusColor = "primary" | "default" | "error";
 
-const STATUS_CONFIG: Record<string, { label: string; color: StatusColor }> = {
-  [ProductStatus.DRAFT]: { label: "Draft", color: "default" },
-  [ProductStatus.PUBLISHED]: { label: "Published", color: "primary" },
-  [ProductStatus.ARCHIVED]: { label: "Archived", color: "default" },
+const STATUS_CONFIG: Record<
+  string,
+  { label: string; color: StatusColor; icon: React.ReactNode }
+> = {
+  [ProductStatus.DRAFT]: {
+    label: "Draft",
+    color: "default",
+    icon: <FileText size={12} aria-hidden="true" />,
+  },
+  [ProductStatus.PUBLISHED]: {
+    label: "Published",
+    color: "primary",
+    icon: <Eye size={12} aria-hidden="true" />,
+  },
+  [ProductStatus.ARCHIVED]: {
+    label: "Archived",
+    color: "default",
+    icon: <Archive size={12} aria-hidden="true" />,
+  },
 };
 
 interface ProductStatusMenuProps {
   productId: string;
   status: string;
   onDelete?: () => void;
+  className?: string;
 }
 
 export function ProductStatusMenu({
   productId,
   status,
   onDelete,
+  className,
 }: ProductStatusMenuProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -61,7 +94,7 @@ export function ProductStatusMenu({
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu className={cn("w-full", className)}>
       <DropdownMenuTrigger asChild stopPropagation>
         <Button
           as="button"
@@ -69,10 +102,13 @@ export function ProductStatusMenu({
           variant="outline"
           color={config.color}
           size="sm"
-          endIcon={<IconChevron className="w-3 h-3" />}
+          startIcon={config.icon}
+          endIcon={<AnimatedChevron />}
           disabled={isPending}
+          aria-label={config.label}
+          className="w-full"
         >
-          {config.label}
+          <span className="hidden sm:inline">{config.label}</span>
         </Button>
       </DropdownMenuTrigger>
 

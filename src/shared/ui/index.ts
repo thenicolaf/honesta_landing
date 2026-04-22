@@ -135,11 +135,16 @@ export { AddressSuggestInput } from "./AddressSuggestInput";
 export { AddressCard } from "./AddressCard";
 export { CopyText } from "./CopyText";
 export { ToastProvider, toastSuccess, toastError, toastInfo } from "./Toast";
-export { getNotificationStyle, getNotificationHref } from "./NotificationTypeConfig";
+export {
+  getNotificationStyle,
+  getNotificationHref,
+  NOTIFICATION_TYPES,
+  NOTIFICATION_TYPE_LABELS,
+} from "./NotificationTypeConfig";
 export { Popover, PopoverTrigger, PopoverContent, usePopover } from "./Popover";
 export { Tooltip, TooltipTrigger, TooltipContent, useTooltip, type TooltipSide } from "./Tooltip";
 export { ToastFromUrl } from "./ToastFromUrl";
-export { ViewModeToggle } from "./ViewModeToggle";
+export { MixCompositionList, type MixCompositionItem } from "./MixCompositionList";
 export {
   MultiSelect,
   MultiSelectTrigger,

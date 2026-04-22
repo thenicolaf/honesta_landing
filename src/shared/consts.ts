@@ -3,10 +3,6 @@ export const COORDINATES_KEY = "honesta_coordinates";
 export const COOKIE_CONSENT_KEY = "honesta_cookie_consent";
 export const PUSH_OPT_OUT_KEY = "honesta_push_opt_out";
 
-export const CATEGORIES_VIEW_COOKIE = "honesta_categories_view";
-export const PRODUCTS_VIEW_COOKIE = "honesta_products_view";
-export const MIXES_VIEW_COOKIE = "honesta_mixes_view";
-
 export const UAE_EMIRATES = [
   { value: "Abu Dhabi", label: "Abu Dhabi" },
   { value: "Ajman", label: "Ajman" },

@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, DeliveryInfo } from "@/shared/ui";
+import { Card, DeliveryInfo, MixCompositionList } from "@/shared/ui";
 import { formatDateTime } from "@/shared/ui/Table";
 import { useCart } from "@/providers";
 import { getCartTotals } from "@/lib/cart";
@@ -52,36 +52,39 @@ function OrderLineItem({ item, promoPerUnit, promoCodeEndsAt }: {
       : undefined;
 
   return (
-    <div className="flex justify-between items-start gap-2">
-      <div className="flex-1 min-w-0">
-        <p className="font-body font-light text-earth text-sm leading-snug">
-          {item.name}
-          {item.weight_g ? ` (${item.weight_g}g)` : ""}
-        </p>
-        <p className="font-body font-light text-earth/45 text-xs">
-          × {item.quantity}
-        </p>
-        {item.promotionEndsAt && (
-          <p className="font-body text-2xs text-earth/40">
-            Until {formatDateTime(item.promotionEndsAt)}
+    <div className="flex flex-col gap-1">
+      <div className="flex justify-between items-start gap-2">
+        <div className="flex-1 min-w-0">
+          <p className="font-body font-light text-earth text-sm leading-snug">
+            {item.name}
+            {item.weight_g ? ` (${item.weight_g}g)` : ""}
           </p>
-        )}
-        {hasPromoCode && promoCodeEndsAt && (
-          <p className="font-body text-2xs text-earth/40">
-            Until {formatDateTime(promoCodeEndsAt)}
+          <p className="font-body font-light text-earth/45 text-xs">
+            × {item.quantity}
           </p>
-        )}
+          {item.promotionEndsAt && (
+            <p className="font-body text-2xs text-earth/40">
+              Until {formatDateTime(item.promotionEndsAt)}
+            </p>
+          )}
+          {hasPromoCode && promoCodeEndsAt && (
+            <p className="font-body text-2xs text-earth/40">
+              Until {formatDateTime(promoCodeEndsAt)}
+            </p>
+          )}
+        </div>
+        <div className="shrink-0 text-right">
+          <span className={cn("font-body font-semibold text-sm", priceColor)}>
+            AED {finalLineTotal.toFixed(2)}
+          </span>
+          {strikeAmount != null && (
+            <p className="font-body text-earth/30 text-xs line-through">
+              AED {strikeAmount.toFixed(2)}
+            </p>
+          )}
+        </div>
       </div>
-      <div className="shrink-0 text-right">
-        <span className={cn("font-body font-semibold text-sm", priceColor)}>
-          AED {finalLineTotal.toFixed(2)}
-        </span>
-        {strikeAmount != null && (
-          <p className="font-body text-earth/30 text-xs line-through">
-            AED {strikeAmount.toFixed(2)}
-          </p>
-        )}
-      </div>
+      {item.isMix && <MixCompositionList items={item.mixItems} />}
     </div>
   );
 }

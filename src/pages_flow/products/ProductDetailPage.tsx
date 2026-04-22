@@ -9,11 +9,13 @@ import {
   ProductHeader,
   ProductPriceAndCart,
   ProductExpandedDetails,
+  ProductIngredientsSection,
   ProductDetailImage,
   ProductTagline,
   ProductNote,
   ProductVariantSelector,
   FavoriteButton,
+  ShareButton,
 } from "@/sections/products/components";
 
 // ─── ProductDetailPage ────────────────────────────────────────────────────────
@@ -95,6 +97,8 @@ export function ProductDetailPage({
 
             <ProductTagline tagline={tagline} />
 
+            <ProductIngredientsSection ingredients={ingredients} />
+
             {product.variants.length > 0 && (
               <ProductVariantSelector
                 variants={product.variants}
@@ -106,6 +110,15 @@ export function ProductDetailPage({
             <ProductPriceAndCart
               product={product}
               selectedVariant={selectedVariant}
+              actionSuffix={
+                product.slug ? (
+                  <ShareButton
+                    title={title}
+                    slug={product.slug}
+                    align="right"
+                  />
+                ) : undefined
+              }
             />
 
             <ProductNote note={product.note} />
@@ -117,7 +130,6 @@ export function ProductDetailPage({
               occasions={occasions}
               tags={tags}
               freeFrom={freeFrom}
-              ingredients={ingredients}
             />
           </div>
         </div>

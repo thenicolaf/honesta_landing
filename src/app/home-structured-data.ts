@@ -10,7 +10,7 @@ export function buildHomeStructuredData(
     "@id": `${siteUrl}/#collectionpage`,
     name: "HONESTA — Natural Dried Fruits",
     description:
-      "Handcrafted dried fruits and pastila. 100% fruit. No sugar. No additives. Small batch production with love.",
+      "Handcrafted dried fruits and pastila. 100% fruit. No added sugar. No additives. Small batch production with love.",
     url: siteUrl,
     isPartOf: { "@id": `${siteUrl}/#website` },
     mainEntity: {

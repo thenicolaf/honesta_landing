@@ -31,13 +31,16 @@ export function ProductSalesSection({ sales }: { sales: ProductSales[] }) {
       <div className="md:hidden mb-8">
         <DataCardList className="min-[30rem]:grid-cols-2">
           {paginatedData.map((p) => (
-            <DataCard key={p.name}>
+            <DataCard key={`${p.name}-${p.weight_g}`}>
               <DataCardHeader>
                 <span className="font-body font-semibold text-sm text-earth">
                   {p.name}
                 </span>
               </DataCardHeader>
               <DataCardBody>
+                <DataCardField label="Weight">
+                  <span className="tabular-nums">{p.weight_g}g</span>
+                </DataCardField>
                 <DataCardField label="Quantity">
                   <span className="tabular-nums">{p.quantity}</span>
                 </DataCardField>
@@ -68,8 +71,15 @@ export function ProductSalesSection({ sales }: { sales: ProductSales[] }) {
           </TableHeader>
           <TableBody>
             {paginatedData.map((p) => (
-              <TableRow key={p.name}>
-                <TableCell>{p.name}</TableCell>
+              <TableRow key={`${p.name}-${p.weight_g}`}>
+                <TableCell>
+                  <div className="flex flex-col">
+                    <span>{p.name}</span>
+                    <span className="font-body text-2xs text-earth/50 tabular-nums">
+                      {p.weight_g}g
+                    </span>
+                  </div>
+                </TableCell>
                 <TableCell className="text-right tabular-nums">
                   {p.quantity}
                 </TableCell>

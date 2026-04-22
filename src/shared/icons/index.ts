@@ -25,3 +25,7 @@ export { IconUpload } from "./IconUpload";
 export { IconEye } from "./IconEye";
 export { IconEyeOff } from "./IconEyeOff";
 export { IconCalendar } from "./IconCalendar";
+export { IconShare } from "./IconShare";
+export { IconLink } from "./IconLink";
+export { IconWhatsApp } from "./IconWhatsApp";
+export { IconTelegram } from "./IconTelegram";

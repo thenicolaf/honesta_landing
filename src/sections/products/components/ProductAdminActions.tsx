@@ -26,11 +26,12 @@ export function ProductAdminActions({
   const router = useRouter();
 
   return (
-    <div className="flex items-center gap-2 pt-3 mt-auto [&>button]:grow">
+    <div className="flex flex-row items-center gap-2 pt-3 mt-auto">
       <ProductStatusMenu
         productId={productId}
         status={status}
         onDelete={onDelete}
+        className="flex-1"
       />
       <Button
         as="button"
@@ -43,9 +44,9 @@ export function ProductAdminActions({
           router.push(`/panel/products/${productId}/edit`);
         }}
         aria-label={`Edit ${productTitle}`}
-        className="grow"
+        className="flex-1"
       >
-        Edit
+        <span className="hidden sm:inline">Edit</span>
       </Button>
     </div>
   );

@@ -5,10 +5,7 @@ import {
   Button,
   Badge,
   Card,
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsibleChevron,
-  CollapsibleContent,
+  MixCompositionList,
   toastInfo,
 } from "@/shared/ui";
 import { formatDateTime } from "@/shared/ui/Table";
@@ -193,40 +190,6 @@ function PriceInfo({ item, promoHint }: {
   );
 }
 
-function MixComposition({ items }: { items: CartItemType["mixItems"] }) {
-  if (!items || items.length === 0) return null;
-  const totalCells = items.reduce((sum, m) => sum + m.count, 0);
-  return (
-    <Collapsible className="mt-1.5">
-      <CollapsibleTrigger
-        onClick={stop}
-        className="inline-flex items-center gap-1.5 font-body font-semibold uppercase tracking-[0.12em] text-2xs text-earth/55 hover:text-orange transition-colors"
-      >
-        Composition · {totalCells} {totalCells === 1 ? "item" : "items"}
-        <CollapsibleChevron />
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        <div className="flex flex-wrap gap-x-1.5 gap-y-1.5 mt-2 pr-2">
-          {items.map((m, i) => (
-            <div key={i} className="relative">
-              <Badge variant="outline" size="xs">
-                {m.name}
-              </Badge>
-              <Badge
-                variant="counter"
-                size="pill"
-                className="absolute -top-1.5 -right-1.5"
-              >
-                {m.count}
-              </Badge>
-            </div>
-          ))}
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
-  );
-}
-
 // ─── CartItem ─────────────────────────────────────────────────────────────────
 
 interface CartItemProps {
@@ -273,7 +236,7 @@ export function CartItem({
             <WeightBadge weight_g={item.weight_g} />
           </div>
           <PriceInfo item={item} promoHint={promoHint} />
-          {item.isMix && <MixComposition items={item.mixItems} />}
+          {item.isMix && <MixCompositionList items={item.mixItems} />}
         </div>
         <QuantityControls
           variantId={item.variantId}
@@ -296,7 +259,7 @@ export function CartItem({
               <WeightBadge weight_g={item.weight_g} />
             </div>
             <PriceInfo item={item} promoHint={promoHint} />
-            {item.isMix && <MixComposition items={item.mixItems} />}
+            {item.isMix && <MixCompositionList items={item.mixItems} />}
           </div>
         </div>
         <div className="flex items-center justify-between mt-3">
@@ -314,7 +277,7 @@ export function CartItem({
 
   if (item.isMix) {
     return (
-      <Link href="/mix" className="block">
+      <Link href="/mix?from=cart" className="block">
         {card}
       </Link>
     );

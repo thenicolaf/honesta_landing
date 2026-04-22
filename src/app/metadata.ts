@@ -14,14 +14,14 @@ export const metadata: Metadata = {
   },
   manifest: "/favicon/site.webmanifest",
   title: {
-    default: "HONESTA — Natural Dried Fruits. No Sugar. No Additives.",
+    default: "HONESTA — Natural Dried Fruits. No Added Sugar. No Additives.",
     template: "%s — HONESTA",
   },
   description:
-    "Handcrafted dried fruits and pastila. 100% fruit. No sugar. No additives. Small batch production with love.",
+    "Handcrafted dried fruits and pastila. 100% fruit. No added sugar. No additives. Small batch production with love.",
   keywords: [
     "dried fruits online",
-    "natural fruit snacks no sugar",
+    "natural fruit snacks no added sugar",
     "handcrafted dried orange",
     "healthy snacks for kids",
     "small batch dried fruit",

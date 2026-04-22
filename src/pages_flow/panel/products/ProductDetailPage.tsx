@@ -6,6 +6,7 @@ import type { AdminDbProduct } from "@/lib/productsDb";
 import {
   ProductHeader,
   ProductExpandedDetails,
+  ProductIngredientsSection,
   ProductDetailImage,
   ProductTagline,
   ProductNote,
@@ -86,6 +87,8 @@ function ProductDetailContent({ product }: ProductDetailPageProps) {
 
           <ProductTagline tagline={tagline} />
 
+          <ProductIngredientsSection ingredients={ingredients} />
+
           <AdminVariantBadges
             variants={product.product_variants}
             promotion={promotion}
@@ -102,7 +105,6 @@ function ProductDetailContent({ product }: ProductDetailPageProps) {
             occasions={occasions}
             tags={tags}
             freeFrom={freeFrom}
-            ingredients={ingredients}
           />
 
           {/* Admin actions */}

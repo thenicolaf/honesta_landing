@@ -7,6 +7,7 @@ import { OrdersOverview } from "@/pages_flow/panel/dashboard/sections/OrdersOver
 import { CatalogOverview } from "@/pages_flow/panel/dashboard/sections/CatalogOverview";
 import { PartnershipsOverview } from "@/pages_flow/panel/dashboard/sections/PartnershipsOverview";
 import { PromotionsOverview } from "@/pages_flow/panel/dashboard/sections/PromotionsOverview";
+import { PromoCodesOverview } from "@/pages_flow/panel/dashboard/sections/PromoCodesOverview";
 import { RecentNotifications } from "@/pages_flow/panel/dashboard/RecentNotifications";
 import { MarkAllReadButton } from "@/pages_flow/panel/dashboard/MarkAllReadButton";
 
@@ -14,8 +15,9 @@ function OrdersSkeleton() {
   return (
     <>
       <SkeletonSection count={4} className="grid-cols-2 md:grid-cols-3 xl:grid-cols-4" />
-      <SkeletonSection count={4} label="Orders by Status" className="grid-cols-2 md:grid-cols-4" />
+      <SkeletonSection count={3} label="Orders by Status" className="grid-cols-1 sm:grid-cols-3" />
       <SkeletonSection count={3} label="Product Sales" className="grid-cols-1 sm:grid-cols-2 md:grid-cols-3" />
+      <SkeletonSection count={3} label="Mix Sales" className="grid-cols-1 sm:grid-cols-2 md:grid-cols-3" />
     </>
   );
 }
@@ -29,7 +31,7 @@ export default function PanelPage() {
         <OrdersOverview />
       </Suspense>
 
-      <Suspense fallback={<SkeletonSection count={4} label="Catalog" className="grid-cols-2 md:grid-cols-4" />}>
+      <Suspense fallback={<SkeletonSection count={8} label="Catalog" className="grid-cols-2 md:grid-cols-3 xl:grid-cols-4" />}>
         <CatalogOverview />
       </Suspense>
 
@@ -39,6 +41,10 @@ export default function PanelPage() {
 
       <Suspense fallback={<SkeletonSection count={3} label="Active Promotions" className="grid-cols-1 sm:grid-cols-2 md:grid-cols-3" />}>
         <PromotionsOverview />
+      </Suspense>
+
+      <Suspense fallback={<SkeletonSection count={3} label="Promo Codes" className="grid-cols-1 sm:grid-cols-2 md:grid-cols-3" />}>
+        <PromoCodesOverview />
       </Suspense>
 
       <div className="flex items-center justify-between mb-3">

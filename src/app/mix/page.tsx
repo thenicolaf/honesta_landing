@@ -12,7 +12,7 @@ import {
 } from "./structured-data";
 
 const MIX_DESCRIPTION =
-  "Build your own HONESTA dried-fruit mix. Pick a box, fill each cell with fruit of your choice — natural, no sugar, no additives.";
+  "Build your own HONESTA dried-fruit mix. Pick a box, fill each cell with fruit of your choice — natural, no added sugar, no additives.";
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteUrl = process.env.PUBLIC_BASE_URL!;
@@ -101,18 +101,32 @@ function MixSkeleton() {
   );
 }
 
-export default function MixPage() {
+const FROM_MAP: Record<string, { href: string; label: string }> = {
+  cart: { href: "/cart", label: "Back to cart" },
+};
+
+export default async function MixPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string }>;
+}) {
+  const { from } = await searchParams;
+  const back = (from ? FROM_MAP[from] : undefined) ?? {
+    href: "/#mix",
+    label: "Back",
+  };
+
   return (
     <main className="mx-auto grow w-full max-w-7xl px-5 sm:px-6 lg:px-10 pt-24 pb-12 md:pt-28 md:pb-20">
       <HashLink
-        href="/#mix"
+        href={back.href}
         className={
           buttonVariants({ variant: "outline", size: "sm" }) +
           " mb-6 inline-flex"
         }
       >
         <ArrowLeft size={14} className="mr-2" />
-        Back
+        {back.label}
       </HashLink>
 
       <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-moss mb-3">
@@ -125,7 +139,10 @@ export default function MixPage() {
         Build Your Mix
       </h1>
 
-      <SearchParamsFilterProvider keys={["box", "preset"]} multiKeys={["preset"]}>
+      <SearchParamsFilterProvider
+        keys={["box", "preset"]}
+        multiKeys={["preset"]}
+      >
         <Suspense fallback={<MixSkeleton />}>
           <MixContent />
         </Suspense>

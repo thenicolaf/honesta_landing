@@ -23,24 +23,8 @@ export function AdminCategoryCard({
   };
 
   return (
-    <div className="relative flex flex-col h-full rounded-[16px] bg-white-warm border border-earth/8 overflow-hidden">
-      {/* Drag handle */}
-      {dragHandleRef && (
-        <Button
-          as="button"
-          type="button"
-          ref={dragHandleRef}
-          variant="primary"
-          size="icon"
-          className="absolute top-2 right-2 z-10 w-7! h-7! rounded-lg cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity duration-150 touch-none"
-        >
-          <GripVertical size={14} className="pointer-events-none" />
-        </Button>
-      )}
-      {/* Image / placeholder */}
-      <div
-        className={`relative aspect-4/3 ${category.image_url ? "" : placeholderBg} flex items-center justify-center`}
-      >
+    <div className="h-full flex flex-col rounded-2xl bg-white-warm border border-earth/8 hover:shadow-lg hover:border-transparent transition-colors duration-200">
+      <div className="relative aspect-3/2 rounded-t-2xl overflow-hidden">
         {category.image_url ? (
           <Image
             src={category.image_url}
@@ -48,42 +32,53 @@ export function AdminCategoryCard({
             fill
             className="object-cover pointer-events-none"
             draggable={false}
-            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
+            sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 25vw"
           />
         ) : (
-          <Icon className="w-16 h-16 text-earth/20" />
+          <div
+            className={`absolute inset-0 flex items-center justify-center ${placeholderBg}`}
+          >
+            <Icon className="w-12 h-12 text-earth/20" />
+          </div>
+        )}
+
+        {dragHandleRef && (
+          <Button
+            as="button"
+            type="button"
+            ref={dragHandleRef}
+            variant="primary"
+            size="icon"
+            className="absolute top-2 right-2 z-10 w-7! h-7! rounded-lg cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity duration-150 touch-none"
+          >
+            <GripVertical size={14} className="pointer-events-none" />
+          </Button>
         )}
       </div>
 
-      <div className="flex flex-col p-6 gap-4 grow">
-        <div className="flex flex-col items-start gap-2">
-          <p className="font-body font-semibold uppercase tracking-[0.14em] text-2xs text-earth/50">
+      <div className="flex-1 p-3 flex flex-col gap-2">
+        <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
+          <p className="font-body font-semibold uppercase tracking-[0.13em] text-2xs text-earth/60">
             {category.audience}
           </p>
           {category.badge && (
-            <Badge variant="natural" className="shrink-0 -translate-x-2">
+            <Badge variant="natural" size="xs">
               {category.badge}
             </Badge>
           )}
         </div>
 
-        <div>
-          <h3
-            className="font-display font-semibold text-heading leading-tight mb-1"
-            style={{ fontSize: "clamp(1.3rem, 2.5vw, 1.6rem)" }}
-          >
-            {category.name}
-          </h3>
-          <p className="font-body font-light text-sm text-earth/60 italic">
+        <h3 className="font-display font-semibold text-heading leading-tight capitalize text-[clamp(1rem,4vw,1.15rem)] min-[520px]:text-[clamp(1.15rem,2vw,1.4rem)]">
+          {category.name}
+        </h3>
+
+        {category.tagline && (
+          <p className="font-body font-light text-2xs text-earth/70 line-clamp-2">
             {category.tagline}
           </p>
-        </div>
+        )}
 
-        <p className="font-body font-light text-sm text-earth/60 leading-relaxed grow">
-          {category.description}
-        </p>
-
-        <div className="flex items-center gap-2 [&>a]:grow [&>button]:grow mt-auto">
+        <div className="flex flex-row items-center gap-2 pt-1 mt-auto">
           <Button
             as="a"
             href={`/panel/categories/${category.id}/edit`}
@@ -91,8 +86,9 @@ export function AdminCategoryCard({
             size="sm"
             startIcon={<Pencil size={12} aria-hidden="true" />}
             aria-label={`Edit ${category.name}`}
+            className="flex-1"
           >
-            Edit
+            <span className="hidden sm:inline">Edit</span>
           </Button>
           <Button
             as="button"
@@ -103,8 +99,9 @@ export function AdminCategoryCard({
             startIcon={<Trash2 size={12} aria-hidden="true" />}
             onClick={() => openDelete(category)}
             aria-label={`Delete ${category.name}`}
+            className="flex-1"
           >
-            Delete
+            <span className="hidden sm:inline">Delete</span>
           </Button>
         </div>
       </div>

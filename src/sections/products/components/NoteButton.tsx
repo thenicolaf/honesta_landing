@@ -1,0 +1,38 @@
+"use client";
+
+import { Button, Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui";
+import { IconInfo } from "@/shared/icons";
+import { cn } from "@/shared/utils/cn";
+
+interface NoteButtonProps {
+  note?: string;
+  className?: string;
+}
+
+export function NoteButton({ note, className }: NoteButtonProps) {
+  if (!note) return null;
+
+  return (
+    <Tooltip side="top" className={cn("absolute bottom-2 right-2 z-20", className)}>
+      <TooltipTrigger asChild>
+        <Button
+          as="button"
+          type="button"
+          variant="text"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+          className="rounded-full bg-earth/30 p-1.5! text-white-warm! backdrop-blur-sm hover:bg-earth/50 transition-all duration-300"
+          aria-label="Show note"
+        >
+          <IconInfo className="w-3.5 h-3.5" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent className="whitespace-normal min-w-32 w-max max-w-72 text-left leading-snug">
+        {note}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
