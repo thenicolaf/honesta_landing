@@ -6,9 +6,8 @@ import { useSortable, isSortable } from "@dnd-kit/react/sortable";
 import { toast } from "react-toastify";
 import { cn } from "@/shared/utils/cn";
 import type { DbCategory } from "@/sections/categories/types";
+import { ADMIN_CATEGORY_GRID_CLASS } from "@/sections/categories/CategoryGridSkeleton";
 import { AdminCategoryCard } from "./AdminCategoryCard";
-import { AdminCategoryRow } from "./AdminCategoryRow";
-import { useViewMode, type ViewMode } from "@/providers/ViewModeProvider";
 import { reorderCategories } from "./actions";
 
 function moveItem<T>(items: T[], from: number, to: number): T[] {
@@ -22,11 +21,9 @@ function moveItem<T>(items: T[], from: number, to: number): T[] {
 function SortableCategoryCard({
   category,
   index,
-  mode,
 }: {
   category: DbCategory;
   index: number;
-  mode: ViewMode;
 }) {
   const handleElRef = useRef<HTMLButtonElement>(null);
   const { ref, isDragging } = useSortable({
@@ -51,11 +48,7 @@ function SortableCategoryCard({
         isDragging && "opacity-40",
       )}
     >
-      {mode === "row" ? (
-        <AdminCategoryRow category={category} dragHandleRef={handleElRef} />
-      ) : (
-        <AdminCategoryCard category={category} dragHandleRef={handleElRef} />
-      )}
+      <AdminCategoryCard category={category} dragHandleRef={handleElRef} />
     </div>
   );
 }
@@ -65,7 +58,6 @@ export function SortableCategoryGrid({
 }: {
   categories: DbCategory[];
 }) {
-  const { mode } = useViewMode();
   const [, startTransition] = useTransition();
   const [optimistic, setOptimistic] = useOptimistic(
     categories,
@@ -100,20 +92,14 @@ export function SortableCategoryGrid({
     }
   }
 
-  const containerClass =
-    mode === "row"
-      ? "grid grid-cols-1 gap-4 sm:gap-5 2xl:grid-cols-2 2xl:gap-6"
-      : "grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4";
-
   return (
     <DragDropProvider onDragEnd={handleDragEnd}>
-      <div className={containerClass}>
+      <div className={ADMIN_CATEGORY_GRID_CLASS}>
         {optimistic.map((category, index) => (
           <SortableCategoryCard
             key={category.id}
             category={category}
             index={index}
-            mode={mode}
           />
         ))}
       </div>

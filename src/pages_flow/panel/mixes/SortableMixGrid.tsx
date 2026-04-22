@@ -6,10 +6,8 @@ import { useSortable, isSortable } from "@dnd-kit/react/sortable";
 import { toast } from "react-toastify";
 import { cn } from "@/shared/utils/cn";
 import type { MixBox } from "@/lib/mixBoxesDb";
-import { useViewMode, type ViewMode } from "@/providers/ViewModeProvider";
 import { reorderMixesAction } from "./actions";
 import { MixCard } from "./MixCard";
-import { MixRow } from "./MixRow";
 import { ADMIN_MIX_GRID_CLASS } from "./MixesSkeleton";
 
 function moveItem<T>(items: T[], from: number, to: number): T[] {
@@ -20,15 +18,7 @@ function moveItem<T>(items: T[], from: number, to: number): T[] {
   return next;
 }
 
-function SortableMixItem({
-  mix,
-  index,
-  mode,
-}: {
-  mix: MixBox;
-  index: number;
-  mode: ViewMode;
-}) {
+function SortableMixItem({ mix, index }: { mix: MixBox; index: number }) {
   const handleElRef = useRef<HTMLButtonElement>(null);
   const { ref, isDragging } = useSortable({
     id: mix.id,
@@ -52,17 +42,12 @@ function SortableMixItem({
         isDragging && "opacity-40",
       )}
     >
-      {mode === "row" ? (
-        <MixRow mix={mix} dragHandleRef={handleElRef} />
-      ) : (
-        <MixCard mix={mix} dragHandleRef={handleElRef} />
-      )}
+      <MixCard mix={mix} dragHandleRef={handleElRef} />
     </div>
   );
 }
 
 export function SortableMixGrid({ mixes }: { mixes: MixBox[] }) {
-  const { mode } = useViewMode();
   const [, startTransition] = useTransition();
   const [optimistic, setOptimistic] = useOptimistic(
     mixes,
@@ -99,14 +84,9 @@ export function SortableMixGrid({ mixes }: { mixes: MixBox[] }) {
 
   return (
     <DragDropProvider onDragEnd={handleDragEnd}>
-      <div className={ADMIN_MIX_GRID_CLASS[mode]}>
+      <div className={ADMIN_MIX_GRID_CLASS}>
         {optimistic.map((mix, index) => (
-          <SortableMixItem
-            key={mix.id}
-            mix={mix}
-            index={index}
-            mode={mode}
-          />
+          <SortableMixItem key={mix.id} mix={mix} index={index} />
         ))}
       </div>
     </DragDropProvider>

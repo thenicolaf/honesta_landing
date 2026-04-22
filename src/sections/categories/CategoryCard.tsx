@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { Badge } from "@/shared/ui";
+import { ArrowRight } from "lucide-react";
+import { Badge, buttonVariants } from "@/shared/ui";
 import { IconLeaf } from "@/shared/icons";
 import { HashLink } from "../navbar";
 import type { CategoryCard as CategoryCardData } from "./types";
@@ -9,7 +10,6 @@ export function CategoryCard({
   slug,
   name,
   tagline,
-  description,
   audience,
   image_url,
   badge,
@@ -21,13 +21,11 @@ export function CategoryCard({
   };
 
   return (
-    <HashLink
-      href={href}
-      className="group flex flex-col rounded-[16px] overflow-hidden bg-white-warm hover:shadow-lg transition-shadow duration-300 text-left cursor-pointer"
-    >
-      {/* Image / placeholder */}
-      <div
-        className={`relative w-full aspect-4/3 ${image_url ? "" : placeholderBg} flex items-center justify-center`}
+    <div className="h-full flex flex-col rounded-2xl bg-white-warm border border-parchment/60 hover:shadow-lg hover:border-transparent transition-colors duration-200">
+      <HashLink
+        href={href}
+        className="block relative aspect-3/2 rounded-t-2xl overflow-hidden"
+        aria-label={name}
       >
         {image_url ? (
           <Image
@@ -35,56 +33,53 @@ export function CategoryCard({
             alt={name}
             fill
             className="object-cover"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
         ) : (
-          <Icon className="w-16 h-16 text-earth/20" />
+          <div
+            className={`absolute inset-0 flex items-center justify-center ${placeholderBg}`}
+          >
+            <Icon className="w-12 h-12 text-earth/20" />
+          </div>
         )}
-      </div>
+      </HashLink>
 
-      {/* Content */}
-      <div className="flex flex-col flex-1 p-6 gap-4">
-        {/* Audience label + badge */}
-        <div className="flex flex-col items-start gap-2">
-          <p className="font-body font-semibold uppercase tracking-[0.14em] text-2xs text-earth/65">
+      <div className="flex-1 p-3 flex flex-col gap-2">
+        <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
+          <p className="font-body font-semibold uppercase tracking-[0.13em] text-2xs text-earth/60">
             {audience}
           </p>
           {badge && (
-            <Badge variant="natural" className="shrink-0 -translate-x-2">
+            <Badge variant="natural" size="xs">
               {badge}
             </Badge>
           )}
         </div>
 
-        {/* Name + tagline */}
-        <div>
-          <h3
-            className="font-display font-semibold text-heading leading-tight mb-1"
-            style={{ fontSize: "clamp(1.3rem, 2.5vw, 1.6rem)" }}
-          >
-            {name}
-          </h3>
-          <p className="font-body font-light text-sm text-earth/70 italic">
+        <h3 className="font-display font-semibold text-heading leading-tight capitalize text-[clamp(1rem,4vw,1.15rem)] min-[520px]:text-[clamp(1.15rem,2vw,1.4rem)]">
+          {name}
+        </h3>
+
+        {tagline && (
+          <p className="font-body font-light text-2xs text-earth/70 line-clamp-2">
             {tagline}
           </p>
-        </div>
+        )}
 
-        {/* Description */}
-        <p className="font-body font-light text-sm text-earth/70 leading-relaxed">
-          {description}
-        </p>
-
-        {/* CTA */}
-        <div className="mt-auto pt-2 flex items-center gap-2 font-body font-semibold uppercase tracking-[0.12em] text-2xs text-orange group-hover:text-orange-light transition-colors duration-200">
-          Explore
-          <span
-            className="inline-block transition-transform duration-200 group-hover:translate-x-1"
-            aria-hidden="true"
+        <div className="mt-auto pt-1 flex">
+          <HashLink
+            href={href}
+            className={`${buttonVariants({ variant: "text", color: "warning", size: "sm" })} group whitespace-nowrap self-start`}
           >
-            →
-          </span>
+            Explore
+            <ArrowRight
+              size={14}
+              aria-hidden="true"
+              className="transition-transform duration-200 group-hover:translate-x-1"
+            />
+          </HashLink>
         </div>
       </div>
-    </HashLink>
+    </div>
   );
 }

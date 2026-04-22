@@ -11,14 +11,6 @@ import { Suspense } from "react";
 import { getCategories } from "@/lib/categoriesDb";
 import { getActiveMixBoxes } from "@/lib/mixBoxesDb";
 import { buildHomeStructuredData } from "./home-structured-data";
-import { readViewModeCookie } from "@/shared/utils/readViewModeCookie";
-import { CATEGORIES_VIEW_COOKIE } from "@/shared/consts";
-import type { ViewMode } from "@/providers/ViewModeProvider";
-
-const PUBLIC_CATEGORY_GRID_CLASS: Record<ViewMode, string> = {
-  card: "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
-  row: "grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-2 lg:gap-6",
-};
 
 export async function generateMetadata({
   searchParams,
@@ -51,7 +43,7 @@ export async function generateMetadata({
   return {};
 }
 
-function CategoriesSkeleton({ mode }: { mode: ViewMode }) {
+function CategoriesSkeleton() {
   return (
     <section className="bg-sand py-20 md:py-28">
       <div className="mx-auto max-w-screen-2xl px-6 lg:px-10">
@@ -59,14 +51,7 @@ function CategoriesSkeleton({ mode }: { mode: ViewMode }) {
           <Skeleton className="h-3 w-20 mx-auto mb-4" />
           <Skeleton className="h-8 w-64 mx-auto" />
         </div>
-        <div className="mb-6 flex justify-end">
-          <Skeleton className="h-9 w-20 rounded-xl" />
-        </div>
-        <CategoryGridSkeleton
-          mode={mode}
-          gridClassName={PUBLIC_CATEGORY_GRID_CLASS[mode]}
-          count={4}
-        />
+        <CategoryGridSkeleton count={4} />
       </div>
     </section>
   );
@@ -91,9 +76,8 @@ function ProductsSkeleton() {
 }
 
 export default async function Home() {
-  const [categories, categoriesViewMode, activeMixBoxes] = await Promise.all([
+  const [categories, activeMixBoxes] = await Promise.all([
     getCategories(),
-    readViewModeCookie(CATEGORIES_VIEW_COOKIE),
     getActiveMixBoxes(),
   ]);
   const siteUrl = process.env.PUBLIC_BASE_URL!;
@@ -106,7 +90,7 @@ export default async function Home() {
       </AboutExpandedProvider>
       <MixCTA hasActiveBoxes={activeMixBoxes.length > 0} />
       <SearchParamsFilterProvider keys={["category", "sort", "search", "mark"]}>
-        <Suspense fallback={<CategoriesSkeleton mode={categoriesViewMode} />}>
+        <Suspense fallback={<CategoriesSkeleton />}>
           <CategoriesSection />
         </Suspense>
         <Suspense fallback={<ProductsSkeleton />}>

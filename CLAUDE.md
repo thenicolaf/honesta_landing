@@ -499,20 +499,17 @@ Both views share the same `paginatedData` from hooks like `useOrdersTable` / `us
 - Filter keys typically: `["search", "status"|"type", "sortKey", "sortDir", "page", "pageSize"]`.
 - Always reset `page` filter when changing search/status filters.
 
-## Product card
+## Product card specifics
 
-Public product cards ([ProductItem](src/sections/products/ProductItem.tsx)) and admin product cards ([AdminProductCard](src/pages_flow/panel/products/AdminProductCard.tsx)) share a compact layout modelled on the mix [PresetCard](src/pages_flow/mix/PresetCard.tsx). There is no row variant and no `ViewModeToggle` for products.
+Beyond the shared card anatomy (see **Card grids**), product cards use:
+- `ProductVariantSelector` (public) vs `AdminVariantBadges` (admin) for weights/prices.
+- `IngredientsInline` ([src/sections/products/components/IngredientsInline.tsx](src/sections/products/components/IngredientsInline.tsx)) — uppercase label + `ingredients.join(" · ")` with `line-clamp-2`.
+- `ProductNote` — rendered as `NoteButton` overlay on image bottom-right (Info icon + tooltip with full note); no inline blockquote on the card.
+- `ShareButton` — public only, passed as `actionSuffix` of `ProductPriceAndCart`.
+- `ViewButton` — public only, `ArrowUpRight` icon overlay bottom-left to signal clickability.
+- Footer: public — `ProductPriceAndCart layout="stacked"` (price row + full-width Add-to-Cart / `- qty +` counter); admin — `ProductAdminActions` (Status menu + Edit, `min-[520px]:flex-row`).
 
-Layout (both public + admin):
-- `ProductImage` (aspect-3/2) with overlay badges (SALE / BEST SELLER / NEW, Out-of-stock on admin, FavoriteButton on public)
-- `ProductHeader` (category uppercase + Badge)
-- `ProductTitle`
-- Variants — public uses `ProductVariantSelector` (selectable), admin uses `AdminVariantBadges` (all variants with prices)
-- `IngredientsInline` ([src/sections/products/components/IngredientsInline.tsx](src/sections/products/components/IngredientsInline.tsx)) — uppercase label + `ingredients.join(" · ")` with `line-clamp-2`
-- `ProductNote` with `truncate` (italic blockquote, line-clamp-2 + tooltip on overflow)
-- Footer — public: `ProductPriceAndCart` with `layout="stacked"` (price row on top, full-width Add-to-Cart / `- qty +` counter below); admin: `ProductAdminActions` (Status menu + Edit, full-width).
-
-`ProductPriceAndCart` accepts `layout: "stacked" | "inline"` (default `"inline"` for detail pages, pass `"stacked"` in compact cards). Everything else — promotion math, cart sync, out-of-stock branch, "Order via Instagram" fallback — is shared between layouts.
+`ProductPriceAndCart` accepts `layout: "stacked" | "inline"` (default `"inline"` for detail pages, pass `"stacked"` in compact cards) and `actionSuffix?: React.ReactNode` (used for `ShareButton` right of Add-to-Cart). Promotion math, cart sync, out-of-stock branch, "Order via Instagram" fallback are shared between layouts.
 
 Rich content (benefits, nutrition, tags, freeFrom, servingIdeas, occasions) is **not** shown on the card — users who want more detail click through to `/products/[slug]`, which renders `ProductExpandedDetails`.
 
@@ -577,53 +574,39 @@ Products have a **main image** (`image_url`) and an optional **gallery** (`image
 - **Promotions** — `src/lib/promotionsDb.ts` handles CRUD. Promotions have `discount_type` (percentage | fixed), `discount_value`, date range, and `is_active` flag. Linked to products via `promotion_products` join table. Status is computed client-side via `getPromotionStatus()` (active | scheduled | expired) based on `is_active` + dates. Promotion list sorts active first.
 - **Order fulfillment** — `orders.is_fulfilled` boolean field. Admin toggles via `FulfilledToggle` checkbox component (`src/pages_flow/panel/orders/FulfilledToggle.tsx`) with server action. Filterable in admin orders view (Fulfilled / Unfulfilled).
 
-## View-mode system (card / row)
+## Card grids
 
-Shared toggle that lets users switch between a detailed card grid and a compact row grid. Used on admin **categories** + public **categories** section, and admin **mixes**. Products (public `/`, `/panel/products`, `/panel/favorites`) do **not** use this toggle — they render a single compact card (see **Product card** below), so there is no `PRODUCTS_VIEW_COOKIE` and no `ViewModeToggle` in the products toolbar.
+Products, categories and mixes all use a single compact-card layout (no row-variant, no view-mode toggle). Each card lives inside a responsive grid with public/admin breakpoint sets.
 
-- **Provider:** [src/providers/ViewModeProvider.tsx](src/providers/ViewModeProvider.tsx) — context with `{ mode: "row" | "card", setMode }`. `setMode` writes a cookie so the preference persists across reloads.
-- **Toggle UI:** [src/shared/ui/ViewModeToggle.tsx](src/shared/ui/ViewModeToggle.tsx) — `FormTileRadio` with `Rows3` / `LayoutGrid` icons. Placed in `AdminPageHeader.actions` on admin pages or alongside filters in public toolbars.
-- **Server-side reader:** [src/shared/utils/readViewModeCookie.ts](src/shared/utils/readViewModeCookie.ts) — `readViewModeCookie(cookieKey, defaultMode?)` called in async server components to hydrate `initialMode` synchronously (no flash on first render).
-- **Cookies** (in [src/shared/consts.ts](src/shared/consts.ts)):
-  - `CATEGORIES_VIEW_COOKIE` shared between `/panel/categories` and `/` categories section.
-  - `MIXES_VIEW_COOKIE` for `/panel/mixes`.
-- **Default mode:** `"row"` (`DEFAULT_VIEW_MODE` in provider).
+- **Products** — public + admin + favorites. Card: [ProductItem](src/sections/products/ProductItem.tsx) / [AdminProductCard](src/pages_flow/panel/products/AdminProductCard.tsx). Grid constants in [src/sections/products/ProductGridSkeleton.tsx](src/sections/products/ProductGridSkeleton.tsx):
+  - `PUBLIC_PRODUCT_GRID_CLASS` — `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4`.
+  - `ADMIN_PRODUCT_GRID_CLASS` — `grid-cols-2 min-[800px]:grid-cols-3 min-[1024px]:grid-cols-2 min-[1124px]:grid-cols-3 min-[1400px]:grid-cols-4` (nonlinear — 2 cols in 1024–1123px where sidebar squeezes the content).
+- **Categories** — public section + admin DnD grid. Card: [CategoryCard](src/sections/categories/CategoryCard.tsx) / [AdminCategoryCard](src/pages_flow/panel/categories/AdminCategoryCard.tsx). Grid constants in [src/sections/categories/CategoryGridSkeleton.tsx](src/sections/categories/CategoryGridSkeleton.tsx):
+  - `PUBLIC_CATEGORY_GRID_CLASS` — identical to public products.
+  - `ADMIN_CATEGORY_GRID_CLASS` — identical to admin products.
+- **Mixes** — admin DnD grid only (no public mix grid — `/mix` is a constructor, `MixCTA` is a banner). Card: [MixCard](src/pages_flow/panel/mixes/MixCard.tsx). Grid: `ADMIN_MIX_GRID_CLASS` in [src/pages_flow/panel/mixes/MixesSkeleton.tsx](src/pages_flow/panel/mixes/MixesSkeleton.tsx) — same as admin products.
 
-Integration pattern (same on every page):
-1. Server page reads the cookie, wraps content in `<ViewModeProvider cookieKey={...} initialMode={...}>`.
-2. Add `<ViewModeToggle />` in `AdminPageHeader.actions` (admin) or the section toolbar (public).
-3. Inner client grid uses `useViewMode()` to pick the grid class and conditionally renders card vs row component.
-4. Suspense fallback uses a view-aware skeleton (see below) fed the same `initialMode`.
-
-### Row variants
-
-Category row components mirror each other structurally: `flex flex-col h-full p-3 sm:p-4 rounded-2xl` outer, `grow flow-root` content wrapper with a `float-left` image (`aspect-4/3`, responsive widths `w-36 sm:w-48 md:w-60 lg:w-64 xl:w-52 2xl:w-56`) and wrapping text beside/below it. Overlay badges on the image switch to `size="xs"` with `sm:px-3! sm:py-1! sm:text-2xs!` so they shrink on narrow screens instead of covering the photo.
-
-- Categories: [src/pages_flow/panel/categories/AdminCategoryRow.tsx](src/pages_flow/panel/categories/AdminCategoryRow.tsx) + [src/sections/categories/CategoryCardRow.tsx](src/sections/categories/CategoryCardRow.tsx).
-
-### Grid breakpoints
-
-Grid class maps live in single-source files so the skeleton and the real grid stay in lock-step (Tailwind must see the literal strings in the scanned file).
-
-- **Categories** — `PUBLIC_CATEGORY_GRID_CLASS` in [src/app/page.tsx](src/app/page.tsx); `ADMIN_CATEGORY_GRID_CLASS` inline in [src/pages_flow/panel/categories/SortableCategoryGrid.tsx](src/pages_flow/panel/categories/SortableCategoryGrid.tsx) and [src/app/panel/categories/page.tsx](src/app/panel/categories/page.tsx).
-- **Products** — single constant `PRODUCT_GRID_CLASS` in [src/sections/products/ProductGridSkeleton.tsx](src/sections/products/ProductGridSkeleton.tsx) (`grid-cols-2 → 3 → 4 → 5` at `sm/lg/xl`). Reused by public `ProductGrid`, admin `ProductsPage`, and `FavoritesGrid`. `PUBLIC_PRODUCT_GRID_CLASS` is a backward-compatible alias of the same constant.
-- **Row breakpoint shorthand (categories only):**
-  - Admin categories row: `2xl:grid-cols-2`; public categories row: `lg:grid-cols-2`.
+**Shared card anatomy** (all three domains):
+- Root `<div>` with `h-full flex flex-col rounded-2xl bg-white-warm border` + hover shadow.
+- Image aspect-3/2, `rounded-t-2xl overflow-hidden`. Image wrapped in `<Link>` for public (navigation target).
+- Overlay slots: top-left — badges (SALE/BEST/NEW for products, `{cell_count} CELLS` + `Inactive` for mixes, optional `badge` for categories); top-right — `FavoriteButton` for public products, `Out of stock` for admin products, drag handle (GripVertical in a circle, `opacity-0 group-hover:opacity-100`) for admin categories/mixes; bottom-left — `ViewButton` (ArrowUpRight) for products; bottom-right — `NoteButton` (Info + tooltip) for products with `note`.
+- Body `p-3 flex flex-col gap-2 grow`: header row (uppercase category/audience label + `Badge` same line), `ProductTitle` (capitalize, responsive clamp font), secondary line (ingredients/tagline/presets count), stacked footer `mt-auto` with primary action (Add to Cart / Explore) or admin actions pair (`Edit` + `Delete` via `min-[520px]:flex-row min-[520px]:flex-1`).
 
 ### Skeletons
 
-Skeletons live next to the real components and accept `mode: ViewMode` so they can render the same layout the data will produce:
+Each grid owns its skeleton which mirrors the real card (image + header + title + line + footer):
 
-- [src/sections/categories/CategoryGridSkeleton.tsx](src/sections/categories/CategoryGridSkeleton.tsx) — takes `mode` + `gridClassName` (the grid class lives in the page that owns the breakpoints, e.g. admin vs public).
-- [src/sections/products/ProductGridSkeleton.tsx](src/sections/products/ProductGridSkeleton.tsx) — takes `count` only, renders a single compact card variant (public + admin share the same grid). No `mode` / `variant` props.
+- [src/sections/products/ProductGridSkeleton.tsx](src/sections/products/ProductGridSkeleton.tsx) — takes `count` + `variant: "public" | "admin"`.
+- [src/sections/categories/CategoryGridSkeleton.tsx](src/sections/categories/CategoryGridSkeleton.tsx) — takes `count` + `variant: "public" | "admin"`.
+- [src/pages_flow/panel/mixes/MixesSkeleton.tsx](src/pages_flow/panel/mixes/MixesSkeleton.tsx) — takes `count` only (admin-only).
 
-Other list pages have their own hand-rolled skeletons that copy the real card markup (so placeholders line up with the real layout, preventing a layout shift):
+Other list pages (promotions, promo-codes, delivery) have hand-rolled skeletons that copy their real card markup.
 
-- [src/pages_flow/panel/promotions/PromotionsSkeleton.tsx](src/pages_flow/panel/promotions/PromotionsSkeleton.tsx)
-- [src/pages_flow/panel/promo-codes/PromoCodesSkeleton.tsx](src/pages_flow/panel/promo-codes/PromoCodesSkeleton.tsx)
-- [src/pages_flow/panel/delivery/DeliverySkeleton.tsx](src/pages_flow/panel/delivery/DeliverySkeleton.tsx)
+**Rule of thumb:** when creating a new list page, copy the real card's outer classes (`rounded-2xl`, `bg-white-warm`, padding) into the skeleton and use inner `<Skeleton>` blocks sized close to the real text/buttons.
 
-**Rule of thumb:** when creating a new list page, copy the real card's outer classes (`rounded-[16px]`, `bg-white-warm`, `shadow-sm`, padding) into the skeleton and use inner `<Skeleton>` blocks sized close to the real text/buttons. Do not reach for the generic `SkeletonGrid` / `SkeletonProductGrid` — they don't match new card shapes.
+### Admin DnD (categories + mixes)
+
+`@dnd-kit/react` + `useSortable({ handle })` lives on the grid wrapper (`SortableCategoryGrid`, `SortableMixGrid`). The card receives `dragHandleRef` and wires it to the overlay `<Button>` top-right. `PointerSensor` with `activationConstraints: () => undefined` eliminates the 250ms touch delay. `reorderCategories` / `reorderMixesAction` server actions are called inside `useTransition` + `useOptimistic` for instant feedback.
 
 ## Category Sorting
 

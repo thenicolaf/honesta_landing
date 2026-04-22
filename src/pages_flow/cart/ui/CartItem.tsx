@@ -314,7 +314,7 @@ export function CartItem({
 
   if (item.isMix) {
     return (
-      <Link href="/mix" className="block">
+      <Link href="/mix?from=cart" className="block">
         {card}
       </Link>
     );
