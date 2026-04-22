@@ -78,7 +78,7 @@ export function AdminCategoryCard({
           </p>
         )}
 
-        <div className="flex flex-col items-stretch gap-2 pt-1 mt-auto min-[520px]:flex-row min-[520px]:items-center">
+        <div className="flex flex-row items-center gap-2 pt-1 mt-auto">
           <Button
             as="a"
             href={`/panel/categories/${category.id}/edit`}
@@ -86,9 +86,9 @@ export function AdminCategoryCard({
             size="sm"
             startIcon={<Pencil size={12} aria-hidden="true" />}
             aria-label={`Edit ${category.name}`}
-            className="w-full min-[520px]:flex-1"
+            className="flex-1"
           >
-            Edit
+            <span className="hidden sm:inline">Edit</span>
           </Button>
           <Button
             as="button"
@@ -99,9 +99,9 @@ export function AdminCategoryCard({
             startIcon={<Trash2 size={12} aria-hidden="true" />}
             onClick={() => openDelete(category)}
             aria-label={`Delete ${category.name}`}
-            className="w-full min-[520px]:flex-1"
+            className="flex-1"
           >
-            Delete
+            <span className="hidden sm:inline">Delete</span>
           </Button>
         </div>
       </div>

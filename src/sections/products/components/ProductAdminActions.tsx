@@ -26,12 +26,12 @@ export function ProductAdminActions({
   const router = useRouter();
 
   return (
-    <div className="flex flex-col items-stretch gap-2 pt-3 mt-auto min-[520px]:flex-row min-[520px]:items-center">
+    <div className="flex flex-row items-center gap-2 pt-3 mt-auto">
       <ProductStatusMenu
         productId={productId}
         status={status}
         onDelete={onDelete}
-        className="min-[520px]:flex-1"
+        className="flex-1"
       />
       <Button
         as="button"
@@ -44,9 +44,9 @@ export function ProductAdminActions({
           router.push(`/panel/products/${productId}/edit`);
         }}
         aria-label={`Edit ${productTitle}`}
-        className="w-full min-[520px]:flex-1"
+        className="flex-1"
       >
-        Edit
+        <span className="hidden sm:inline">Edit</span>
       </Button>
     </div>
   );

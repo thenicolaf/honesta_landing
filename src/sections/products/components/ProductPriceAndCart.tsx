@@ -1,6 +1,6 @@
 "use client";
 
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, ShoppingCart, PackageX } from "lucide-react";
 import { Button, Badge, toastSuccess, toastInfo } from "@/shared/ui";
 import { useCart } from "@/providers";
 import { ProductPrice } from "./ProductPrice";
@@ -81,11 +81,15 @@ export function ProductPriceAndCart({
             variant="outline"
             size="md"
             className={cn(
-              "h-8 font-body font-medium uppercase text-xs tracking-widest whitespace-nowrap",
+              "h-8 font-body font-medium uppercase text-xs tracking-widest whitespace-nowrap gap-1.5",
               stacked && (actionSuffix ? "flex-1 justify-center" : "w-full justify-center"),
             )}
+            aria-label="Out of Stock"
           >
-            Out of Stock
+            <PackageX className="w-3.5 h-3.5" />
+            <span className={cn(stacked && "hidden min-[700px]:inline")}>
+              Out of Stock
+            </span>
           </Badge>
           {actionSuffix}
         </div>
@@ -150,7 +154,7 @@ export function ProductPriceAndCart({
         <ProductPrice price={variantPrice} promotion={variantPromotion} mark={product.mark} />
         <div className={controlsClass}>
           {actionPrefix}
-          <div className="flex items-center gap-2">
+          <div className={cn("flex items-center gap-2", stacked && "gap-1.5")}>
             <Button
               as="button"
               variant="outline"
@@ -160,7 +164,7 @@ export function ProductPriceAndCart({
             >
               <Minus className="w-3.5 h-3.5" />
             </Button>
-            <span className="font-body font-semibold text-earth text-sm w-4 text-center">
+            <span className="font-body font-semibold text-earth text-sm min-w-4 text-center tabular-nums">
               {quantity}
             </span>
             <Button
@@ -189,12 +193,16 @@ export function ProductPriceAndCart({
           variant="primary"
           size="sm"
           onClick={handleAdd}
+          aria-label="Add to cart"
           className={cn(
-            "whitespace-nowrap",
+            "whitespace-nowrap gap-1.5",
             stacked && (actionSuffix ? "flex-1" : "w-full"),
           )}
         >
-          Add to Cart
+          <ShoppingCart className="w-3.5 h-3.5" />
+          <span className={cn(stacked && "hidden min-[700px]:inline")}>
+            Add to Cart
+          </span>
         </Button>
         {actionSuffix}
       </div>

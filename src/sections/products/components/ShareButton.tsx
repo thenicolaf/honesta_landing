@@ -7,7 +7,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   toastSuccess,
-  toastInfo,
   toastError,
 } from "@/shared/ui";
 import {
@@ -66,16 +65,13 @@ export function ShareButton({
     );
   };
 
-  const handleInstagram = async () => {
+  const handleInstagram = () => {
     const url = buildProductUrl(slug);
-    const copied = await copyToClipboard(url);
-    if (copied) {
-      toastInfo("Link copied — paste it in Instagram");
-    } else {
-      toastError("Could not copy link");
-    }
-    const igUrl = process.env.NEXT_PUBLIC_INSTAGRAM_BRAND_URL;
-    if (igUrl) openInNewTab(igUrl);
+    // Instagram has no public "share to DM" URL with recipient picker that
+    // accepts pre-filled text. Open the new-DM screen (user picks any
+    // recipient) and silently stage the link in clipboard so they can paste.
+    void copyToClipboard(`${title} — ${url}`);
+    openInNewTab("https://www.instagram.com/direct/new/");
   };
 
   const handleCopyLink = async () => {

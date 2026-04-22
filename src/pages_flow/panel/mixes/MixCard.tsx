@@ -85,7 +85,7 @@ export function MixCard({
           showCountBadge={false}
         />
 
-        <div className="flex flex-col items-stretch gap-2 pt-1 mt-auto min-[520px]:flex-row min-[520px]:items-center">
+        <div className="flex flex-row items-center gap-2 pt-1 mt-auto">
           <Button
             as="a"
             href={`/panel/mixes/${mix.id}/edit`}
@@ -93,9 +93,9 @@ export function MixCard({
             size="sm"
             startIcon={<Pencil size={12} aria-hidden="true" />}
             aria-label={`Edit ${mix.name}`}
-            className="w-full min-[520px]:flex-1"
+            className="flex-1"
           >
-            Edit
+            <span className="hidden sm:inline">Edit</span>
           </Button>
           <Button
             as="button"
@@ -106,9 +106,9 @@ export function MixCard({
             startIcon={<Trash2 size={12} aria-hidden="true" />}
             onClick={() => openDelete(mix)}
             aria-label={`Delete ${mix.name}`}
-            className="w-full min-[520px]:flex-1"
+            className="flex-1"
           >
-            Delete
+            <span className="hidden sm:inline">Delete</span>
           </Button>
         </div>
       </div>
