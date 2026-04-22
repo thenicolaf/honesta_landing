@@ -338,13 +338,24 @@ Because each "Add to cart" creates a new `product_variants` row + cells, the DB 
   - `result/page.tsx` + webhook — additionally call `cleanupOrphanedMixVariants` on `order_items.variant_id` of the paid order. This covers **guest checkout** (no `user_id`, so `clearCartAndCleanup` is skipped).
 - **FAILED orders**: variants are **kept** — user may retry payment with the same composition still in their cart.
 
-### Mix composition in order views
+### Mix composition rendering (shared)
 
-- [`OrderMixComposition`](src/pages_flow/orders/ui/OrderMixComposition.tsx) — reusable `Collapsible` (trigger "COMPOSITION · N ITEMS") with `Badge variant="outline" size="xs"` chips + counter pills. Used in:
-  - `/panel/orders` (user view) — both mobile cards (`OrderCards.ItemLine`) and desktop table (`columns.tsx itemsColumn`)
-  - `/panel/all-orders` (admin view) — both mobile cards (`AdminOrderCards.ItemLine`) and the same desktop table columns
-- Items column uses `min-w-80` to fit the expanded composition. Cart view uses the same pattern — see `MixComposition` in [CartItem.tsx](src/pages_flow/cart/ui/CartItem.tsx).
-- **Stop-propagation trick:** `CollapsibleTrigger` gets `onClick={stop}` (stopPropagation + preventDefault) to prevent the parent card/row click handler from firing when the user opens the composition.
+Single source of truth: [`MixCompositionList`](src/shared/ui/MixCompositionList.tsx) from `@/shared/ui`. Renders a `Collapsible` with trigger `Composition · N items` and a list of rows `[36px thumbnail with ×count pill] · name / total weight · total price`. Accepts any items matching `MixCompositionItem` (`name`, `image_url?`, `count`, `weight_g`, `price`) — compatible with both `CartItem.mixItems` and `order_items.mix_composition` (`MixCompositionEntry`).
+
+Props:
+- `triggerLabel?: string` — override default label (e.g. `Presets · ${n}` for admin mix cards).
+- `showCountBadge?: boolean` (default `true`) — hide the `×N` pill when listing presets (where count is always 1).
+
+Used in:
+- [`OrderCards`](src/pages_flow/orders/ui/OrderCards.tsx), [`AdminOrderCards`](src/pages_flow/panel/orders/AdminOrderCards.tsx), [`columns.tsx`](src/pages_flow/orders/columns.tsx) itemsColumn (both user `/panel/orders` + admin `/panel/all-orders`, cards + desktop table).
+- [`CartItem`](src/pages_flow/cart/ui/CartItem.tsx) — mini-mix row in cart.
+- [`MixSummary`](src/pages_flow/mix/MixSummary.tsx) — `/mix` constructor right column.
+- [`OrderSummary`](src/pages_flow/checkout/ui/OrderSummary.tsx) — `/checkout` right column for `isMix=true` lines.
+- [`MixCard`](src/pages_flow/panel/mixes/MixCard.tsx) — admin mix card (lists available presets with per-cell weight/price, `showCountBadge={false}`, custom triggerLabel).
+
+**Stop-propagation trick:** The internal `CollapsibleTrigger` has `onClick={stop}` (stopPropagation + preventDefault) to prevent the parent card/row click handler from firing when the user opens the composition.
+
+**Layout note:** Items column in order tables uses `min-w-80` to fit the expanded composition.
 
 ### Images
 
@@ -468,6 +479,7 @@ Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React conte
 - **`MultiSelect` / `MultiSelectTrigger` / `MultiSelectContent` / `MultiSelectItem` / `MultiSelectEmpty` / `MultiSelectCreate` / `MultiSelectDelete`** — compound multi-select with search, selected-items-first sorting, scroll preservation. Context-based (`useMultiSelect`). `MultiSelectCreate` for inline option creation, `MultiSelectDelete` for inline deletion.
 - **`Tooltip` / `TooltipTrigger` / `TooltipContent`** — hover/focus tooltip with 4-direction support (`side` prop: `top | bottom | left | right`), auto-fallback to opposite side if no space. `delay` prop (default 200ms). Toggle on click for touch devices. **Always use `asChild`** on `TooltipTrigger` — it merges all handlers (onClick, onMouseEnter, etc.) with the child element's handlers via `cloneElement`. No `useId()` — safe inside Suspense boundaries.
 - **`Gallery`** — rows-based image gallery using `react-photo-album`. Props: `images: GalleryImage[]`, `rowHeight`, `maxPerRow`, `spacing`, `onClick(index)`. No built-in Lightbox — compose with `<Lightbox>` externally.
+- **`MixCompositionList`** — shared Collapsible with rows `[thumbnail with ×count pill] / name + total weight / total price`. Single source of truth for mix composition display across cart, mix constructor, checkout, order views, and admin mix cards. See **Mix composition rendering (shared)** below for full usage.
 - **`CartEmpty`** — empty cart placeholder screen.
 - **`Loader`** — loading spinner (used during cart hydration).
 

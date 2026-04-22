@@ -3,7 +3,6 @@ import {
   DollarSign,
   Users,
   Truck,
-  Clock,
   CheckCircle,
   XCircle,
   Ban,
@@ -11,22 +10,30 @@ import {
 import { Card, Badge } from "@/shared/ui";
 import { formatAed } from "@/shared/ui/Table";
 import { OrderStatus } from "@/shared/types";
+import type { MixCompositionEntry } from "@/lib/orders";
 import { cn } from "@/shared/utils/cn";
 import { StatCard, SectionHeading } from "../ui";
 import { ProductSalesSection } from "../ProductSalesSection";
+import { MixSalesSection } from "../MixSalesSection";
 import { getDashboardOrders, getUsersCount } from "../queries";
-import type { ProductSales } from "../types";
+import type { ProductSales, MixSales, MixPresetSales } from "../types";
 
 type OrderRow = {
+  created_at: string;
   status: string;
   total: string;
   delivery_fee: string;
-  order_items: { name: string; price: string; quantity: number }[];
+  order_items: {
+    name: string;
+    price: string;
+    quantity: number;
+    weight_g: number | null;
+    mix_composition: MixCompositionEntry[] | null;
+  }[];
 };
 
 const STATUS_CONFIG = [
   { key: OrderStatus.PAID, label: "Paid", variant: "natural" as const, icon: <CheckCircle className="w-4 h-4" /> },
-  { key: OrderStatus.PENDING, label: "Pending", variant: "warm" as const, icon: <Clock className="w-4 h-4" /> },
   { key: OrderStatus.FAILED, label: "Failed", variant: "outline" as const, icon: <XCircle className="w-4 h-4" />, badgeClassName: "text-red-500 border-red-200" },
   { key: OrderStatus.CANCELLED, label: "Cancelled", variant: "outline" as const, icon: <Ban className="w-4 h-4" />, badgeClassName: "text-red-500 border-red-200" },
 ];
@@ -36,32 +43,100 @@ function aggregateOrders(orders: OrderRow[]) {
   let revenue = 0;
   let paidCount = 0;
   let totalDelivery = 0;
-  const salesMap = new Map<string, { quantity: number; revenue: number }>();
+  const productMap = new Map<string, { name: string; weight_g: number; quantity: number; revenue: number }>();
+  const mixMap = new Map<
+    string,
+    {
+      name: string;
+      quantity: number;
+      revenue: number;
+      presetMap: Map<string, MixPresetSales>;
+    }
+  >();
 
   for (const o of orders) {
     byStatus[o.status] = (byStatus[o.status] ?? 0) + 1;
-    if (o.status === OrderStatus.PAID) {
-      revenue += Number(o.total);
-      paidCount += 1;
-      totalDelivery += Number(o.delivery_fee);
-      for (const item of o.order_items) {
-        const existing = salesMap.get(item.name);
-        const itemRevenue = Number(item.price) * item.quantity;
-        if (existing) {
-          existing.quantity += item.quantity;
-          existing.revenue += itemRevenue;
+    if (o.status !== OrderStatus.PAID) continue;
+
+    revenue += Number(o.total);
+    paidCount += 1;
+    totalDelivery += Number(o.delivery_fee);
+
+    for (const item of o.order_items) {
+      const itemRevenue = Number(item.price) * item.quantity;
+
+      if (item.mix_composition) {
+        let entry = mixMap.get(item.name);
+        if (!entry) {
+          entry = {
+            name: item.name,
+            quantity: 0,
+            revenue: 0,
+            presetMap: new Map<string, MixPresetSales>(),
+          };
+          mixMap.set(item.name, entry);
+        }
+        entry.quantity += item.quantity;
+        entry.revenue += itemRevenue;
+
+        for (const preset of item.mix_composition) {
+          const presetKey = `${preset.name}::${preset.weight_g}`;
+          const presetEntry = entry.presetMap.get(presetKey);
+          const totalCount = preset.count * item.quantity;
+          const totalRevenue = preset.price * preset.count * item.quantity;
+          if (presetEntry) {
+            presetEntry.count += totalCount;
+            presetEntry.revenue += totalRevenue;
+          } else {
+            entry.presetMap.set(presetKey, {
+              name: preset.name,
+              image_url: preset.image_url,
+              weight_g: preset.weight_g,
+              count: totalCount,
+              revenue: totalRevenue,
+            });
+          }
+        }
+      } else {
+        const weight = item.weight_g ?? 0;
+        const key = `${item.name}::${weight}`;
+        const entry = productMap.get(key);
+        if (entry) {
+          entry.quantity += item.quantity;
+          entry.revenue += itemRevenue;
         } else {
-          salesMap.set(item.name, { quantity: item.quantity, revenue: itemRevenue });
+          productMap.set(key, {
+            name: item.name,
+            weight_g: weight,
+            quantity: item.quantity,
+            revenue: itemRevenue,
+          });
         }
       }
     }
   }
 
-  const productSales: ProductSales[] = Array.from(salesMap.entries())
-    .map(([name, data]) => ({ name, ...data }))
+  const productSales: ProductSales[] = Array.from(productMap.values()).sort(
+    (a, b) => b.revenue - a.revenue,
+  );
+  const mixSales: MixSales[] = Array.from(mixMap.values())
+    .map(({ name, quantity, revenue, presetMap }) => ({
+      name,
+      quantity,
+      revenue,
+      presets: Array.from(presetMap.values()).sort((a, b) => b.revenue - a.revenue),
+    }))
     .sort((a, b) => b.revenue - a.revenue);
 
-  return { total: orders.length, revenue, avgOrderValue: paidCount > 0 ? revenue / paidCount : 0, totalDelivery, byStatus, productSales };
+  return {
+    total: orders.length,
+    revenue,
+    avgOrderValue: paidCount > 0 ? revenue / paidCount : 0,
+    totalDelivery,
+    byStatus,
+    productSales,
+    mixSales,
+  };
 }
 
 export async function OrdersOverview() {
@@ -87,7 +162,7 @@ export async function OrdersOverview() {
       </section>
 
       <SectionHeading>Orders by Status</SectionHeading>
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         {STATUS_CONFIG.map(({ key, label, variant, icon, badgeClassName }) => (
           <Card padding="sm" key={key} className="min-[30rem]:p-6">
             <div className="flex items-center gap-2 min-[30rem]:gap-3">
@@ -111,6 +186,13 @@ export async function OrdersOverview() {
         <>
           <SectionHeading>Product Sales</SectionHeading>
           <ProductSalesSection sales={stats.productSales} />
+        </>
+      )}
+
+      {stats.mixSales.length > 0 && (
+        <>
+          <SectionHeading>Mix Sales</SectionHeading>
+          <MixSalesSection sales={stats.mixSales} />
         </>
       )}
     </>

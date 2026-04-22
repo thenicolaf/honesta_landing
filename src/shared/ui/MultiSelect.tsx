@@ -221,7 +221,7 @@ export function MultiSelectTrigger({
         )}
       </span>
 
-      <span className="shrink-0 inline-flex items-center gap-1 ml-1 self-start mt-0.5">
+      <span className="shrink-0 inline-flex items-center gap-1 ml-1 self-center">
         <AnimatePresence initial={false}>
           {showClear && (
             <motion.span

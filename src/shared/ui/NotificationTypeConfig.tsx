@@ -7,6 +7,26 @@ interface NotificationTypeStyle {
   iconColor: string;
 }
 
+export const NOTIFICATION_TYPES = [
+  "order_paid",
+  "order_failed",
+  "order_cancelled",
+  "new_partnership",
+  "new_promotion",
+  "new_product",
+  "new_category",
+] as const;
+
+export const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
+  order_paid: "Paid",
+  order_failed: "Failed",
+  order_cancelled: "Cancelled",
+  new_partnership: "Partnership",
+  new_promotion: "Promotion",
+  new_product: "Product",
+  new_category: "Category",
+};
+
 const TYPE_STYLES: Record<string, NotificationTypeStyle> = {
   new_order: {
     icon: <ShoppingBag className="w-3.5 h-3.5" />,
