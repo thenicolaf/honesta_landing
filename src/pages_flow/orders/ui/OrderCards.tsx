@@ -6,12 +6,12 @@ import {
   DataCardList,
   DataCardEmpty,
   CopyText,
+  MixCompositionList,
 } from "@/shared/ui";
 import { formatAed, formatDateTime } from "@/shared/ui/Table";
 import { IconReceipt } from "@/shared/icons";
 import { StatusBadge } from "./StatusBadge";
 import { CopyOrderId } from "./CopyOrderId";
-import { OrderMixComposition } from "./OrderMixComposition";
 import { displayAddress } from "@/shared/utils/address";
 import type { Order } from "../types";
 
@@ -40,7 +40,7 @@ function ItemLine({ item }: { item: Order["order_items"][number] }) {
           {formatAed(finalLineTotal)}
         </span>
       </div>
-      <OrderMixComposition items={item.mix_composition} />
+      <MixCompositionList items={item.mix_composition} />
     </div>
   );
 }
@@ -79,8 +79,8 @@ function CostBreakdown({ order }: { order: Order }) {
         <span className="text-earth/60">{formatAed(order.delivery_fee)}</span>
       </div>
       <div className="flex justify-between pt-1 border-t border-earth/8 mt-0.5">
-        <span className="text-xs font-semibold text-earth">Total</span>
-        <span className="text-xs font-semibold text-earth">
+        <span className="text-sm font-semibold text-earth">Total</span>
+        <span className="text-sm font-semibold text-earth">
           {formatAed(order.total)}
         </span>
       </div>

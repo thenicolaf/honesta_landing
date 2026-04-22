@@ -6,11 +6,10 @@ import {
   compareDate,
   compareString,
 } from "@/shared/ui/Table";
-import { CopyText } from "@/shared/ui";
+import { CopyText, MixCompositionList } from "@/shared/ui";
 import { displayAddress } from "@/shared/utils/address";
 import { StatusBadge } from "./ui/StatusBadge";
 import { CopyOrderId } from "./ui/CopyOrderId";
-import { OrderMixComposition } from "./ui/OrderMixComposition";
 import type { Order, AdminOrder } from "./types";
 import { FulfilledToggle } from "@/pages_flow/panel/orders/FulfilledToggle";
 
@@ -86,7 +85,7 @@ export const itemsColumn: ColumnDef<Order, OrderKey> = {
                 )}
               </div>
             </div>
-            <OrderMixComposition items={item.mix_composition} />
+            <MixCompositionList items={item.mix_composition} />
           </div>
         );
       })}

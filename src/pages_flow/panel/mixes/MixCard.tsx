@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { GripVertical, Pencil, Trash2, LayoutGrid } from "lucide-react";
-import { Badge, Button } from "@/shared/ui";
+import { Badge, Button, MixCompositionList } from "@/shared/ui";
 import type { MixBox } from "@/lib/mixBoxesDb";
 import { useMixActions } from "./MixActionsProvider";
 
@@ -59,15 +59,9 @@ export function MixCard({
       </div>
 
       <div className="flex-1 p-3 flex flex-col gap-2">
-        <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
-          <p className="font-body font-semibold uppercase tracking-[0.13em] text-2xs text-earth/60">
-            Mix box
-          </p>
-          <Badge variant="natural" size="xs">
-            {mix.presets.length}{" "}
-            {mix.presets.length === 1 ? "preset" : "presets"}
-          </Badge>
-        </div>
+        <p className="font-body font-semibold uppercase tracking-[0.13em] text-2xs text-earth/60">
+          Mix box
+        </p>
 
         <h3 className="font-display font-semibold text-heading leading-tight capitalize text-[clamp(1rem,4vw,1.15rem)] min-[520px]:text-[clamp(1.15rem,2vw,1.4rem)]">
           {mix.name}
@@ -78,6 +72,18 @@ export function MixCard({
             {mix.description}
           </p>
         )}
+
+        <MixCompositionList
+          items={mix.presets.map((p) => ({
+            name: p.product?.title ?? "Unknown",
+            image_url: p.product?.image_url ?? null,
+            count: 1,
+            weight_g: p.weight_g,
+            price: p.price,
+          }))}
+          triggerLabel={`Presets · ${mix.presets.length}`}
+          showCountBadge={false}
+        />
 
         <div className="flex flex-col items-stretch gap-2 pt-1 mt-auto min-[520px]:flex-row min-[520px]:items-center">
           <Button
