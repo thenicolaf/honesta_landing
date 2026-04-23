@@ -113,6 +113,7 @@ function ProductDetailContent({ product }: ProductDetailPageProps) {
               productId={product.id}
               status={product.status}
               onDelete={() => openDelete(product)}
+              labelClassName="inline!"
             />
             <Button
               as="a"
