@@ -60,6 +60,8 @@ interface ProductStatusMenuProps {
   status: string;
   onDelete?: () => void;
   className?: string;
+  /** Extra classes for the label `<span>`. Use to override the default `hidden sm:inline`. */
+  labelClassName?: string;
 }
 
 export function ProductStatusMenu({
@@ -67,6 +69,7 @@ export function ProductStatusMenu({
   status,
   onDelete,
   className,
+  labelClassName,
 }: ProductStatusMenuProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -108,7 +111,7 @@ export function ProductStatusMenu({
           aria-label={config.label}
           className="w-full"
         >
-          <span className="hidden sm:inline">{config.label}</span>
+          <span className={cn("hidden sm:inline", labelClassName)}>{config.label}</span>
         </Button>
       </DropdownMenuTrigger>
 
