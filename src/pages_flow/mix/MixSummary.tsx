@@ -90,9 +90,9 @@ export function MixSummary({
         {items.map((item) => (
           <div
             key={item.variantId}
-            className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 rounded-xl bg-sand/40"
+            className="flex flex-col gap-3 p-3 sm:p-4 rounded-xl bg-sand/40"
           >
-            <div className="flex items-start gap-3 min-w-0 sm:flex-1">
+            <div className="flex items-start gap-3">
               <div className="relative shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-sand">
                 {item.image_url ? (
                   <Image
@@ -116,48 +116,49 @@ export function MixSummary({
                 <p className="font-body font-light text-xs text-earth/55">
                   {item.weight_g}g · AED {item.price.toFixed(2)} each
                 </p>
-                <MixCompositionList items={item.mixItems} />
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center items-end gap-2 sm:gap-3 shrink-0">
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    as="button"
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() =>
+                      item.quantity === 1
+                        ? onRemove(item.variantId)
+                        : onUpdateQuantity(item.variantId, item.quantity - 1)
+                    }
+                    aria-label="Decrease quantity"
+                    className="w-7 h-7"
+                  >
+                    <Minus size={12} />
+                  </Button>
+                  <span className="font-body font-semibold text-sm text-earth w-5 text-center">
+                    {item.quantity}
+                  </span>
+                  <Button
+                    as="button"
+                    type="button"
+                    variant="primary"
+                    size="icon"
+                    onClick={() =>
+                      onUpdateQuantity(item.variantId, item.quantity + 1)
+                    }
+                    aria-label="Increase quantity"
+                    className="w-7 h-7"
+                  >
+                    <Plus size={12} />
+                  </Button>
+                </div>
+                <p className="font-body font-semibold text-sm text-heading whitespace-nowrap sm:w-20 sm:text-right">
+                  AED {(item.price * item.quantity).toFixed(2)}
+                </p>
               </div>
             </div>
 
-            <div className="flex items-center justify-between sm:justify-end gap-2 sm:shrink-0 pl-15 sm:pl-0">
-              <div className="flex items-center gap-1.5">
-                <Button
-                  as="button"
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() =>
-                    item.quantity === 1
-                      ? onRemove(item.variantId)
-                      : onUpdateQuantity(item.variantId, item.quantity - 1)
-                  }
-                  aria-label="Decrease quantity"
-                  className="w-7 h-7"
-                >
-                  <Minus size={12} />
-                </Button>
-                <span className="font-body font-semibold text-sm text-earth w-5 text-center">
-                  {item.quantity}
-                </span>
-                <Button
-                  as="button"
-                  type="button"
-                  variant="primary"
-                  size="icon"
-                  onClick={() =>
-                    onUpdateQuantity(item.variantId, item.quantity + 1)
-                  }
-                  aria-label="Increase quantity"
-                  className="w-7 h-7"
-                >
-                  <Plus size={12} />
-                </Button>
-              </div>
-              <p className="font-body font-semibold text-sm text-heading whitespace-nowrap sm:w-20 sm:text-right">
-                AED {(item.price * item.quantity).toFixed(2)}
-              </p>
-            </div>
+            <MixCompositionList items={item.mixItems} className="w-full mt-0" />
           </div>
         ))}
       </div>

@@ -236,7 +236,6 @@ export function CartItem({
             <WeightBadge weight_g={item.weight_g} />
           </div>
           <PriceInfo item={item} promoHint={promoHint} />
-          {item.isMix && <MixCompositionList items={item.mixItems} />}
         </div>
         <QuantityControls
           variantId={item.variantId}
@@ -259,7 +258,6 @@ export function CartItem({
               <WeightBadge weight_g={item.weight_g} />
             </div>
             <PriceInfo item={item} promoHint={promoHint} />
-            {item.isMix && <MixCompositionList items={item.mixItems} />}
           </div>
         </div>
         <div className="flex items-center justify-between mt-3">
@@ -272,6 +270,10 @@ export function CartItem({
           <LineTotal amount={finalLineTotal} strikethrough={lineTotalStrike} color={lineTotalColor} />
         </div>
       </div>
+
+      {item.isMix && (
+        <MixCompositionList items={item.mixItems} className="w-full mt-3" />
+      )}
     </Card>
   );
 

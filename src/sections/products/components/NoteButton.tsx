@@ -13,7 +13,7 @@ export function NoteButton({ note, className }: NoteButtonProps) {
   if (!note) return null;
 
   return (
-    <Tooltip side="top" className={cn("absolute bottom-2 right-2 z-20", className)}>
+    <Tooltip side="top" className={cn("absolute bottom-2 right-2 z-30", className)}>
       <TooltipTrigger asChild>
         <Button
           as="button"

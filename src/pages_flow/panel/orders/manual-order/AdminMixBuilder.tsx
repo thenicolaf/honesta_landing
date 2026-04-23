@@ -254,8 +254,8 @@ function PendingMixCard({
     .filter((m) => m !== null);
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 rounded-xl bg-sand/40">
-      <div className="flex items-start gap-3 min-w-0 sm:flex-1">
+    <div className="flex flex-col gap-3 p-3 sm:p-4 rounded-xl bg-sand/40">
+      <div className="flex items-start gap-3">
         <div className="relative shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-sand">
           {box.image_url ? (
             <Image
@@ -279,11 +279,8 @@ function PendingMixCard({
           <p className="font-body font-light text-xs text-earth/55">
             {weight}g · {formatAed(price)}
           </p>
-          <MixCompositionList items={compositionItems} />
         </div>
-      </div>
 
-      <div className="flex items-center justify-end sm:shrink-0 pl-15 sm:pl-0">
         <Button
           as="button"
           type="button"
@@ -292,10 +289,13 @@ function PendingMixCard({
           color="error"
           onClick={onRemove}
           aria-label="Remove mix"
+          className="shrink-0"
         >
           <Trash2 className="w-4 h-4" />
         </Button>
       </div>
+
+      <MixCompositionList items={compositionItems} className="w-full mt-0" />
     </div>
   );
 }

@@ -37,7 +37,7 @@ export function ProductItem({ product, from }: ProductItemProps) {
     : undefined;
 
   return (
-    <div className="relative z-0 has-[[role=tooltip]]:z-10 h-full flex flex-col rounded-2xl bg-white-warm border border-parchment/60 hover:shadow-lg hover:border-transparent transition-[box-shadow,border-color] duration-300">
+    <div className="h-full flex flex-col rounded-2xl bg-white-warm border border-parchment/60 hover:shadow-lg hover:border-transparent transition-all duration-300">
       <div className="relative">
         {href ? (
           <Link href={href} className="block" aria-label={title}>
@@ -46,15 +46,6 @@ export function ProductItem({ product, from }: ProductItemProps) {
               title={title}
               sale={!!product.promotion}
               mark={product.mark}
-              topRight={
-                product.id ? (
-                  <FavoriteButton
-                    productId={product.id}
-                    tooltipSide="left"
-                    className="absolute top-2 right-2 z-20 rounded-full bg-white-warm/80 backdrop-blur-sm hover:bg-white-warm"
-                  />
-                ) : undefined
-              }
             />
           </Link>
         ) : (
@@ -63,15 +54,13 @@ export function ProductItem({ product, from }: ProductItemProps) {
             title={title}
             sale={!!product.promotion}
             mark={product.mark}
-            topRight={
-              product.id ? (
-                <FavoriteButton
-                  productId={product.id}
-                  tooltipSide="left"
-                  className="absolute top-2 right-2 z-20 rounded-full bg-white-warm/80 backdrop-blur-sm hover:bg-white-warm"
-                />
-              ) : undefined
-            }
+          />
+        )}
+        {product.id && (
+          <FavoriteButton
+            productId={product.id}
+            tooltipSide="left"
+            className="absolute top-2 right-2 z-30 rounded-full bg-white-warm/80 backdrop-blur-sm hover:bg-white-warm"
           />
         )}
         {href && <ViewButton href={href} />}
