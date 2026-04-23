@@ -74,7 +74,7 @@ export function MixBuilderPage({ boxes }: MixBuilderPageProps) {
   }, [selectedBox, counts]);
 
   function handleSelectBox(id: string) {
-    boxFilter.onValueChange(id);
+    boxFilter.onValueChange(id === boxFilter.value ? "" : id);
     presetFilter.onValuesChange([]);
   }
 
@@ -110,6 +110,7 @@ export function MixBuilderPage({ boxes }: MixBuilderPageProps) {
       addToCart(result.cartItem);
       toastSuccess(`${selectedBox.name} added to cart`);
       presetFilter.onValuesChange([]);
+      boxFilter.onValueChange("");
     });
   }
 

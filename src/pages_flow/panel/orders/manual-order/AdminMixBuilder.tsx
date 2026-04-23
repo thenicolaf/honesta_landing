@@ -2,20 +2,19 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { LayoutGrid, Trash2 } from "lucide-react";
+import { LayoutGrid, Plus, Trash2 } from "lucide-react";
 import {
-  Badge,
   Button,
   Collapsible,
-  CollapsibleTrigger,
-  CollapsibleChevron,
   CollapsibleContent,
   EmptyState,
+  MixCompositionList,
 } from "@/shared/ui";
 import { formatAed } from "@/shared/ui/Table";
 import { BoxSelector } from "@/pages_flow/mix/BoxSelector";
 import { PresetGrid } from "@/pages_flow/mix/PresetGrid";
-import type { MixBox, MixPreset } from "@/lib/mixBoxesDb";
+import type { MixBox } from "@/lib/mixBoxesDb";
+import type { MixCompositionItem } from "@/shared/ui/MixCompositionList";
 
 export interface PendingMix {
   id: string;
@@ -141,13 +140,18 @@ export function AdminMixBuilder({ boxes, mixes, onChange }: Props) {
       <Collapsible open={!!activeBox}>
         <CollapsibleContent>
           {activeBox && (
-            <div className="flex flex-col gap-4 pt-2">
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-body font-semibold uppercase tracking-[0.12em] text-2xs text-earth/55">
-                  Fill cells · {totalCells} / {cellCount}
-                </p>
+            <section>
+              <div className="flex items-end justify-between gap-4 mb-5">
+                <div>
+                  <h3 className="font-display font-semibold text-heading text-lg sm:text-xl">
+                    Fill your cells
+                  </h3>
+                  <p className="font-body font-light text-earth/60 text-sm mt-1">
+                    {totalCells} / {cellCount} cells filled
+                  </p>
+                </div>
                 {totalCells > 0 && (
-                  <p className="font-body font-semibold text-heading text-sm whitespace-nowrap">
+                  <p className="font-body font-semibold text-heading text-sm sm:text-base whitespace-nowrap">
                     {formatAed(draftTotals.price)} · {draftTotals.weight}g
                   </p>
                 )}
@@ -161,7 +165,7 @@ export function AdminMixBuilder({ boxes, mixes, onChange }: Props) {
                 onRemove={handleRemovePreset}
               />
 
-              <div className="flex items-center justify-end gap-3">
+              <div className="flex items-center justify-end gap-3 mt-6">
                 {totalCells > 0 && (
                   <Button
                     as="button"
@@ -180,36 +184,39 @@ export function AdminMixBuilder({ boxes, mixes, onChange }: Props) {
                   size="sm"
                   disabled={!isComplete}
                   onClick={handleAddToOrder}
+                  startIcon={<Plus size={14} />}
                 >
                   Add mix to order
                 </Button>
               </div>
-            </div>
+            </section>
           )}
         </CollapsibleContent>
       </Collapsible>
 
       {mixes.length > 0 && (
-        <div className="flex flex-col gap-3 pt-2 border-t border-earth/8">
-          <p className="font-body font-semibold uppercase tracking-[0.12em] text-2xs text-earth/55 pt-3">
+        <section className="rounded-2xl bg-white-warm p-4 sm:p-6">
+          <h3 className="font-display font-semibold text-heading text-lg mb-4">
             Mixes in this order
-          </p>
-          {mixes.map((m) => {
-            const box = boxes.find((b) => b.id === m.boxId);
-            if (!box) return null;
-            const totals = calcMixTotals(box, m.selections);
-            return (
-              <PendingMixCard
-                key={m.id}
-                box={box}
-                selections={m.selections}
-                price={totals.price}
-                weight={totals.weight}
-                onRemove={() => handleRemoveMix(m.id)}
-              />
-            );
-          })}
-        </div>
+          </h3>
+          <div className="flex flex-col gap-3">
+            {mixes.map((m) => {
+              const box = boxes.find((b) => b.id === m.boxId);
+              if (!box) return null;
+              const totals = calcMixTotals(box, m.selections);
+              return (
+                <PendingMixCard
+                  key={m.id}
+                  box={box}
+                  selections={m.selections}
+                  price={totals.price}
+                  weight={totals.weight}
+                  onRemove={() => handleRemoveMix(m.id)}
+                />
+              );
+            })}
+          </div>
+        </section>
       )}
     </div>
   );
@@ -230,24 +237,37 @@ function PendingMixCard({
   weight,
   onRemove,
 }: PendingMixCardProps) {
-  const totalCount = selections.reduce((sum, s) => sum + s.count, 0);
   const presetMap = new Map(box.presets.map((p) => [p.id, p] as const));
 
+  const compositionItems: MixCompositionItem[] = selections
+    .map((s): MixCompositionItem | null => {
+      const preset = presetMap.get(s.presetId);
+      if (!preset) return null;
+      return {
+        name: preset.product?.title ?? "—",
+        image_url: preset.product?.image_url ?? null,
+        count: s.count,
+        weight_g: preset.weight_g,
+        price: Number(preset.price),
+      };
+    })
+    .filter((m) => m !== null);
+
   return (
-    <div className="flex flex-col sm:flex-row sm:items-start gap-3 p-3 sm:p-4 rounded-xl bg-sand/40">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 rounded-xl bg-sand/40">
       <div className="flex items-start gap-3 min-w-0 sm:flex-1">
-        <div className="relative shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-sand">
+        <div className="relative shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-sand">
           {box.image_url ? (
             <Image
               src={box.image_url}
               alt={box.name}
               fill
               className="object-cover"
-              sizes="64px"
+              sizes="80px"
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-earth/25">
-              <LayoutGrid size={20} />
+              <LayoutGrid size={24} />
             </div>
           )}
         </div>
@@ -259,37 +279,11 @@ function PendingMixCard({
           <p className="font-body font-light text-xs text-earth/55">
             {weight}g · {formatAed(price)}
           </p>
-          <Collapsible className="mt-1">
-            <CollapsibleTrigger className="inline-flex items-center gap-1.5 font-body font-semibold uppercase tracking-[0.12em] text-2xs text-earth/55 hover:text-orange transition-colors">
-              Composition · {totalCount} items
-              <CollapsibleChevron />
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="flex flex-wrap gap-x-1.5 gap-y-1.5 mt-2 pr-2">
-                {selections.map((s) => {
-                  const preset = presetMap.get(s.presetId) as MixPreset | undefined;
-                  return (
-                    <div key={s.presetId} className="relative">
-                      <Badge variant="outline" size="xs">
-                        {preset?.product?.title ?? "—"}
-                      </Badge>
-                      <Badge
-                        variant="counter"
-                        size="pill"
-                        className="absolute -top-1.5 -right-1.5"
-                      >
-                        {s.count}
-                      </Badge>
-                    </div>
-                  );
-                })}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+          <MixCompositionList items={compositionItems} />
         </div>
       </div>
 
-      <div className="flex sm:items-center sm:h-16 justify-end">
+      <div className="flex items-center justify-end sm:shrink-0 pl-15 sm:pl-0">
         <Button
           as="button"
           type="button"

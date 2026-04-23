@@ -37,7 +37,7 @@ export function ProductItem({ product, from }: ProductItemProps) {
     : undefined;
 
   return (
-    <div className="h-full flex flex-col rounded-2xl bg-white-warm border border-parchment/60 hover:shadow-lg hover:border-transparent transition-all duration-300">
+    <div className="relative z-0 has-[[role=tooltip]]:z-10 h-full flex flex-col rounded-2xl bg-white-warm border border-parchment/60 hover:shadow-lg hover:border-transparent transition-[box-shadow,border-color] duration-300">
       <div className="relative">
         {href ? (
           <Link href={href} className="block" aria-label={title}>
