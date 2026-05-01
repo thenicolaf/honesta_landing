@@ -8,6 +8,7 @@ export {
   FormMultiSelect,
   FormNumberInput,
   FormTextarea,
+  FormRichTextarea,
   FormCheckbox,
   FormUploadZone,
   FormError,
@@ -20,6 +21,7 @@ export {
   FormDatePicker,
 } from "./Form/index";
 export { Loader } from "./Loader";
+export { RichText } from "./RichText";
 export { PageLoader } from "../../pages_flow/PageLoader";
 export { Skeleton, SkeletonCard, SkeletonGrid, SkeletonProductGrid, SkeletonSection } from "./Skeleton";
 export { Badge } from "./Badge";

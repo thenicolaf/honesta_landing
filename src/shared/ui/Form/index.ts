@@ -4,6 +4,7 @@ export { FormSelect } from "./FormSelect";
 export { FormMultiSelect } from "./FormMultiSelect";
 export { FormNumberInput } from "./FormNumberInput";
 export { FormTextarea } from "./FormTextarea";
+export { FormRichTextarea } from "./FormRichTextarea";
 export { FormCheckbox } from "./FormCheckbox";
 export { FormError } from "./FormError";
 export { FormPasswordInput } from "./FormPasswordInput";
