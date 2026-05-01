@@ -7,3 +7,4 @@ export { AboutUs } from "./AboutUs";
 export { MixCTA } from "./MixCTA";
 export * from "./partnership";
 export { Footer } from "./Footer";
+export { MarketingPopupDialog } from "./marketing/MarketingPopupDialog";

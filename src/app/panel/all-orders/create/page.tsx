@@ -1,6 +1,7 @@
 import { Suspense } from "react";
+import { ArrowLeft } from "lucide-react";
 import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
-import { Skeleton } from "@/shared/ui";
+import { Button, Skeleton } from "@/shared/ui";
 import { supabaseAdmin } from "@/lib/supabase.server";
 import { getDeliverySettings } from "@/lib/deliveryDb";
 import { getActiveMixBoxes } from "@/lib/mixBoxesDb";
@@ -114,6 +115,17 @@ function FormSkeleton() {
 export default function Page() {
   return (
     <>
+      <div className="mb-6">
+        <Button
+          href="/panel/all-orders"
+          variant="outline"
+          size="sm"
+          startIcon={<ArrowLeft size={14} />}
+        >
+          Back to orders
+        </Button>
+      </div>
+
       <AdminPageHeader title="New order" label="Admin Panel" />
       <Suspense fallback={<FormSkeleton />}>
         <CreateContent />

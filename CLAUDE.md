@@ -203,6 +203,9 @@ src/
 | `/panel/promotions` | Promotion management (admin only) |
 | `/panel/promotions/create` | Create new promotion (admin only) |
 | `/panel/promotions/[id]/edit` | Edit promotion (admin only) |
+| `/panel/marketing-popup` | Marketing popups catalog — list with Activate/Edit/Delete (admin only) |
+| `/panel/marketing-popup/create` | Create new popup (admin only) |
+| `/panel/marketing-popup/[id]/edit` | Edit popup (admin only) |
 
 ## Panel Section (`panel` route segment)
 
@@ -341,6 +344,58 @@ Empty editor → `null`; otherwise sanitized HTML is stored. `note` is **not** v
 
 `blocksToHTMLLossy` is the lossy/external format — colours come back as inline `style="color: #hex; background-color: #hex"` (not `data-text-color` attributes), which is why `style` is in the DOMPurify whitelist. `blocksToFullHTML` would preserve more BlockNote-internal markup but is far more verbose; we deliberately use lossy for portable HTML.
 
+## Marketing Popup
+
+Catalog of home-page popups for holiday greetings and exclusive-offer announcements. Multi-row CRUD at `/panel/marketing-popup` (list / create / edit / delete) — admin keeps a library of pre-built popups (NY, 8 March, Black Friday) and toggles activation with a single click. The home page (`/`) renders the **single active** popup if any.
+
+### Data model
+
+Multi-row table `marketing_popup`. Columns: `id` (uuid, default `gen_random_uuid()`), `is_active`, `title` (visitor-facing heading, also doubles as admin catalog label — required), `body` (sanitized HTML, written by BlockNote), `image_url`, `cta_label`, `cta_url`, `starts_at` / `ends_at` (nullable timestamptz — optional display window, NULL on either side = unbounded), `version` (integer), `created_at`, `updated_at`. Mutual-exclusion enforced at the DB level by **partial unique index `marketing_popup_one_active ON ((is_active)) WHERE is_active = true`** — at most one row may be active at any time. Storage bucket `marketing` (public read, admin write/delete) — added to `ALLOWED_BUCKETS` in [src/lib/storage.ts](src/lib/storage.ts).
+
+### Auto-bumped `version` (Postgres trigger)
+
+`marketing_popup_bump_version_trg` is a `BEFORE UPDATE` trigger that does `NEW.version := OLD.version + 1; NEW.updated_at := now()`. This means the app fires a single UPDATE without a preceding SELECT to read the current version — saves one round-trip per save (~150-300ms). The trigger fires on every UPDATE, including activate/deactivate flips, so the version always advances.
+
+### Re-show strategy
+
+The trigger bumps `version` on every UPDATE. The client component ([src/sections/marketing/MarketingPopupDialog.tsx](src/sections/marketing/MarketingPopupDialog.tsx)) keeps a per-popup map in `localStorage.honesta_popup_seen_versions` — JSON of `{ [popupId]: lastSeenVersion }`. Show iff `seen[popup.id] < popup.version`, then on close write the current version into the map. Per-id keying matters now that admins keep a catalog of popups: switching the active popup makes a fresh `id` show up to every visitor, even if its `version` happens to be lower than the previously dismissed popup's version.
+
+### Render flow
+
+[src/app/page.tsx](src/app/page.tsx) parallelises `getActiveMarketingPopup()` with the existing `Promise.all`. Conditional mount uses [`isMarketingPopupActive(popup)`](src/lib/marketingPopupDb.ts) — checks `is_active` + non-empty title + `starts_at <= now() < ends_at` (skipping any NULL bound). When no active popup or out of window, **nothing is rendered** — zero DOM, zero JS. The dialog imports the `Dialog` compound from `@/shared/ui` and renders `<RichText html={body} />` for the body so BlockNote stays out of the public bundle.
+
+### Admin catalog UI
+
+`/panel/marketing-popup` lists all popups as cards sorted by status (`active → scheduled → inactive → expired`). Each card shows `title` (heading, falls back to "(untitled)" if missing), status badge, optional date range, and three action buttons:
+- **Edit** → `/panel/marketing-popup/[id]/edit`
+- **Activate / Deactivate** → calls `activateMarketingPopupAction` / `deactivateMarketingPopupAction` (no confirmation)
+- **Delete** → confirmation Dialog → `deleteMarketingPopupAction`
+
+### Activation logic
+
+[`setMarketingPopupActive(id, true)`](src/lib/marketingPopupDb.ts) does **deactivate-all-others-then-activate-this** in two queries: first `UPDATE marketing_popup SET is_active=false WHERE is_active=true AND id != $1`, then `UPDATE marketing_popup SET is_active=true WHERE id=$1`. Brief window between updates where nothing is active is harmless (home page is server-rendered and revalidated). `createMarketingPopup` and `updateMarketingPopup` apply the same deactivate-others step when the new row is being saved with `is_active=true`.
+
+### Status helper
+
+[`getMarketingPopupStatus(isActive, startsAt, endsAt)`](src/pages_flow/panel/marketing-popup/types.ts) → `"active" | "scheduled" | "expired" | "inactive"`. Same shape as `getPromotionStatus` but with extra `inactive` state for `is_active=false` rows that aren't expired.
+
+### Form (create + edit)
+
+[`MarketingPopupForm`](src/pages_flow/panel/marketing-popup/MarketingPopupForm.tsx) accepts `popup: MarketingPopup | null`. `null` → create mode (uses `createMarketingPopupAction`); existing row → edit mode (uses `updateMarketingPopupAction.bind(null, popup.id)`). Fields: `title` (required — used both as visitor heading and as admin catalog label), `is_active`, `body` (FormRichTextarea), `image_url` (FormUploadZone, `bucket="marketing"`), `cta_label` + `cta_url`, `starts_at` + `ends_at` (FormDatePicker pair, both `clearable`).
+
+### Action contracts
+
+All in [src/pages_flow/panel/marketing-popup/actions.ts](src/pages_flow/panel/marketing-popup/actions.ts):
+- `createMarketingPopupAction(_prevState, formData)` → INSERT, redirect to list with `?toast=created`
+- `updateMarketingPopupAction(id, _prevState, formData)` → UPDATE, redirect with `?toast=updated`
+- `deleteMarketingPopupAction(id)` → DELETE + cleanup of image from bucket
+- `activateMarketingPopupAction(id)` / `deactivateMarketingPopupAction(id)` → flip `is_active` without touching content
+All sanitize body via `sanitizeNoteHtml`, validate dates, validate CTA URL (absolute `http(s)://` or relative `/...`), revalidate `/` + `/panel/marketing-popup`.
+
+### No notification on save
+
+The popup itself is the broadcast channel — sending a parallel push/in-app notification on save would double-deliver. `notificationsDb` stays reserved for product/promotion/order events.
+
 ## Mix Constructor
 
 Customers can build their own mix boxes: pick a box template (e.g. "Classic 9-cell"), fill each cell with a product from the box's assortment at admin-configured weight/price, then add the assembled mix to cart as a normal product.
@@ -439,7 +494,7 @@ Two files, three client instances:
   - `supabaseAdmin` — static service-role client, bypasses RLS (use only in server actions, API routes, and `lib/`)
   - `createSupabaseServerClient()` — async, reads cookies via `@supabase/ssr`; use whenever you need the current user's session
 
-**DB tables:** `orders` (status, is_fulfilled, subtotal, delivery_fee, total, **promotion_discount**, **promo_code_id**, **promo_discount**, customer fields, ngenius_ref), `order_items` (order_id, variant_id, name, price, **original_price** nullable, **promo_discount** per unit, weight_g, quantity, **mix_composition** JSONB nullable — snapshot of mix contents — all snapshots at order time so historical orders survive promo/promotion/variant edits), `products` (image_url, images JSONB `[]`, in_stock, badge, **note** — sanitized HTML string, not plain text — see **Rich text (product notes)**, nutrition JSONB, status `product_status` enum — `draft | published | archived | system`, **no price/weight_g columns**, these live in `product_variants`), `product_variants` (product_id, weight_g, price — one-to-many with products), `categories` (name, slug, audience, tagline, description, image_url, badge, sort_order), `benefits` (id, name, description — unique on name+description), `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, role `user_role`, gender, birthday, allow_notifications), `cart_items` (user_id, variant_id, quantity — minimal, prices via join), `notifications` (type, title, message, related_id, user_id, audience `user_role` — nullable, NULL = all roles), `notification_reads` (notification_id, user_id, read_at — tracks per-user read status), `push_subscriptions` (user_id, endpoint UNIQUE, p256dh, auth — FK to auth.users + profiles, RLS per user), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id), `promo_codes` (code, scope, discount_type, discount_value, min_order_amount, max_uses, max_uses_per_user, stack_with_promotions, starts_at, ends_at, is_active — code is exactly 6 `[A-Z0-9]` chars enforced by CHECK), `promo_code_products`, `promo_code_users`, `promo_code_redemptions` (`unique(order_id)`), `mix_boxes` (id — **same UUID as corresponding `products.id`**, name, slug UNIQUE, description, image_url, cell_count, is_active, sort_order), `mix_box_presets` (box_id, product_id, weight_g, price — `UNIQUE(box_id, product_id)` means each product appears once in a box's assortment), `mix_variant_cells` (variant_id → product_variants CASCADE, cell_index, preset_id → mix_box_presets CASCADE, `UNIQUE(variant_id, cell_index)` — stores what preset sits in each cell of an assembled mix variant).
+**DB tables:** `orders` (status, is_fulfilled, subtotal, delivery_fee, total, **promotion_discount**, **promo_code_id**, **promo_discount**, customer fields, ngenius_ref), `order_items` (order_id, variant_id, name, price, **original_price** nullable, **promo_discount** per unit, weight_g, quantity, **mix_composition** JSONB nullable — snapshot of mix contents — all snapshots at order time so historical orders survive promo/promotion/variant edits), `products` (image_url, images JSONB `[]`, in_stock, badge, **note** — sanitized HTML string, not plain text — see **Rich text (product notes)**, nutrition JSONB, status `product_status` enum — `draft | published | archived | system`, **no price/weight_g columns**, these live in `product_variants`), `product_variants` (product_id, weight_g, price — one-to-many with products), `categories` (name, slug, audience, tagline, description, image_url, badge, sort_order), `benefits` (id, name, description — unique on name+description), `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, role `user_role`, gender, birthday, allow_notifications), `cart_items` (user_id, variant_id, quantity — minimal, prices via join), `notifications` (type, title, message, related_id, user_id, audience `user_role` — nullable, NULL = all roles), `notification_reads` (notification_id, user_id, read_at — tracks per-user read status), `push_subscriptions` (user_id, endpoint UNIQUE, p256dh, auth — FK to auth.users + profiles, RLS per user), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id), `promo_codes` (code, scope, discount_type, discount_value, min_order_amount, max_uses, max_uses_per_user, stack_with_promotions, starts_at, ends_at, is_active — code is exactly 6 `[A-Z0-9]` chars enforced by CHECK), `promo_code_products`, `promo_code_users`, `promo_code_redemptions` (`unique(order_id)`), `mix_boxes` (id — **same UUID as corresponding `products.id`**, name, slug UNIQUE, description, image_url, cell_count, is_active, sort_order), `mix_box_presets` (box_id, product_id, weight_g, price — `UNIQUE(box_id, product_id)` means each product appears once in a box's assortment), `mix_variant_cells` (variant_id → product_variants CASCADE, cell_index, preset_id → mix_box_presets CASCADE, `UNIQUE(variant_id, cell_index)` — stores what preset sits in each cell of an assembled mix variant), `marketing_popup` (multi-row catalog of home-page popups; `is_active` with partial unique index `WHERE is_active=true` enforcing at most one active row, `title` doubles as visitor heading + admin catalog label, `body` HTML, `image_url`, `cta_label`, `cta_url`, `starts_at`/`ends_at` nullable display window, `version` auto-bumped by `BEFORE UPDATE` trigger — see **Marketing Popup**).
 
 **Order display invariant:** `originalSubtotal − promotion_discount − promo_discount + delivery_fee = total`. The order list pages and cards display this breakdown as `Subtotal − Promotion − Promo + Delivery = Total`. Old orders without `original_price`/`promotion_discount` (NULL/0) render correctly without the new lines.
 
