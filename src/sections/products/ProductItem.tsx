@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { Product } from "./types";
+import { buildProductHref } from "./utils";
 import {
   ProductImage,
   ProductHeader,
@@ -32,9 +33,7 @@ export function ProductItem({ product, from }: ProductItemProps) {
     product.variants?.find((v) => v.id === selectedVariantId) ??
     product.variants?.[0];
 
-  const href = product.slug
-    ? `/products/${product.slug}${from ? `?from=${from}` : ""}`
-    : undefined;
+  const href = buildProductHref({ slug: product.slug, from });
 
   return (
     <div className="h-full flex flex-col rounded-2xl bg-white-warm border border-parchment/60 hover:shadow-lg hover:border-transparent transition-all duration-300">

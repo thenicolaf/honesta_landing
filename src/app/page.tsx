@@ -6,13 +6,18 @@ import {
   MixCTA,
   PartnershipCTA,
   MarketingPopupDialog,
+  PromoSliderSkeleton,
 } from "@/sections";
 import { CategoryGridSkeleton } from "@/sections/categories/CategoryGridSkeleton";
 import { AboutExpandedProvider } from "@/sections/about/AboutExpandedProvider";
 import { Skeleton } from "@/shared/ui";
 import { ProductGridSkeleton } from "@/sections/products/ProductGridSkeleton";
 import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvider";
-import { CategoriesSection, ProductsSection } from "@/pages_flow/home";
+import {
+  CategoriesSection,
+  ProductsSection,
+  PromoSliderSection,
+} from "@/pages_flow/home";
 import { HashTracker } from "./_components/HashTracker";
 import { Suspense } from "react";
 import { getCategories } from "@/lib/categoriesDb";
@@ -102,6 +107,9 @@ export default async function Home() {
         <AboutUs />
       </AboutExpandedProvider>
       <MixCTA hasActiveBoxes={activeMixBoxes.length > 0} />
+      <Suspense fallback={<PromoSliderSkeleton />}>
+        <PromoSliderSection />
+      </Suspense>
       <SearchParamsFilterProvider keys={["category", "sort", "search", "mark"]}>
         <Suspense fallback={<CategoriesSkeleton />}>
           <CategoriesSection />

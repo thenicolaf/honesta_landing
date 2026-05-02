@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { Info } from "lucide-react";
 import {
   FormLabel,
   FormInput,
@@ -12,6 +13,9 @@ import {
   FormDatePicker,
   Button,
   Card,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
   toastSuccess,
   toastError,
 } from "@/shared/ui";
@@ -171,7 +175,7 @@ export function MarketingPopupForm({ popup }: MarketingPopupFormProps) {
             Leave both empty to show whenever active. Set just one bound to
             constrain only the start or only the end.
           </p>
-          <div>
+          <div className="flex items-center gap-1">
             <FormCheckbox
               id="popup-active"
               name="is_active"
@@ -180,11 +184,25 @@ export function MarketingPopupForm({ popup }: MarketingPopupFormProps) {
               }
               label="Active — show this popup on the home page"
             />
-            <p className="mt-2 font-body text-2xs text-earth/60">
-              Activating this popup will automatically deactivate any other
-              active popup. Visitors see it once per content version — saving
-              any change re-prompts everyone.
-            </p>
+            <Tooltip side="top">
+              <TooltipTrigger asChild>
+                <Button
+                  as="button"
+                  type="button"
+                  variant="text"
+                  size="icon"
+                  aria-label="Active popup info"
+                  className="text-earth/40 hover:text-earth/70"
+                >
+                  <Info size={13} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="w-64 whitespace-normal text-left leading-snug">
+                Activating this popup will automatically deactivate any other
+                active popup. Visitors see it once per content version — saving
+                any change re-prompts everyone.
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
       </Card>

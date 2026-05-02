@@ -48,10 +48,11 @@ export function NavMobileTabBar() {
                   : "text-earth/50 hover:text-orange hover:bg-sand/50 active:bg-sand",
               )}
             >
-              <Icon className="w-4.5 h-4.5 sm:w-5 sm:h-5" strokeWidth={1.5} />
-              <span className="font-body font-semibold uppercase text-[0.5rem] sm:text-[0.5625rem] tracking-[0.08em] min-[400px]:tracking-widest">
+              <Icon className="w-5.5 h-5.5 min-[500px]:w-4.5 min-[500px]:h-4.5 sm:w-5 sm:h-5" strokeWidth={1.5} />
+              <span className="hidden min-[500px]:inline font-body font-semibold uppercase text-[0.5rem] sm:text-[0.5625rem] tracking-[0.08em] min-[400px]:tracking-widest">
                 {label}
               </span>
+              <span className="sr-only min-[500px]:hidden">{label}</span>
             </HashLink>
           );
         })}

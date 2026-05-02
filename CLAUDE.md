@@ -457,6 +457,43 @@ Used in:
 
 Mix box images use the `mixes` Supabase Storage bucket (added to `ALLOWED_BUCKETS` in [src/lib/storage.ts](src/lib/storage.ts)). Must be created in Supabase Dashboard manually, with public read policy.
 
+## PromoSlider
+
+Reusable embla carousel of promo + best-seller products. Lives in [src/sections/PromoSlider/](src/sections/PromoSlider/) and is wrapped by the async server section [src/pages_flow/home/PromoSliderSection.tsx](src/pages_flow/home/PromoSliderSection.tsx) which fetches data via [getPromoSliderProducts](src/lib/promoSliderProducts.ts) (active promotions sorted by `endsAt`, then best-sellers; deduped; capped at 10).
+
+### Where it's embedded
+
+- **Home (`/`)** — `id="promo"` anchor, `kicker="Top picks & deals"`, `title="Best Offers"`, default centered header. Default `from="promo"` on inner `ProductItem` links so the product detail page shows "Back to promo" → `/#promo`.
+- **Product detail page (`/products/[id]`)** — passed via `<ProductDetailPage belowGrid={...}>` slot. `excludeId={product.id}` (current product hidden from suggestions), `kicker="More to explore"`, `title="You might also like"`, `headerClassName="text-left md:pl-12"` (left-aligned + offset to align with first card under the prev-arrow button), `withAnchor={false}` (no duplicate `id="promo"` outside home).
+- **Cart (`/cart`)** — passed via `<CartPage belowContent={...}>` slot, only on the populated-cart branch (skipped on `EmptyCart`).
+
+### `from` query param chain
+
+Product links produced by the slider carry `?from=...` so the back button on `/products/[id]` resolves to the right origin. Mapping in [src/app/products/[id]/page.tsx](src/app/products/[id]/page.tsx):
+
+```ts
+const FROM_MAP = {
+  favorites: { href: "/panel/favorites", label: "Back to favorites" },
+  cart:      { href: "/cart",            label: "Back to cart" },
+  promo:     { href: "/#promo",          label: "Back to promo" },
+  products:  { href: "/#products",       label: "Back to products" },
+};
+```
+
+The slider on a product detail page **inherits** the incoming `from` so that the original entry context (cart / favorites / etc.) propagates through any depth of product-to-product navigation: `from={from ?? "products"}`. If user landed on a product directly (no `from`), the slider falls back to `from="products"` so chained back-clicks return to `/#products` — never `/#promo` (the home variant).
+
+### `belowGrid` / `belowContent` slot pattern
+
+Both `ProductDetailPage` (client component) and `CartPage` (client component) accept a `ReactNode` slot that the parent server component fills with `<Suspense fallback={<PromoSliderSkeleton />}><PromoSliderSection .../></Suspense>`. This is the standard Next.js App Router pattern for embedding async server components inside client components — pass them as props/children, not by importing & calling. **Always set a `key` on the wrapper `<Suspense>`** when passing as a prop — RSC serialisation otherwise emits a "Each child in a list should have a unique key" warning.
+
+### `buildProductHref` helper
+
+`/products/[slug]?from=...` href construction lives in [src/sections/products/utils/buildProductHref.ts](src/sections/products/utils/buildProductHref.ts). Always use this helper instead of hand-rolling — keeps the query-string format consistent and gives a single place to extend (e.g. add `variant`, `ref` params later).
+
+### `ClearCartButton`
+
+[src/pages_flow/cart/ui/ClearCartButton.tsx](src/pages_flow/cart/ui/ClearCartButton.tsx) — outline-error button with `Trash2` icon, opens a confirmation `Dialog` before calling `useCart().clearCart()`. Mounted above `CartGrid` in `flex justify-end`. The underlying `clearCart` already wipes localStorage / `cart_items` and triggers `cleanupOrphanedMixVariants` for any mix variants in the cart, so the button itself just needs to call it and toast.
+
 ## Auth
 
 Two auth methods: **email/password** and **Google OAuth**.
@@ -573,12 +610,13 @@ Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React conte
 - **`Thumbnail`** — reusable image thumbnail. Props: `src`, `alt`, `selected?` (orange border), `softDeleted?` (dimmed + grayscale), `showLabel?` (alt text below, default true), `onClick?`, `children?` (overlay buttons). Used by `SortableThumbnail` and `ProductDetailImage`.
 - **`Popover` / `PopoverTrigger` / `PopoverContent`** — context-based popover with auto up/down direction, outside-click close, viewport clamping. Supports **controlled mode** via `open`/`onOpenChange` props (used by `BenefitsSection`, `NutritionSection`). `usePopover()` hook for child components.
 - **`MultiSelect` / `MultiSelectTrigger` / `MultiSelectContent` / `MultiSelectItem` / `MultiSelectEmpty` / `MultiSelectCreate` / `MultiSelectDelete`** — compound multi-select with search, selected-items-first sorting, scroll preservation. Context-based (`useMultiSelect`). `MultiSelectCreate` for inline option creation, `MultiSelectDelete` for inline deletion.
-- **`Tooltip` / `TooltipTrigger` / `TooltipContent`** — hover/focus tooltip with 4-direction support (`side` prop: `top | bottom | left | right`), auto-fallback to opposite side if no space. `delay` prop (default 200ms). Toggle on click for touch devices. **Always use `asChild`** on `TooltipTrigger` — it merges all handlers (onClick, onMouseEnter, etc.) with the child element's handlers via `cloneElement`. No `useId()` — safe inside Suspense boundaries.
+- **`Tooltip` / `TooltipTrigger` / `TooltipContent`** — hover/focus tooltip with 4-direction support (`side` prop: `top | bottom | left | right`), auto-fallback to opposite side if no space. `delay` prop (default 200ms). Toggle on click for touch devices. **Always use `asChild`** on `TooltipTrigger` — it merges all handlers (onClick, onMouseEnter, etc.) with the child element's handlers via `cloneElement`. No `useId()` — safe inside Suspense boundaries. **`TooltipContent` renders into a `createPortal(..., document.body)` with `position: fixed` and JS-computed coords from the trigger's `getBoundingClientRect()` — this lets the tooltip escape any `overflow: hidden | clip` ancestor (e.g. embla carousel viewport, modal scroll containers). Coords are clamped to the viewport with an 8px pad. Recomputed on `resize` and `scroll` (capture phase, so any scrollable ancestor triggers the update). SSR-safe via `useSyncExternalStore` mount detection (no effect-driven setState). Do not write tooltip-specific positioning hacks like `w-full left-0 translate-x-0!` — the portal handles it.**
 - **`Gallery`** — rows-based image gallery using `react-photo-album`. Props: `images: GalleryImage[]`, `rowHeight`, `maxPerRow`, `spacing`, `onClick(index)`. No built-in Lightbox — compose with `<Lightbox>` externally.
 - **`MixCompositionList`** — shared Collapsible with rows `[thumbnail with ×count pill] / name + total weight / total price`. Single source of truth for mix composition display across cart, mix constructor, checkout, order views, and admin mix cards. See **Mix composition rendering (shared)** below for full usage.
 - **`RichText`** — renders sanitized HTML via `dangerouslySetInnerHTML` inside a `<div class="rich-text">` (paired with prose-style overrides in `globals.css`). Used to display the rich-text product `note` in tooltips and detail blockquotes. **Does not sanitize on render** — content is sanitized once at write time in admin actions; render path trusts the DB to avoid running jsdom on every SSR.
 - **`CartEmpty`** — empty cart placeholder screen.
 - **`Loader`** — loading spinner (used during cart hydration).
+- **`Dialog` focus behaviour** — on open, the dialog **focuses its container** (`tabIndex={-1}` + `outline-none` on the motion.div), **not** the first focusable child. This avoids the unwanted focus ring on the auto-targeted close button for simple/info dialogs. Escape, Tab navigation, and the close button all still work. Form dialogs that need to auto-focus a specific field should use the standard React `autoFocus` prop on that field — relying on Dialog's old "first focusable" behaviour will not work.
 
 ## Responsive table/cards pattern
 
@@ -917,7 +955,7 @@ Product/order/inquiry list pages use a shared pattern for search:
 - **`HashTracker`** (`src/app/_components/HashTracker.tsx`) — scroll-spy on home page. Uses `IntersectionObserver` to update URL hash as user scrolls through sections. `MutationObserver` handles Suspense-deferred sections. Dispatches `hashchange` event (no polling).
 - **`useActiveHash`** (`src/sections/navbar/useActiveHash.ts`) — `useSyncExternalStore` listening for `hashchange` + `popstate` events (no polling).
 - **Scroll restoration** — inline `<script>` in `layout.tsx` with `history.scrollRestoration = "manual"` + sessionStorage save/restore (needed because native restoration fails with Suspense streaming).
-- **Navigation links** — shared source of truth in `src/shared/consts/navLinks.ts`. `SectionId` enum (`Hero`, `About`, `Mix`, `Categories`, `Products`, `Story`, `Contact`), `SECTION_IDS = Object.values(SectionId)` (used by `HashTracker`), `NAV_LINKS` and `TAB_LINKS` (typed with `NavLink<T>` generic). Used by Navbar, NavMobileTabBar, Footer, and HashTracker.
+- **Navigation links** — shared source of truth in `src/shared/consts/navLinks.ts`. `SectionId` enum (`Hero`, `About`, `Mix`, `Promo`, `Categories`, `Products`, `Story`, `Contact`), `SECTION_IDS = Object.values(SectionId)` (used by `HashTracker`), `NAV_LINKS` and `TAB_LINKS` (typed with `NavLink<T>` generic). Used by Navbar, NavMobileTabBar, Footer, and HashTracker. The mobile tab bar (`NavMobileTabBar`) hides text labels under `500px` and enlarges the icon (`w-5.5`) to keep tap targets comfortable when only the glyph is visible; `<500px` labels are kept as `sr-only` for screen readers.
 
 ## Product sorting
 

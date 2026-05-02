@@ -8,3 +8,4 @@ export { MixCTA } from "./MixCTA";
 export * from "./partnership";
 export { Footer } from "./Footer";
 export { MarketingPopupDialog } from "./marketing/MarketingPopupDialog";
+export { PromoSlider, PromoSliderSkeleton } from "./PromoSlider";

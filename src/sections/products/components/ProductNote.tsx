@@ -54,7 +54,7 @@ function TruncatedNote({ note }: { note: string }) {
           </div>
         </blockquote>
       </TooltipTrigger>
-      <TooltipContent className="whitespace-normal w-full left-0 translate-x-0! text-left">
+      <TooltipContent className="whitespace-normal max-w-72 text-left leading-snug">
         <RichText html={note} />
       </TooltipContent>
     </Tooltip>

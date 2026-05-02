@@ -5,6 +5,8 @@ import { Skeleton } from "@/shared/ui";
 import { getProductBySlug } from "@/lib/productsDb";
 import { mapDbProducts } from "@/sections/products/utils";
 import { ProductDetailPage } from "@/pages_flow/products/ProductDetailPage";
+import { PromoSliderSection } from "@/pages_flow/home";
+import { PromoSliderSkeleton } from "@/sections";
 import {
   buildProductJsonLd,
   buildBreadcrumbJsonLd,
@@ -56,6 +58,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 const FROM_MAP: Record<string, { href: string; label: string }> = {
   favorites: { href: "/panel/favorites", label: "Back to favorites" },
   cart: { href: "/cart", label: "Back to cart" },
+  promo: { href: "/#promo", label: "Back to promo" },
+  products: { href: "/#products", label: "Back to products" },
 };
 
 function ProductSkeleton() {
@@ -93,6 +97,7 @@ async function ProductContent({ id, from }: { id: string; from?: string }) {
 
   const siteUrl = process.env.PUBLIC_BASE_URL!;
   const [product] = mapDbProducts([dbProduct]);
+  const back = from ? FROM_MAP[from] : undefined;
 
   const productJsonLd = buildProductJsonLd(dbProduct, product, siteUrl);
   const breadcrumbJsonLd = buildBreadcrumbJsonLd(dbProduct, product, siteUrl);
@@ -109,9 +114,19 @@ async function ProductContent({ id, from }: { id: string; from?: string }) {
       />
       <ProductDetailPage
         product={product}
-        {...(from && FROM_MAP[from]
-          ? { backHref: FROM_MAP[from].href, backLabel: FROM_MAP[from].label }
-          : {})}
+        {...(back ? { backHref: back.href, backLabel: back.label } : {})}
+        belowGrid={
+          <Suspense key="promo-slider" fallback={<PromoSliderSkeleton />}>
+            <PromoSliderSection
+              excludeId={product.id}
+              kicker="More to explore"
+              title="You might also like"
+              withAnchor={false}
+              headerClassName="text-left md:pl-12"
+              from={from ?? "products"}
+            />
+          </Suspense>
+        }
       />
     </>
   );

@@ -1,12 +1,13 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, type RefObject } from "react";
 
 export type TooltipSide = "top" | "bottom" | "left" | "right";
 
 export interface TooltipContextValue {
   open: boolean;
   resolvedSide: TooltipSide;
+  triggerRef: RefObject<HTMLElement | null>;
   show: () => void;
   hide: () => void;
   toggle: () => void;

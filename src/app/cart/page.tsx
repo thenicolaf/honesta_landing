@@ -5,6 +5,8 @@ import { CartSkeleton } from "@/pages_flow/cart/ui/CartSkeleton";
 import { getDeliverySettings } from "@/lib/deliveryDb";
 import { getActivePromotionsMap } from "@/lib/promotionsDb";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
+import { PromoSliderSection } from "@/pages_flow/home";
+import { PromoSliderSkeleton } from "@/sections";
 
 export const metadata: Metadata = {
   title: "Cart",
@@ -25,6 +27,17 @@ async function CartContent() {
       deliverySettings={deliverySettings}
       isAuthenticated={!!user}
       activePromotions={activePromotions}
+      belowContent={
+        <Suspense key="promo-slider" fallback={<PromoSliderSkeleton />}>
+          <PromoSliderSection
+            kicker="More to explore"
+            title="You might also like"
+            withAnchor={false}
+            headerClassName="text-left md:pl-12"
+            from="cart"
+          />
+        </Suspense>
+      }
     />
   );
 }

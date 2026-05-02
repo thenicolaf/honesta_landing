@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { ArrowLeft } from "lucide-react";
 import { buttonVariants } from "@/shared/ui";
 import { HashLink } from "@/sections/navbar";
@@ -24,12 +24,15 @@ interface ProductDetailPageProps {
   product: Product;
   backHref?: string;
   backLabel?: string;
+  /** Server-rendered slot below the main grid (e.g. PromoSliderSection). */
+  belowGrid?: ReactNode;
 }
 
 export function ProductDetailPage({
   product,
   backHref = "/#products",
   backLabel = "Back to products",
+  belowGrid,
 }: ProductDetailPageProps) {
   const {
     title,
@@ -134,6 +137,7 @@ export function ProductDetailPage({
           </div>
         </div>
       </div>
+      {belowGrid}
     </main>
   );
 }

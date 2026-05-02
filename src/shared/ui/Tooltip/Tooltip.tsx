@@ -5,15 +5,24 @@ import {
   useRef,
   useCallback,
   useLayoutEffect,
+  useSyncExternalStore,
   Children,
   cloneElement,
   isValidElement,
 } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/shared/utils/cn";
 import { TooltipContext, useTooltip, type TooltipSide } from "./context";
 
 const MIN_SPACE = 40;
+const OFFSET = 6;
+const VIEWPORT_PAD = 8;
+
+// useSyncExternalStore helpers for SSR-safe mount detection
+const subscribeNoop = () => () => {};
+const getMountedTrue = () => true;
+const getMountedFalse = () => false;
 
 function resolveSide(
   rect: DOMRect,
@@ -57,14 +66,16 @@ export function Tooltip({
 }: TooltipProps) {
   const [open, setOpen] = useState(false);
   const [resolvedSide, setResolvedSide] = useState<TooltipSide>(side);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
 
   const show = useCallback(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
-      if (rootRef.current) {
-        setResolvedSide(resolveSide(rootRef.current.getBoundingClientRect(), side));
+      if (triggerRef.current) {
+        setResolvedSide(
+          resolveSide(triggerRef.current.getBoundingClientRect(), side),
+        );
       }
       setOpen(true);
     }, delay);
@@ -79,8 +90,10 @@ export function Tooltip({
     if (open) {
       hide();
     } else {
-      if (rootRef.current) {
-        setResolvedSide(resolveSide(rootRef.current.getBoundingClientRect(), side));
+      if (triggerRef.current) {
+        setResolvedSide(
+          resolveSide(triggerRef.current.getBoundingClientRect(), side),
+        );
       }
       setOpen(true);
     }
@@ -88,11 +101,9 @@ export function Tooltip({
 
   return (
     <TooltipContext.Provider
-      value={{ open, resolvedSide, show, hide, toggle }}
+      value={{ open, resolvedSide, triggerRef, show, hide, toggle }}
     >
-      <div ref={rootRef} className={cn("relative inline-block", className)}>
-        {children}
-      </div>
+      <div className={cn("relative inline-block", className)}>{children}</div>
     </TooltipContext.Provider>
   );
 }
@@ -111,7 +122,14 @@ export function TooltipTrigger({
   className,
   asChild = false,
 }: TooltipTriggerProps) {
-  const { show, hide, toggle } = useTooltip();
+  const { show, hide, toggle, triggerRef } = useTooltip();
+
+  const setRef = useCallback(
+    (node: HTMLElement | null) => {
+      triggerRef.current = node;
+    },
+    [triggerRef],
+  );
 
   if (asChild) {
     const child = Children.only(children);
@@ -124,7 +142,10 @@ export function TooltipTrigger({
       onFocus?: (e: React.FocusEvent) => void;
       onBlur?: (e: React.FocusEvent) => void;
     };
+
+    // eslint-disable-next-line react-hooks/refs -- ref callback is invoked by React, not read during render
     return cloneElement(child as React.ReactElement<Record<string, unknown>>, {
+      ref: setRef,
       onMouseEnter: (e: React.MouseEvent) => { childProps.onMouseEnter?.(e); show(); },
       onMouseLeave: (e: React.MouseEvent) => { childProps.onMouseLeave?.(e); hide(); },
       onFocus: (e: React.FocusEvent) => { childProps.onFocus?.(e); show(); },
@@ -136,6 +157,7 @@ export function TooltipTrigger({
 
   return (
     <span
+      ref={setRef}
       className={className}
       onMouseEnter={show}
       onMouseLeave={hide}
@@ -149,16 +171,6 @@ export function TooltipTrigger({
 }
 
 // ─── TooltipContent ──────────────────────────────────────────────────────────
-
-const OFFSET = 6;
-const VIEWPORT_PAD = 8;
-
-const basePositionStyles: Record<TooltipSide, string> = {
-  top: "bottom-full mb-1.5 left-1/2 -translate-x-1/2",
-  bottom: "top-full mt-1.5 left-1/2 -translate-x-1/2",
-  left: "right-full mr-1.5 top-1/2 -translate-y-1/2",
-  right: "left-full ml-1.5 top-1/2 -translate-y-1/2",
-};
 
 const initialOffset: Record<TooltipSide, { x: number; y: number }> = {
   top: { x: 0, y: OFFSET },
@@ -176,59 +188,80 @@ export function TooltipContent({
   children,
   className,
 }: TooltipContentProps) {
-  const { open, hide, resolvedSide } = useTooltip();
+  const { open, hide, resolvedSide, triggerRef } = useTooltip();
   const contentRef = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(
+    null,
+  );
   const offset = initialOffset[resolvedSide];
-  const isHorizontalSide =
-    resolvedSide === "top" || resolvedSide === "bottom";
 
-  // Clamp to viewport after mount / resize — no state, direct DOM mutation.
-  // Uses offsetWidth / offsetParent so measurements are NOT affected by
-  // motion's `scale` transform in the enter animation.
-  const clamp = useCallback(() => {
-    const el = contentRef.current;
-    const parent = el?.offsetParent as HTMLElement | null;
-    if (!el || !parent || !isHorizontalSide) return;
+  // SSR safety — createPortal needs document.body. useSyncExternalStore returns
+  // false on server, true on client without an effect-driven setState.
+  const mounted = useSyncExternalStore(
+    subscribeNoop,
+    getMountedTrue,
+    getMountedFalse,
+  );
 
-    // Reset previous inline positioning so we measure from CSS baseline
-    el.style.left = "";
-    el.style.right = "";
-    el.style.transform = "";
+  const updatePosition = useCallback(() => {
+    const trigger = triggerRef.current;
+    const content = contentRef.current;
+    if (!trigger || !content) return;
 
-    const parentRect = parent.getBoundingClientRect();
-    const width = el.offsetWidth;
-    // CSS baseline: left:50% then -translate-x-1/2 → el's viewport left =
-    // parentLeft + parent.width/2 - width/2. Compute without relying on
-    // getBoundingClientRect (which reflects the animated scale).
-    const baseLeft =
-      parentRect.left + parent.offsetWidth / 2 - width / 2;
-    const baseRight = baseLeft + width;
+    const triggerRect = trigger.getBoundingClientRect();
+    // offsetWidth/Height ignore motion's `scale` transform during enter
+    const contentWidth = content.offsetWidth;
+    const contentHeight = content.offsetHeight;
     const vw = window.innerWidth;
+    const vh = window.innerHeight;
 
-    const overflowLeft = VIEWPORT_PAD - baseLeft;
-    const overflowRight = baseRight - (vw - VIEWPORT_PAD);
+    let top = 0;
+    let left = 0;
 
-    if (overflowLeft > 0 || overflowRight > 0) {
-      let desiredLeft = baseLeft;
-      if (overflowRight > 0) desiredLeft -= overflowRight;
-      if (desiredLeft < VIEWPORT_PAD) desiredLeft = VIEWPORT_PAD;
-
-      el.style.left = `${desiredLeft - parentRect.left}px`;
-      el.style.right = "auto";
-      el.style.transform = "none";
+    switch (resolvedSide) {
+      case "top":
+        top = triggerRect.top - contentHeight - OFFSET;
+        left = triggerRect.left + triggerRect.width / 2 - contentWidth / 2;
+        break;
+      case "bottom":
+        top = triggerRect.bottom + OFFSET;
+        left = triggerRect.left + triggerRect.width / 2 - contentWidth / 2;
+        break;
+      case "left":
+        top = triggerRect.top + triggerRect.height / 2 - contentHeight / 2;
+        left = triggerRect.left - contentWidth - OFFSET;
+        break;
+      case "right":
+        top = triggerRect.top + triggerRect.height / 2 - contentHeight / 2;
+        left = triggerRect.right + OFFSET;
+        break;
     }
-  }, [isHorizontalSide]);
+
+    // Clamp to viewport
+    const maxLeft = vw - VIEWPORT_PAD - contentWidth;
+    if (left > maxLeft) left = maxLeft;
+    if (left < VIEWPORT_PAD) left = VIEWPORT_PAD;
+
+    const maxTop = vh - VIEWPORT_PAD - contentHeight;
+    if (top > maxTop) top = maxTop;
+    if (top < VIEWPORT_PAD) top = VIEWPORT_PAD;
+
+    setCoords({ top, left });
+  }, [resolvedSide, triggerRef]);
 
   useLayoutEffect(() => {
     if (!open) return;
-    clamp();
-    window.addEventListener("resize", clamp);
-    window.addEventListener("scroll", clamp, true);
+    // Measure-then-position is the canonical use case for useLayoutEffect:
+    // we read DOM size + trigger position and commit coords before paint.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- DOM measurement requires setState in layout effect
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
     return () => {
-      window.removeEventListener("resize", clamp);
-      window.removeEventListener("scroll", clamp, true);
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [open, clamp]);
+  }, [open, updatePosition]);
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -236,7 +269,9 @@ export function TooltipContent({
     hide();
   };
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence initial={false}>
       {open && (
         <motion.div
@@ -247,16 +282,21 @@ export function TooltipContent({
           animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
           exit={{ opacity: 0, x: offset.x, y: offset.y, scale: 0.95 }}
           transition={{ duration: 0.15, ease: "easeOut" }}
+          style={{
+            position: "fixed",
+            top: coords?.top ?? 0,
+            left: coords?.left ?? 0,
+            visibility: coords ? "visible" : "hidden",
+          }}
           className={cn(
-            "absolute z-50",
-            basePositionStyles[resolvedSide],
-            "rounded-lg px-2.5 py-1.5 bg-earth text-white-warm text-2xs font-body whitespace-nowrap shadow-md",
+            "z-50 rounded-lg px-2.5 py-1.5 bg-earth text-white-warm text-2xs font-body whitespace-nowrap shadow-md pointer-events-auto",
             className,
           )}
         >
           {children}
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }

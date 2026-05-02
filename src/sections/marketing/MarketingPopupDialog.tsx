@@ -89,28 +89,29 @@ export function MarketingPopupDialog({
           )}
         >
           {hasImage && (
-            <div className="relative aspect-4/5 md:aspect-auto md:min-h-115 bg-sand">
+            <div className="relative aspect-3/2 sm:aspect-16/10 md:aspect-auto md:min-h-115 bg-sand">
               <Image
                 src={image_url!}
                 alt=""
                 fill
-                sizes="(max-width: 768px) 100vw, 480px"
-                className="object-cover"
-                priority={false}
+                sizes="(min-width: 1024px) 465px, (min-width: 768px) 45vw, 100vw"
+                className="object-cover object-center"
+                quality={85}
+                priority
               />
               {/* Soft brand-colored vignette to blend the image into the content panel */}
               <div className="absolute inset-0 bg-linear-to-b from-transparent via-transparent to-cream/45 md:bg-linear-to-r md:from-transparent md:via-transparent md:to-cream/55 pointer-events-none" />
             </div>
           )}
 
-          <div className="noise relative flex flex-col justify-center bg-cream px-8 py-10 md:px-12 md:py-14">
-            {/* Subtle botanical decorations — corner accents */}
+          <div className="noise relative overflow-hidden flex flex-col justify-center bg-cream px-8 py-10 md:px-12 md:py-14">
+            {/* Subtle botanical decorations — corner accents inside the panel */}
             <IconBotanical
-              className="absolute -top-2 -right-2 w-24 h-24 text-orange/10 rotate-12 pointer-events-none"
+              className="absolute top-3 right-3 w-20 h-20 md:w-24 md:h-24 text-orange/15 rotate-12 pointer-events-none"
               aria-hidden
             />
             <IconLeaf
-              className="absolute -bottom-3 -left-3 w-16 h-16 text-moss/15 -rotate-12 pointer-events-none"
+              className="absolute bottom-3 left-3 w-14 h-14 md:w-16 md:h-16 text-moss/20 -rotate-12 pointer-events-none"
               aria-hidden
             />
 
