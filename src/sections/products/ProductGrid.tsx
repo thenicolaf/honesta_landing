@@ -1,7 +1,9 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { EmptyState } from "@/shared/ui";
 import { IconLeaf } from "@/shared/icons";
+import { buildBackHref } from "@/shared/utils/backHref";
 import { ProductItem } from "./ProductItem";
 import { ProductToolbar } from "./ProductToolbar";
 import { useFilteredProducts } from "./useFilteredProducts";
@@ -30,10 +32,22 @@ function ProductHeader() {
 }
 
 function ProductList({ products }: { products: Product[] }) {
+  // Preserve active filters + scroll back to the products section.
+  const backHref = buildBackHref({
+    pathname: "/",
+    searchParams: useSearchParams(),
+    hash: "#products",
+  });
+
   return (
     <div className={PRODUCT_GRID_CLASS}>
       {products.map((product) => (
-        <ProductItem key={product.id ?? product.title} product={product} />
+        <ProductItem
+          key={product.id ?? product.title}
+          product={product}
+          from="products"
+          backHref={backHref}
+        />
       ))}
     </div>
   );

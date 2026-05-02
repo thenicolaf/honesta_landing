@@ -7,6 +7,7 @@ import { mapDbProducts } from "@/sections/products/utils";
 import { ProductDetailPage } from "@/pages_flow/products/ProductDetailPage";
 import { PromoSliderSection } from "@/pages_flow/home";
 import { PromoSliderSkeleton } from "@/sections";
+import { isSafeBackHref } from "@/shared/utils/backHref";
 import {
   buildProductJsonLd,
   buildBreadcrumbJsonLd,
@@ -15,7 +16,7 @@ import {
 
 interface Props {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ from?: string }>;
+  searchParams: Promise<{ from?: string; back?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -91,13 +92,28 @@ function ProductSkeleton() {
   );
 }
 
-async function ProductContent({ id, from }: { id: string; from?: string }) {
+async function ProductContent({
+  id,
+  from,
+  back,
+}: {
+  id: string;
+  from?: string;
+  back?: string;
+}) {
   const dbProduct = await getProductBySlug(id);
   if (!dbProduct) notFound();
 
   const siteUrl = process.env.PUBLIC_BASE_URL!;
   const [product] = mapDbProducts([dbProduct]);
-  const back = from ? FROM_MAP[from] : undefined;
+
+  // Resolve the back link: prefer an explicit `?back=` URL (carries filter
+  // state), fall back to the static FROM_MAP entry; label always comes from
+  // FROM_MAP[from] when available so we keep "Back to {origin}" wording.
+  const fallback = from ? FROM_MAP[from] : undefined;
+  const safeBack = isSafeBackHref(back) ? back : undefined;
+  const backHref = safeBack ?? fallback?.href;
+  const backLabel = fallback?.label ?? (safeBack ? "Back" : undefined);
 
   const productJsonLd = buildProductJsonLd(dbProduct, product, siteUrl);
   const breadcrumbJsonLd = buildBreadcrumbJsonLd(dbProduct, product, siteUrl);
@@ -114,7 +130,7 @@ async function ProductContent({ id, from }: { id: string; from?: string }) {
       />
       <ProductDetailPage
         product={product}
-        {...(back ? { backHref: back.href, backLabel: back.label } : {})}
+        {...(backHref ? { backHref, backLabel } : {})}
         belowGrid={
           <Suspense key="promo-slider" fallback={<PromoSliderSkeleton />}>
             <PromoSliderSection
@@ -124,6 +140,7 @@ async function ProductContent({ id, from }: { id: string; from?: string }) {
               withAnchor={false}
               headerClassName="text-left md:pl-12"
               from={from ?? "products"}
+              backHref={safeBack}
             />
           </Suspense>
         }
@@ -133,11 +150,11 @@ async function ProductContent({ id, from }: { id: string; from?: string }) {
 }
 
 export default async function Page({ params, searchParams }: Props) {
-  const [{ id }, { from }] = await Promise.all([params, searchParams]);
+  const [{ id }, { from, back }] = await Promise.all([params, searchParams]);
 
   return (
     <Suspense fallback={<ProductSkeleton />}>
-      <ProductContent id={id} from={from} />
+      <ProductContent id={id} from={from} back={back} />
     </Suspense>
   );
 }

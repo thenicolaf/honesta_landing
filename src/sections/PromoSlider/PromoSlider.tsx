@@ -13,9 +13,15 @@ interface PromoSliderProps {
   products: Product[];
   /** Origin marker added as `?from=` to product links — drives the back button label on the product detail page. Default: "promo". */
   from?: string;
+  /** Full back URL forwarded as `?back=` to nested product links — preserves filter state through chained navigation. */
+  backHref?: string;
 }
 
-export function PromoSlider({ products, from = "promo" }: PromoSliderProps) {
+export function PromoSlider({
+  products,
+  from = "promo",
+  backHref,
+}: PromoSliderProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { loop: true, align: "start", containScroll: "trimSnaps" },
     [
@@ -69,7 +75,7 @@ export function PromoSlider({ products, from = "promo" }: PromoSliderProps) {
                 aria-roledescription="slide"
                 aria-label={`${i + 1} of ${products.length}`}
               >
-                <ProductItem product={p} from={from} />
+                <ProductItem product={p} from={from} backHref={backHref} />
               </div>
             ))}
           </div>

@@ -19,9 +19,16 @@ import { ProductActionsProvider, useProductActions } from "./ProductActionsProvi
 
 interface ProductDetailPageProps {
   product: AdminDbProduct;
+  /** Override the static back link — used to preserve filter state from the admin products list. */
+  backHref?: string;
+  backLabel?: string;
 }
 
-function ProductDetailContent({ product }: ProductDetailPageProps) {
+function ProductDetailContent({
+  product,
+  backHref = "/panel/products",
+  backLabel = "Back to products",
+}: ProductDetailPageProps) {
   const { openDelete } = useProductActions();
   const {
     badge,
@@ -42,12 +49,12 @@ function ProductDetailContent({ product }: ProductDetailPageProps) {
       <div className="mb-6">
         <Button
           as="a"
-          href="/panel/products"
+          href={backHref}
           variant="outline"
           size="sm"
           startIcon={<ArrowLeft size={14} />}
         >
-          Back to products
+          {backLabel}
         </Button>
       </div>
 
@@ -132,10 +139,10 @@ function ProductDetailContent({ product }: ProductDetailPageProps) {
   );
 }
 
-export function ProductDetailPage({ product }: ProductDetailPageProps) {
+export function ProductDetailPage(props: ProductDetailPageProps) {
   return (
     <ProductActionsProvider>
-      <ProductDetailContent product={product} />
+      <ProductDetailContent {...props} />
     </ProductActionsProvider>
   );
 }

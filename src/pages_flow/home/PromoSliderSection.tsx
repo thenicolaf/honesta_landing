@@ -15,6 +15,8 @@ interface PromoSliderSectionProps {
   headerClassName?: string;
   /** Origin marker for product links — controls the "Back to …" label on the product detail page. */
   from?: string;
+  /** Full back URL forwarded to nested product links — preserves filter state through chained navigation. */
+  backHref?: string;
 }
 
 export async function PromoSliderSection({
@@ -24,6 +26,7 @@ export async function PromoSliderSection({
   withAnchor = true,
   headerClassName,
   from,
+  backHref,
 }: PromoSliderSectionProps = {}) {
   const products = await getPromoSliderProducts(10, { excludeId });
   if (products.length === 0) return null;
@@ -46,7 +49,7 @@ export async function PromoSliderSection({
           </h2>
         </div>
 
-        <PromoSlider products={products} from={from} />
+        <PromoSlider products={products} from={from} backHref={backHref} />
       </div>
     </section>
   );

@@ -20,9 +20,11 @@ import {
 interface ProductItemProps {
   product: Product;
   from?: string;
+  /** Full back URL (path + query + hash) — overrides the static `FROM_MAP[from].href` so filter state is preserved. */
+  backHref?: string;
 }
 
-export function ProductItem({ product, from }: ProductItemProps) {
+export function ProductItem({ product, from, backHref }: ProductItemProps) {
   const { title, category, ingredients, image_url } = product;
 
   const [selectedVariantId, setSelectedVariantId] = useState(
@@ -33,7 +35,7 @@ export function ProductItem({ product, from }: ProductItemProps) {
     product.variants?.find((v) => v.id === selectedVariantId) ??
     product.variants?.[0];
 
-  const href = buildProductHref({ slug: product.slug, from });
+  const href = buildProductHref({ slug: product.slug, from, backHref });
 
   return (
     <div className="h-full flex flex-col rounded-2xl bg-white-warm border border-parchment/60 hover:shadow-lg hover:border-transparent transition-all duration-300">
