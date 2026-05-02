@@ -252,7 +252,7 @@ async function parseProductValues(
     in_stock: values.in_stock === "true",
     mark: values.mark || "new",
     category_id: values.category_id || null,
-    nutrition: JSON.parse((formData.get("nutrition") as string) || "{}") as NutritionJson,
+    nutrition: JSON.parse((formData.get("nutrition") as string) || "[]") as NutritionJson,
   };
 }
 

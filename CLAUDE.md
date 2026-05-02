@@ -467,9 +467,14 @@ Reusable embla carousel of promo + best-seller products. Lives in [src/sections/
 - **Product detail page (`/products/[id]`)** — passed via `<ProductDetailPage belowGrid={...}>` slot. `excludeId={product.id}` (current product hidden from suggestions), `kicker="More to explore"`, `title="You might also like"`, `headerClassName="text-left md:pl-12"` (left-aligned + offset to align with first card under the prev-arrow button), `withAnchor={false}` (no duplicate `id="promo"` outside home).
 - **Cart (`/cart`)** — passed via `<CartPage belowContent={...}>` slot, only on the populated-cart branch (skipped on `EmptyCart`).
 
-### `from` query param chain
+### `from` + `back` query param chain
 
-Product links produced by the slider carry `?from=...` so the back button on `/products/[id]` resolves to the right origin. Mapping in [src/app/products/[id]/page.tsx](src/app/products/[id]/page.tsx):
+Product links carry **two** query params controlling the back button on `/products/[id]`:
+
+- **`?from=`** — short key looked up in `FROM_MAP` for the **label** ("Back to cart", "Back to products", …).
+- **`?back=`** — full URL (path + query + hash) used as the back **href**. Lets the caller carry filter state so the user lands on the same scrolled, filtered list. Validated with `isSafeBackHref` (only same-origin relative paths — rejects `https://...` and protocol-relative `//evil.com/...`). When `?back=` is present it overrides `FROM_MAP[from].href`; the label still comes from `FROM_MAP[from]` (or `"Back"` if `from` is unknown).
+
+Mapping in [src/app/products/[id]/page.tsx](src/app/products/[id]/page.tsx):
 
 ```ts
 const FROM_MAP = {
@@ -480,7 +485,19 @@ const FROM_MAP = {
 };
 ```
 
-The slider on a product detail page **inherits** the incoming `from` so that the original entry context (cart / favorites / etc.) propagates through any depth of product-to-product navigation: `from={from ?? "products"}`. If user landed on a product directly (no `from`), the slider falls back to `from="products"` so chained back-clicks return to `/#products` — never `/#promo` (the home variant).
+The slider on a product detail page **inherits** the incoming `from` and `back` so that the original entry context propagates through any depth of product-to-product navigation: `from={from ?? "products"}`, `backHref={safeBack}`. If user landed on a product directly (no `from`), the slider falls back to `from="products"` so chained back-clicks return to `/#products` — never `/#promo` (the home variant).
+
+### Filter preservation helpers
+
+Three pieces wire up the "Back returns to the same filtered list" UX:
+
+1. **[buildBackHref / isSafeBackHref](src/shared/utils/backHref.ts)** — single source of truth for the `?back=` value. `buildBackHref({ pathname, searchParams, hash })` produces the URL using `useSearchParams().toString()`; `isSafeBackHref(url)` is the same-origin guard used by every consumer of `?back=`.
+2. **[buildProductHref](src/sections/products/utils/buildProductHref.ts)** — serialises both `from` and `backHref` into the outbound `/products/{slug}?from=…&back=…` URL. Always use this helper instead of hand-rolling the public product link.
+3. **List pages capture filters via `useSearchParams()` and pass `backHref` to each card:**
+   - [src/sections/products/ProductGrid.tsx](src/sections/products/ProductGrid.tsx) — public home `#products` grid passes `backHref = "/?{filters}#products"` and `from="products"`.
+   - [src/pages_flow/panel/products/AdminProductCard.tsx](src/pages_flow/panel/products/AdminProductCard.tsx) — admin grid passes `back=/panel/products?{filters}` directly into the `/panel/products/{id}/details` link.
+
+   Adding a new filterable list page with this UX is two lines: `useSearchParams()` → `buildBackHref(...)` → pass into the link.
 
 ### `belowGrid` / `belowContent` slot pattern
 
@@ -488,7 +505,7 @@ Both `ProductDetailPage` (client component) and `CartPage` (client component) ac
 
 ### `buildProductHref` helper
 
-`/products/[slug]?from=...` href construction lives in [src/sections/products/utils/buildProductHref.ts](src/sections/products/utils/buildProductHref.ts). Always use this helper instead of hand-rolling — keeps the query-string format consistent and gives a single place to extend (e.g. add `variant`, `ref` params later).
+`/products/[slug]?from=...&back=...` href construction lives in [src/sections/products/utils/buildProductHref.ts](src/sections/products/utils/buildProductHref.ts). Accepts `{ slug, from?, backHref? }` and uses `URLSearchParams` so encoding stays correct. Always use this helper instead of hand-rolling — keeps the query-string format consistent and gives a single place to extend (e.g. add `variant`, `ref` params later).
 
 ### `ClearCartButton`
 
@@ -715,7 +732,7 @@ Products have a **main image** (`image_url`) and an optional **gallery** (`image
 - **Product data** loaded from Supabase (with `image_url` + `images` from Storage). `mapDbProducts()` converts Supabase rows to the `Product` type, including variant mapping, image arrays, and promotion calculation.
 - **Delivery fee** is `NEXT_PUBLIC_DELIVERY_FEE` env var (default 25 AED), defined in `src/shared/consts.ts`.
 - **Product badge** — optional `badge` text field on both `products` and `categories` tables. Displayed via `Badge` component in `ProductHeader` and category cards. If empty/null, badge is hidden.
-- **Nutrition** — dynamic fields stored as `Record<string, { name: string; value: number }>` in `products.nutrition` JSONB. Admin form (`NutritionSection`) allows adding/removing fields via Popover form. Default 8 fields (Calories, Carbs, etc.) pre-populated for new products. `NutritionTable` in public UI iterates `Object.values(nutrition)`.
+- **Nutrition** — dynamic fields stored as `Array<{ key, name, value }>` in `products.nutrition` JSONB. **Format is an array, not an object** — JSONB normalizes object keys (no order guarantee), but preserves array order, which is what makes admin-defined ordering survive a round-trip. Admin form (`NutritionSection` in [src/pages_flow/panel/products/product-form/NutritionSection.tsx](src/pages_flow/panel/products/product-form/NutritionSection.tsx)) allows adding / removing / **drag-and-drop reordering** fields. DnD via `@dnd-kit/react` (`useSortable` + `PointerSensor` with instant activation, `handle` ref) — same pattern as [SortableThumbnail](src/shared/ui/UploadZone/SortableThumbnail.tsx). Drag handle is a `GripVertical` button absolutely positioned at `top-0 left-0` over the label; on hover-capable devices it appears on `group-hover` and the label slides right via `translate-x-7` (with `transition-transform`); on touch devices (`@media(hover:none)`) the handle is always visible and the label is rendered with the offset upfront. Default 8 fields (Calories, Carbs, etc.) pre-populated for new products. `parseNutritionEntries` is **tolerant** — accepts the new array format **and** the legacy `Record<string, { name, value }>` shape so existing rows in the DB keep working without migration. The single normalization point is [`mapNutrition`](src/sections/products/utils/mapNutrition.ts) which always returns the array form, so `NutritionTable` in public UI iterates `nutrition.map(...)` (no `Object.values`).
 - **Benefits** — managed via `BenefitsSection` with `MultiSelect` compound component. Supports inline creation (Popover form with name + description) and deletion. API: `POST/DELETE /api/options` with `entityType: "benefits"`. Benefits table: `benefits(id, name, description)`.
 - **Product fields** `servingIdeas`, `occasions`, `tags`, `freeFrom` are all rendered **inside the collapsible Details block** on product cards/rows (not exposed on the card body). On detail pages (`ProductExpandedDetails`, public + admin) they're joined by `ingredients` — the 2×2 grid is Tags / FreeFrom / Serving / Occasions, with Ingredients full-width between Nutrition and the grid. On cards/rows `ingredients` stays visible above `ProductNote` (the one exception). Section wrappers with uppercase labels: `ProductTagsSection`, `ProductFreeFromSection`, `ProductIngredientsSection` (all in [ProductDetails.tsx](src/sections/products/components/ProductDetails.tsx)). `hasDetailsContent` considers all six fields when deciding whether to show the Details trigger.
 - **Promotions** — `src/lib/promotionsDb.ts` handles CRUD. Promotions have `discount_type` (percentage | fixed), `discount_value`, date range, and `is_active` flag. Linked to products via `promotion_products` join table. Status is computed client-side via `getPromotionStatus()` (active | scheduled | expired) based on `is_active` + dates. Promotion list sorts active first.

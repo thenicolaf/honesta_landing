@@ -1,5 +1,6 @@
 import type { DbProduct, Product, ProductVariant } from "../types";
 import { calculateDiscountedPrice, findActivePromotion } from "@/shared/utils/calculateDiscount";
+import { mapNutrition } from "./mapNutrition";
 
 export function mapDbProducts(
   raw: DbProduct[],
@@ -51,9 +52,7 @@ export function mapDbProducts(
       ),
       occasions: p.product_occasions.map((po) => po.occasion_options.label),
       benefits: p.product_benefits.map((pb) => pb.benefits),
-      nutrition: p.nutrition && Object.keys(p.nutrition).length > 0
-        ? p.nutrition
-        : undefined,
+      nutrition: mapNutrition(p.nutrition),
       mark: p.mark ?? "standard",
       promotion,
       totalSold: salesMap?.[p.id] ?? 0,

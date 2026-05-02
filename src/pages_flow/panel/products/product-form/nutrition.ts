@@ -15,21 +15,22 @@ export const DEFAULT_NUTRITION_FIELDS: { key: string; name: string }[] = [
   { key: "vitamin_c", name: "Vitamin C (mg)" },
 ];
 
-export type NutritionJson = Record<string, { name: string; value: number }>;
+export type NutritionJson = NutritionEntry[];
+
+type LegacyNutritionObject = Record<string, { name: string; value: number }>;
 
 export function buildNutrition(entries: NutritionEntry[]): NutritionJson {
-  const result: NutritionJson = {};
-  for (const { key, name, value } of entries) {
-    if (key) result[key] = { name, value };
-  }
-  return result;
+  return entries.filter((e) => e.key).map(({ key, name, value }) => ({ key, name, value }));
 }
 
 export function parseNutritionEntries(
-  nutrition: NutritionJson | null | undefined,
+  nutrition: NutritionJson | LegacyNutritionObject | null | undefined,
 ): NutritionEntry[] {
   if (!nutrition) {
     return DEFAULT_NUTRITION_FIELDS.map((f) => ({ ...f, value: 0 }));
+  }
+  if (Array.isArray(nutrition)) {
+    return nutrition.map(({ key, name, value }) => ({ key, name, value }));
   }
   return Object.entries(nutrition).map(([key, { name, value }]) => ({
     key,
