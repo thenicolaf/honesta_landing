@@ -2,6 +2,7 @@ import type { MaskitoOptions } from "@maskito/core";
 import {
   maskitoDateOptionsGenerator,
   maskitoDateTimeOptionsGenerator,
+  maskitoTimeOptionsGenerator,
 } from "@maskito/kit";
 import { format as fnsFormat, isValid, parse, parseISO } from "date-fns";
 
@@ -17,6 +18,7 @@ const FORMAT_TO_MASK: Record<string, () => MaskitoOptions> = {
       dateSeparator: ".",
       dateTimeSeparator: " ",
     }),
+  "HH:mm": () => maskitoTimeOptionsGenerator({ mode: "HH:MM" }),
 };
 
 const maskCache = new Map<string, MaskitoOptions>();

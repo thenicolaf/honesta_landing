@@ -17,10 +17,12 @@ export function ResultCard({
   success,
   paymentState,
   orderRef,
+  deliverySchedule,
 }: {
   success: boolean;
   paymentState?: string;
   orderRef: string;
+  deliverySchedule?: string | null;
 }) {
   return (
     <div className="max-w-md w-full">
@@ -47,6 +49,13 @@ export function ResultCard({
             ? "Your order has been confirmed. We'll deliver soon!"
             : "Something went wrong with your payment. Please try again."}
         </p>
+
+        {success && deliverySchedule && (
+          <p className="font-body text-sm text-earth mb-3">
+            <span className="text-earth/55">Delivery: </span>
+            {deliverySchedule}
+          </p>
+        )}
 
         {paymentState && (
           <p className="font-body text-xs text-earth/40 mb-1">

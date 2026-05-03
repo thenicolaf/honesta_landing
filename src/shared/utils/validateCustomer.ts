@@ -6,6 +6,8 @@ export type CustomerErrors = Partial<Record<keyof CustomerInfo, string>> & {
   addressCity?: string;
   addressArea?: string;
   addressBuilding?: string;
+  deliveryDate?: string;
+  deliverySlot?: string;
 };
 
 export function validateCustomer(

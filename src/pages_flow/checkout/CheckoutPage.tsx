@@ -13,12 +13,16 @@ import { parseAddress } from "@/shared/utils/address";
 import type { CustomerInfo } from "@/shared/types";
 import type { UserAddress } from "@/lib/addressesDb";
 import type { DeliverySetting } from "@/lib/deliveryDb";
+import type { DeliverySlot } from "@/lib/deliverySlotsDb";
+import type { DeliveryBlackout } from "@/lib/deliveryBlackoutsDb";
 import type { ActivePromotionsMap } from "@/lib/promotionsDb";
 
 interface CheckoutPageProps {
   defaultValues?: Partial<CustomerInfo>;
   addresses?: UserAddress[];
   deliverySettings: DeliverySetting[];
+  deliverySlots: DeliverySlot[];
+  deliveryBlackouts: DeliveryBlackout[];
   isAuthenticated: boolean;
   activePromotions: ActivePromotionsMap;
 }
@@ -27,6 +31,8 @@ export function CheckoutPage({
   defaultValues,
   addresses,
   deliverySettings,
+  deliverySlots,
+  deliveryBlackouts,
   isAuthenticated,
   activePromotions,
 }: CheckoutPageProps) {
@@ -75,11 +81,13 @@ export function CheckoutPage({
           Your Details
         </h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-8 items-start">
           <CheckoutFormSection
             defaultValues={defaultValues}
             addresses={addresses}
             deliverySettings={deliverySettings}
+            deliverySlots={deliverySlots}
+            deliveryBlackouts={deliveryBlackouts}
             isAuthenticated={isAuthenticated}
             emirate={emirate}
             onEmirateChange={setEmirate}
@@ -87,7 +95,6 @@ export function CheckoutPage({
           <OrderSummary
             deliveryFee={delivery.fee}
             isFreeDelivery={delivery.isFreeDelivery}
-            deliveryDays={delivery.deliveryDays}
             originalFee={
               deliverySettings.find(
                 (s) => s.emirate.toLowerCase() === emirate.toLowerCase(),

@@ -46,11 +46,22 @@ export function NavUserButton({ user, isAdmin }: NavUserButtonProps) {
             {isAdmin && (
               <>
                 <DropdownMenuSeparator />
-                {ADMIN_ROUTES.map((route) => (
-                  <DropdownMenuItem key={route.href} asChild className={isActive(route.href) ? "text-orange!" : ""}>
-                    <Link href={route.href}>{route.label}</Link>
-                  </DropdownMenuItem>
-                ))}
+                <li
+                  role="presentation"
+                  className="block max-h-[40vh] overflow-y-auto overscroll-contain"
+                >
+                  <ul role="group" className="m-0 p-0 list-none">
+                    {ADMIN_ROUTES.map((route) => (
+                      <DropdownMenuItem
+                        key={route.href}
+                        asChild
+                        className={isActive(route.href) ? "text-orange!" : ""}
+                      >
+                        <Link href={route.href}>{route.label}</Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </ul>
+                </li>
               </>
             )}
             <DropdownMenuSeparator />

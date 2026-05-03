@@ -2,6 +2,7 @@ interface OrderForNotification {
   first_name: string | null;
   last_name: string | null;
   total: number | string;
+  delivery_schedule?: string | null;
 }
 
 interface OrderItemForNotification {
@@ -11,30 +12,63 @@ interface OrderItemForNotification {
 
 const MAX_NAMED_ITEMS = 2;
 
-export function formatOrderNotificationMessage(
+export interface OrderNotificationParts {
+  /** Customer full name. */
+  customer: string | null;
+  /** Total quantity across line items. */
+  totalQty: number;
+  /** Short list of named items (up to MAX_NAMED_ITEMS) + "+N more" suffix. */
+  itemsText: string | null;
+  /** Pre-formatted "AED 123.45". */
+  totalText: string;
+  /** Optional delivery schedule snapshot. */
+  deliverySchedule: string | null;
+}
+
+/**
+ * Returns the structured pieces of an order notification. Used by:
+ *  - push notifications + in-app realtime, via {@link formatOrderNotificationMessage}
+ *    (joined with " · " into a single line);
+ *  - the result/cancel page toast, which renders each piece on its own row.
+ */
+export function buildOrderNotificationParts(
   order: OrderForNotification,
   items: OrderItemForNotification[],
-): string {
-  const name = [order.first_name, order.last_name]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
+): OrderNotificationParts {
+  const customer =
+    [order.first_name, order.last_name].filter(Boolean).join(" ").trim() ||
+    null;
 
   const totalQty = items.reduce((sum, i) => sum + i.quantity, 0);
 
-  const parts: string[] = [];
-  if (name) parts.push(name);
-
+  let itemsText: string | null = null;
   if (items.length > 0) {
     const head = items
       .slice(0, MAX_NAMED_ITEMS)
       .map((i) => `${i.quantity}× ${i.name}`);
     const extra = items.length - MAX_NAMED_ITEMS;
-    const itemsText = extra > 0 ? [...head, `+${extra} more`].join(", ") : head.join(", ");
-    parts.push(`${totalQty} items · ${itemsText}`);
+    itemsText =
+      extra > 0 ? [...head, `+${extra} more`].join(", ") : head.join(", ");
   }
 
-  parts.push(`AED ${Number(order.total).toFixed(2)}`);
+  return {
+    customer,
+    totalQty,
+    itemsText,
+    totalText: `AED ${Number(order.total).toFixed(2)}`,
+    deliverySchedule: order.delivery_schedule ?? null,
+  };
+}
 
-  return parts.join(" · ");
+export function formatOrderNotificationMessage(
+  order: OrderForNotification,
+  items: OrderItemForNotification[],
+): string {
+  const parts = buildOrderNotificationParts(order, items);
+  const segments: string[] = [];
+  if (parts.customer) segments.push(parts.customer);
+  if (parts.itemsText) segments.push(`${parts.totalQty} items · ${parts.itemsText}`);
+  segments.push(parts.totalText);
+  if (parts.deliverySchedule) segments.push(parts.deliverySchedule);
+  return segments.join(" · ");
 }

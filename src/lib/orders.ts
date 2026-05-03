@@ -103,6 +103,8 @@ interface CreateOrderParams {
   promotionDiscount?: number;
   /** Defaults to OrderStatus.PENDING. Pass OrderStatus.PAID for manual admin orders. */
   status?: OrderStatus;
+  /** Pre-formatted human-readable delivery summary. */
+  deliverySchedule?: string | null;
 }
 
 /**
@@ -137,6 +139,7 @@ export async function createOrderWithItems({
   promoDiscount = 0,
   promotionDiscount = 0,
   status = OrderStatus.PENDING,
+  deliverySchedule = null,
 }: CreateOrderParams): Promise<{
   data: OrderResult | null;
   error: string | null;
@@ -165,6 +168,7 @@ export async function createOrderWithItems({
           ? { lat: parseFloat(customer.lat), lng: parseFloat(customer.lng) }
           : null,
       user_id: userId ?? null,
+      delivery_schedule: deliverySchedule,
     })
     .select()
     .single();

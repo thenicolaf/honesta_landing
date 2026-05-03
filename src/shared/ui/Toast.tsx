@@ -55,7 +55,10 @@ const baseOptions: ToastOptions = {
   icon: false,
 };
 
-export function toastSuccess(message: string, options?: ToastOptions) {
+export function toastSuccess(
+  message: React.ReactNode,
+  options?: ToastOptions,
+) {
   return toast(message, {
     ...baseOptions,
     ...options,
@@ -63,7 +66,10 @@ export function toastSuccess(message: string, options?: ToastOptions) {
   });
 }
 
-export function toastError(message: string, options?: ToastOptions) {
+export function toastError(
+  message: React.ReactNode,
+  options?: ToastOptions,
+) {
   return toast(message, {
     ...baseOptions,
     ...options,
@@ -71,7 +77,10 @@ export function toastError(message: string, options?: ToastOptions) {
   });
 }
 
-export function toastInfo(message: string, options?: ToastOptions) {
+export function toastInfo(
+  message: React.ReactNode,
+  options?: ToastOptions,
+) {
   return toast(message, {
     ...baseOptions,
     ...options,

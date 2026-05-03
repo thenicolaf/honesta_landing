@@ -21,6 +21,7 @@ export type Order = {
   promo_discount: number;
   promo_code?: { code: string } | null;
   address: string;
+  delivery_schedule: string | null;
   created_at: string;
   order_items: OrderItem[];
 };

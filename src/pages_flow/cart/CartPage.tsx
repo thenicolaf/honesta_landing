@@ -11,11 +11,9 @@ import { ClearCartButton } from "./ui/ClearCartButton";
 import { buttonVariants } from "@/shared/ui";
 import { CartSkeleton } from "./ui/CartSkeleton";
 import { HashLink } from "@/sections/navbar";
-import type { DeliverySetting } from "@/lib/deliveryDb";
 import type { ActivePromotionsMap } from "@/lib/promotionsDb";
 
 interface CartPageProps {
-  deliverySettings: DeliverySetting[];
   isAuthenticated: boolean;
   activePromotions: ActivePromotionsMap;
   /** Server-rendered slot below the cart summary (e.g. PromoSliderSection). */
@@ -23,7 +21,6 @@ interface CartPageProps {
 }
 
 export function CartPage({
-  deliverySettings,
   isAuthenticated,
   activePromotions,
   belowContent,
@@ -73,7 +70,7 @@ export function CartPage({
           </div>
           <CartGrid />
           <PromoCodeBlock isAuthenticated={isAuthenticated} />
-          <CartSummary deliverySettings={deliverySettings} />
+          <CartSummary />
         </div>
       </div>
       {belowContent}

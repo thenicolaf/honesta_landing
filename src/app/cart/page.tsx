@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { CartPage } from "@/pages_flow/cart";
 import { CartSkeleton } from "@/pages_flow/cart/ui/CartSkeleton";
-import { getDeliverySettings } from "@/lib/deliveryDb";
 import { getActivePromotionsMap } from "@/lib/promotionsDb";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
 import { PromoSliderSection } from "@/pages_flow/home";
@@ -15,16 +14,13 @@ export const metadata: Metadata = {
 };
 
 async function CartContent() {
-  const [deliverySettings, { data: { user } }, activePromotions] =
-    await Promise.all([
-      getDeliverySettings(),
-      createSupabaseServerClient().then((s) => s.auth.getUser()),
-      getActivePromotionsMap(),
-    ]);
+  const [{ data: { user } }, activePromotions] = await Promise.all([
+    createSupabaseServerClient().then((s) => s.auth.getUser()),
+    getActivePromotionsMap(),
+  ]);
 
   return (
     <CartPage
-      deliverySettings={deliverySettings}
       isAuthenticated={!!user}
       activePromotions={activePromotions}
       belowContent={

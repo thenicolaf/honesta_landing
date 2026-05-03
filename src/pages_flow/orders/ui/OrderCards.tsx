@@ -119,6 +119,12 @@ export function OrderCards({ orders }: { orders: Order[] }) {
             <div className="border-t border-earth/8 pt-1 mt-1">
               <CostBreakdown order={order} />
             </div>
+            {order.delivery_schedule && (
+              <p className="text-2xs text-earth/55 mt-1.5">
+                <span className="text-earth/40">Delivery: </span>
+                {order.delivery_schedule}
+              </p>
+            )}
             {order.address && (
               <CopyText
                 text={displayAddress(order.address)}

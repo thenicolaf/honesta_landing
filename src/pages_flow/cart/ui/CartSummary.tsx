@@ -1,27 +1,17 @@
 "use client";
 
-import { Button, buttonVariants, Card, DeliveryInfo } from "@/shared/ui";
+import { Button, buttonVariants, Card } from "@/shared/ui";
 import { useCart } from "@/providers";
 import { getCartTotals } from "@/lib/cart";
-import { formatDeliveryDaysRange } from "@/shared/utils/calculateDelivery";
-import type { DeliverySetting } from "@/lib/deliveryDb";
 import { HashLink } from "@/sections";
 import { cn } from "@/shared/utils/cn";
 
-interface CartSummaryProps {
-  deliverySettings: DeliverySetting[];
-}
-
-export function CartSummary({ deliverySettings }: CartSummaryProps) {
+export function CartSummary() {
   const { items, appliedPromoCode, promoDiscount } = useCart();
   const { originalSubtotal, promotionDiscount, total } = getCartTotals(
     items,
     promoDiscount,
   );
-
-  const freeThreshold = deliverySettings.find(
-    (s) => s.emirate === "Dubai",
-  )?.free_delivery_threshold;
 
   const hasAdjustments = promotionDiscount > 0 || promoDiscount > 0;
 
@@ -78,10 +68,6 @@ export function CartSummary({ deliverySettings }: CartSummaryProps) {
               AED {total.toFixed(2)}
             </span>
           </div>
-
-          <DeliveryInfo
-            label={`${formatDeliveryDaysRange(deliverySettings)}${freeThreshold ? ` · Free in Dubai from AED ${freeThreshold}` : ""}`}
-          />
         </div>
       </Card>
 

@@ -99,7 +99,11 @@ src/
 │   ├── notificationsDb.ts      # Notifications CRUD + triggers push via pushNotification.ts
 │   ├── pushNotification.ts     # Server-side web-push sending (VAPID, lazy init)
 │   ├── storage.ts              # Image upload/delete to Supabase Storage
-│   └── syncCartPrices.ts       # Syncs cart prices with active promotions
+│   ├── syncCartPrices.ts       # Syncs cart prices with active promotions
+│   ├── deliveryDb.ts           # Per-emirate delivery_settings (incl. cutoff_hour)
+│   ├── deliverySlotsDb.ts      # delivery_slots CRUD + cached queries (re-exports getAvailableSlotsForDate / findSlotConflict)
+│   ├── deliveryBlackoutsDb.ts  # delivery_blackouts CRUD (date or date+slot)
+│   └── orderNotifications.ts   # buildOrderNotificationParts (structured) + formatOrderNotificationMessage (string)
 │
 ├── proxy.ts                    # Next.js middleware helper — refreshes auth session + protects private routes
 │
@@ -158,7 +162,7 @@ src/
     ├── ui/                     # Reusable primitives (Button, Badge, Card, Form, Collapsible, etc.)
     ├── icons/                  # SVG icon components + index.ts barrel
     ├── types/                  # Categories enum, CustomerInfo, OrderStatus, ProfileInfo, UserRole
-    └── utils/                  # cn.ts, validateCustomer.ts, validatePartnership.ts, validateProfile.ts, validateAuth.ts, validatePhone.ts, calculateDiscount.ts, resolveNotificationHref.ts
+    └── utils/                  # cn.ts, validateCustomer.ts, validatePartnership.ts, validateProfile.ts, validateAuth.ts, validatePhone.ts, calculateDiscount.ts, resolveNotificationHref.ts, zonedTime.ts (Asia/Dubai wall-clock + cut-off helpers), deliverySlots.ts (pure getAvailableSlotsForDate + findSlotConflict resolver)
 ```
 
 **Rule:** backend/data-access → `src/lib/`, page-level component trees → `src/pages_flow/`, landing sections → `src/sections/`, generic primitives → `src/shared/ui/`, SVG icons → `src/shared/icons/`, React context providers → `src/providers/`.
@@ -206,6 +210,7 @@ src/
 | `/panel/marketing-popup` | Marketing popups catalog — list with Activate/Edit/Delete (admin only) |
 | `/panel/marketing-popup/create` | Create new popup (admin only) |
 | `/panel/marketing-popup/[id]/edit` | Edit popup (admin only) |
+| `/panel/delivery` | Delivery settings — emirates + slots (CRUD via Dialog) + blackouts (CRUD via Dialog), admin only |
 
 ## Panel Section (`panel` route segment)
 
@@ -234,17 +239,16 @@ Pages use **Suspense + Skeleton** instead of `loading.tsx`. Each page wraps asyn
 
 ## E-commerce & Payment Flow
 
-**Checkout server action** (`src/pages_flow/checkout/actions.ts`):
-1. Validates `CustomerInfo` (phone must match `^\+971[0-9]{9}$`, UAE format)
-2. Saves customer to `CUSTOMER_COOKIE_KEY` cookie (30 days) for form repopulation
-3. Re-validates the applied promo code server-side via `validatePromoCode` from [src/lib/promoCodeApply.ts](src/lib/promoCodeApply.ts) — never trusts client
-4. Computes totals via `getCartTotals(items, promoDiscount)` from [src/lib/cart.ts](src/lib/cart.ts) — returns `{ originalSubtotal, subtotal, promotionDiscount, total }`
-5. Builds `OrderItemRow[]` via `buildMixCompositionMap(variantIds)` + `cartItemToOrderRow(cartItem, mixMap, perItemPromoDiscounts)` (both from [src/lib/orders.ts](src/lib/orders.ts))
-6. Calls `createOrderWithItems({ items: OrderItemRow[], customer, subtotal, deliveryFee, promoCodeId, promoDiscount, promotionDiscount })` — inserts `orders` + pre-built `order_items` in one pass, no hidden DB lookups
-7. Calls N-Genius to create a payment, gets back payment URL
-8. Updates order with `ngenius_ref`, then `redirect()` to N-Genius hosted page
+**Checkout server action** (`src/pages_flow/checkout/actions.ts`) — phased pipeline (see **Delivery schedule → Server-side revalidation in `submitCheckout`** for the full breakdown). All step helpers extracted to [checkoutSteps.ts](src/pages_flow/checkout/checkoutSteps.ts) so `submitCheckout` reads as a linear sequence of `Promise.all` phases. Headline:
+1. Phase 1 (parallel): auth + active slots + emirate setting + mix composition map. `persistCustomerCookie` is fire-and-forget.
+2. Validate customer + delivery date/slot (date+slot required only when admin configured at least one slot).
+3. Phase 3 (parallel): re-apply promo code + re-validate the (date, slot) pair against current `delivery_slots`/`delivery_blackouts`/`cutoff_hour`.
+4. Compute totals + delivery fee (`evaluateDeliveryFee` is pure, reuses fetched setting).
+5. Build `OrderItemRow[]` via `buildMixCompositionMap` + `cartItemToOrderRow`.
+6. `createOrderWithItems({ ..., deliverySchedule })` — one insert, no hidden lookups.
+7. Call N-Genius, persist `ngenius_ref`, redirect to hosted page.
 
-**`createOrderWithItems` contract** ([src/lib/orders.ts](src/lib/orders.ts)): accepts `items: OrderItemRow[]` (a pre-built shape matching `order_items` columns — `variant_id`, `name`, `price`, `original_price`, `promo_discount`, `quantity`, `weight_g`, `mix_composition`). Callers assemble these rows themselves — for checkout via `cartItemToOrderRow(+buildMixCompositionMap)`, for manual admin orders by constructing rows directly with inline `mix_composition`. The function itself only inserts; it does **not** run a DB join to resolve mix composition.
+**`createOrderWithItems` contract** ([src/lib/orders.ts](src/lib/orders.ts)): accepts `items: OrderItemRow[]` (a pre-built shape matching `order_items` columns — `variant_id`, `name`, `price`, `original_price`, `promo_discount`, `quantity`, `weight_g`, `mix_composition`) plus optional `deliverySchedule: string | null`. Callers assemble rows themselves — checkout via `cartItemToOrderRow(+buildMixCompositionMap)`, manual admin orders by constructing rows directly with inline `mix_composition`. The function itself only inserts; it does **not** run a DB join to resolve mix composition.
 
 **Result page** (`src/app/checkout/result/page.tsx`):
 - Server component — polls N-Genius directly for final status
@@ -252,10 +256,12 @@ Pages use **Suspense + Skeleton** instead of `loading.tsx`. Each page wraps asyn
 - On `PAID`: records promo code redemption, calls `clearCartAndCleanup(supabaseAdmin, user_id)` for auth users (wipes `cart_items` + cleans up orphan mix-variants from cart), and additionally calls `cleanupOrphanedMixVariants` with `variant_id`s from this order's `order_items` — this covers guest flow where `user_id` is NULL
 - For guests: renders an inline `<script>` that synchronously wipes `honesta_cart` + `honesta_promo_code` from `localStorage` **before** `CartProvider` mounts and reads it
 - Renders `<ClearCartOnSuccess>` (client component) to flush the in-memory `CartProvider._items` store after a navigation hit
+- Renders [`<ResultToast>`](src/app/checkout/result/ResultToast.tsx) — fires a structured toast on mount using `{ title, parts }` returned by `settleOrder`. Realtime channel can't catch the notification INSERT in time after the N-Genius redirect, so the toast is dispatched directly from the page. Returns `null` on subsequent visits (settleOrder is idempotent), so refresh doesn't double-toast. The same component is reused on `/checkout/cancel` (with `success={false}`).
 
 **Manual admin orders** (`src/app/panel/all-orders/create/page.tsx` + `src/pages_flow/panel/orders/manual-order/`):
-- Form composes `OrderItemsPicker` (product/variant/qty rows) + `AdminMixBuilder` (reuses [BoxSelector](src/pages_flow/mix/BoxSelector.tsx) + [PresetGrid](src/pages_flow/mix/PresetGrid.tsx) from `/mix`) + `AddressWithMap` + live summary. All form state is lifted into `ManualOrderForm`.
-- `createManualOrderAction` ([src/pages_flow/panel/orders/manual-order/actions.ts](src/pages_flow/panel/orders/manual-order/actions.ts)) — re-checks `profiles.role='admin'` (defence-in-depth, on top of `proxy.ts`), loads authoritative variant prices + promotions, loads boxes+presets in one query, builds `OrderItemRow[]` directly (inline `mix_composition` for mixes, `variant_id=NULL` for them), inserts with `status=OrderStatus.PAID`.
+- Form decomposed into per-block sections under [sections/](src/pages_flow/panel/orders/manual-order/sections/) (CustomerInfoSection, DeliveryAddressSection, DeliveryScheduleSection, ProductsSection, MixesSection, NotesSection, OrderSummarySection, ManualOrderFooter — all wrapped by a shared `ManualOrderSection` card). Logic split into [`useDeliverySchedule`](src/pages_flow/panel/orders/manual-order/useDeliverySchedule.ts) (date+slot state with weekday filter) and [`buildManualOrderTotals`](src/pages_flow/panel/orders/manual-order/totals.ts) (pure subtotal/discount/delivery/total calculation). `ManualOrderForm` itself is now ~110 lines of linear orchestration.
+- Admin date picker has **no `minDate`/`maxDate`** — past dates are intentionally allowed for back-filling historical orders; cut-off and blackouts are also bypassed.
+- `createManualOrderAction` ([src/pages_flow/panel/orders/manual-order/actions.ts](src/pages_flow/panel/orders/manual-order/actions.ts)) — re-checks `profiles.role='admin'` (defence-in-depth, on top of `proxy.ts`), loads authoritative variant prices + promotions, loads boxes+presets in one query, builds `OrderItemRow[]` directly (inline `mix_composition` for mixes, `variant_id=NULL` for them), inserts with `status=OrderStatus.PAID` and `delivery_schedule` from a hidden field composed client-side.
 - **No N-Genius, no push notification, no cart cleanup** — admin marks a PAID order that already happened off-site (WhatsApp/Instagram/phone).
 - **No `product_variants` / `mix_variant_cells` writes** — the manual flow deliberately bypasses `assembleMixAction` to avoid polluting the DB with single-use mix variants. Composition lives only in `order_items.mix_composition`.
 - `revalidatePath("/panel/all-orders")` + `revalidatePath("/panel")` on success so dashboard stats refresh.
@@ -277,6 +283,7 @@ Pages use **Suspense + Skeleton** instead of `loading.tsx`. Each page wraps asyn
 - **Price sync:** `syncCartPrices` queries products with variants + promotions, recalculates prices. `originalPrice` is computed from promotions on the fly, never stored in DB.
 - **DB cart (`cartDb.ts`):** `getCartFromDb` does a join: `cart_items → product_variants → products` (with promotions) to build full CartItem objects. `upsertItemInDb` stores only `(user_id, variant_id, quantity)`.
 - **Totals utility:** [src/lib/cart.ts](src/lib/cart.ts) `getCartTotals(items, promoDiscount)` is the single source of truth for `originalSubtotal` (sum of `originalPrice ?? price`), `subtotal` (after product promotions, before promo code), `promotionDiscount` (`originalSubtotal − subtotal`), and `total` (`subtotal − promoDiscount`). **Don't duplicate `items.reduce` for totals in components — call this helper.** It's used by `CartSummary`, `OrderSummary`, and `submitCheckout`.
+- **Cart/Order summary delivery info.** `CartSummary` (`/cart`) does **not** show delivery days or free-delivery threshold — the address isn't picked yet. `OrderSummary` (`/checkout`) keeps only the conditional free-threshold note (`Free in {emirate} from AED {n}`) because emirate is selected here; delivery days hint was retired in favour of the explicit date+slot picker.
 - **Color semantics for prices:** **moss** = promo code discount, **orange** = product promotion, **earth** = no discount. Apply this priority order when rendering line totals (promo > promotion > regular).
 
 ## Promo codes
@@ -457,6 +464,70 @@ Used in:
 
 Mix box images use the `mixes` Supabase Storage bucket (added to `ALLOWED_BUCKETS` in [src/lib/storage.ts](src/lib/storage.ts)). Must be created in Supabase Dashboard manually, with public read policy.
 
+## Delivery schedule (slots, blackouts, cut-off)
+
+Customers pick a delivery date + slot during checkout. Admins manage slots and per-date/per-slot blackouts in `/panel/delivery`. The whole module is **soft-required**: when no slots exist in DB, the picker is hidden and customers can place orders without choosing a window. As soon as the admin adds at least one slot, the date+slot becomes mandatory.
+
+### Data model
+
+- `delivery_slots` — admin-managed list. `start_time`/`end_time` (postgres `time`), `available_weekdays` (`smallint[]`, ISO 1=Mon … 7=Sun, CHECK enforces non-empty + range via `<@ ARRAY[1..7]`), `is_active`. No `sort_order` — UI sorts by `start_time` everywhere.
+- `delivery_blackouts` — `(blackout_date, slot_id)` with `slot_id` nullable. `slot_id IS NULL` = whole day blocked; `slot_id = <uuid>` = only that slot blocked on that date. Unique index uses `NULLS NOT DISTINCT` so `(date, NULL)` can't be inserted twice.
+- `delivery_settings.cutoff_hour` — per-emirate (0–23, default 19). Before this hour in Asia/Dubai, "tomorrow" is the earliest deliverable date; from this hour, earliest becomes "the day after tomorrow".
+- `delivery_settings.delivery_days` — per-emirate lead time (default 1 = next-day). Threaded through `getMinDeliveryDate(cutoffHour, at, deliveryDays)`: earliest deliverable date = `today + max(1, deliveryDays) + (pastCutoff ? 1 : 0)`. Switching emirate in checkout (e.g. Dubai with 1 day → Sharjah with 2 days) re-anchors the date grid automatically — `CheckoutFormSection` reads `emirateSetting?.delivery_days ?? 1` and passes it down to `DeliveryScheduleSection` → `useDeliverySchedulePicker` → `buildDayGrid` / `getAvailableSlotsForDate`. The server `revalidateDeliveryWindow(delivery, cutoffHour, deliveryDays)` uses the same value for the submit-time race check.
+- `orders.delivery_schedule text` — single human-readable snapshot like `"6 May 2026 · Morning 09:00–15:00"`. No FKs into delivery tables, so admins can edit/delete slots freely without breaking historical orders.
+
+### Pure resolver — single source of truth
+
+[`getAvailableSlotsForDate(date, slots, blackouts, cutoffHour, now?)`](src/shared/utils/deliverySlots.ts) is a pure function used both for client rendering (date strip / slot tiles) and server-side revalidation at submit time. It rejects dates before `getMinDeliveryDate(cutoffHour)`, drops fully-blocked days, removes per-slot blackouts, and filters by `available_weekdays`. [`findSlotConflict`](src/shared/utils/deliverySlots.ts) is the parallel checker for slot creation/edit (no two active slots can overlap in time on a shared weekday).
+
+### Time zone helpers
+
+[src/shared/utils/zonedTime.ts](src/shared/utils/zonedTime.ts) — `nowInZone`, `isPastCutoff`, `getMinDeliveryDate`, `getZoneIsoWeekday`, `formatLongDate`, `formatTimeRange`, `formatDeliverySchedule`, `toDateOnlyString`, `fromDateOnlyString`. Uses `Intl.DateTimeFormat` with cached formatters; default `timeZone="Asia/Dubai"` is overridable via the optional last argument. No new packages — just `date-fns` + native `Intl`.
+
+### Weekday labels
+
+[src/shared/consts/delivery.ts](src/shared/consts/delivery.ts) exports `WEEKDAYS_ISO`, `weekdayShortLabel(iso)`, `weekdayFullLabel(iso)` — both helpers wrap `format(setDay(...), "EEE"|"EEEE")` so labels are always in sync with date-fns instead of being hard-coded maps.
+
+### Admin UI (`/panel/delivery`)
+
+Three sections on a single page:
+1. **Emirates** (existing) — per-row form with `delivery_fee`, threshold, minimum, days, **cutoff_hour** (`FormNumberInput` 0–23 with an `Info` tooltip explaining the semantics).
+2. **Delivery slots** ([SlotsSection](src/pages_flow/panel/delivery/SlotsSection.tsx)) — card grid sorted by `start_time`, each card shows time range (Jost tabular-nums) + label + 7 weekday chips (Mon–Sun, on/off) + status badge + Edit/Delete buttons in the same style as `PromotionCard`. Add/Edit open a `Dialog` with [`SlotForm`](src/pages_flow/panel/delivery/SlotForm.tsx) — `FormInput` label, two `FormTimePicker` (HH:mm), `TagToolbarMulti` weekday chips, `FormCheckbox` is_active, plus a "Free: …" hint computed by [`computeFreeWindows`](src/pages_flow/panel/delivery/freeWindows.ts) showing remaining gaps for the selected weekdays.
+3. **Blocked dates** ([BlackoutsSection](src/pages_flow/panel/delivery/BlackoutsSection.tsx)) — same card pattern. Card shows date (large) + "All day" or "{slot label} · {range}" badge + reason. Edit + Delete in the dialog. [`BlackoutForm`](src/pages_flow/panel/delivery/BlackoutForm.tsx) — `FormDatePicker`, then a `FormSelect` of slots **filtered by the chosen date's weekday** (so admin can't block a slot on a day it doesn't run); "All day" is the first/default option.
+
+Server actions in [src/pages_flow/panel/delivery/actions.ts](src/pages_flow/panel/delivery/actions.ts): `createSlotAction`/`updateSlotAction` run `findSlotConflict` against existing rows; conflict text uses `weekdayShortLabel(conflict.weekday)`. `addBlackoutAction`/`updateBlackoutAction` share `validateBlackoutInput` + `mapBlackoutDbError` helpers (DRY) and re-check that a per-slot blackout's slot covers the chosen weekday. All revalidate `/panel/delivery`, `/cart`, `/checkout`.
+
+### Checkout UI
+
+The customer picker is decomposed under [src/pages_flow/checkout/ui/delivery-schedule/](src/pages_flow/checkout/ui/delivery-schedule):
+- [`buildDayCells.ts`](src/pages_flow/checkout/ui/delivery-schedule/buildDayCells.ts) — pure `buildDayGrid(slots, blackouts, cutoffHour)` returns `{ cells, weekdayLabels, earliestAvailable }`. Grid is **2 weeks × 7 columns**, anchored to the Monday of the week containing `getMinDeliveryDate(...)` (so past days are never wasted on a row when the picker opens later in the week).
+- [`useDeliverySchedulePicker.ts`](src/pages_flow/checkout/ui/delivery-schedule/useDeliverySchedulePicker.ts) — owns picker state, derives effective `selectedDateIso`/`selectedSlotId` during render (no setState-in-effect cascades when upstream changes), notifies parent via `onSelectionChange(selected: boolean)` from a `useEffect` guarded by `useRef`.
+- [`DateGrid.tsx`](src/pages_flow/checkout/ui/delivery-schedule/DateGrid.tsx) — header row (`EEEEE` letters via `format`) + `FormTileRadio` with `className="grid grid-cols-7 gap-1.5"` overriding the default flex; cells are `aspect-square` `FormTileRadioItem` with the day-of-month, `disabled` prop on unavailable cells.
+- [`SlotPicker.tsx`](src/pages_flow/checkout/ui/delivery-schedule/SlotPicker.tsx) — `Slot for {date}` heading + `FormTileRadio` of slots.
+- [`EarliestDeliveryHint.tsx`](src/pages_flow/checkout/ui/delivery-schedule/EarliestDeliveryHint.tsx) — `Earliest delivery — {date}` line under the grid.
+
+[`DeliveryScheduleSection`](src/pages_flow/checkout/ui/DeliveryScheduleSection.tsx) is the thin orchestrator: hides itself entirely when `slots.length === 0`, renders the section + writes hidden inputs `delivery_date` (`yyyy-MM-dd`) and `delivery_slot_id` (uuid). Mounted **inside** `CheckoutForm` between the address block and notes via the `scheduleSlot` prop slot. The `CheckoutFormSection` lifts `scheduleSelected` state from the picker's `onSelectionChange` callback and forwards `scheduleRequired = slots.length > 0` and `scheduleSelected` into `SubmitButton` — the submit is disabled until a slot is picked, with an inline error "Pick a delivery date and slot to continue" rendered under the button.
+
+`CheckoutPage` uses `lg:grid-cols-[minmax(0,1fr)_360px]` (not `1fr_360px`) so the form column can shrink below its natural content width without pushing OrderSummary off-grid.
+
+### Server-side revalidation in `submitCheckout`
+
+[src/pages_flow/checkout/actions.ts](src/pages_flow/checkout/actions.ts) runs in **phases** with `Promise.all` to keep N-Genius the only dominant latency; named helpers live in [checkoutSteps.ts](src/pages_flow/checkout/checkoutSteps.ts) (`loadCurrentUser`, `parseDeliveryFields`, `readEmirate`, `fetchDeliverySetting`, `applyPromoCode`, `revalidateDeliveryWindow`, `evaluateDeliveryFee`, `computeCheckoutTotals`, `validateCheckoutFields`, `persistCustomerCookie`):
+
+1. Phase 1 (parallel) — `loadCurrentUser`, `getActiveDeliverySlots`, `fetchDeliverySetting(emirate)`, `buildMixCompositionMap`. `persistCustomerCookie` is fire-and-forget (`void`).
+2. Phase 2 — pure validation. `scheduleRequired = activeSlots.length > 0`; if true, `delivery_date`/`delivery_slot_id` become required.
+3. Phase 3 (parallel) — `applyPromoCode`, `revalidateDeliveryWindow(deliveryFields, setting?.cutoff_hour ?? 19)`. The window helper returns `{ deliverySchedule: null }` when no active slots exist (skipped on empty admin config) and otherwise calls `getAvailableSlotsForDate` to confirm the (date, slot) pair is still valid; on race the response sets `fieldErrors.deliveryDate` or `fieldErrors.deliverySlot`.
+4. Phase 4 — `evaluateDeliveryFee` is **pure**; uses the already-fetched setting.
+5. Phase 5/6 — insert order with `delivery_schedule = formatDeliverySchedule(date, slot)` (or `null` for soft-required mode), then redirect to N-Genius.
+
+### Manual admin order
+
+[`/panel/all-orders/create`](src/app/panel/all-orders/create/page.tsx) ↔ [`ManualOrderForm`](src/pages_flow/panel/orders/manual-order/ManualOrderForm.tsx) — same date+slot picker but **without cut-off / blackouts** (admin enters historical orders). Past dates are allowed: `FormDatePicker` has no `minDate`/`maxDate`. Logic decomposed into [`useDeliverySchedule`](src/pages_flow/panel/orders/manual-order/useDeliverySchedule.ts) (date+slot state with weekday filter), [`buildManualOrderTotals`](src/pages_flow/panel/orders/manual-order/totals.ts) (pure subtotal/promotion/delivery/total), and per-block UI in [`sections/`](src/pages_flow/panel/orders/manual-order/sections/) (CustomerInfoSection, DeliveryAddressSection, DeliveryScheduleSection, ProductsSection, MixesSection, NotesSection, OrderSummarySection, ManualOrderFooter wrapped by a shared `ManualOrderSection`). Form composes the schedule string client-side and submits it as a hidden `delivery_schedule` field; server action accepts the string verbatim.
+
+### SQL migration
+
+`delivery_slots_migration.sql` lives at the repo root (intentionally outside `supabase/migrations/`) — apply manually via `supabase db push` / Studio. Adds `cutoff_hour` to `delivery_settings`, creates `delivery_slots` + `delivery_blackouts` with admin-only RLS (mirroring the existing `Admin insert/update/delete` + `Allow public read` pattern from `delivery_settings`), and adds `orders.delivery_schedule`. Uses `available_weekdays <@ ARRAY[1,2,3,4,5,6,7]::smallint[]` for the range CHECK because Postgres disallows subqueries inside CHECK.
+
 ## PromoSlider
 
 Reusable embla carousel of promo + best-seller products. Lives in [src/sections/PromoSlider/](src/sections/PromoSlider/) and is wrapped by the async server section [src/pages_flow/home/PromoSliderSection.tsx](src/pages_flow/home/PromoSliderSection.tsx) which fetches data via [getPromoSliderProducts](src/lib/promoSliderProducts.ts) (active promotions sorted by `endsAt`, then best-sellers; deduped; capped at 10).
@@ -548,7 +619,7 @@ Two files, three client instances:
   - `supabaseAdmin` — static service-role client, bypasses RLS (use only in server actions, API routes, and `lib/`)
   - `createSupabaseServerClient()` — async, reads cookies via `@supabase/ssr`; use whenever you need the current user's session
 
-**DB tables:** `orders` (status, is_fulfilled, subtotal, delivery_fee, total, **promotion_discount**, **promo_code_id**, **promo_discount**, customer fields, ngenius_ref), `order_items` (order_id, variant_id, name, price, **original_price** nullable, **promo_discount** per unit, weight_g, quantity, **mix_composition** JSONB nullable — snapshot of mix contents — all snapshots at order time so historical orders survive promo/promotion/variant edits), `products` (image_url, images JSONB `[]`, in_stock, badge, **note** — sanitized HTML string, not plain text — see **Rich text (product notes)**, nutrition JSONB, status `product_status` enum — `draft | published | archived | system`, **no price/weight_g columns**, these live in `product_variants`), `product_variants` (product_id, weight_g, price — one-to-many with products), `categories` (name, slug, audience, tagline, description, image_url, badge, sort_order), `benefits` (id, name, description — unique on name+description), `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, role `user_role`, gender, birthday, allow_notifications), `cart_items` (user_id, variant_id, quantity — minimal, prices via join), `notifications` (type, title, message, related_id, user_id, audience `user_role` — nullable, NULL = all roles), `notification_reads` (notification_id, user_id, read_at — tracks per-user read status), `push_subscriptions` (user_id, endpoint UNIQUE, p256dh, auth — FK to auth.users + profiles, RLS per user), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id), `promo_codes` (code, scope, discount_type, discount_value, min_order_amount, max_uses, max_uses_per_user, stack_with_promotions, starts_at, ends_at, is_active — code is exactly 6 `[A-Z0-9]` chars enforced by CHECK), `promo_code_products`, `promo_code_users`, `promo_code_redemptions` (`unique(order_id)`), `mix_boxes` (id — **same UUID as corresponding `products.id`**, name, slug UNIQUE, description, image_url, cell_count, is_active, sort_order), `mix_box_presets` (box_id, product_id, weight_g, price — `UNIQUE(box_id, product_id)` means each product appears once in a box's assortment), `mix_variant_cells` (variant_id → product_variants CASCADE, cell_index, preset_id → mix_box_presets CASCADE, `UNIQUE(variant_id, cell_index)` — stores what preset sits in each cell of an assembled mix variant), `marketing_popup` (multi-row catalog of home-page popups; `is_active` with partial unique index `WHERE is_active=true` enforcing at most one active row, `title` doubles as visitor heading + admin catalog label, `body` HTML, `image_url`, `cta_label`, `cta_url`, `starts_at`/`ends_at` nullable display window, `version` auto-bumped by `BEFORE UPDATE` trigger — see **Marketing Popup**).
+**DB tables:** `orders` (status, is_fulfilled, subtotal, delivery_fee, total, **promotion_discount**, **promo_code_id**, **promo_discount**, **delivery_schedule** text nullable — human-readable snapshot like `"6 May 2026 · Morning 09:00–15:00"`, customer fields, ngenius_ref), `order_items` (order_id, variant_id, name, price, **original_price** nullable, **promo_discount** per unit, weight_g, quantity, **mix_composition** JSONB nullable — snapshot of mix contents — all snapshots at order time so historical orders survive promo/promotion/variant edits), `products` (image_url, images JSONB `[]`, in_stock, badge, **note** — sanitized HTML string, not plain text — see **Rich text (product notes)**, nutrition JSONB, status `product_status` enum — `draft | published | archived | system`, **no price/weight_g columns**, these live in `product_variants`), `product_variants` (product_id, weight_g, price — one-to-many with products), `categories` (name, slug, audience, tagline, description, image_url, badge, sort_order), `benefits` (id, name, description — unique on name+description), `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, role `user_role`, gender, birthday, allow_notifications), `cart_items` (user_id, variant_id, quantity — minimal, prices via join), `notifications` (type, title, message, related_id, user_id, audience `user_role` — nullable, NULL = all roles), `notification_reads` (notification_id, user_id, read_at — tracks per-user read status), `push_subscriptions` (user_id, endpoint UNIQUE, p256dh, auth — FK to auth.users + profiles, RLS per user), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id), `promo_codes` (code, scope, discount_type, discount_value, min_order_amount, max_uses, max_uses_per_user, stack_with_promotions, starts_at, ends_at, is_active — code is exactly 6 `[A-Z0-9]` chars enforced by CHECK), `promo_code_products`, `promo_code_users`, `promo_code_redemptions` (`unique(order_id)`), `mix_boxes` (id — **same UUID as corresponding `products.id`**, name, slug UNIQUE, description, image_url, cell_count, is_active, sort_order), `mix_box_presets` (box_id, product_id, weight_g, price — `UNIQUE(box_id, product_id)` means each product appears once in a box's assortment), `mix_variant_cells` (variant_id → product_variants CASCADE, cell_index, preset_id → mix_box_presets CASCADE, `UNIQUE(variant_id, cell_index)` — stores what preset sits in each cell of an assembled mix variant), `marketing_popup` (multi-row catalog of home-page popups; `is_active` with partial unique index `WHERE is_active=true` enforcing at most one active row, `title` doubles as visitor heading + admin catalog label, `body` HTML, `image_url`, `cta_label`, `cta_url`, `starts_at`/`ends_at` nullable display window, `version` auto-bumped by `BEFORE UPDATE` trigger — see **Marketing Popup**), `delivery_settings` (per-emirate row: delivery_fee, free_delivery_threshold, minimum_order, delivery_days, **cutoff_hour** integer 0–23 default 19, is_active), `delivery_slots` (id, label, start_time/end_time, is_active, **available_weekdays** smallint[] ISO 1=Mon … 7=Sun, CHECK enforces non-empty + range — see **Delivery schedule**), `delivery_blackouts` (blackout_date date, slot_id uuid nullable — NULL = entire day blocked, reason text, unique index on (date, slot_id) `NULLS NOT DISTINCT`).
 
 **Order display invariant:** `originalSubtotal − promotion_discount − promo_discount + delivery_fee = total`. The order list pages and cards display this breakdown as `Subtotal − Promotion − Promo + Delivery = Total`. Old orders without `original_price`/`promotion_discount` (NULL/0) render correctly without the new lines.
 
@@ -556,7 +627,13 @@ Two files, three client instances:
 
 **Realtime orders hook.** [src/pages_flow/panel/orders/useRealtimeOrders.ts](src/pages_flow/panel/orders/useRealtimeOrders.ts) holds no local state — it subscribes to Supabase Realtime on `orders` and calls `router.refresh()` on any UPDATE or DELETE. INSERT events are ignored (new orders are always PENDING and hidden anyway; they'll be picked up by the UPDATE that flips their status). This simplicity is deliberate — keeps the hook free of `setState`-in-effect cascades and avoids the old INSERT→order_items race condition.
 
-**Order notification messages.** [src/lib/orderNotifications.ts](src/lib/orderNotifications.ts) — `formatOrderNotificationMessage(order, items)` is the single source of truth for the body of `order_paid` / `order_failed` / `order_cancelled` notifications. Format: `{First Last} · {totalQty} items · {qty}× {name}, … · AED {total}` (first 2 item names, then `+N more`). Callers (`checkout/result`, `api/payment/webhook`, `checkout/cancel`) fetch `first_name, last_name, total, order_items(name, quantity, variant_id)` in a **single** `.select(...)` and pass the row straight to the helper — important for the N-Genius webhook 15-second SLA.
+**Order notification messages.** [src/lib/orderNotifications.ts](src/lib/orderNotifications.ts) exposes two helpers built around the same `OrderNotificationParts` shape `{ customer, totalQty, itemsText, totalText, deliverySchedule }`:
+- `buildOrderNotificationParts(order, items)` — structured pieces, used by `ResultToast` to render a multi-line JSX toast.
+- `formatOrderNotificationMessage(order, items)` — joins the same pieces with " · " into a single string for push notifications and the in-app realtime toast (which can only display plain text).
+
+Format: `{First Last} · {totalQty} items · {qty}× {name}, … · AED {total} · {delivery_schedule}` (first 2 item names, then `+N more`; `delivery_schedule` appended only when non-null). Callers (`checkout/result`, `api/payment/webhook`, `checkout/cancel`) fetch `first_name, last_name, total, delivery_schedule, order_items(name, quantity, variant_id)` in a **single** `.select(...)` — important for the N-Genius webhook 15-second SLA.
+
+`toastSuccess` / `toastError` / `toastInfo` accept `React.ReactNode`, so structured JSX bodies are rendered as-is; plain strings still work everywhere else.
 
 ## Design system
 
@@ -616,10 +693,11 @@ Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React conte
 - **`Badge`** — inline label/tag. Variants: `natural` (moss green) | `warm` (sand) | `outline`. Sizes: `xs | sm | md`.
 - **`Card`** — wrapper with 16px radius. Variants: `default` (white-warm) | `sand` | `outline` | `dark` (earth bg).
 - **`TagToolbar` / `TagToolbarItem`** — single-select pill filter bar (`role="radiogroup"`). Controlled or uncontrolled via `value`/`onValueChange`/`defaultValue`. Empty string `""` means "All".
+- **`TagToolbarMulti` / `TagToolbarMultiItem`** — multi-select sibling of `TagToolbar`, sharing the same pill `itemVariants`. Context value is `Set<string>` + `toggle(v)`. ARIA `role="group"` on container, `role="checkbox" aria-checked` on items. Used for the weekday picker in `SlotForm`.
 - **`Collapsible` / `CollapsibleTrigger` / `CollapsibleChevron` / `CollapsibleContent`** — animated accordion using `motion/react` `AnimatePresence`.
 - **`Select` / `SelectTrigger` / `SelectValue` / `SelectContent` / `SelectItem` / `SelectGroup` / `SelectSeparator`** — custom dropdown, context-based, supports controlled/uncontrolled, `clearable` prop, auto up/down direction.
-- **`FormTileRadio` / `FormTileRadioItem`** — single-select tile radio group. Sizes: `sm` (compact, for product cards) | `md` (default). Context-based compound component with controlled/uncontrolled support.
-- **`Form` components** — `FormLabel` (`required` prop adds red `*`), `FormInput` (supports `startIcon` for left icon, `wrapperClassName` for outer div, `clearable` + `onClear`), `FormSelect`, `FormTextarea`, `FormRichTextarea` (BlockNote-backed rich-text editor — see **Rich text (product notes)** below), `FormError`, `FormPasswordInput` (visibility toggle), `FormPhoneInput` (UAE format: displays `0XX XXX XXXX`, submits `+971XXXXXXXXX` via hidden input), `FormOtpInput` (6-digit OTP with `defaultValue` + `useResendCooldown` hook), `FormCheckbox`, `FormNumberInput` (stepper with +/- buttons, controlled via `value`/`onValueChange`), `FormUploadZone` (supports `initialUrl` for single image edit mode, `initialUrls` for multi-image; integrated Lightbox preview + sortable thumbnails) — CVA variants with `default` / `error` states. `FormSelect` wraps the `Select` compound component.
+- **`FormTileRadio` / `FormTileRadioItem`** — single-select tile radio group. Sizes: `sm` (compact, for product cards) | `md` (default). `FormTileRadioItem` accepts `disabled?: boolean` — adds `aria-disabled`, native `disabled`, and a dashed muted state via the CVA `state` variant (`active | idle | disabled`). Override the default flex layout with `className` (used by checkout date grid: `grid grid-cols-7 gap-1.5`). Context-based compound component with controlled/uncontrolled support.
+- **`Form` components** — `FormLabel` (`required` prop adds red `*`), `FormInput` (supports `startIcon` for left icon, `wrapperClassName` for outer div, `clearable` + `onClear`), `FormSelect`, `FormTextarea`, `FormRichTextarea` (BlockNote-backed rich-text editor — see **Rich text (product notes)** below), `FormError`, `FormPasswordInput` (visibility toggle), `FormPhoneInput` (UAE format: displays `0XX XXX XXXX`, submits `+971XXXXXXXXX` via hidden input), `FormOtpInput` (6-digit OTP with `defaultValue` + `useResendCooldown` hook), `FormCheckbox`, `FormNumberInput` (stepper with +/- buttons, controlled via `value`/`onValueChange`), `FormUploadZone` (supports `initialUrl` for single image edit mode, `initialUrls` for multi-image; integrated Lightbox preview + sortable thumbnails), **`FormDatePicker`** (calendar + optional time), **`FormTimePicker`** (HH:mm only — wraps the same `DatePicker` compound with `timeOnly` mode + `DatePickerTimeContent` so the popover renders just the wheels, no calendar) — CVA variants with `default` / `error` states. `FormSelect` wraps the `Select` compound component.
 - **`DropdownMenu` / `DropdownMenuTrigger` / `DropdownMenuContent` / `DropdownMenuItem` / `DropdownMenuSeparator` / `DropdownMenuLabel`** — context-based dropdown menu with auto up/down direction, outside-click and Escape close, `destructive` + `disabled` item variants.
 - **`Table` / `TableHeader` / `TableHeaderRow` / `TableHead` / `TableBody` / `TableRow` / `TableCell` / `TableEmpty` / `TablePagination`** — compound table with sticky header, sort indicators, dividers. Context-based (`useTable`).
 - **`DataTable`** — declarative wrapper: pass `data`, `columns: ColumnDef[]`, `sort`, `pagination` and it renders a full `Table`. Hooks: `useTableSort`, `useTableData`, `useTableSearch`, `useTablePagination`. Helpers: `formatAed`, `formatDate`, `formatDateTime`, `shortId`, comparators (`compareString`, `compareNumber`, `compareDate`).

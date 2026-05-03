@@ -5,7 +5,7 @@ import { ScrollWheel, type ScrollWheelItem } from "../ScrollWheel";
 import { useDatePicker } from "./context";
 
 export function DatePickerTime() {
-  const { value, selectDate, format, minDate, maxDate } = useDatePicker();
+  const { value, selectDate, format, minDate, maxDate, timeOnly } = useDatePicker();
 
   const showSeconds = format.includes("ss");
 
@@ -53,10 +53,12 @@ export function DatePickerTime() {
   }));
 
   const updateTime = (nextHour: number, nextMinute: number, nextSecond: number) => {
-    // When no date is selected, the wheels show a fake "today midnight" base.
-    // Programmatic scroll-sync can fire onValueChange with that base — we must
-    // not push it back into context, or clearing the field would be reverted.
-    if (!value) return;
+    // When no date is selected in date+time mode, the wheels show a fake
+    // "today midnight" base. Programmatic scroll-sync can fire onValueChange
+    // with that base — we must not push it back into context, or clearing the
+    // field would be reverted. In time-only mode this guard would prevent the
+    // user from ever picking a value at all, so we let it through.
+    if (!value && !timeOnly) return;
     const next = new Date(base);
     next.setHours(nextHour);
     next.setMinutes(nextMinute);

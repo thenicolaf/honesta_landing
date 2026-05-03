@@ -4,6 +4,7 @@ import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
 import { Button, Skeleton } from "@/shared/ui";
 import { supabaseAdmin } from "@/lib/supabase.server";
 import { getDeliverySettings } from "@/lib/deliveryDb";
+import { getActiveDeliverySlots } from "@/lib/deliverySlotsDb";
 import { getActiveMixBoxes } from "@/lib/mixBoxesDb";
 import {
   calculateDiscountedPrice,
@@ -79,15 +80,17 @@ async function getManualOrderProducts(): Promise<Product[]> {
 }
 
 async function CreateContent() {
-  const [products, deliverySettings, boxes] = await Promise.all([
+  const [products, deliverySettings, slots, boxes] = await Promise.all([
     getManualOrderProducts(),
     getDeliverySettings(),
+    getActiveDeliverySlots(),
     getActiveMixBoxes(),
   ]);
   return (
     <ManualOrderForm
       products={products}
       deliverySettings={deliverySettings}
+      slots={slots}
       boxes={boxes}
     />
   );
