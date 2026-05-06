@@ -21,6 +21,7 @@ type OrderKey =
   | "items"
   | "pricing"
   | "address"
+  | "delivery"
   | "date"
   | "customer"
   | "notes"
@@ -165,6 +166,22 @@ export const addressColumn: ColumnDef<Order, OrderKey> = {
   headerClassName: "min-w-64",
 };
 
+export const deliveryColumn: ColumnDef<Order, OrderKey> = {
+  key: "delivery",
+  header: "Delivery",
+  cell: (o) =>
+    o.delivery_schedule ? (
+      <span className="text-2xs text-earth/65 whitespace-nowrap">
+        {o.delivery_schedule}
+      </span>
+    ) : (
+      <span className="text-2xs text-earth/20">—</span>
+    ),
+  sortable: true,
+  compare: compareString((o) => o.delivery_schedule ?? ""),
+  headerClassName: "min-w-56",
+};
+
 export const dateColumn: ColumnDef<Order, OrderKey> = {
   key: "date",
   header: "Date",
@@ -244,6 +261,7 @@ export const userOrderColumns: ColumnDef<Order, OrderKey>[] = [
   statusColumn,
   itemsColumn,
   pricingColumn,
+  deliveryColumn,
   addressColumn,
   dateColumn,
 ];
@@ -255,6 +273,7 @@ export const adminOrderColumns: ColumnDef<AdminOrder, OrderKey>[] = [
   statusColumn as ColumnDef<AdminOrder, OrderKey>,
   itemsColumn as ColumnDef<AdminOrder, OrderKey>,
   pricingColumn as ColumnDef<AdminOrder, OrderKey>,
+  deliveryColumn as ColumnDef<AdminOrder, OrderKey>,
   addressColumn as ColumnDef<AdminOrder, OrderKey>,
   notesColumn,
   dateColumn as ColumnDef<AdminOrder, OrderKey>,

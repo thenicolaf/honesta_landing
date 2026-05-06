@@ -75,21 +75,23 @@ const itemVariants = cva(
   [
     "font-body font-semibold uppercase tracking-[0.12em]",
     "rounded-xl border text-center",
-    "cursor-pointer select-none transition-colors duration-200",
+    "select-none transition-colors duration-200",
   ],
   {
     variants: {
-      active: {
-        true: "bg-earth text-cream border-earth",
-        false:
-          "bg-cream text-earth/60 border-earth/20 hover:text-earth hover:border-earth/40",
+      state: {
+        active: "bg-earth text-cream border-earth cursor-pointer",
+        idle:
+          "bg-cream text-earth/60 border-earth/20 hover:text-earth hover:border-earth/40 cursor-pointer",
+        disabled:
+          "bg-cream/40 text-earth/30 border-dashed border-earth/10 cursor-not-allowed",
       },
       size: {
         sm: "px-2.5 py-1.5 text-xs",
         md: "px-4 py-2.5 text-2xs",
       },
     },
-    defaultVariants: { active: false, size: "md" },
+    defaultVariants: { state: "idle", size: "md" },
   },
 );
 
@@ -97,23 +99,31 @@ interface FormTileRadioItemProps {
   children: React.ReactNode;
   value: string;
   className?: string;
+  disabled?: boolean;
 }
 
 export function FormTileRadioItem({
   children,
   value,
   className,
+  disabled = false,
 }: FormTileRadioItemProps) {
   const { value: selected, onValueChange, size } = useFormTileRadio();
   const isActive = selected === value;
+  const state = disabled ? "disabled" : isActive ? "active" : "idle";
 
   return (
     <button
       type="button"
       role="radio"
       aria-checked={isActive}
-      onClick={() => onValueChange(value)}
-      className={cn(itemVariants({ active: isActive, size }), className)}
+      aria-disabled={disabled}
+      disabled={disabled}
+      onClick={() => {
+        if (disabled) return;
+        onValueChange(value);
+      }}
+      className={cn(itemVariants({ state, size }), className)}
     >
       {children}
     </button>

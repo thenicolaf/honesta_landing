@@ -1,4 +1,4 @@
-import { DollarSign, Gift, ShoppingCart, Clock } from "lucide-react";
+import { DollarSign, Gift, ShoppingCart, Clock, Hourglass } from "lucide-react";
 import { formatDeliveryDays } from "@/shared/utils/calculateDelivery";
 import type { DeliverySetting } from "@/lib/deliveryDb";
 
@@ -62,6 +62,11 @@ export function EmirateView({ setting }: EmirateViewProps) {
         icon={<Clock />}
         label="Delivery Time"
         value={formatDeliveryDays(setting.delivery_days)}
+      />
+      <InfoField
+        icon={<Hourglass />}
+        label="Cut-off Hour"
+        value={`${String(setting.cutoff_hour).padStart(2, "0")}:00`}
       />
     </div>
   );

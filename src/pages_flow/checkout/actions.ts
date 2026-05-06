@@ -1,31 +1,29 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import type { CartItem } from "@/sections/products/types/types";
-import {
-  CUSTOMER_COOKIE_KEY,
-  COOKIE_CONSENT_KEY,
-  DEFAULT_EMIRATE,
-} from "@/shared/consts";
 import type { CustomerInfo } from "@/shared/types";
-import {
-  validateCustomer,
-  type CustomerErrors,
-} from "@/shared/utils/validateCustomer";
+import type { CustomerErrors } from "@/shared/utils/validateCustomer";
 import {
   buildMixCompositionMap,
   cartItemToOrderRow,
   createOrderWithItems,
 } from "@/lib/orders";
 import { createPaymentForOrder } from "@/lib/payments";
-import { createSupabaseServerClient } from "@/lib/supabase.server";
-import { getDeliverySettingByEmirate } from "@/lib/deliveryDb";
-import { calculateDelivery } from "@/shared/utils/calculateDelivery";
-import { validatePromoCode } from "@/lib/promoCodeApply";
-import { getCartTotals } from "@/lib/cart";
-import { getPerItemPromoDiscounts } from "@/shared/utils/recalculatePromoDiscount";
-import type { AppliedPromoCode } from "@/lib/promoCodeApply";
+import { getActiveDeliverySlots } from "@/lib/deliverySlotsDb";
+import {
+  applyPromoCode,
+  computeCheckoutTotals,
+  evaluateDeliveryFee,
+  fetchDeliverySetting,
+  loadCurrentUser,
+  parseDeliveryFields,
+  persistCustomerCookie,
+  readEmirate,
+  readSubmittedPromoCode,
+  revalidateDeliveryWindow,
+  validateCheckoutFields,
+} from "./checkoutSteps";
 
 export interface CheckoutState {
   error?: string;
@@ -43,123 +41,106 @@ export async function submitCheckout(
   const customer = Object.fromEntries(formData) as Partial<CustomerInfo>;
 
   try {
-  const cookieStore = await cookies();
+    // Phase 1 — fan out independent reads in parallel:
+    //   user (auth), active slots, emirate setting, mix composition snapshots.
+    // None of them depend on each other, so we don't pay for sequential RTTs.
+    const emirate = readEmirate(formData);
+    const deliveryFields = parseDeliveryFields(formData);
+    const submittedPromo = readSubmittedPromoCode(promoCode, formData);
 
-  // 1. Check auth — authorized users' data comes from DB, not cookies
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    const [user, activeSlots, setting, mixCompositionMap] = await Promise.all([
+      loadCurrentUser(),
+      getActiveDeliverySlots(),
+      fetchDeliverySetting(emirate),
+      buildMixCompositionMap(items.map((i) => i.variantId)),
+    ]);
 
-  // Persist customer info for next visit (skip if guest declined cookies)
-  const consent = cookieStore.get(COOKIE_CONSENT_KEY)?.value;
-  if (user || consent !== "declined") {
-    cookieStore.set(CUSTOMER_COOKIE_KEY, JSON.stringify(customer), {
-      maxAge: 60 * 60 * 24 * 30,
-      path: "/",
-    });
-  }
+    // Best-effort cookie write — don't await DB-bound work on it.
+    void persistCustomerCookie(customer, user.id !== null);
 
-  const fieldErrors = validateCustomer(customer);
-  if (fieldErrors) {
-    return { fieldErrors, values: customer };
-  }
+    // Phase 2 — pure validation. Schedule fields are required only when admin
+    // configured at least one active slot.
+    const scheduleRequired = activeSlots.length > 0;
+    const fieldErrors = validateCheckoutFields(
+      customer,
+      deliveryFields,
+      scheduleRequired,
+    );
+    if (fieldErrors) return { fieldErrors, values: customer };
 
-  // 2. Calculate delivery fee server-side (authoritative)
-  const emirate =
-    (formData.get("emirate") as string)?.trim() || DEFAULT_EMIRATE;
+    // Phase 3 — promo + delivery window in parallel. Both depend only on data
+    // we already have (or fetch independently).
+    const [promo, window] = await Promise.all([
+      applyPromoCode(submittedPromo, items, user.id),
+      revalidateDeliveryWindow(
+        deliveryFields,
+        setting?.cutoff_hour ?? 19,
+        setting?.delivery_days ?? 1,
+      ),
+    ]);
+    if (!promo.ok)
+      return { promoCodeError: promo.promoCodeError, values: customer };
+    if (!window.ok)
+      return { fieldErrors: window.fieldErrors, values: customer };
 
-  // 3. Validate and apply promo code (if present). Re-runs all checks
-  // server-side using the actual user, items, and current DB state.
-  let promoCodeId: string | null = null;
-  let promoDiscount = 0;
-  let appliedCode: AppliedPromoCode | null = null;
-  const submittedPromo =
-    promoCode ?? ((formData.get("promo_code") as string | null) ?? null);
-  if (submittedPromo) {
-    const result = await validatePromoCode({
-      code: submittedPromo,
+    // Phase 4 — pure totals + fee gate using already-fetched setting.
+    const totals = computeCheckoutTotals(
       items,
-      userId: user?.id ?? null,
+      promo.value.appliedCode,
+      promo.value.promoDiscount,
+    );
+    const deliveryFee = evaluateDeliveryFee(
+      emirate,
+      setting,
+      totals.discountedSubtotal,
+    );
+    if (!deliveryFee.ok)
+      return { fieldErrors: deliveryFee.fieldErrors, values: customer };
+
+    // Phase 5 — build rows + persist order.
+    const orderRows = items.map((i) =>
+      cartItemToOrderRow(i, mixCompositionMap, totals.perItemPromoDiscounts),
+    );
+    const { data: order, error: orderError } = await createOrderWithItems({
+      items: orderRows,
+      customer,
+      subtotal: totals.subtotal,
+      deliveryFee: deliveryFee.value.fee,
+      userId: user.id ?? undefined,
+      promoCodeId: promo.value.promoCodeId,
+      promoDiscount: promo.value.promoDiscount,
+      promotionDiscount: totals.promotionDiscount,
+      deliverySchedule: window.value.deliverySchedule,
     });
-    if (!result.ok) {
-      return { promoCodeError: result.error, values: customer };
+    if (orderError || !order) {
+      return {
+        error: orderError ?? "Failed to create order",
+        values: customer,
+      };
     }
-    promoCodeId = result.appliedCode.id;
-    promoDiscount = result.appliedCode.discount;
-    appliedCode = result.appliedCode;
-  }
 
-  const perItemPromoDiscounts = getPerItemPromoDiscounts(items, appliedCode);
+    // Phase 6 — N-Genius hosted page (external network call, dominant latency).
+    const { paymentUrl, error: paymentError } = await createPaymentForOrder(
+      order.id,
+      order.total,
+      customer,
+      deliveryFee.value.emirate,
+    );
+    if (paymentError || !paymentUrl) {
+      return {
+        error: paymentError ?? "Failed to create payment",
+        values: customer,
+      };
+    }
 
-  const totals = getCartTotals(items, promoDiscount);
-  const subtotal = totals.subtotal;
-  const promotionDiscount = totals.promotionDiscount;
-  const discountedSubtotal = totals.total;
-
-  const setting = await getDeliverySettingByEmirate(emirate);
-
-  if (setting && !setting.is_active) {
-    return {
-      fieldErrors: {
-        emirate: `Delivery to ${emirate} is currently unavailable`,
-      },
-      values: customer,
-    };
-  }
-
-  const delivery = calculateDelivery(
-    discountedSubtotal,
-    emirate,
-    setting ? [setting] : [],
-  );
-
-  if (delivery.belowMinimum) {
-    return {
-      fieldErrors: {
-        emirate: `Minimum order of AED ${delivery.minimumOrder} is required for ${emirate}`,
-      },
-      values: customer,
-    };
-  }
-
-  const mixCompositionMap = await buildMixCompositionMap(
-    items.map((i) => i.variantId),
-  );
-  const orderRows = items.map((i) =>
-    cartItemToOrderRow(i, mixCompositionMap, perItemPromoDiscounts),
-  );
-
-  const { data: order, error: orderError } = await createOrderWithItems({
-    items: orderRows,
-    customer,
-    subtotal,
-    deliveryFee: delivery.fee,
-    userId: user?.id,
-    promoCodeId,
-    promoDiscount,
-    promotionDiscount,
-  });
-  if (orderError || !order) {
-    return { error: orderError ?? "Failed to create order", values: customer };
-  }
-
-  // 4. Create payment
-  const { paymentUrl, error: paymentError } = await createPaymentForOrder(
-    order.id,
-    order.total,
-    customer,
-    emirate,
-  );
-  if (paymentError || !paymentUrl) {
-    return { error: paymentError ?? "Failed to create payment", values: customer };
-  }
-
-  redirect(paymentUrl);
+    redirect(paymentUrl);
   } catch (err) {
     // redirect() throws a special Next.js error — rethrow it
     if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
     console.error("Checkout error:", err);
-    return { error: "Something went wrong. Please try again.", values: customer };
+    return {
+      error: "Something went wrong. Please try again.",
+      values: customer,
+    };
   }
 }

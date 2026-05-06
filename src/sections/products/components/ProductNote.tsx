@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui";
+import { RichText, Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui";
 
 interface ProductNoteProps {
   note?: string;
@@ -14,8 +14,8 @@ export function ProductNote({ note, truncate }: ProductNoteProps) {
 
   if (!truncate) {
     return (
-      <blockquote className="border-l-2 border-orange/40 bg-sand/50 rounded-r-lg px-3 py-2 font-body text-sm text-earth/70 italic">
-        {note}
+      <blockquote className="border-l-2 border-orange/40 bg-sand/50 rounded-r-lg px-3 py-2 font-body text-sm text-earth/70">
+        <RichText html={note} />
       </blockquote>
     );
   }
@@ -24,7 +24,7 @@ export function ProductNote({ note, truncate }: ProductNoteProps) {
 }
 
 function TruncatedNote({ note }: { note: string }) {
-  const textRef = useRef<HTMLSpanElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
   const [isClamped, setIsClamped] = useState(false);
 
   useEffect(() => {
@@ -33,10 +33,10 @@ function TruncatedNote({ note }: { note: string }) {
   }, [note]);
 
   const blockquote = (
-    <blockquote className="border-l-2 border-orange/40 bg-sand/50 rounded-r-lg px-3 py-2 font-body text-sm text-earth/70 italic">
-      <span ref={textRef} className="line-clamp-2">
-        {note}
-      </span>
+    <blockquote className="border-l-2 border-orange/40 bg-sand/50 rounded-r-lg px-3 py-2 font-body text-sm text-earth/70">
+      <div ref={textRef} className="line-clamp-2">
+        <RichText html={note} />
+      </div>
     </blockquote>
   );
 
@@ -47,15 +47,15 @@ function TruncatedNote({ note }: { note: string }) {
       <TooltipTrigger asChild className="block text-left w-full">
         <blockquote
           onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
-          className="border-l-2 border-orange/40 bg-sand/50 rounded-r-lg px-3 py-2 font-body text-sm text-earth/70 italic cursor-pointer"
+          className="border-l-2 border-orange/40 bg-sand/50 rounded-r-lg px-3 py-2 font-body text-sm text-earth/70 cursor-pointer"
         >
-          <span ref={textRef} className="line-clamp-2">
-            {note}
-          </span>
+          <div ref={textRef} className="line-clamp-2">
+            <RichText html={note} />
+          </div>
         </blockquote>
       </TooltipTrigger>
-      <TooltipContent className="whitespace-normal w-full left-0 translate-x-0! text-left">
-        {note}
+      <TooltipContent className="whitespace-normal max-w-72 text-left leading-snug">
+        <RichText html={note} />
       </TooltipContent>
     </Tooltip>
   );

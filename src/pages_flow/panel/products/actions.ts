@@ -5,6 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase.server";
 import { deleteImage, parseFormImages, type StorageBucket } from "@/lib/storage";
 import { createNotification } from "@/lib/notificationsDb";
 import type { NutritionJson } from "./product-form/nutrition";
+import { isHtmlEmpty, sanitizeNoteHtml } from "@/shared/utils/sanitizeHtml";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -244,14 +245,14 @@ async function parseProductValues(
     slug: toSlug(title),
     title,
     tagline: values.tagline?.trim() || null,
-    note: values.note?.trim() || null,
+    note: isHtmlEmpty(values.note) ? null : sanitizeNoteHtml(values.note ?? ""),
     badge: values.badge?.trim() || null,
     image_url,
     images,
     in_stock: values.in_stock === "true",
     mark: values.mark || "new",
     category_id: values.category_id || null,
-    nutrition: JSON.parse((formData.get("nutrition") as string) || "{}") as NutritionJson,
+    nutrition: JSON.parse((formData.get("nutrition") as string) || "[]") as NutritionJson,
   };
 }
 

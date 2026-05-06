@@ -1,6 +1,7 @@
 import { Suspense } from "react";
+import { ArrowLeft } from "lucide-react";
 import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
-import { Skeleton } from "@/shared/ui";
+import { Button, Skeleton } from "@/shared/ui";
 import { PromoCodeForm } from "@/pages_flow/panel/promo-codes/PromoCodeForm";
 import { loadProductOptions, loadUserOptions } from "../_data";
 
@@ -31,6 +32,17 @@ function FormSkeleton() {
 export default function Page() {
   return (
     <>
+      <div className="mb-6">
+        <Button
+          href="/panel/promo-codes"
+          variant="outline"
+          size="sm"
+          startIcon={<ArrowLeft size={14} />}
+        >
+          Back to promo codes
+        </Button>
+      </div>
+
       <AdminPageHeader title="New Promo Code" label="Admin Panel" />
       <Suspense fallback={<FormSkeleton />}>
         <CreateContent />

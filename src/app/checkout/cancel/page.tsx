@@ -3,13 +3,23 @@ import { Card, Button } from "@/shared/ui";
 import { supabaseAdmin } from "@/lib/supabase.server";
 import { OrderStatus } from "@/shared/types";
 import { createNotification } from "@/lib/notificationsDb";
-import { formatOrderNotificationMessage } from "@/lib/orderNotifications";
+import {
+  buildOrderNotificationParts,
+  formatOrderNotificationMessage,
+  type OrderNotificationParts,
+} from "@/lib/orderNotifications";
+import { ResultToast } from "../result/ResultToast";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-async function cancelOrder(orderRef: string) {
+interface CancelResult {
+  title: string;
+  parts: OrderNotificationParts;
+}
+
+async function cancelOrder(orderRef: string): Promise<CancelResult | null> {
   const { data: order } = await supabaseAdmin
     .from("orders")
     .update({
@@ -19,22 +29,27 @@ async function cancelOrder(orderRef: string) {
     .eq("ngenius_ref", orderRef)
     .neq("status", OrderStatus.CANCELLED)
     .select(
-      "id, total, first_name, last_name, order_items(name, quantity)",
+      "id, total, first_name, last_name, delivery_schedule, order_items(name, quantity)",
     )
     .single();
 
-  if (order) {
-    const items = (order.order_items ?? []) as Array<{
-      name: string;
-      quantity: number;
-    }>;
-    await createNotification({
-      type: "order_cancelled",
-      title: "Order cancelled",
-      message: formatOrderNotificationMessage(order, items),
-      relatedId: order.id,
-    });
-  }
+  if (!order) return null;
+
+  const items = (order.order_items ?? []) as Array<{
+    name: string;
+    quantity: number;
+  }>;
+  const parts = buildOrderNotificationParts(order, items);
+  const title = "Order cancelled";
+
+  await createNotification({
+    type: "order_cancelled",
+    title,
+    message: formatOrderNotificationMessage(order, items),
+    relatedId: order.id,
+  });
+
+  return { title, parts };
 }
 
 export default async function CheckoutCancelPage({
@@ -44,12 +59,17 @@ export default async function CheckoutCancelPage({
 }) {
   const { ref: orderRef } = await searchParams;
 
+  let toastTitle: string | null = null;
+  let toastParts: OrderNotificationParts | null = null;
   if (orderRef) {
-    await cancelOrder(orderRef);
+    const cancelled = await cancelOrder(orderRef);
+    toastTitle = cancelled?.title ?? null;
+    toastParts = cancelled?.parts ?? null;
   }
 
   return (
     <main className="grow min-h-160 bg-cream flex items-center justify-center px-4 py-16">
+      <ResultToast success={false} title={toastTitle} parts={toastParts} />
       <div className="max-w-md w-full">
         <Card variant="default" padding="lg" className="text-center">
           <div className="w-16 h-16 rounded-full bg-sand mx-auto mb-6 flex items-center justify-center">

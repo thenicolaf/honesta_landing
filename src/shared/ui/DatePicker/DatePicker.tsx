@@ -12,6 +12,8 @@ interface DatePickerProps {
   defaultValue?: Date;
   onValueChange?: (value: Date | undefined) => void;
   showTime?: boolean;
+  /** Time-only picker (HH:mm). Mutually exclusive with showTime. */
+  timeOnly?: boolean;
   clearable?: boolean;
   minDate?: Date;
   maxDate?: Date;
@@ -24,6 +26,7 @@ export function DatePicker({
   defaultValue,
   onValueChange,
   showTime = false,
+  timeOnly = false,
   clearable = false,
   minDate,
   maxDate,
@@ -36,7 +39,11 @@ export function DatePicker({
   const isControlled = controlledValue !== undefined;
   const value = isControlled ? controlledValue : internalValue;
 
-  const format = showTime ? "dd.MM.yyyy HH:mm" : "dd.MM.yyyy";
+  const format = timeOnly
+    ? "HH:mm"
+    : showTime
+      ? "dd.MM.yyyy HH:mm"
+      : "dd.MM.yyyy";
 
   const selectDate = (date: Date | undefined) => {
     setInternalValue(date);
@@ -48,14 +55,19 @@ export function DatePicker({
     onValueChange?.(undefined);
   };
 
-  const displayValue = value ? formatDisplay(value, showTime) : "";
-  const formValue = value ? formatFormValue(value, showTime) : "";
+  const displayValue = value
+    ? formatDisplay(value, { showTime, timeOnly })
+    : "";
+  const formValue = value
+    ? formatFormValue(value, { showTime, timeOnly })
+    : "";
 
   return (
     <DatePickerContext.Provider
       value={{
         value,
         showTime,
+        timeOnly,
         clearable,
         format,
         minDate,

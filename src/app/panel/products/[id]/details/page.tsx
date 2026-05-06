@@ -3,12 +3,20 @@ import { notFound } from "next/navigation";
 import { Skeleton } from "@/shared/ui";
 import { getAdminProductById } from "@/lib/productsDb";
 import { ProductDetailPage } from "@/pages_flow/panel/products/ProductDetailPage";
+import { isSafeBackHref } from "@/shared/utils/backHref";
 
-async function DetailContent({ id }: { id: string }) {
+async function DetailContent({ id, back }: { id: string; back?: string }) {
   const product = await getAdminProductById(id);
   if (!product) notFound();
 
-  return <ProductDetailPage product={product} />;
+  const safeBack = isSafeBackHref(back) ? back : undefined;
+
+  return (
+    <ProductDetailPage
+      product={product}
+      {...(safeBack ? { backHref: safeBack } : {})}
+    />
+  );
 }
 
 function DetailSkeleton() {
@@ -37,14 +45,16 @@ function DetailSkeleton() {
 
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ back?: string }>;
 }) {
-  const { id } = await params;
+  const [{ id }, { back }] = await Promise.all([params, searchParams]);
 
   return (
     <Suspense fallback={<DetailSkeleton />}>
-      <DetailContent id={id} />
+      <DetailContent id={id} back={back} />
     </Suspense>
   );
 }

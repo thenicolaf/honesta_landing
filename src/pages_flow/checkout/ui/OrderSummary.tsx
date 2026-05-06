@@ -5,7 +5,6 @@ import { formatDateTime } from "@/shared/ui/Table";
 import { useCart } from "@/providers";
 import { getCartTotals } from "@/lib/cart";
 import { getPerItemPromoDiscounts } from "@/shared/utils/recalculatePromoDiscount";
-import { formatDeliveryDays } from "@/shared/utils/calculateDelivery";
 import { cn } from "@/shared/utils/cn";
 import type { CartItem } from "@/sections/products/types";
 
@@ -123,7 +122,6 @@ interface OrderSummaryProps {
   deliveryFee: number;
   isFreeDelivery: boolean;
   originalFee?: number;
-  deliveryDays: number;
   freeThreshold?: number;
   emirate: string;
 }
@@ -132,7 +130,6 @@ export function OrderSummary({
   deliveryFee,
   isFreeDelivery,
   originalFee,
-  deliveryDays,
   freeThreshold,
   emirate,
 }: OrderSummaryProps) {
@@ -197,15 +194,13 @@ export function OrderSummary({
           />
         </div>
 
-        <div className="mt-3 pt-3 border-t border-parchment/60">
-          <DeliveryInfo
-            label={`${formatDeliveryDays(deliveryDays)}${
-              freeThreshold
-                ? ` · Free in ${emirate} from AED ${freeThreshold}`
-                : ""
-            }`}
-          />
-        </div>
+        {freeThreshold && (
+          <div className="mt-3 pt-3 border-t border-parchment/60">
+            <DeliveryInfo
+              label={`Free in ${emirate} from AED ${freeThreshold}`}
+            />
+          </div>
+        )}
       </Card>
     </div>
   );

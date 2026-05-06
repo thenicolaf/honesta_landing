@@ -36,6 +36,10 @@ interface CheckoutFormProps {
   belowMinimum?: boolean;
   minimumOrder?: number | null;
   disabledEmirates?: string[];
+  /** Rendered between the address block and notes. */
+  scheduleSlot?: React.ReactNode;
+  scheduleRequired?: boolean;
+  scheduleSelected?: boolean;
 }
 
 export function CheckoutForm({
@@ -50,6 +54,9 @@ export function CheckoutForm({
   belowMinimum,
   minimumOrder,
   disabledEmirates,
+  scheduleSlot,
+  scheduleRequired,
+  scheduleSelected,
 }: CheckoutFormProps) {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
@@ -133,6 +140,8 @@ export function CheckoutForm({
         />
       )}
 
+      {scheduleSlot}
+
       {/* Notes */}
       <div>
         <FormLabel htmlFor="notes">
@@ -179,6 +188,8 @@ export function CheckoutForm({
         belowMinimum={belowMinimum}
         minimumOrder={minimumOrder}
         agreedToTerms={agreedToTerms}
+        scheduleRequired={scheduleRequired}
+        scheduleSelected={scheduleSelected}
       />
 
       <p className="font-body font-light text-earth/40 text-xs text-center">

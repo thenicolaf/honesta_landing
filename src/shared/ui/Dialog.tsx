@@ -169,15 +169,14 @@ export function DialogContent({
     };
   }, [open]);
 
-  // Move focus into dialog on open
+  // Move focus into the dialog container on open. Focusing the container
+  // (instead of the first focusable element) avoids auto-focusing the close
+  // button, which produces an unwanted focus ring on simple/info dialogs.
+  // Form dialogs that want to auto-focus a specific field should use the
+  // standard React `autoFocus` prop on that field.
   useEffect(() => {
     if (!open) return;
-    const el = contentRef.current;
-    if (!el) return;
-    const focusable = el.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-    );
-    focusable[0]?.focus();
+    contentRef.current?.focus();
   }, [open]);
 
   if (typeof document === "undefined") return null;
@@ -193,12 +192,13 @@ export function DialogContent({
               ref={contentRef}
               role="dialog"
               aria-modal="true"
+              tabIndex={-1}
               initial={{ opacity: 0, scale: 0.96, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
               className={cn(
-                "relative w-full pointer-events-auto",
+                "relative w-full pointer-events-auto outline-none",
                 sizeClasses[size],
                 "rounded-2xl border border-earth/12 bg-white-warm shadow-xl shadow-earth/12",
                 "p-6",

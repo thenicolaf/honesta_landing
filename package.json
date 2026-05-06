@@ -13,6 +13,9 @@
     "server": "ngrok http 3000"
   },
   "dependencies": {
+    "@blocknote/core": "^0.49.0",
+    "@blocknote/mantine": "^0.49.0",
+    "@blocknote/react": "^0.49.0",
     "@dnd-kit/react": "^0.3.2",
     "@maskito/core": "^5.2.2",
     "@maskito/kit": "^5.2.2",
@@ -24,6 +27,9 @@
     "clsx": "^2.1.1",
     "country-flag-icons": "^1.6.15",
     "date-fns": "^4.1.0",
+    "embla-carousel-autoplay": "^8.6.0",
+    "embla-carousel-react": "^8.6.0",
+    "isomorphic-dompurify": "^3.11.0",
     "libphonenumber-js": "^1.12.41",
     "lucide-react": "^0.574.0",
     "motion": "^12.34.2",

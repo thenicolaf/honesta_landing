@@ -1,9 +1,10 @@
 export interface NutritionField {
+  key: string;
   name: string;
   value: number;
 }
 
-export type NutritionInfo = Record<string, NutritionField>;
+export type NutritionInfo = NutritionField[];
 
 export interface Benefit {
   name: string;

@@ -5,8 +5,16 @@ import { calculateDiscountedPrice, findActivePromotion } from "@/shared/utils/ca
 export function mapNutrition(
   raw: AdminDbProduct["nutrition"],
 ): NutritionInfo | undefined {
-  if (!raw || Object.keys(raw).length === 0) return undefined;
-  return raw;
+  if (!raw) return undefined;
+  if (Array.isArray(raw)) {
+    return raw.length > 0 ? raw : undefined;
+  }
+  const entries = Object.entries(raw).map(([key, { name, value }]) => ({
+    key,
+    name,
+    value,
+  }));
+  return entries.length > 0 ? entries : undefined;
 }
 
 export interface MappedAdminProduct {

@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { DragDropProvider, PointerSensor } from "@dnd-kit/react";
+import { isSortable, useSortable } from "@dnd-kit/react/sortable";
+import { GripVertical } from "lucide-react";
 import { Button, FormLabel, FormInput, FormNumberInput } from "@/shared/ui";
 import { Popover, PopoverContent, usePopover } from "@/shared/ui/Popover";
 import { IconPlus, IconX } from "@/shared/icons";
+import { cn } from "@/shared/utils/cn";
 import { SectionCard, SectionLabel, type SectionProps } from "./shared";
 import {
   buildNutrition,
@@ -11,6 +15,14 @@ import {
   slugifyKey,
   type NutritionEntry,
 } from "./nutrition";
+
+function moveItem<T>(items: T[], from: number, to: number): T[] {
+  if (from === to) return items;
+  const next = [...items];
+  const [moved] = next.splice(from, 1);
+  next.splice(to, 0, moved);
+  return next;
+}
 
 // ─── Add Field Form (inside Popover) ────────────────────────────────────────
 
@@ -87,6 +99,90 @@ function AddFieldForm({
   );
 }
 
+// ─── Sortable Field ─────────────────────────────────────────────────────────
+
+function SortableNutritionField({
+  entry,
+  index,
+  sortable,
+  onValueChange,
+  onRemove,
+}: {
+  entry: NutritionEntry;
+  index: number;
+  sortable: boolean;
+  onValueChange: (value: number) => void;
+  onRemove: () => void;
+}) {
+  const handleRef = useRef<HTMLButtonElement>(null);
+  const { ref, isDragging } = useSortable({
+    id: entry.key,
+    index,
+    disabled: !sortable,
+    handle: handleRef,
+    sensors: [
+      {
+        plugin: PointerSensor,
+        options: {
+          activationConstraints: () => undefined,
+        },
+      },
+    ],
+  });
+
+  return (
+    <div
+      ref={ref}
+      className={cn("relative group", isDragging && "opacity-40")}
+    >
+      <FormLabel
+        htmlFor={`p-${entry.key}`}
+        className={cn(
+          "transition-transform duration-150",
+          sortable &&
+            "[@media(hover:hover)]:translate-x-0 [@media(hover:hover)]:group-hover:translate-x-7 [@media(hover:none)]:translate-x-7",
+        )}
+      >
+        {entry.name}
+      </FormLabel>
+      <FormNumberInput
+        id={`p-${entry.key}`}
+        name={`_n_${entry.key}`}
+        min={0}
+        step={0.1}
+        placeholder="0"
+        value={entry.value}
+        onValueChange={onValueChange}
+      />
+      {sortable && (
+        <Button
+          as="button"
+          type="button"
+          ref={handleRef}
+          variant="outline"
+          size="icon"
+          className="absolute top-0 left-0 p-0.5 size-5 opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity duration-150 cursor-grab active:cursor-grabbing touch-none"
+          aria-label={`Reorder ${entry.name}`}
+        >
+          <GripVertical className="w-3 h-3 pointer-events-none" />
+        </Button>
+      )}
+      <Button
+        as="button"
+        type="button"
+        variant="outline"
+        size="icon"
+        color="error"
+        onClick={onRemove}
+        className="absolute -top-1 -right-1 p-0.5 size-5 opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity duration-150"
+        aria-label={`Remove ${entry.name}`}
+      >
+        <IconX className="w-3 h-3" />
+      </Button>
+    </div>
+  );
+}
+
 // ─── NutritionSection ───────────────────────────────────────────────────────
 
 export function NutritionSection({ product }: SectionProps) {
@@ -96,6 +192,7 @@ export function NutritionSection({ product }: SectionProps) {
   const [popoverOpen, setPopoverOpen] = useState(false);
 
   const existingKeys = new Set(entries.map((e) => e.key));
+  const sortable = entries.length > 1;
 
   function updateValue(key: string, value: number) {
     setEntries((prev) =>
@@ -123,34 +220,31 @@ export function NutritionSection({ product }: SectionProps) {
         value={JSON.stringify(nutritionJson)}
       />
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {entries.map((entry) => (
-          <div key={entry.key} className="relative group">
-            <FormLabel htmlFor={`p-${entry.key}`}>{entry.name}</FormLabel>
-            <FormNumberInput
-              id={`p-${entry.key}`}
-              name={`_n_${entry.key}`}
-              min={0}
-              step={0.1}
-              placeholder="0"
-              value={entry.value}
+      <DragDropProvider
+        onDragEnd={(event) => {
+          const { source } = event.operation;
+          if (source && isSortable(source)) {
+            const from = source.initialIndex;
+            const to = source.index;
+            if (from !== to) {
+              setEntries((prev) => moveItem(prev, from, to));
+            }
+          }
+        }}
+      >
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {entries.map((entry, idx) => (
+            <SortableNutritionField
+              key={entry.key}
+              entry={entry}
+              index={idx}
+              sortable={sortable}
               onValueChange={(v) => updateValue(entry.key, v)}
+              onRemove={() => removeEntry(entry.key)}
             />
-            <Button
-              as="button"
-              type="button"
-              variant="outline"
-              size="icon"
-              color="error"
-              onClick={() => removeEntry(entry.key)}
-              className="absolute -top-1 -right-1 p-0.5 size-5 opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity duration-150"
-              aria-label={`Remove ${entry.name}`}
-            >
-              <IconX className="w-3 h-3" />
-            </Button>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </DragDropProvider>
 
       <Popover open={popoverOpen} onOpenChange={setPopoverOpen} className="self-start">
         <Button

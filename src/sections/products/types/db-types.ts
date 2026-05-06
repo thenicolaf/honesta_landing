@@ -10,7 +10,10 @@ export interface DbProduct {
   badge: string | null;
   mark: "standard" | "best_seller" | "new";
   note: string | null;
-  nutrition: Record<string, { name: string; value: number }> | null;
+  nutrition:
+    | Array<{ key: string; name: string; value: number }>
+    | Record<string, { name: string; value: number }>
+    | null;
   categories: { slug: string; name: string } | null;
   product_tags: { tag_options: { label: string } }[];
   product_free_froms: { free_from_options: { label: string } }[];

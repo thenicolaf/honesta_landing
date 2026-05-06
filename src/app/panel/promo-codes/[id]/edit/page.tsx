@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
-import { Skeleton } from "@/shared/ui";
+import { Button, Skeleton } from "@/shared/ui";
 import { getPromoCodeById } from "@/lib/promoCodesDb";
 import { PromoCodeForm } from "@/pages_flow/panel/promo-codes/PromoCodeForm";
 import { loadProductOptions, loadUserOptions } from "../../_data";
@@ -43,6 +44,17 @@ export default async function Page({
 
   return (
     <>
+      <div className="mb-6">
+        <Button
+          href="/panel/promo-codes"
+          variant="outline"
+          size="sm"
+          startIcon={<ArrowLeft size={14} />}
+        >
+          Back to promo codes
+        </Button>
+      </div>
+
       <AdminPageHeader title="Edit Promo Code" label="Admin Panel" />
       <Suspense fallback={<FormSkeleton />}>
         <EditContent id={id} />

@@ -147,6 +147,13 @@ export function AdminOrderCards({
               <CostBreakdown order={order} />
             </div>
 
+            {order.delivery_schedule && (
+              <p className="text-2xs text-earth/55 mt-1.5">
+                <span className="text-earth/40">Delivery: </span>
+                {order.delivery_schedule}
+              </p>
+            )}
+
             {order.address && (
               <CopyText
                 text={displayAddress(order.address)}

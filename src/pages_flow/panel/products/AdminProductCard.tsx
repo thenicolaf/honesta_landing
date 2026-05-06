@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Badge } from "@/shared/ui";
 import type { AdminDbProduct } from "@/lib/productsDb";
 import {
@@ -13,13 +14,22 @@ import {
   ProductAdminActions,
 } from "@/sections/products/components";
 import { mapAdminProduct } from "@/sections/products/utils";
+import { buildBackHref } from "@/shared/utils/backHref";
 import { useProductActions } from "./ProductActionsProvider";
 import { AdminVariantBadges } from "./AdminVariantBadges";
 
 export function AdminProductCard({ product }: { product: AdminDbProduct }) {
   const { openDelete } = useProductActions();
   const { badge, category, ingredients, promotion } = mapAdminProduct(product);
-  const href = `/panel/products/${product.id}/details`;
+
+  // Preserve current admin filters (status, category, search, sort, etc.) on
+  // the back URL so returning from the detail page lands on the same view.
+  const backHref = buildBackHref({
+    pathname: "/panel/products",
+    searchParams: useSearchParams(),
+  });
+  const detailQuery = new URLSearchParams({ back: backHref }).toString();
+  const href = `/panel/products/${product.id}/details?${detailQuery}`;
 
   return (
     <div className="h-full flex flex-col rounded-2xl bg-white-warm border border-earth/8 hover:shadow-lg hover:border-transparent transition-all duration-300">

@@ -1,9 +1,16 @@
 import { format } from "date-fns";
 
-export function formatDisplay(date: Date, showTime: boolean): string {
-  return format(date, showTime ? "d MMM yyyy, HH:mm" : "d MMM yyyy");
+interface FormatOptions {
+  showTime: boolean;
+  timeOnly?: boolean;
 }
 
-export function formatFormValue(date: Date, showTime: boolean): string {
-  return showTime ? date.toISOString() : format(date, "yyyy-MM-dd");
+export function formatDisplay(date: Date, options: FormatOptions): string {
+  if (options.timeOnly) return format(date, "HH:mm");
+  return format(date, options.showTime ? "d MMM yyyy, HH:mm" : "d MMM yyyy");
+}
+
+export function formatFormValue(date: Date, options: FormatOptions): string {
+  if (options.timeOnly) return format(date, "HH:mm");
+  return options.showTime ? date.toISOString() : format(date, "yyyy-MM-dd");
 }

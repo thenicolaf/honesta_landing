@@ -2,12 +2,16 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
+import { Info } from "lucide-react";
 import {
   FormLabel,
   FormNumberInput,
   FormCheckbox,
   FormError,
   Button,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
   toastSuccess,
   toastError,
 } from "@/shared/ui";
@@ -114,6 +118,43 @@ export function EmirateForm({ setting, onDone, onCancel }: EmirateFormProps) {
             state={state?.fieldErrors?.days ? "error" : "default"}
           />
           <FormError message={state?.fieldErrors?.days} />
+        </div>
+
+        <div>
+          <div className="flex items-center gap-1.5">
+            <FormLabel htmlFor={`cutoff_${setting.id}`} className="mb-0">
+              Cut-off Hour (Asia/Dubai, 0–23)
+            </FormLabel>
+            <Tooltip side="top">
+              <TooltipTrigger asChild>
+                <Button
+                  as="button"
+                  type="button"
+                  variant="text"
+                  color="default"
+                  size="icon"
+                  className="w-5! h-5! p-0! text-earth/40 hover:text-earth"
+                  aria-label="What is the cut-off hour?"
+                >
+                  <Info className="w-3.5 h-3.5" aria-hidden="true" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-56 whitespace-normal text-center leading-snug">
+                Before this hour customers may pick &ldquo;tomorrow&rdquo;;
+                after, only the day after.
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          <FormNumberInput
+            id={`cutoff_${setting.id}`}
+            name="cutoff_hour"
+            step={1}
+            min={0}
+            max={23}
+            defaultValue={state?.values?.cutoff_hour ?? setting.cutoff_hour}
+            state={state?.fieldErrors?.cutoff_hour ? "error" : "default"}
+          />
+          <FormError message={state?.fieldErrors?.cutoff_hour} />
         </div>
 
         <div className="pt-1">

@@ -5,8 +5,9 @@ import { createContext, useContext } from "react";
 export interface DatePickerContextValue {
   value: Date | undefined;
   showTime: boolean;
+  timeOnly: boolean;
   clearable: boolean;
-  /** Display format for maskito: "dd.MM.yyyy" or "dd.MM.yyyy HH:mm" */
+  /** Display format for maskito: "dd.MM.yyyy", "dd.MM.yyyy HH:mm", or "HH:mm" */
   format: string;
   /** Minimum selectable date (inclusive) */
   minDate?: Date;

@@ -1,15 +1,31 @@
 import type { Metadata } from "next";
-import { Hero, PhilosophyBlock, AboutUs, MixCTA, PartnershipCTA } from "@/sections";
+import {
+  Hero,
+  PhilosophyBlock,
+  AboutUs,
+  MixCTA,
+  PartnershipCTA,
+  MarketingPopupDialog,
+  PromoSliderSkeleton,
+} from "@/sections";
 import { CategoryGridSkeleton } from "@/sections/categories/CategoryGridSkeleton";
 import { AboutExpandedProvider } from "@/sections/about/AboutExpandedProvider";
 import { Skeleton } from "@/shared/ui";
 import { ProductGridSkeleton } from "@/sections/products/ProductGridSkeleton";
 import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvider";
-import { CategoriesSection, ProductsSection } from "@/pages_flow/home";
+import {
+  CategoriesSection,
+  ProductsSection,
+  PromoSliderSection,
+} from "@/pages_flow/home";
 import { HashTracker } from "./_components/HashTracker";
 import { Suspense } from "react";
 import { getCategories } from "@/lib/categoriesDb";
 import { getActiveMixBoxes } from "@/lib/mixBoxesDb";
+import {
+  getActiveMarketingPopup,
+  isMarketingPopupActive,
+} from "@/lib/marketingPopupDb";
 import { buildHomeStructuredData } from "./home-structured-data";
 
 export async function generateMetadata({
@@ -76,11 +92,13 @@ function ProductsSkeleton() {
 }
 
 export default async function Home() {
-  const [categories, activeMixBoxes] = await Promise.all([
+  const [categories, activeMixBoxes, popup] = await Promise.all([
     getCategories(),
     getActiveMixBoxes(),
+    getActiveMarketingPopup(),
   ]);
   const siteUrl = process.env.PUBLIC_BASE_URL!;
+  const showPopup = isMarketingPopupActive(popup);
 
   return (
     <main className="grow min-h-160">
@@ -89,6 +107,9 @@ export default async function Home() {
         <AboutUs />
       </AboutExpandedProvider>
       <MixCTA hasActiveBoxes={activeMixBoxes.length > 0} />
+      <Suspense fallback={<PromoSliderSkeleton />}>
+        <PromoSliderSection />
+      </Suspense>
       <SearchParamsFilterProvider keys={["category", "sort", "search", "mark"]}>
         <Suspense fallback={<CategoriesSkeleton />}>
           <CategoriesSection />
@@ -99,6 +120,17 @@ export default async function Home() {
       </SearchParamsFilterProvider>
       <PhilosophyBlock />
       <PartnershipCTA />
+      {showPopup && popup && (
+        <MarketingPopupDialog
+          id={popup.id}
+          version={popup.version}
+          title={popup.title}
+          body={popup.body}
+          image_url={popup.image_url}
+          cta_label={popup.cta_label}
+          cta_url={popup.cta_url}
+        />
+      )}
       <HashTracker />
       <script
         type="application/ld+json"

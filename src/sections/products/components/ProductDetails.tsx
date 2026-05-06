@@ -30,7 +30,7 @@ export function BenefitsList({ benefits }: { benefits: Benefit[] }) {
 // ─── NutritionTable ───────────────────────────────────────────────────────────
 
 export function NutritionTable({ nutrition }: { nutrition: NutritionInfo }) {
-  const rows = Object.values(nutrition).map((field) => ({
+  const rows = nutrition.map((field) => ({
     label: field.name,
     value: String(field.value),
   }));

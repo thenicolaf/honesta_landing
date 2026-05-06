@@ -6,8 +6,13 @@ import { createNotification } from "@/lib/notificationsDb";
 import { recordPromoCodeRedemption } from "@/lib/promoCodesDb";
 import { clearCartAndCleanup } from "@/lib/cartDb";
 import { cleanupOrphanedMixVariants } from "@/pages_flow/mix/actions";
-import { formatOrderNotificationMessage } from "@/lib/orderNotifications";
+import {
+  buildOrderNotificationParts,
+  formatOrderNotificationMessage,
+  type OrderNotificationParts,
+} from "@/lib/orderNotifications";
 import { ClearCartOnSuccess } from "./ClearCartOnSuccess";
+import { ResultToast } from "./ResultToast";
 import { ResultCard, MissingRefCard } from "./ui";
 
 export const metadata: Metadata = {
@@ -26,7 +31,15 @@ async function resolvePaymentState(orderRef: string) {
   }
 }
 
-async function settleOrder(orderRef: string, success: boolean) {
+interface SettleResult {
+  title: string;
+  parts: OrderNotificationParts;
+}
+
+async function settleOrder(
+  orderRef: string,
+  success: boolean,
+): Promise<SettleResult | null> {
   const newStatus = success ? OrderStatus.PAID : OrderStatus.FAILED;
 
   const { data: order } = await supabaseAdmin
@@ -35,17 +48,20 @@ async function settleOrder(orderRef: string, success: boolean) {
     .eq("ngenius_ref", orderRef)
     .neq("status", newStatus)
     .select(
-      "id, total, promo_code_id, user_id, first_name, last_name, order_items(name, quantity, variant_id)",
+      "id, total, promo_code_id, user_id, first_name, last_name, delivery_schedule, order_items(name, quantity, variant_id)",
     )
     .single();
 
-  if (!order) return;
+  if (!order) return null;
 
   const items = (order.order_items ?? []) as Array<{
     name: string;
     quantity: number;
     variant_id: string | null;
   }>;
+
+  const parts = buildOrderNotificationParts(order, items);
+  const title = success ? "Order paid" : "Payment failed";
 
   await Promise.all([
     success && order.promo_code_id && order.user_id
@@ -60,7 +76,7 @@ async function settleOrder(orderRef: string, success: boolean) {
       : null,
     createNotification({
       type: success ? "order_paid" : "order_failed",
-      title: success ? "Order paid" : "Payment failed",
+      title,
       message: formatOrderNotificationMessage(order, items),
       relatedId: order.id,
     }),
@@ -74,6 +90,8 @@ async function settleOrder(orderRef: string, success: boolean) {
       await cleanupOrphanedMixVariants(variantIds);
     }
   }
+
+  return { title, parts };
 }
 
 export default async function CheckoutResultPage({
@@ -92,8 +110,22 @@ export default async function CheckoutResultPage({
     ? SUCCESS_STATES.has(paymentState) || FAIL_STATES.has(paymentState)
     : false;
 
+  let toastTitle: string | null = null;
+  let toastParts: OrderNotificationParts | null = null;
   if (settled) {
-    await settleOrder(orderRef, success);
+    const settledResult = await settleOrder(orderRef, success);
+    toastTitle = settledResult?.title ?? null;
+    toastParts = settledResult?.parts ?? null;
+  }
+
+  let deliverySchedule: string | null = null;
+  if (success) {
+    const { data } = await supabaseAdmin
+      .from("orders")
+      .select("delivery_schedule")
+      .eq("ngenius_ref", orderRef)
+      .single();
+    deliverySchedule = (data?.delivery_schedule as string | null) ?? null;
   }
 
   return (
@@ -108,7 +140,13 @@ export default async function CheckoutResultPage({
           <ClearCartOnSuccess success={success} />
         </>
       )}
-      <ResultCard success={success} paymentState={paymentState} orderRef={orderRef} />
+      <ResultToast success={success} title={toastTitle} parts={toastParts} />
+      <ResultCard
+        success={success}
+        paymentState={paymentState}
+        orderRef={orderRef}
+        deliverySchedule={deliverySchedule}
+      />
     </main>
   );
 }

@@ -199,3 +199,75 @@ body {
     transform: translateY(-8px) scale(0.97);
   }
 }
+
+/* ─── Rich text rendering (admin-authored product notes) ─── */
+.rich-text p {
+  margin: 0;
+}
+.rich-text p + p,
+.rich-text p + ul,
+.rich-text p + ol,
+.rich-text ul + p,
+.rich-text ol + p {
+  margin-top: 0.25rem;
+}
+.rich-text ul,
+.rich-text ol {
+  padding-left: 1rem;
+  list-style: revert;
+}
+.rich-text strong {
+  font-weight: 600;
+}
+.rich-text em {
+  font-style: italic;
+}
+/* Links — orange + underline in both render output and editor view.
+   Defined BEFORE data-text-color rules so an explicit color override on a
+   link still wins via cascade order at equal specificity. */
+.rich-text a,
+.rich-text-editor a {
+  color: var(--color-orange);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+/* BlockNote text/background color tokens (light mode defaults) */
+.rich-text [data-text-color="gray"] { color: #9b9a97; }
+.rich-text [data-text-color="brown"] { color: #64473a; }
+.rich-text [data-text-color="red"] { color: #e03e3e; }
+.rich-text [data-text-color="orange"] { color: #d9730d; }
+.rich-text [data-text-color="yellow"] { color: #dfab01; }
+.rich-text [data-text-color="green"] { color: #4d6461; }
+.rich-text [data-text-color="blue"] { color: #0b6e99; }
+.rich-text [data-text-color="purple"] { color: #6940a5; }
+.rich-text [data-text-color="pink"] { color: #ad1a72; }
+.rich-text [data-background-color="gray"] { background-color: #ebeced; }
+.rich-text [data-background-color="brown"] { background-color: #e9e5e3; }
+.rich-text [data-background-color="red"] { background-color: #fbe4e4; }
+.rich-text [data-background-color="orange"] { background-color: #f6e9d9; }
+.rich-text [data-background-color="yellow"] { background-color: #fbf3db; }
+.rich-text [data-background-color="green"] { background-color: #ddedea; }
+.rich-text [data-background-color="blue"] { background-color: #ddebf1; }
+.rich-text [data-background-color="purple"] { background-color: #eae4f2; }
+.rich-text [data-background-color="pink"] { background-color: #f4dfeb; }
+
+/* ─── BlockNote editor brand overrides ─── */
+.rich-text-editor .bn-container,
+.rich-text-editor .bn-editor,
+.rich-text-editor [data-node-type="blockGroup"],
+.rich-text-editor .ProseMirror {
+  --bn-font-family: var(--font-body);
+  --bn-color-editor-text: var(--color-earth);
+  --bn-color-editor-background: transparent;
+  background: transparent !important;
+  font-family: var(--font-body);
+  color: var(--color-earth);
+}
+.rich-text-editor .bn-editor {
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 300;
+}
+.rich-text-editor .bn-block-content {
+  padding-block: 0.125rem;
+}

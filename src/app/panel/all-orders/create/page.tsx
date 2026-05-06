@@ -1,8 +1,10 @@
 import { Suspense } from "react";
+import { ArrowLeft } from "lucide-react";
 import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
-import { Skeleton } from "@/shared/ui";
+import { Button, Skeleton } from "@/shared/ui";
 import { supabaseAdmin } from "@/lib/supabase.server";
 import { getDeliverySettings } from "@/lib/deliveryDb";
+import { getActiveDeliverySlots } from "@/lib/deliverySlotsDb";
 import { getActiveMixBoxes } from "@/lib/mixBoxesDb";
 import {
   calculateDiscountedPrice,
@@ -78,15 +80,17 @@ async function getManualOrderProducts(): Promise<Product[]> {
 }
 
 async function CreateContent() {
-  const [products, deliverySettings, boxes] = await Promise.all([
+  const [products, deliverySettings, slots, boxes] = await Promise.all([
     getManualOrderProducts(),
     getDeliverySettings(),
+    getActiveDeliverySlots(),
     getActiveMixBoxes(),
   ]);
   return (
     <ManualOrderForm
       products={products}
       deliverySettings={deliverySettings}
+      slots={slots}
       boxes={boxes}
     />
   );
@@ -114,6 +118,17 @@ function FormSkeleton() {
 export default function Page() {
   return (
     <>
+      <div className="mb-6">
+        <Button
+          href="/panel/all-orders"
+          variant="outline"
+          size="sm"
+          startIcon={<ArrowLeft size={14} />}
+        >
+          Back to orders
+        </Button>
+      </div>
+
       <AdminPageHeader title="New order" label="Admin Panel" />
       <Suspense fallback={<FormSkeleton />}>
         <CreateContent />

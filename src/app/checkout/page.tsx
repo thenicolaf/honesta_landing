@@ -6,6 +6,8 @@ import { CustomerInfo } from "@/shared/types";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
 import { getUserAddresses } from "@/lib/addressesDb";
 import { getDeliverySettings } from "@/lib/deliveryDb";
+import { getActiveDeliverySlots } from "@/lib/deliverySlotsDb";
+import { getDeliveryBlackouts } from "@/lib/deliveryBlackoutsDb";
 import { getActivePromotionsMap } from "@/lib/promotionsDb";
 
 export const metadata: Metadata = {
@@ -15,13 +17,21 @@ export const metadata: Metadata = {
 };
 
 export default async function CheckoutRoute() {
-  const [cookieStore, supabase, deliverySettings, activePromotions] =
-    await Promise.all([
-      cookies(),
-      createSupabaseServerClient(),
-      getDeliverySettings(),
-      getActivePromotionsMap(),
-    ]);
+  const [
+    cookieStore,
+    supabase,
+    deliverySettings,
+    deliverySlots,
+    deliveryBlackouts,
+    activePromotions,
+  ] = await Promise.all([
+    cookies(),
+    createSupabaseServerClient(),
+    getDeliverySettings(),
+    getActiveDeliverySlots(),
+    getDeliveryBlackouts(),
+    getActivePromotionsMap(),
+  ]);
 
   const raw = cookieStore.get(CUSTOMER_COOKIE_KEY)?.value;
   let cookieValues: Partial<CustomerInfo> = {};
@@ -62,6 +72,8 @@ export default async function CheckoutRoute() {
       defaultValues={user ? profileValues : cookieValues}
       addresses={addresses}
       deliverySettings={deliverySettings}
+      deliverySlots={deliverySlots}
+      deliveryBlackouts={deliveryBlackouts}
       isAuthenticated={!!user}
       activePromotions={activePromotions}
     />

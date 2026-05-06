@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       .eq("ngenius_ref", ngeniusRef)
       .neq("status", newStatus)
       .select(
-        "id, total, promo_code_id, user_id, first_name, last_name, order_items(name, quantity, variant_id)",
+        "id, total, promo_code_id, user_id, first_name, last_name, delivery_schedule, order_items(name, quantity, variant_id)",
       )
       .single();
 

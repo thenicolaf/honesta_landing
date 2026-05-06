@@ -8,6 +8,7 @@ export type DeliverySetting = {
   free_delivery_threshold: number | null;
   minimum_order: number | null;
   delivery_days: number;
+  cutoff_hour: number;
   is_active: boolean;
   updated_at: string;
 };
@@ -42,6 +43,7 @@ export async function updateDeliverySetting(
     free_delivery_threshold: number | null;
     minimum_order: number | null;
     delivery_days: number;
+    cutoff_hour: number;
     is_active: boolean;
   },
 ): Promise<{ error: string | null }> {

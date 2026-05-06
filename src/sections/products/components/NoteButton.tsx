@@ -1,6 +1,12 @@
 "use client";
 
-import { Button, Tooltip, TooltipTrigger, TooltipContent } from "@/shared/ui";
+import {
+  Button,
+  RichText,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/shared/ui";
 import { IconInfo } from "@/shared/icons";
 import { cn } from "@/shared/utils/cn";
 
@@ -31,7 +37,7 @@ export function NoteButton({ note, className }: NoteButtonProps) {
         </Button>
       </TooltipTrigger>
       <TooltipContent className="whitespace-normal min-w-32 w-max max-w-72 text-left leading-snug">
-        {note}
+        <RichText html={note} />
       </TooltipContent>
     </Tooltip>
   );

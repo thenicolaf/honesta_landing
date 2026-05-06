@@ -5,6 +5,7 @@ import {
   FormLabel,
   FormInput,
   FormTextarea,
+  FormRichTextarea,
   FormCheckbox,
   FormSelect,
   FormUploadZone,
@@ -62,10 +63,9 @@ export function BasicInfoSection({ product, state }: SectionProps) {
 
         <div className="sm:col-span-2">
           <FormLabel htmlFor="p-note">Note</FormLabel>
-          <FormTextarea
+          <FormRichTextarea
             id="p-note"
             name="note"
-            rows={2}
             placeholder="e.g. Store in a cool, dry place. Ships within 2-3 business days."
             defaultValue={state?.values?.note ?? product?.note ?? ""}
           />

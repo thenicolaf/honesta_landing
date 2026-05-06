@@ -26,7 +26,10 @@ import {
 export interface ManualOrderState {
   error?: string;
   fieldErrors?: CustomerErrors & { items?: string };
-  values?: Partial<CustomerInfo> & { items?: string };
+  values?: Partial<CustomerInfo> & {
+    items?: string;
+    delivery_schedule?: string;
+  };
 }
 
 interface PickedItem {
@@ -215,6 +218,13 @@ export async function createManualOrderAction(
       fieldErrors.items = "Add at least one product or mix";
     }
 
+    const deliverySchedule =
+      ((formData.get("delivery_schedule") as string | null) ?? "").trim() ||
+      null;
+    if (!deliverySchedule) {
+      fieldErrors.deliveryDate = "Select delivery date and slot";
+    }
+
     if (Object.keys(fieldErrors).length > 0) {
       return { fieldErrors, values: customer };
     }
@@ -345,6 +355,7 @@ export async function createManualOrderAction(
       deliveryFee: delivery.fee,
       promotionDiscount,
       status: OrderStatus.PAID,
+      deliverySchedule,
     });
     if (orderError || !order) {
       return {
