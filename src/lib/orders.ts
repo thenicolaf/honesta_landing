@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase.server";
+import { findMissingVariantIds } from "@/lib/validateOrderVariants";
 import type { CartItem } from "@/sections/products/types/types";
 import type { CustomerInfo } from "@/shared/types";
 import { OrderStatus } from "@/shared/types";
@@ -146,6 +147,18 @@ export async function createOrderWithItems({
 }> {
   const discountedSubtotal = Math.max(0, subtotal - promoDiscount);
   const total = discountedSubtotal + deliveryFee;
+
+  const variantIds = items
+    .map((row) => row.variant_id)
+    .filter((id): id is string => id !== null);
+  const missingVariantIds = await findMissingVariantIds(variantIds);
+  if (missingVariantIds.length > 0) {
+    return {
+      data: null,
+      error:
+        "Some items in your cart are no longer available. Please refresh the page and try again.",
+    };
+  }
 
   const { data: order, error: orderError } = await supabaseAdmin
     .from("orders")

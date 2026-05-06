@@ -67,10 +67,14 @@ export function CheckoutFormSection({
     if (state?.promoCodeError) toastError(state.promoCodeError);
   }, [state]);
 
+  const mergedDefaults = state?.values
+    ? { ...defaultValues, ...state.values }
+    : defaultValues;
+
   return (
     <form action={formAction} className="flex flex-col gap-5">
       <CheckoutForm
-        defaultValues={defaultValues}
+        defaultValues={mergedDefaults}
         addresses={addresses}
         fieldErrors={state?.fieldErrors}
         promoCodeError={state?.promoCodeError}
