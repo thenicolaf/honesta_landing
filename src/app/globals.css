@@ -271,3 +271,12 @@ body {
 .rich-text-editor .bn-block-content {
   padding-block: 0.125rem;
 }
+
+/* BlockNote creates its portalElement (formatting toolbar / slash menu / link
+   popover) as a direct child of <body> with class .bn-mantine. Without an
+   explicit z-index it sits under Dialog overlay (z-50) and becomes invisible
+   when the editor lives inside a Dialog. Lift it above all dialogs. */
+body > .bn-mantine {
+  position: relative;
+  z-index: 100;
+}

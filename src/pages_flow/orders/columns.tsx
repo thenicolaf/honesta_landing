@@ -58,10 +58,17 @@ export const itemsColumn: ColumnDef<Order, OrderKey> = {
         return (
           <div key={item.id} className="flex flex-col gap-1">
             <div className="flex items-start justify-between gap-3">
-              <span className="text-sm text-earth">
-                {item.name}
-                <span className="text-earth/40 ml-1">×{item.quantity}</span>
-              </span>
+              <div className="flex flex-col min-w-0">
+                <span className="text-sm text-earth">
+                  {item.name}
+                  <span className="text-earth/40 ml-1">×{item.quantity}</span>
+                </span>
+                {item.weight_g != null && item.weight_g > 0 && (
+                  <span className="text-2xs text-earth/45 tabular-nums">
+                    {item.weight_g} g
+                  </span>
+                )}
+              </div>
               <div className="shrink-0 flex flex-col items-end whitespace-nowrap">
                 <span
                   className={

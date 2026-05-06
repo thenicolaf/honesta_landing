@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase.server";
 import { deleteImage, parseFormImages, type StorageBucket } from "@/lib/storage";
 import { createNotification } from "@/lib/notificationsDb";
+import { upsertInventorySettings } from "@/lib/inventoryDb";
 import type { NutritionJson } from "./product-form/nutrition";
 import { isHtmlEmpty, sanitizeNoteHtml } from "@/shared/utils/sanitizeHtml";
 
@@ -32,6 +33,8 @@ interface ProductValues {
   servingIdeaIds: string;
   benefitIds: string;
   ingredientIds: string;
+  cost_per_100g: string;
+  low_stock_threshold_g: string;
   [key: string]: string;
 }
 
@@ -44,6 +47,8 @@ export interface ProductState {
     category_id?: string;
     ingredientIds?: string;
     images?: string;
+    cost_per_100g?: string;
+    low_stock_threshold_g?: string;
   };
   values?: Partial<ProductValues>;
 }
@@ -203,6 +208,28 @@ function validateProduct(values: Partial<ProductValues>) {
 
   if (parseIds(values.ingredientIds ?? null).length === 0) {
     fieldErrors.ingredientIds = "At least one ingredient is required";
+  }
+
+  const cost = Number(values.cost_per_100g);
+  if (
+    values.cost_per_100g === undefined ||
+    values.cost_per_100g === "" ||
+    !Number.isFinite(cost) ||
+    cost < 0
+  ) {
+    fieldErrors.cost_per_100g = "Enter a non-negative number";
+  }
+
+  const threshold = Number(values.low_stock_threshold_g);
+  if (
+    values.low_stock_threshold_g === undefined ||
+    values.low_stock_threshold_g === "" ||
+    !Number.isFinite(threshold) ||
+    !Number.isInteger(threshold) ||
+    threshold < 0
+  ) {
+    fieldErrors.low_stock_threshold_g =
+      "Enter a non-negative whole number of grams";
   }
 
   return Object.keys(fieldErrors).length > 0 ? fieldErrors : null;
@@ -410,6 +437,11 @@ export async function createProduct(
     await Promise.all([
       insertJunctionRows(data.id, values),
       syncVariants(data.id, variants),
+      upsertInventorySettings({
+        productId: data.id,
+        costPer100g: Number(values.cost_per_100g),
+        lowStockThresholdG: Number(values.low_stock_threshold_g),
+      }),
     ]);
 
     if (status === "published") {
@@ -474,6 +506,11 @@ export async function updateProduct(
     await Promise.all([
       insertJunctionRows(id, values),
       syncVariants(id, variants),
+      upsertInventorySettings({
+        productId: id,
+        costPer100g: Number(values.cost_per_100g),
+        lowStockThresholdG: Number(values.low_stock_threshold_g),
+      }),
     ]);
 
     redirect("/panel/products?toast=updated");

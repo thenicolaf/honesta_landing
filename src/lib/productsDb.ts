@@ -12,8 +12,15 @@ const PRODUCTS_SELECT = `
   product_benefits(benefit_id, benefits(id, name, description)),
   product_ingredients(ingredient_id, ingredient_options(id, label)),
   promotion_products(promotions(name, discount_type, discount_value, starts_at, ends_at, is_active)),
-  product_variants(id, weight_g, price)
+  product_variants(id, weight_g, price),
+  product_inventory(stock_g, low_stock_threshold_g, cost_per_100g)
 `;
+
+export interface AdminProductInventory {
+  stock_g: number;
+  low_stock_threshold_g: number;
+  cost_per_100g: number;
+}
 
 export type AdminDbProduct = Omit<
   DbProduct,
@@ -32,6 +39,7 @@ export type AdminDbProduct = Omit<
   product_occasions: { occasion_id: number; occasion_options: { id: number; label: string } }[];
   product_benefits: { benefit_id: number; benefits: { id: number; name: string; description: string } }[];
   product_ingredients: { ingredient_id: number; ingredient_options: { id: number; label: string } }[];
+  product_inventory: AdminProductInventory | AdminProductInventory[] | null;
 };
 
 const PUBLIC_PRODUCTS_SELECT = `

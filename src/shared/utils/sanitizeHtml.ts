@@ -29,11 +29,20 @@ export function sanitizeNoteHtml(html: string): string {
   return DOMPurify.sanitize(html, NOTE_CONFIG);
 }
 
-export function isHtmlEmpty(html: string | null | undefined): boolean {
-  if (!html) return true;
-  const stripped = html
-    .replace(/<[^>]*>/g, "")
-    .replace(/&nbsp;/g, "")
+/**
+ * Strip all HTML tags and entities from a string, returning plain text suitable
+ * for substring search or emptiness checks. Not a security boundary — use
+ * {@link sanitizeNoteHtml} for anything that will be rendered as HTML.
+ */
+export function stripHtml(html: string | null | undefined): string {
+  if (!html) return "";
+  return html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
-  return stripped.length === 0;
+}
+
+export function isHtmlEmpty(html: string | null | undefined): boolean {
+  return stripHtml(html).length === 0;
 }

@@ -2,7 +2,10 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createSupabaseServerClient, supabaseAdmin } from "@/lib/supabase.server";
+import {
+  createSupabaseServerClient,
+  supabaseAdmin,
+} from "@/lib/supabase.server";
 import {
   createOrderWithItems,
   type OrderItemRow,
@@ -10,6 +13,7 @@ import {
 } from "@/lib/orders";
 import { getDeliverySettingByEmirate } from "@/lib/deliveryDb";
 import { getActiveDeliverySlots } from "@/lib/deliverySlotsDb";
+import { deductInventoryForOrder } from "@/lib/inventoryDb";
 import { calculateDelivery } from "@/shared/utils/calculateDelivery";
 import {
   calculateDiscountedPrice,
@@ -60,7 +64,7 @@ type PresetRow = {
   id: string;
   weight_g: number;
   price: string | number;
-  product: { title: string; image_url: string | null } | null;
+  product: { id: string; title: string; image_url: string | null } | null;
 };
 
 type BoxRow = {
@@ -80,7 +84,8 @@ function parsePickedItems(raw: string | null): PickedItem[] {
     return parsed
       .map((r) => {
         const row = r as Partial<PickedItem>;
-        const variantId = typeof row.variantId === "string" ? row.variantId : "";
+        const variantId =
+          typeof row.variantId === "string" ? row.variantId : "";
         const quantity =
           typeof row.quantity === "number" && row.quantity > 0
             ? Math.floor(row.quantity)
@@ -102,7 +107,9 @@ function parsePendingMixes(raw: string | null): PendingMixPayload[] {
       .map((r) => {
         const row = r as Partial<PendingMixPayload>;
         const boxId = typeof row.boxId === "string" ? row.boxId : "";
-        const selectionsRaw = Array.isArray(row.selections) ? row.selections : [];
+        const selectionsRaw = Array.isArray(row.selections)
+          ? row.selections
+          : [];
         const selections = selectionsRaw
           .map((s) => {
             const sel = s as Partial<{ presetId: string; count: number }>;
@@ -156,11 +163,17 @@ function buildMixOrderRow(
         error: `Selected item in "${box.name}" is no longer available.`,
       };
     }
+    if (!preset.product) {
+      return {
+        error: `Selected item in "${box.name}" is no longer available.`,
+      };
+    }
     price += Number(preset.price) * s.count;
     weight += preset.weight_g * s.count;
     composition.push({
-      name: preset.product?.title ?? "—",
-      image_url: preset.product?.image_url ?? null,
+      product_id: preset.product.id,
+      name: preset.product.title,
+      image_url: preset.product.image_url,
       count: s.count,
       weight_g: preset.weight_g,
       price: Number(preset.price),
@@ -303,7 +316,7 @@ export async function createManualOrderAction(
           `id, name, image_url, cell_count, is_active,
            presets:mix_box_presets(
              id, weight_g, price,
-             product:products(title, image_url)
+             product:products(id, title, image_url)
            )`,
         )
         .in("id", boxIds);
@@ -371,8 +384,11 @@ export async function createManualOrderAction(
       };
     }
 
-    revalidatePath("/panel/all-orders");
-    revalidatePath("/panel");
+    await Promise.all([
+      deductInventoryForOrder(order.id),
+      Promise.resolve(revalidatePath("/panel/all-orders")),
+      Promise.resolve(revalidatePath("/panel")),
+    ]);
     redirect("/panel/all-orders");
   } catch (err) {
     if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;

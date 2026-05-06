@@ -5,6 +5,7 @@ import type { CustomerInfo } from "@/shared/types";
 import { OrderStatus } from "@/shared/types";
 
 export type MixCompositionEntry = {
+  product_id: string;
   name: string;
   image_url: string | null;
   count: number;
@@ -47,35 +48,39 @@ export async function buildMixCompositionMap(
   const { data: cells } = await supabaseAdmin
     .from("mix_variant_cells")
     .select(
-      "variant_id, preset_id, mix_box_presets:preset_id(weight_g, price, product:products(title, image_url))",
+      "variant_id, preset_id, mix_box_presets:preset_id(weight_g, price, product:products(id, title, image_url))",
     )
     .in("variant_id", mixVariantIds);
 
+  type CellProduct = { id: string; title: string; image_url: string | null };
   type CellRow = {
     variant_id: string;
     preset_id: string;
     mix_box_presets: {
       weight_g: number;
       price: string | number;
-      product: { title: string; image_url: string | null } | { title: string; image_url: string | null }[] | null;
+      product: CellProduct | CellProduct[] | null;
     };
   };
 
   for (const row of (cells ?? []) as unknown as CellRow[]) {
     const preset = row.mix_box_presets;
-    const rawProduct = preset.product as unknown;
+    const rawProduct = preset.product;
     const product = (
       Array.isArray(rawProduct) ? rawProduct[0] : rawProduct
-    ) as { title: string; image_url: string | null } | null;
+    ) as CellProduct | null;
+
+    if (!product) continue;
 
     const list = result.get(row.variant_id) ?? [];
-    const existing = list.find((e) => e.name === (product?.title ?? "—"));
+    const existing = list.find((e) => e.product_id === product.id);
     if (existing) {
       existing.count++;
     } else {
       list.push({
-        name: product?.title ?? "—",
-        image_url: product?.image_url ?? null,
+        product_id: product.id,
+        name: product.title,
+        image_url: product.image_url,
         count: 1,
         weight_g: preset.weight_g,
         price: Number(preset.price),

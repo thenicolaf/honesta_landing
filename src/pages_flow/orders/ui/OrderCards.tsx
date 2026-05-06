@@ -32,10 +32,17 @@ function ItemLine({ item }: { item: Order["order_items"][number] }) {
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-2xs text-earth truncate">
-          {item.name} <span className="text-earth/40">×{item.quantity}</span>
-        </span>
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-col min-w-0">
+          <span className="text-2xs text-earth truncate">
+            {item.name} <span className="text-earth/40">×{item.quantity}</span>
+          </span>
+          {item.weight_g != null && item.weight_g > 0 && (
+            <span className="text-2xs text-earth/45 tabular-nums">
+              {item.weight_g} g
+            </span>
+          )}
+        </div>
         <span className={`text-2xs shrink-0 ${priceColor}`}>
           {formatAed(finalLineTotal)}
         </span>

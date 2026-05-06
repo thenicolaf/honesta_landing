@@ -173,17 +173,25 @@ interface MultiSelectTriggerProps {
   placeholder?: string;
   className?: string;
   renderTag?: (value: string, onRemove: () => void) => React.ReactNode;
+  /** When set, only this many tags are rendered; the rest collapse into "+N more". */
+  maxVisibleTags?: number;
 }
 
 export function MultiSelectTrigger({
   placeholder = "Select...",
   className,
   renderTag,
+  maxVisibleTags,
 }: MultiSelectTriggerProps) {
   const { open, values, options, clearable, toggle, removeItem, clearAll } =
     useMultiSelect();
   const hasValues = values.length > 0;
   const showClear = clearable && hasValues;
+  const visibleValues =
+    maxVisibleTags !== undefined && values.length > maxVisibleTags
+      ? values.slice(0, maxVisibleTags)
+      : values;
+  const hiddenCount = values.length - visibleValues.length;
 
   const getLabel = (v: string) =>
     options.find((o) => o.value === v)?.label ?? v;
@@ -207,15 +215,22 @@ export function MultiSelectTrigger({
     >
       <span className="flex flex-1 flex-wrap items-center gap-1.5 min-w-0">
         {hasValues ? (
-          values.map((v) =>
-            renderTag ? (
-              renderTag(v, () => removeItem(v))
-            ) : (
-              <Tag key={v} onRemove={() => removeItem(v)}>
-                {getLabel(v)}
-              </Tag>
-            ),
-          )
+          <>
+            {visibleValues.map((v) =>
+              renderTag ? (
+                renderTag(v, () => removeItem(v))
+              ) : (
+                <Tag key={v} onRemove={() => removeItem(v)}>
+                  {getLabel(v)}
+                </Tag>
+              ),
+            )}
+            {hiddenCount > 0 && (
+              <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full bg-sand text-2xs font-semibold text-earth/70">
+                +{hiddenCount} more
+              </span>
+            )}
+          </>
         ) : (
           <span className="text-earth/40 py-0.5">{placeholder}</span>
         )}

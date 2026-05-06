@@ -7,6 +7,7 @@ export type OrderItem = {
   original_price: number | null;
   promo_discount: number;
   quantity: number;
+  weight_g: number | null;
   mix_composition: MixCompositionEntry[] | null;
 };
 
