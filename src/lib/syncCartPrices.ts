@@ -42,15 +42,21 @@ export async function syncCartPrices(
 
   let changed = false;
 
-  const updated = items.map((item) => {
+  const updated = items.flatMap((item) => {
     const product = productMap.get(item.productId);
-    if (!product) return item;
+    if (!product) {
+      changed = true;
+      return [];
+    }
 
     // Find variant by variantId
     const variant = product.product_variants.find(
       (v) => v.id === item.variantId,
     );
-    if (!variant) return item;
+    if (!variant) {
+      changed = true;
+      return [];
+    }
 
     const basePrice = Number(variant.price);
     const activePromo = findActivePromotion(product.promotion_products);
