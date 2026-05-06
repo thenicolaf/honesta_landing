@@ -58,7 +58,6 @@ export function ManualOrderForm({
 
   useToastOnStateChange(state);
 
-  const defaults = state?.values ?? {};
   const totals = buildManualOrderTotals({
     rows,
     mixes,
@@ -71,25 +70,27 @@ export function ManualOrderForm({
   return (
     <form action={dispatch} className="flex flex-col gap-6">
       <CustomerInfoSection
-        defaults={defaults}
+        values={state?.values}
         fieldErrors={state?.fieldErrors}
       />
 
       <DeliveryAddressSection
-        defaults={defaults}
+        values={state?.values}
         fieldErrors={state?.fieldErrors}
         onEmirateChange={setEmirate}
       />
 
-      <DeliveryScheduleSection
-        date={schedule.date}
-        slotId={schedule.slotId}
-        filteredSlots={schedule.filteredSlots}
-        scheduleText={schedule.scheduleText}
-        fieldErrors={state?.fieldErrors}
-        onDateChange={schedule.setDate}
-        onSlotChange={schedule.setSlotId}
-      />
+      {slots.length > 0 && (
+        <DeliveryScheduleSection
+          date={schedule.date}
+          slotId={schedule.slotId}
+          filteredSlots={schedule.filteredSlots}
+          scheduleText={schedule.scheduleText}
+          fieldErrors={state?.fieldErrors}
+          onDateChange={schedule.setDate}
+          onSlotChange={schedule.setSlotId}
+        />
+      )}
 
       <ProductsSection
         products={products}
@@ -100,7 +101,7 @@ export function ManualOrderForm({
 
       <MixesSection boxes={boxes} mixes={mixes} onChange={setMixes} />
 
-      <NotesSection defaultValue={defaults.notes} />
+      <NotesSection defaultValue={state?.values?.notes} />
 
       <OrderSummarySection totals={totals} emirate={emirate} />
 

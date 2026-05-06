@@ -1,6 +1,10 @@
 import type { SectionProps } from "./shared";
 
 export interface VariantRow {
+  /** Existing DB id; absent = new row to insert. Preserved through form
+   * round-trips so the server can diff by id instead of full DELETE+INSERT
+   * (which would re-issue UUIDs and break user carts). */
+  id?: string;
   weight_g: number;
   price: number;
 }
@@ -32,6 +36,7 @@ export function initRows(
       .slice()
       .sort((a, b) => a.weight_g - b.weight_g)
       .map((v) => ({
+        id: v.id,
         weight_g: v.weight_g,
         price: Number(v.price),
       }));

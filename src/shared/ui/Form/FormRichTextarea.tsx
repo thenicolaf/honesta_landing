@@ -4,7 +4,6 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/shared/utils/cn";
-import { useFormReset } from "./useFormReset";
 
 const Editor = dynamic(() => import("./BlockNoteEditor"), {
   ssr: false,
@@ -47,15 +46,19 @@ export function FormRichTextarea({
   state,
 }: FormRichTextareaProps) {
   const [html, setHtml] = useState(defaultValue ?? "");
-  const resetRef = useFormReset<HTMLDivElement>(() => setHtml(""));
+  // Adjust state in-render when defaultValue changes (e.g. server action
+  // echoes submitted values back). Editor is keyed on defaultValue so it
+  // remounts with the new initialHtml — BlockNote only reads it at mount.
+  const [prevDefaultValue, setPrevDefaultValue] = useState(defaultValue ?? "");
+  if ((defaultValue ?? "") !== prevDefaultValue) {
+    setPrevDefaultValue(defaultValue ?? "");
+    setHtml(defaultValue ?? "");
+  }
 
   return (
-    <div
-      ref={resetRef}
-      id={id}
-      className={cn(wrapperVariants({ state }), className)}
-    >
+    <div id={id} className={cn(wrapperVariants({ state }), className)}>
       <Editor
+        key={prevDefaultValue}
         initialHtml={defaultValue ?? ""}
         placeholder={placeholder}
         onHtmlChange={setHtml}

@@ -8,6 +8,7 @@ import {
   removeItem,
   updateQuantity,
   clearCart as clearCartStorage,
+  findMatchingIndex,
 } from "@/lib/cart";
 import {
   upsertItemInDb,
@@ -27,14 +28,24 @@ export function useCartActions(
     if (userId && supabaseRef.current) {
       const items = getItems();
       const qty = item.quantity ?? 1;
-      const existing = items.find((i) => i.variantId === item.variantId);
+      const matchIdx = findMatchingIndex(items, item);
+      const existing = matchIdx >= 0 ? items[matchIdx] : null;
       const newQty = existing ? existing.quantity + qty : qty;
+      // Replace snapshot wholesale on re-add so the cart picks up any changes
+      // (name, image, weight, price) and so a stale variantId from a previous
+      // page render gets replaced by the fresh one — see findMatchingIndex.
       const newItems = existing
-        ? items.map((i) =>
-            i.variantId === item.variantId ? { ...i, quantity: newQty } : i,
+        ? items.map((i, idx) =>
+            idx === matchIdx ? { ...item, quantity: newQty } : i,
           )
         : [...items, { ...item, quantity: qty }];
       setStore(newItems);
+      // If we replaced a stale variantId, the old DB row was already
+      // CASCADE-wiped by the variant deletion, but be defensive in case the
+      // backend still has a row keyed on the old variantId.
+      if (existing && existing.variantId !== item.variantId) {
+        void removeItemFromDb(supabaseRef.current, userId, existing.variantId);
+      }
       upsertItemInDb(supabaseRef.current, userId, {
         ...item,
         quantity: newQty,

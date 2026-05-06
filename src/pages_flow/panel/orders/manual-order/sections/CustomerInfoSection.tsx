@@ -9,12 +9,12 @@ import type { ManualOrderState } from "../actions";
 import { ManualOrderSection } from "./ManualOrderSection";
 
 interface CustomerInfoSectionProps {
-  defaults: Partial<CustomerInfo>;
+  values?: Partial<CustomerInfo>;
   fieldErrors?: ManualOrderState["fieldErrors"];
 }
 
 export function CustomerInfoSection({
-  defaults,
+  values,
   fieldErrors,
 }: CustomerInfoSectionProps) {
   return (
@@ -27,7 +27,7 @@ export function CustomerInfoSection({
           <FormInput
             id="firstName"
             name="firstName"
-            defaultValue={defaults.firstName}
+            defaultValue={values?.firstName}
             placeholder="Ahmed"
             state={fieldErrors?.firstName ? "error" : "default"}
           />
@@ -40,7 +40,7 @@ export function CustomerInfoSection({
           <FormInput
             id="lastName"
             name="lastName"
-            defaultValue={defaults.lastName}
+            defaultValue={values?.lastName}
             placeholder="Al Rashid"
             state={fieldErrors?.lastName ? "error" : "default"}
           />
@@ -56,7 +56,7 @@ export function CustomerInfoSection({
           id="email"
           name="email"
           type="email"
-          defaultValue={defaults.email}
+          defaultValue={values?.email}
           placeholder="you@example.com"
           state={fieldErrors?.email ? "error" : "default"}
         />
@@ -70,7 +70,7 @@ export function CustomerInfoSection({
         <FormPhoneInput
           id="phone"
           name="phone"
-          defaultValue={defaults.phone}
+          defaultValue={values?.phone}
           state={fieldErrors?.phone ? "error" : "default"}
         />
         <FormError message={fieldErrors?.phone} />

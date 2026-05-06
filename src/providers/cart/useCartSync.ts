@@ -1,13 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { getCartFromDb } from "@/lib/cartDb";
-import { getCart } from "@/lib/cart";
+import { getCart, saveCart } from "@/lib/cart";
 import { syncCartPrices } from "@/lib/syncCartPrices";
 import type { ActivePromotionsMap } from "@/lib/promotionsDb";
 import { calculateDiscountedPrice } from "@/shared/utils/calculateDiscount";
-import type { CartItem } from "@/sections/products/types";
 import { setStore, resetStore, getItems } from "./store";
 
 export function useCartSync(userId: string | null | undefined) {
@@ -19,21 +18,43 @@ export function useCartSync(userId: string | null | undefined) {
     userIdRef.current = userId;
   }, [userId]);
 
+  // Guests: hydrate from localStorage SYNCHRONOUSLY before paint so the navbar
+  // counter shows the correct number on first frame (no SSR data available for
+  // a localStorage-backed cart). Price/variant sync runs separately below.
+  useLayoutEffect(() => {
+    if (userId) return;
+    setStore(getCart());
+  }, [userId]);
+
   useEffect(() => {
-    resetStore();
     const supabase = createSupabaseBrowserClient();
 
-    async function loadAndSync(cartItems: CartItem[]) {
-      const { items: synced } = await syncCartPrices(supabase, cartItems);
-      setStore(synced);
-    }
-
     if (userId) {
+      // Auth users: server already provided initialItemCount; wait for the
+      // DB-backed cart to load before flipping isHydrated, so we don't briefly
+      // render an empty cart on top of an existing badge.
+      resetStore();
       supabaseRef.current = supabase;
-      getCartFromDb(supabase).then(loadAndSync);
+      getCartFromDb(supabase).then(async (cartItems) => {
+        const { items: synced } = await syncCartPrices(supabase, cartItems);
+        setStore(synced);
+      });
     } else {
       supabaseRef.current = null;
-      loadAndSync(getCart());
+      // localStorage already hydrated above; refresh prices in the background
+      // and only re-set the store if anything actually changed.
+      void (async () => {
+        const { items: synced, changed } = await syncCartPrices(
+          supabase,
+          getItems(),
+        );
+        if (changed) {
+          setStore(synced);
+          // Persist to localStorage too — otherwise stale items keep
+          // resurfacing from storage on every page reload.
+          saveCart(synced);
+        }
+      })();
     }
   }, [userId]);
 
@@ -45,6 +66,7 @@ export function useCartSync(userId: string | null | undefined) {
       : getItems();
     const { items: synced } = await syncCartPrices(supabase, cartItems);
     setStore(synced);
+    if (!currentUserId) saveCart(synced);
   }, []);
 
   const applyServerPromotions = useCallback(

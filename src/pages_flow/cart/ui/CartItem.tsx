@@ -86,7 +86,7 @@ function PromoHint({ discount, endsAt }: { discount: number; endsAt?: string }) 
       <div className="flex items-center gap-1">
         <Tag size={10} className="text-moss shrink-0" />
         <span className="font-body text-2xs text-moss">
-          Promo −AED {discount.toFixed(2)} each
+          Promo −AED {discount.toFixed(2)}
         </span>
       </div>
       {endsAt && (
@@ -220,7 +220,10 @@ export function CartItem({
       : undefined;
 
   const promoHint = hasPromoCode ? (
-    <PromoHint discount={promoDiscountPerUnit} endsAt={promoCodeEndsAt} />
+    <PromoHint
+      discount={promoDiscountPerUnit * item.quantity}
+      endsAt={promoCodeEndsAt}
+    />
   ) : null;
 
   const card = (

@@ -9,6 +9,7 @@ import {
   type MixCompositionEntry,
 } from "@/lib/orders";
 import { getDeliverySettingByEmirate } from "@/lib/deliveryDb";
+import { getActiveDeliverySlots } from "@/lib/deliverySlotsDb";
 import { calculateDelivery } from "@/shared/utils/calculateDelivery";
 import {
   calculateDiscountedPrice,
@@ -221,8 +222,14 @@ export async function createManualOrderAction(
     const deliverySchedule =
       ((formData.get("delivery_schedule") as string | null) ?? "").trim() ||
       null;
+
+    // Schedule fields are required only when the admin configured at least
+    // one active slot — mirrors the DeliveryScheduleSection's render condition.
     if (!deliverySchedule) {
-      fieldErrors.deliveryDate = "Select delivery date and slot";
+      const activeSlots = await getActiveDeliverySlots();
+      if (activeSlots.length > 0) {
+        fieldErrors.deliveryDate = "Select delivery date and slot";
+      }
     }
 
     if (Object.keys(fieldErrors).length > 0) {

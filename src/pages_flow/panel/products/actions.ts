@@ -10,6 +10,8 @@ import { isHtmlEmpty, sanitizeNoteHtml } from "@/shared/utils/sanitizeHtml";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface VariantInput {
+  /** Present for variants that already exist in DB; absent for new rows. */
+  id?: string;
   weight_g: number;
   price: number;
 }
@@ -257,20 +259,62 @@ async function parseProductValues(
 }
 
 async function syncVariants(productId: string, variants: VariantInput[]) {
-  await supabaseAdmin
+  // Diff against existing rows so unchanged variants keep their UUIDs. Doing
+  // a wholesale DELETE+INSERT would re-issue UUIDs on every save and orphan
+  // every cart_items / order_items row that pointed at the old variant.
+  const { data: existing } = await supabaseAdmin
     .from("product_variants")
-    .delete()
+    .select("id, weight_g, price")
     .eq("product_id", productId);
 
-  if (variants.length > 0) {
-    await supabaseAdmin.from("product_variants").insert(
-      variants.map((v) => ({
+  const existingMap = new Map(
+    (existing ?? []).map((v) => [v.id as string, v]),
+  );
+  const submittedIds = new Set(
+    variants.map((v) => v.id).filter((id): id is string => !!id),
+  );
+
+  const toUpdate: Array<{ id: string; weight_g: number; price: number }> = [];
+  const toInsert: Array<{ product_id: string; weight_g: number; price: number }> = [];
+  for (const v of variants) {
+    if (v.id && existingMap.has(v.id)) {
+      const prev = existingMap.get(v.id)!;
+      if (prev.weight_g !== v.weight_g || Number(prev.price) !== v.price) {
+        toUpdate.push({ id: v.id, weight_g: v.weight_g, price: v.price });
+      }
+    } else {
+      toInsert.push({
         product_id: productId,
         weight_g: v.weight_g,
         price: v.price,
-      })),
+      });
+    }
+  }
+  const toDeleteIds = (existing ?? [])
+    .map((v) => v.id as string)
+    .filter((id) => !submittedIds.has(id));
+
+  const ops: PromiseLike<unknown>[] = [];
+  if (toDeleteIds.length > 0) {
+    ops.push(
+      supabaseAdmin
+        .from("product_variants")
+        .delete()
+        .in("id", toDeleteIds),
     );
   }
+  for (const row of toUpdate) {
+    ops.push(
+      supabaseAdmin
+        .from("product_variants")
+        .update({ weight_g: row.weight_g, price: row.price })
+        .eq("id", row.id),
+    );
+  }
+  if (toInsert.length > 0) {
+    ops.push(supabaseAdmin.from("product_variants").insert(toInsert));
+  }
+  await Promise.all(ops);
 }
 
 // ─── Status transitions ──────────────────────────────────────────────────────

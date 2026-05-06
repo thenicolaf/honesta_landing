@@ -12,7 +12,6 @@ import {
 } from "../DatePicker";
 import { FormLabel } from "./FormLabel";
 import { FormError } from "./FormError";
-import { useFormReset } from "./useFormReset";
 
 interface FormTimePickerProps {
   id?: string;
@@ -52,11 +51,14 @@ export function FormTimePicker({
     defaultValue,
   );
   const isControlled = onValueChange !== undefined;
+  // Adjust state in-render when defaultValue changes (e.g. server action
+  // echoes submitted values back through props).
+  const [prevDefaultValue, setPrevDefaultValue] = useState(defaultValue);
+  if (defaultValue !== prevDefaultValue) {
+    setPrevDefaultValue(defaultValue);
+    if (!isControlled) setInternalValue(defaultValue);
+  }
   const value = isControlled ? controlledValue : internalValue;
-
-  const resetRef = useFormReset<HTMLDivElement>(() => {
-    setInternalValue(defaultValue);
-  });
 
   const handleChange = (date: Date | undefined) => {
     setInternalValue(date);
@@ -64,7 +66,7 @@ export function FormTimePicker({
   };
 
   return (
-    <div ref={resetRef} className={className}>
+    <div className={className}>
       {label && (
         <FormLabel htmlFor={id} required={required}>
           {label}

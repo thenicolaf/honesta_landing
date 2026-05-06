@@ -12,22 +12,22 @@ const AddressWithMap = dynamic(
 );
 
 interface DeliveryAddressSectionProps {
-  defaults: Partial<CustomerInfo>;
+  values?: Partial<CustomerInfo>;
   fieldErrors?: ManualOrderState["fieldErrors"];
   onEmirateChange: (emirate: string) => void;
 }
 
 export function DeliveryAddressSection({
-  defaults,
+  values,
   fieldErrors,
   onEmirateChange,
 }: DeliveryAddressSectionProps) {
   return (
     <ManualOrderSection title="Delivery address">
       <AddressWithMap
-        {...parseAddress(defaults.address)}
-        defaultLat={defaults.lat}
-        defaultLng={defaults.lng}
+        {...parseAddress(values?.address)}
+        defaultLat={values?.lat}
+        defaultLng={values?.lng}
         fieldErrors={mapAddressFieldErrors(fieldErrors)}
         onEmirateChange={onEmirateChange}
       />

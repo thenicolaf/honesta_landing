@@ -14,7 +14,6 @@ import {
   SelectValue,
 } from "../Select";
 import type { FieldVariantProps } from "./shared";
-import { useFormReset } from "./useFormReset";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -140,16 +139,23 @@ export function FormPhoneInput({
   state,
   className,
 }: FormPhoneInputProps) {
-  const [internalValue, setInternalValue] = useState<Value | undefined>(
-    () => {
-      const raw = controlledValue || defaultValue;
-      return raw ? (raw.replace(/\s/g, "") as Value) : undefined;
-    },
-  );
+  const normalize = (raw?: string): Value | undefined =>
+    raw ? (raw.replace(/\s/g, "") as Value) : undefined;
 
-  const resetRef = useFormReset<HTMLDivElement>(() =>
-    setInternalValue(undefined),
+  const [internalValue, setInternalValue] = useState<Value | undefined>(() =>
+    normalize(controlledValue || defaultValue),
   );
+  // Track the last defaultValue we adopted so that when the parent passes a
+  // new one (e.g. server action echoes submitted values back), we re-sync
+  // internal state in-render — React's recommended pattern for deriving state
+  // from props without effects.
+  const [prevDefaultValue, setPrevDefaultValue] = useState(defaultValue);
+  if (defaultValue !== prevDefaultValue) {
+    setPrevDefaultValue(defaultValue);
+    if (controlledValue === undefined) {
+      setInternalValue(normalize(defaultValue));
+    }
+  }
 
   const value = controlledValue !== undefined
     ? (controlledValue.replace(/\s/g, "") as Value)
@@ -162,7 +168,6 @@ export function FormPhoneInput({
 
   return (
     <div
-      ref={resetRef}
       className={cn(
         "relative flex items-center rounded-xl border bg-cream transition-colors",
         "focus-within:border-orange",

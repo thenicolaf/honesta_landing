@@ -16,7 +16,7 @@ export function getCart(): CartItem[] {
   }
 }
 
-function saveCart(items: CartItem[]): void {
+export function saveCart(items: CartItem[]): void {
   if (!isBrowser()) return;
   localStorage.setItem(CART_KEY, JSON.stringify(items));
 }
@@ -25,16 +25,42 @@ export function addItem(
   item: Omit<CartItem, "quantity"> & { quantity?: number },
 ): CartItem[] {
   const cart = getCart();
-  const existing = cart.find((c) => c.variantId === item.variantId);
-  if (existing) {
-    existing.quantity += item.quantity ?? 1;
-    existing.price = item.price;
-    existing.originalPrice = item.originalPrice;
+  const addQty = item.quantity ?? 1;
+  const idx = findMatchingIndex(cart, item);
+  if (idx >= 0) {
+    // Replace snapshot wholesale (name, image, weight_g, price, …) and merge
+    // quantity. Keeps cart in sync with the latest product state on re-add.
+    cart[idx] = { ...item, quantity: cart[idx].quantity + addQty };
   } else {
-    cart.push({ ...item, quantity: item.quantity ?? 1 });
+    cart.push({ ...item, quantity: addQty });
   }
   saveCart(cart);
   return cart;
+}
+
+/**
+ * Locates a cart slot that should merge with the incoming item:
+ *   1. exact variantId match (same DB row), or
+ *   2. for non-mix items, same (productId + weight_g) but different variantId —
+ *      that's a stale snapshot left over from a previous variant UUID
+ *      (e.g. admin re-saved the product before the diff-based syncVariants
+ *      fix was deployed). Treating it as the same logical variant lets the
+ *      fresh add silently replace the stale entry instead of duplicating it.
+ *   Mixes are skipped because each assembled mix is a genuinely unique variant.
+ */
+export function findMatchingIndex(
+  cart: CartItem[],
+  item: Pick<CartItem, "variantId" | "productId" | "weight_g" | "isMix">,
+): number {
+  const exact = cart.findIndex((c) => c.variantId === item.variantId);
+  if (exact >= 0) return exact;
+  if (item.isMix) return -1;
+  return cart.findIndex(
+    (c) =>
+      !c.isMix &&
+      c.productId === item.productId &&
+      c.weight_g === item.weight_g,
+  );
 }
 
 export function removeItem(variantId: string): CartItem[] {

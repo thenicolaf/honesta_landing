@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, type ReactNode } from "react";
+import { useLayoutEffect, type ReactNode } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useCart } from "@/providers";
 import { EmptyCart } from "./EmptyCart";
@@ -25,15 +25,11 @@ export function CartPage({
   activePromotions,
   belowContent,
 }: CartPageProps) {
-  const { items, isHydrated, refresh, applyServerPromotions } = useCart();
+  const { items, isHydrated, applyServerPromotions } = useCart();
 
   useLayoutEffect(() => {
     applyServerPromotions(activePromotions);
   }, [activePromotions, applyServerPromotions]);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
 
   if (!isHydrated) {
     return <CartSkeleton />;

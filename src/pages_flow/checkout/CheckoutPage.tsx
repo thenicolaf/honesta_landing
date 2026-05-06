@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { useCart } from "@/providers";
 import { CheckoutFormSection } from "./ui/CheckoutFormSection";
 import { OrderSummary } from "./ui/OrderSummary";
@@ -36,8 +36,7 @@ export function CheckoutPage({
   isAuthenticated,
   activePromotions,
 }: CheckoutPageProps) {
-  const { items, total, isHydrated, refresh, applyServerPromotions } =
-    useCart();
+  const { items, total, isHydrated, applyServerPromotions } = useCart();
   const [emirate, setEmirate] = useState(() =>
     extractEmirateFromAddress(defaultValues?.address ?? "", addresses),
   );
@@ -45,10 +44,6 @@ export function CheckoutPage({
   useLayoutEffect(() => {
     applyServerPromotions(activePromotions);
   }, [activePromotions, applyServerPromotions]);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
 
   const delivery = calculateDelivery(total, emirate, deliverySettings);
 

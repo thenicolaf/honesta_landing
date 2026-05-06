@@ -39,6 +39,7 @@ export function DeliveryScheduleSection({
             value={date}
             onValueChange={onDateChange}
             clearable
+            placeholder="Select date"
             state={fieldErrors?.deliveryDate ? "error" : "default"}
           />
           <FormError message={fieldErrors?.deliveryDate} />
@@ -49,8 +50,14 @@ export function DeliveryScheduleSection({
             name="delivery_slot_id_unused"
             value={slotId}
             onValueChange={onSlotChange}
-            disabled={!date}
-            placeholder={!date ? "Select date first" : "Select slot"}
+            disabled={!date || filteredSlots.length === 0}
+            placeholder={
+              !date
+                ? "Select date first"
+                : filteredSlots.length === 0
+                  ? "No slots for this day"
+                  : "Select slot"
+            }
             options={filteredSlots.map((s) => ({
               value: s.id,
               label: `${s.label} · ${s.start_time.slice(0, 5)}–${s.end_time.slice(0, 5)}`,
