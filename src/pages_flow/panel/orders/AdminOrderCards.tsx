@@ -164,7 +164,7 @@ export function AdminOrderCards({
             )}
 
             {order.notes && (
-              <p className="text-2xs text-earth/40 italic mt-1 truncate">
+              <p className="text-2xs text-earth/40 italic mt-1 line-clamp-3">
                 {order.notes}
               </p>
             )}

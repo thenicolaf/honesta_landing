@@ -9,7 +9,6 @@ import {
   SelectContent,
   SelectItem,
 } from "../Select";
-import { useFormReset } from "./useFormReset";
 
 type FormSelectOption =
   | string
@@ -51,11 +50,14 @@ export function FormSelect({
 }: FormSelectProps) {
   const [internalValue, setInternalValue] = useState(defaultValue);
   const isControlled = controlledValue !== undefined;
+  // Adjust state in-render when defaultValue changes (e.g. server action
+  // echoes submitted values back through props).
+  const [prevDefaultValue, setPrevDefaultValue] = useState(defaultValue);
+  if (defaultValue !== prevDefaultValue) {
+    setPrevDefaultValue(defaultValue);
+    if (!isControlled) setInternalValue(defaultValue);
+  }
   const value = isControlled ? controlledValue : internalValue;
-
-  const resetRef = useFormReset<HTMLDivElement>(() =>
-    setInternalValue(defaultValue),
-  );
 
   const handleChange = (v: string) => {
     if (!isControlled) setInternalValue(v);
@@ -67,7 +69,7 @@ export function FormSelect({
   );
 
   return (
-    <div ref={resetRef} className={className}>
+    <div className={className}>
       <input type="hidden" id={id} name={name} value={value} />
       <Select
         value={value}

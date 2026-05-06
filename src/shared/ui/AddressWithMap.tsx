@@ -12,7 +12,6 @@ import {
 import { AddressSuggestInput } from "@/shared/ui/AddressSuggestInput";
 import { UAE_EMIRATES } from "@/shared/consts";
 import { composeAddress, displayAddress } from "@/shared/utils/address";
-import { useFormReset } from "@/shared/ui/Form/useFormReset";
 
 const DUBAI_CENTER = { lat: 25.2048, lng: 55.2708 };
 const LIBRARIES: ["places"] = ["places"];
@@ -114,7 +113,13 @@ export function AddressWithMap({
   const [buildingName, setBuildingNameState] = useState(defaultBuildingName);
   const [flatNumber, setFlatNumber] = useState(defaultFlatNumber);
 
-  const resetRef = useFormReset<HTMLDivElement>(() => {
+  // Re-sync state in-render whenever the parent passes new defaults (e.g.
+  // server action echoes submitted values back). React's recommended
+  // "adjust state on prop change" pattern — no effect needed.
+  const defaultsKey = `${resolvedDefaultEmirate}|${defaultCity}|${defaultArea}|${defaultBuildingName}|${defaultFlatNumber}|${defaultLat ?? ""}|${defaultLng ?? ""}`;
+  const [prevDefaultsKey, setPrevDefaultsKey] = useState(defaultsKey);
+  if (defaultsKey !== prevDefaultsKey) {
+    setPrevDefaultsKey(defaultsKey);
     setEmirateState(resolvedDefaultEmirate);
     setCityState(defaultCity);
     setAreaState(defaultArea);
@@ -122,7 +127,7 @@ export function AddressWithMap({
     setFlatNumber(defaultFlatNumber);
     setCenter(initPos);
     setMarkerPos(initPos);
-  });
+  }
 
   // Set emirate + notify parent (no cascade, used by resolvePlace & onMapClick)
   function setEmirate(value: string) {
@@ -329,7 +334,7 @@ export function AddressWithMap({
   };
 
   return (
-    <div ref={resetRef}>
+    <div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {/* Emirate */}
         <div className="sm:col-span-2">
