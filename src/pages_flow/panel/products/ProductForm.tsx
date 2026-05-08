@@ -6,6 +6,7 @@ import type { AdminDbProduct, ProductFormOptions } from "@/lib/productsDb";
 import { createProduct, updateProduct, type ProductState } from "./actions";
 import { BasicInfoSection } from "./product-form/BasicInfoSection";
 import { VariantsSection } from "./product-form/VariantsSection";
+import { InventorySection } from "./product-form/InventorySection";
 import { CategorySection } from "./product-form/CategorySection";
 import { IngredientsSection } from "./product-form/IngredientsSection";
 import { TagsSection } from "./product-form/TagsSection";
@@ -39,6 +40,7 @@ export function ProductForm({ product, options }: ProductFormProps) {
     <form action={dispatch} className="flex flex-col gap-6">
       <BasicInfoSection {...sectionProps} />
       <VariantsSection {...sectionProps} />
+      <InventorySection {...sectionProps} />
       <CategorySection {...sectionProps} />
       <IngredientsSection {...sectionProps} />
       <TagsSection {...sectionProps} />

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Tag, X } from "lucide-react";
 import { useCart } from "@/providers";
 import { Button, FormInput } from "@/shared/ui";
+import { trackApplyCoupon, trackCouponInvalid } from "@/lib/analytics";
 
 interface PromoCodeInputProps {
   isAuthenticated: boolean;
@@ -75,14 +76,22 @@ export function PromoCodeInput({
   }
 
   const handleApply = () => {
-    if (!code.trim()) return;
+    const trimmed = code.trim();
+    if (!trimmed) return;
     setError(null);
     startTransition(async () => {
-      const result = await applyPromoCode(code);
+      const result = await applyPromoCode(trimmed);
       if (!result.ok) {
         setError(result.error);
+        trackCouponInvalid(trimmed, result.error);
       } else {
         setCode("");
+        trackApplyCoupon({
+          code: result.appliedCode.code,
+          discount: result.appliedCode.discount,
+          discountType: result.appliedCode.discountType,
+          scope: result.appliedCode.scope,
+        });
       }
     });
   };

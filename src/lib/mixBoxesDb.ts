@@ -97,6 +97,8 @@ export interface MixProductOption {
   slug: string;
   image_url: string | null;
   category_name: string | null;
+  stock_g: number;
+  low_stock_threshold_g: number;
 }
 
 export interface MixFormOptions {
@@ -106,7 +108,9 @@ export interface MixFormOptions {
 export const getMixFormOptions = cache(async (): Promise<MixFormOptions> => {
   const { data } = await supabaseAdmin
     .from("products")
-    .select("id, title, slug, image_url, categories(name)")
+    .select(
+      "id, title, slug, image_url, categories(name), product_inventory(stock_g, low_stock_threshold_g)",
+    )
     .eq("status", "published")
     .order("title", { ascending: true });
 
@@ -116,16 +120,26 @@ export const getMixFormOptions = cache(async (): Promise<MixFormOptions> => {
     slug: string;
     image_url: string | null;
     categories: { name: string } | null;
+    product_inventory:
+      | { stock_g: number; low_stock_threshold_g: number }
+      | { stock_g: number; low_stock_threshold_g: number }[]
+      | null;
   }[];
 
   return {
-    products: rows.map((p) => ({
-      id: p.id,
-      title: p.title,
-      slug: p.slug,
-      image_url: p.image_url,
-      category_name: p.categories?.name ?? null,
-    })),
+    products: rows.map((p) => {
+      const invRaw = p.product_inventory;
+      const inv = Array.isArray(invRaw) ? invRaw[0] : invRaw;
+      return {
+        id: p.id,
+        title: p.title,
+        slug: p.slug,
+        image_url: p.image_url,
+        category_name: p.categories?.name ?? null,
+        stock_g: inv?.stock_g ?? 0,
+        low_stock_threshold_g: inv?.low_stock_threshold_g ?? 500,
+      };
+    }),
   };
 });
 

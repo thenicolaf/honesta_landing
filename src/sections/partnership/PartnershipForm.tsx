@@ -16,6 +16,7 @@ import {
   CollapsibleContent,
 } from "@/shared/ui";
 import { parseAddress } from "@/shared/utils/address";
+import { trackPartnershipInquiry } from "@/lib/analytics";
 
 const AddressWithMap = dynamic(
   () => import("@/shared/ui/AddressWithMap").then((m) => m.AddressWithMap),
@@ -34,7 +35,10 @@ export function PartnershipForm() {
   useEffect(() => {
     if (state === prevState.current) return;
     prevState.current = state;
-    if (state?.success) toastSuccess("Partnership inquiry sent!");
+    if (state?.success) {
+      toastSuccess("Partnership inquiry sent!");
+      trackPartnershipInquiry(state.values?.business_type);
+    }
     if (state?.error) toastError(state.error);
     if (state?.fieldErrors) toastError("Please fill in the required fields");
   }, [state]);

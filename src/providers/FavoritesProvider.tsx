@@ -15,6 +15,11 @@ import {
   addFavoriteToDb,
   removeFavoriteFromDb,
 } from "@/lib/favoritesDb";
+import {
+  trackAddToWishlist,
+  trackRemoveFromWishlist,
+  type WishlistMeta,
+} from "@/lib/analytics";
 
 // ─── External favorites store ──────────────────────────────────────────────────
 
@@ -63,7 +68,7 @@ interface FavoritesContextValue {
   isHydrated: boolean;
   isAuthenticated: boolean;
   isFavorite: (id: string) => boolean;
-  toggleFavorite: (id: string) => void;
+  toggleFavorite: (id: string, meta?: WishlistMeta) => void;
 }
 
 const FavoritesContext = createContext<FavoritesContextValue | null>(null);
@@ -107,7 +112,7 @@ export function FavoritesProvider({
     }
   }, [userId]);
 
-  function toggleFavorite(id: string) {
+  function toggleFavorite(id: string, meta?: WishlistMeta) {
     if (!userId || !supabaseRef.current) return;
     const add = !_favorites.includes(id);
     startTransition(() => {
@@ -115,9 +120,11 @@ export function FavoritesProvider({
       if (add) {
         setStore([..._favorites, id]);
         addFavoriteToDb(supabaseRef.current!, userId, id);
+        if (meta) trackAddToWishlist(id, meta);
       } else {
         setStore(_favorites.filter((f) => f !== id));
         removeFavoriteFromDb(supabaseRef.current!, userId, id);
+        if (meta) trackRemoveFromWishlist(id, meta);
       }
     });
   }

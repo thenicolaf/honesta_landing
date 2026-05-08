@@ -15,6 +15,9 @@ import { getCartItemCount } from "@/lib/cartDb";
 import { getUnreadCount } from "@/lib/notificationsDb";
 import { COOKIE_CONSENT_KEY } from "@/shared/consts";
 import { cookies } from "next/headers";
+import { Analytics } from "./_components/Analytics";
+import { GAEventDispatcher } from "./_components/GAEventDispatcher";
+import { Suspense } from "react";
 
 export { siteMetadata as metadata };
 
@@ -95,6 +98,10 @@ export default async function RootLayout({
         </CartProvider>
         <ToastProvider />
         <CookieConsent show={!hasConsent} />
+        <Analytics />
+        <Suspense fallback={null}>
+          <GAEventDispatcher />
+        </Suspense>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}

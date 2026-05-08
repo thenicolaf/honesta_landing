@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import { sendGAEvent } from "@next/third-parties/google";
 import { COOKIE_CONSENT_KEY } from "@/shared/consts";
 import { Button } from "./Button";
 import { Card } from "./Card";
@@ -15,6 +16,7 @@ export function CookieConsent({ show = false }: CookieConsentProps) {
 
   function handleChoice(value: "accepted" | "declined") {
     document.cookie = `${COOKIE_CONSENT_KEY}=${value}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+    sendGAEvent("event", "cookie_consent", { consent: value });
     setVisible(false);
   }
 

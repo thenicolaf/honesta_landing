@@ -68,6 +68,15 @@ export function PresetsSection({ mix, options, state }: SectionProps) {
           const noProduct = hasError && !row.product_id;
           const badWeight = hasError && row.weight_g <= 0;
           const badPrice = hasError && row.price <= 0;
+          const selectedProduct = products.find((p) => p.id === row.product_id);
+          const stockTone =
+            selectedProduct == null
+              ? null
+              : selectedProduct.stock_g <= 0
+                ? "text-red-600"
+                : selectedProduct.stock_g < selectedProduct.low_stock_threshold_g
+                  ? "text-orange"
+                  : "text-earth/55";
 
           return (
             <div key={i} className="flex flex-col gap-3 sm:flex-row sm:items-start">
@@ -108,6 +117,22 @@ export function PresetsSection({ mix, options, state }: SectionProps) {
                     </SelectContent>
                   </Select>
                   <FormError message={noProduct ? "Product is required" : undefined} />
+                  {selectedProduct && stockTone && (
+                    <p
+                      className={cn(
+                        "mt-1 font-body text-2xs tabular-nums",
+                        stockTone,
+                      )}
+                    >
+                      {selectedProduct.stock_g.toLocaleString("en-US")} g in stock
+                      {selectedProduct.stock_g <= 0
+                        ? " · Cannot be sold"
+                        : selectedProduct.stock_g <
+                            selectedProduct.low_stock_threshold_g
+                          ? " · Low"
+                          : ""}
+                    </p>
+                  )}
                 </div>
 
                 <div className="shrink-0 sm:hidden">

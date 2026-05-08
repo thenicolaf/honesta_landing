@@ -6,11 +6,13 @@ import { createNotification } from "@/lib/notificationsDb";
 import { recordPromoCodeRedemption } from "@/lib/promoCodesDb";
 import { clearCartAndCleanup } from "@/lib/cartDb";
 import { cleanupOrphanedMixVariants } from "@/pages_flow/mix/actions";
+import { deductInventoryForOrder } from "@/lib/inventoryDb";
 import {
   buildOrderNotificationParts,
   formatOrderNotificationMessage,
   type OrderNotificationParts,
 } from "@/lib/orderNotifications";
+import type { PurchasePayload } from "@/lib/analytics";
 import { ClearCartOnSuccess } from "./ClearCartOnSuccess";
 import { ResultToast } from "./ResultToast";
 import { ResultCard, MissingRefCard } from "./ui";
@@ -22,7 +24,35 @@ export const metadata: Metadata = {
 const SUCCESS_STATES = new Set(["PURCHASED", "CAPTURED"]);
 const FAIL_STATES = new Set(["FAILED", "DECLINED"]);
 
-async function resolvePaymentState(orderRef: string) {
+const PAID_TITLE = "Order paid";
+const FAILED_TITLE = "Payment failed";
+
+interface OrderItem {
+  name: string;
+  quantity: number;
+  variant_id: string | null;
+  price: number;
+}
+
+interface SettledOrder {
+  id: string;
+  total: number;
+  promo_code_id: string | null;
+  user_id: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  delivery_schedule: string | null;
+  promo_codes: { code: string } | null;
+  order_items: OrderItem[];
+}
+
+interface SettleResult {
+  title: string;
+  parts: OrderNotificationParts;
+  order: SettledOrder;
+}
+
+async function resolvePaymentState(orderRef: string): Promise<string | undefined> {
   try {
     const order = await getOrderStatus(orderRef);
     return order?._embedded?.payment?.[0]?.state as string | undefined;
@@ -31,9 +61,64 @@ async function resolvePaymentState(orderRef: string) {
   }
 }
 
-interface SettleResult {
-  title: string;
-  parts: OrderNotificationParts;
+// Atomic status transition: returns the row only on the first transition into
+// `newStatus` thanks to .neq(...). Idempotent — second call returns null.
+async function transitionOrderStatus(
+  orderRef: string,
+  newStatus: OrderStatus,
+): Promise<SettledOrder | null> {
+  const { data } = await supabaseAdmin
+    .from("orders")
+    .update({ status: newStatus, updated_at: new Date().toISOString() })
+    .eq("ngenius_ref", orderRef)
+    .neq("status", newStatus)
+    .select(
+      "id, total, promo_code_id, user_id, first_name, last_name, delivery_schedule, " +
+        "promo_codes(code), " +
+        "order_items(name, quantity, variant_id, price)",
+    )
+    .single();
+  return data as SettledOrder | null;
+}
+
+async function runPaidSideEffects(
+  order: SettledOrder,
+  message: string,
+): Promise<void> {
+  const variantIds = order.order_items
+    .map((i) => i.variant_id)
+    .filter((id): id is string => !!id);
+
+  await Promise.all([
+    deductInventoryForOrder(order.id),
+    order.promo_code_id && order.user_id
+      ? recordPromoCodeRedemption({
+          promoCodeId: order.promo_code_id,
+          orderId: order.id,
+          userId: order.user_id,
+        })
+      : null,
+    order.user_id ? clearCartAndCleanup(supabaseAdmin, order.user_id) : null,
+    variantIds.length > 0 ? cleanupOrphanedMixVariants(variantIds) : null,
+    createNotification({
+      type: "order_paid",
+      title: PAID_TITLE,
+      message,
+      relatedId: order.id,
+    }),
+  ]);
+}
+
+async function notifyFailedTransition(
+  order: SettledOrder,
+  message: string,
+): Promise<void> {
+  await createNotification({
+    type: "order_failed",
+    title: FAILED_TITLE,
+    message,
+    relatedId: order.id,
+  });
 }
 
 async function settleOrder(
@@ -41,57 +126,62 @@ async function settleOrder(
   success: boolean,
 ): Promise<SettleResult | null> {
   const newStatus = success ? OrderStatus.PAID : OrderStatus.FAILED;
-
-  const { data: order } = await supabaseAdmin
-    .from("orders")
-    .update({ status: newStatus, updated_at: new Date().toISOString() })
-    .eq("ngenius_ref", orderRef)
-    .neq("status", newStatus)
-    .select(
-      "id, total, promo_code_id, user_id, first_name, last_name, delivery_schedule, order_items(name, quantity, variant_id)",
-    )
-    .single();
-
+  const order = await transitionOrderStatus(orderRef, newStatus);
   if (!order) return null;
 
-  const items = (order.order_items ?? []) as Array<{
-    name: string;
-    quantity: number;
-    variant_id: string | null;
-  }>;
-
-  const parts = buildOrderNotificationParts(order, items);
-  const title = success ? "Order paid" : "Payment failed";
-
-  await Promise.all([
-    success && order.promo_code_id && order.user_id
-      ? recordPromoCodeRedemption({
-          promoCodeId: order.promo_code_id as string,
-          orderId: order.id as string,
-          userId: order.user_id as string,
-        })
-      : null,
-    success && order.user_id
-      ? clearCartAndCleanup(supabaseAdmin, order.user_id as string)
-      : null,
-    createNotification({
-      type: success ? "order_paid" : "order_failed",
-      title,
-      message: formatOrderNotificationMessage(order, items),
-      relatedId: order.id,
-    }),
-  ]);
+  const message = formatOrderNotificationMessage(order, order.order_items);
+  const parts = buildOrderNotificationParts(order, order.order_items);
+  const title = success ? PAID_TITLE : FAILED_TITLE;
 
   if (success) {
-    const variantIds = items
-      .map((i) => i.variant_id)
-      .filter((id): id is string => !!id);
-    if (variantIds.length > 0) {
-      await cleanupOrphanedMixVariants(variantIds);
-    }
+    await runPaidSideEffects(order, message);
+  } else {
+    await notifyFailedTransition(order, message);
   }
 
-  return { title, parts };
+  return { title, parts, order };
+}
+
+function buildPurchasePayload(order: SettledOrder): PurchasePayload {
+  return {
+    transactionId: order.id,
+    value: order.total,
+    items: order.order_items.map((item) => ({
+      item_id: item.variant_id ?? item.name,
+      item_name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+    })),
+    ...(order.promo_codes?.code && { coupon: order.promo_codes.code }),
+  };
+}
+
+async function loadDeliverySchedule(orderRef: string): Promise<string | null> {
+  try {
+    const { data } = await supabaseAdmin
+      .from("orders")
+      .select("delivery_schedule")
+      .eq("ngenius_ref", orderRef)
+      .single();
+    return (data?.delivery_schedule as string | null) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function safeSettleOrder(
+  orderRef: string,
+  success: boolean,
+): Promise<SettleResult | null> {
+  try {
+    return await settleOrder(orderRef, success);
+  } catch (err) {
+    // Don't crash the result page — the user just paid and deserves to see
+    // the outcome. Side-effects might be partially applied; the webhook is
+    // idempotent and will reconcile on its end.
+    console.error("Failed to settle order on result page:", err);
+    return null;
+  }
 }
 
 export default async function CheckoutResultPage({
@@ -110,23 +200,13 @@ export default async function CheckoutResultPage({
     ? SUCCESS_STATES.has(paymentState) || FAIL_STATES.has(paymentState)
     : false;
 
-  let toastTitle: string | null = null;
-  let toastParts: OrderNotificationParts | null = null;
-  if (settled) {
-    const settledResult = await settleOrder(orderRef, success);
-    toastTitle = settledResult?.title ?? null;
-    toastParts = settledResult?.parts ?? null;
-  }
+  const settledResult = settled ? await safeSettleOrder(orderRef, success) : null;
+  const toastTitle = settledResult?.title ?? null;
+  const toastParts = settledResult?.parts ?? null;
+  const purchasePayload =
+    success && settledResult ? buildPurchasePayload(settledResult.order) : null;
 
-  let deliverySchedule: string | null = null;
-  if (success) {
-    const { data } = await supabaseAdmin
-      .from("orders")
-      .select("delivery_schedule")
-      .eq("ngenius_ref", orderRef)
-      .single();
-    deliverySchedule = (data?.delivery_schedule as string | null) ?? null;
-  }
+  const deliverySchedule = success ? await loadDeliverySchedule(orderRef) : null;
 
   return (
     <main className="grow min-h-160 bg-cream flex items-center justify-center px-4 py-16">
@@ -140,7 +220,12 @@ export default async function CheckoutResultPage({
           <ClearCartOnSuccess success={success} />
         </>
       )}
-      <ResultToast success={success} title={toastTitle} parts={toastParts} />
+      <ResultToast
+        success={success}
+        title={toastTitle}
+        parts={toastParts}
+        purchase={purchasePayload}
+      />
       <ResultCard
         success={success}
         paymentState={paymentState}

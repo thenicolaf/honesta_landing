@@ -1,14 +1,16 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { EmptyState } from "@/shared/ui";
 import { IconLeaf } from "@/shared/icons";
 import { buildBackHref } from "@/shared/utils/backHref";
+import { productToGAItem, trackViewItemList } from "@/lib/analytics";
 import { ProductItem } from "./ProductItem";
 import { ProductToolbar } from "./ProductToolbar";
 import { useFilteredProducts } from "./useFilteredProducts";
 import { PRODUCT_GRID_CLASS } from "./ProductGridSkeleton";
-import type { DbProductGridProps, Product } from "./types";
+import type { CategoryItem, DbProductGridProps, Product } from "./types";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -53,6 +55,27 @@ function ProductList({ products }: { products: Product[] }) {
   );
 }
 
+function useTrackViewItemList(
+  products: Product[],
+  categorySlug: string,
+  categories?: CategoryItem[],
+) {
+  const lastFiredSlug = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (products.length === 0) return;
+    if (lastFiredSlug.current === categorySlug) return;
+    lastFiredSlug.current = categorySlug;
+    const listName =
+      categories?.find((c) => c.value === categorySlug)?.label ??
+      (categorySlug || "All products");
+    trackViewItemList(
+      listName,
+      products.map((p) => productToGAItem(p)),
+    );
+  }, [products, categorySlug, categories]);
+}
+
 // ─── ProductGrid ──────────────────────────────────────────────────────────────
 
 export function ProductGrid({
@@ -61,6 +84,8 @@ export function ProductGrid({
   salesMap,
 }: DbProductGridProps) {
   const filters = useFilteredProducts(rawProducts, salesMap);
+
+  useTrackViewItemList(filters.products, filters.categoryFilter.value, categories);
 
   return (
     <section id="products" className="bg-white-warm py-20 md:py-28">

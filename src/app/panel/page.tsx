@@ -4,6 +4,7 @@ import { RefreshButton } from "@/app/panel/_components/RefreshButton";
 import { SkeletonSection } from "@/shared/ui";
 import { SectionHeading } from "@/pages_flow/panel/dashboard/ui";
 import { OrdersOverview } from "@/pages_flow/panel/dashboard/sections/OrdersOverview";
+import { ProfitOverview } from "@/pages_flow/panel/dashboard/sections/ProfitOverview";
 import { CatalogOverview } from "@/pages_flow/panel/dashboard/sections/CatalogOverview";
 import { PartnershipsOverview } from "@/pages_flow/panel/dashboard/sections/PartnershipsOverview";
 import { PromotionsOverview } from "@/pages_flow/panel/dashboard/sections/PromotionsOverview";
@@ -29,6 +30,12 @@ export default function PanelPage() {
 
       <Suspense fallback={<OrdersSkeleton />}>
         <OrdersOverview />
+      </Suspense>
+
+      <Suspense
+        fallback={<SkeletonSection count={4} label="Profit" className="grid-cols-2 md:grid-cols-4" />}
+      >
+        <ProfitOverview />
       </Suspense>
 
       <Suspense fallback={<SkeletonSection count={8} label="Catalog" className="grid-cols-2 md:grid-cols-3 xl:grid-cols-4" />}>

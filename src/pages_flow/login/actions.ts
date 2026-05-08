@@ -6,6 +6,7 @@ import {
   validateLogin,
   type LoginErrors,
 } from "@/shared/utils/validateAuth";
+import { withGAEvent } from "@/shared/utils/analyticsParams";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -62,7 +63,8 @@ export async function signIn(
       return { error: mapAuthError(error.message), values };
     }
 
-    redirect(next.startsWith("/") ? next : "/");
+    const target = next.startsWith("/") ? next : "/";
+    redirect(withGAEvent(target, "login", "email"));
   } catch (err) {
     if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
     console.error("Login error:", err);

@@ -1,8 +1,9 @@
 "use client";
 
-import { useLayoutEffect, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useCart } from "@/providers";
+import { trackViewCart } from "@/lib/analytics";
 import { EmptyCart } from "./EmptyCart";
 import { CartGrid } from "./ui/CartGrid";
 import { CartSummary } from "./ui/CartSummary";
@@ -25,11 +26,19 @@ export function CartPage({
   activePromotions,
   belowContent,
 }: CartPageProps) {
-  const { items, isHydrated, applyServerPromotions } = useCart();
+  const { items, total, isHydrated, applyServerPromotions } = useCart();
 
   useLayoutEffect(() => {
     applyServerPromotions(activePromotions);
   }, [activePromotions, applyServerPromotions]);
+
+  const firedViewCart = useRef(false);
+  useEffect(() => {
+    if (firedViewCart.current) return;
+    if (!isHydrated || items.length === 0) return;
+    firedViewCart.current = true;
+    trackViewCart(items, total);
+  }, [isHydrated, items, total]);
 
   if (!isHydrated) {
     return <CartSkeleton />;

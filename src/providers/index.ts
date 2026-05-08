@@ -4,6 +4,7 @@ export {
   FilterProvider,
   useFilter,
   useFilterBar,
+  useFilterBarMulti,
   type FilterValues,
 } from "./FilterProvider";
 export { SearchParamsFilterProvider } from "./SearchParamsFilterProvider";

@@ -7,6 +7,7 @@ import { CheckoutForm } from "./CheckoutForm";
 import { DeliveryScheduleSection } from "./DeliveryScheduleSection";
 import { toastError } from "@/shared/ui";
 import { calculateDelivery } from "@/shared/utils/calculateDelivery";
+import { trackBeginCheckout } from "@/lib/analytics";
 import type { CustomerInfo } from "@/shared/types";
 import type { UserAddress } from "@/lib/addressesDb";
 import type { DeliverySetting } from "@/lib/deliveryDb";
@@ -35,6 +36,14 @@ export function CheckoutFormSection({
   onEmirateChange,
 }: CheckoutFormSectionProps) {
   const { items, total, appliedPromoCode } = useCart();
+
+  const firedBeginCheckout = useRef(false);
+  useEffect(() => {
+    if (firedBeginCheckout.current) return;
+    if (items.length === 0) return;
+    firedBeginCheckout.current = true;
+    trackBeginCheckout(items, total, appliedPromoCode?.code);
+  }, [items, total, appliedPromoCode]);
 
   const delivery = calculateDelivery(total, emirate, deliverySettings);
   const disabledEmirates = deliverySettings

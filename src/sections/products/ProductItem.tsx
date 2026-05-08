@@ -59,7 +59,7 @@ export function ProductItem({ product, from, backHref }: ProductItemProps) {
         )}
         {product.id && (
           <FavoriteButton
-            productId={product.id}
+            product={product as typeof product & { id: string }}
             tooltipSide="left"
             className="absolute top-2 right-2 z-30 rounded-full bg-white-warm/80 backdrop-blur-sm hover:bg-white-warm"
           />
