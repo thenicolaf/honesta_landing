@@ -67,11 +67,15 @@ export function ResultCard({
         </p>
 
         <div className="flex flex-col gap-3">
-          <Button href="/">Back to Home</Button>
-          {!success && (
-            <Button href="/cart" variant="outline">
-              Back to Cart
-            </Button>
+          {success ? (
+            <Button href="/">Back to Home</Button>
+          ) : (
+            <>
+              <Button href="/cart">Back to Cart</Button>
+              <Button href="/" variant="outline">
+                Back to Home
+              </Button>
+            </>
           )}
         </div>
       </Card>

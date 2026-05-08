@@ -3,6 +3,7 @@ import {
   supabaseAdmin,
 } from "@/lib/supabase.server";
 import { NextRequest, NextResponse } from "next/server";
+import { withGAEvent } from "@/shared/utils/analyticsParams";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -36,11 +37,12 @@ export async function GET(request: NextRequest) {
         );
       }
 
+      const target = withGAEvent(next, "login", "google");
       const forwardedHost = request.headers.get("x-forwarded-host");
       if (process.env.NODE_ENV === "development" || !forwardedHost) {
-        return NextResponse.redirect(`${origin}${next}`);
+        return NextResponse.redirect(`${origin}${target}`);
       }
-      return NextResponse.redirect(`https://${forwardedHost}${next}`);
+      return NextResponse.redirect(`https://${forwardedHost}${target}`);
     }
   }
 

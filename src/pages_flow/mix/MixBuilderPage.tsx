@@ -12,6 +12,7 @@ import {
 } from "@/shared/ui";
 import { ShoppingBag } from "lucide-react";
 import type { MixBox } from "@/lib/mixBoxesDb";
+import { trackMixAssemble } from "@/lib/analytics";
 import { BoxSelector } from "./BoxSelector";
 import { PresetGrid } from "./PresetGrid";
 import { MixSummary } from "./MixSummary";
@@ -108,6 +109,13 @@ export function MixBuilderPage({ boxes }: MixBuilderPageProps) {
         return;
       }
       addToCart(result.cartItem);
+      trackMixAssemble({
+        boxId: selectedBox.id,
+        boxName: selectedBox.name,
+        presetCount: selections.length,
+        value: totalPrice,
+        weightG: totalWeight,
+      });
       toastSuccess(`${selectedBox.name} added to cart`);
       presetFilter.onValuesChange([]);
       boxFilter.onValueChange("");

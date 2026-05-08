@@ -39,7 +39,7 @@ export function HistoryPageInner({
       if (reasonSet.size > 0 && !reasonSet.has(m.reason)) return false;
       if (productSet.size > 0 && !productSet.has(m.product_id)) return false;
       if (q) {
-        const haystack = `${m.product_title} ${stripHtml(m.note)}`.toLowerCase();
+        const haystack = `${m.product_title} ${stripHtml(m.note)} ${m.order_id ?? ""}`.toLowerCase();
         if (!haystack.includes(q)) return false;
       }
       return true;

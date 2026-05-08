@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
+import { withGAEvent } from "@/shared/utils/analyticsParams";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -44,7 +45,7 @@ export async function verifyOtp(
       return { error: "Invalid or expired code. Please try again." };
     }
 
-    redirect("/");
+    redirect(withGAEvent("/", "sign_up", "email"));
   } catch (err) {
     if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
     console.error("Verify email error:", err);

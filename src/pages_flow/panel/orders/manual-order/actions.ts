@@ -194,6 +194,75 @@ function buildMixOrderRow(
   };
 }
 
+// ─── Phase-1 loaders ─────────────────────────────────────────────────────────
+// Each returns a discriminated union { ok: true, data } | { ok: false, error }
+// so the orchestrator below can fail fast without nested if-checks.
+
+type AuthResult =
+  | { ok: true; userId: string }
+  | { ok: false; error: string };
+
+async function loadAuthorizedAdmin(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+): Promise<AuthResult> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Unauthorized" };
+  const { data: profile } = await supabaseAdmin
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (profile?.role !== "admin")
+    return { ok: false, error: "Admin access required" };
+  return { ok: true, userId: user.id };
+}
+
+type LoadResult<T> =
+  | { ok: true; data: T }
+  | { ok: false; error: string };
+
+async function loadVariants(
+  variantIds: string[],
+): Promise<LoadResult<VariantRow[]>> {
+  if (variantIds.length === 0) return { ok: true, data: [] };
+  const { data, error } = await supabaseAdmin
+    .from("product_variants")
+    .select(
+      `id, weight_g, price,
+       products!inner(
+         id, slug, title, image_url,
+         promotion_products(promotions(name, discount_type, discount_value, starts_at, ends_at, is_active))
+       )`,
+    )
+    .in("id", variantIds);
+  if (error || !data) {
+    return { ok: false, error: "Failed to load products. Please try again." };
+  }
+  return { ok: true, data: data as unknown as VariantRow[] };
+}
+
+async function loadMixBoxes(boxIds: string[]): Promise<LoadResult<BoxRow[]>> {
+  if (boxIds.length === 0) return { ok: true, data: [] };
+  const { data, error } = await supabaseAdmin
+    .from("mix_boxes")
+    .select(
+      `id, name, image_url, cell_count, is_active,
+       presets:mix_box_presets(
+         id, weight_g, price,
+         product:products(id, title, image_url)
+       )`,
+    )
+    .in("id", boxIds);
+  if (error || !data) {
+    return { ok: false, error: "Failed to load mix boxes. Please try again." };
+  }
+  return { ok: true, data: data as unknown as BoxRow[] };
+}
+
+// ─── Action ──────────────────────────────────────────────────────────────────
+
 export async function createManualOrderAction(
   _prevState: ManualOrderState | null,
   formData: FormData,
@@ -204,149 +273,106 @@ export async function createManualOrderAction(
 
   try {
     const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return { error: "Unauthorized", values: customer };
-    }
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-    if (profile?.role !== "admin") {
-      return { error: "Admin access required", values: customer };
-    }
 
-    const fieldErrors: ManualOrderState["fieldErrors"] =
-      validateCustomer(customer) ?? {};
-
+    // Synchronous parsing — no I/O.
     const picked = parsePickedItems(
       (formData.get("items") as string | null) ?? null,
     );
     const pendingMixes = parsePendingMixes(
       (formData.get("mixes") as string | null) ?? null,
     );
-    if (picked.length === 0 && pendingMixes.length === 0) {
-      fieldErrors.items = "Add at least one product or mix";
-    }
-
     const deliverySchedule =
       ((formData.get("delivery_schedule") as string | null) ?? "").trim() ||
       null;
+    const emirate =
+      (formData.get("emirate") as string | null)?.trim() || DEFAULT_EMIRATE;
 
-    // Schedule fields are required only when the admin configured at least
-    // one active slot — mirrors the DeliveryScheduleSection's render condition.
-    if (!deliverySchedule) {
-      const activeSlots = await getActiveDeliverySlots();
-      if (activeSlots.length > 0) {
-        fieldErrors.deliveryDate = "Select delivery date and slot";
-      }
+    const variantIds = picked.map((p) => p.variantId);
+    const boxIds = [...new Set(pendingMixes.map((m) => m.boxId))];
+
+    // Phase 1 — fan out all read-only I/O in parallel. Auth + profile is the
+    // only chained step; everything else only depends on synchronously-parsed
+    // formData. Active-slot lookup is skipped when the schedule is already set,
+    // keeping the soft-required mode cheap.
+    const [auth, deliverySetting, activeSlots, variants, boxes] =
+      await Promise.all([
+        loadAuthorizedAdmin(supabase),
+        getDeliverySettingByEmirate(emirate),
+        deliverySchedule
+          ? Promise.resolve([] as Awaited<ReturnType<typeof getActiveDeliverySlots>>)
+          : getActiveDeliverySlots(),
+        loadVariants(variantIds),
+        loadMixBoxes(boxIds),
+      ]);
+
+    if (!auth.ok) return { error: auth.error, values: customer };
+
+    // Phase 2 — pure validation, no I/O.
+    const fieldErrors: ManualOrderState["fieldErrors"] =
+      validateCustomer(customer) ?? {};
+
+    if (picked.length === 0 && pendingMixes.length === 0) {
+      fieldErrors.items = "Add at least one product or mix";
     }
-
+    if (!deliverySchedule && activeSlots.length > 0) {
+      fieldErrors.deliveryDate = "Select delivery date and slot";
+    }
     if (Object.keys(fieldErrors).length > 0) {
       return { fieldErrors, values: customer };
     }
 
-    const regularRows: OrderItemRow[] = [];
-    if (picked.length > 0) {
-      const variantIds = picked.map((p) => p.variantId);
-      const { data: variants, error: variantsError } = await supabaseAdmin
-        .from("product_variants")
-        .select(
-          `id, weight_g, price,
-           products!inner(
-             id, slug, title, image_url,
-             promotion_products(promotions(name, discount_type, discount_value, starts_at, ends_at, is_active))
-           )`,
-        )
-        .in("id", variantIds);
+    if (!variants.ok) return { error: variants.error, values: customer };
+    if (!boxes.ok) return { error: boxes.error, values: customer };
 
-      if (variantsError || !variants) {
+    // Phase 3 — build OrderItemRow[] from the already-fetched data.
+    const variantMap = new Map(variants.data.map((v) => [v.id, v]));
+    const regularRows: OrderItemRow[] = [];
+    for (const p of picked) {
+      const v = variantMap.get(p.variantId);
+      if (!v || !v.products) {
         return {
-          error: "Failed to load products. Please try again.",
+          error: "One of the selected products is no longer available.",
           values: customer,
         };
       }
-
-      const variantMap = new Map<string, VariantRow>();
-      for (const v of variants as unknown as VariantRow[]) {
-        variantMap.set(v.id, v);
-      }
-
-      for (const p of picked) {
-        const v = variantMap.get(p.variantId);
-        if (!v || !v.products) {
-          return {
-            error: "One of the selected products is no longer available.",
-            values: customer,
-          };
-        }
-        const originalPrice = Number(v.price);
-        const activePromo = findActivePromotion(
-          v.products.promotion_products ?? [],
-        );
-        const finalPrice = activePromo
-          ? calculateDiscountedPrice(
-              originalPrice,
-              activePromo.discount_type as "percentage" | "fixed",
-              Number(activePromo.discount_value),
-            )
-          : originalPrice;
-        regularRows.push({
-          variant_id: v.id,
-          name: v.products.title,
-          price: finalPrice,
-          original_price: activePromo ? originalPrice : null,
-          promo_discount: 0,
-          quantity: p.quantity,
-          weight_g: v.weight_g,
-          mix_composition: null,
-        });
-      }
+      const originalPrice = Number(v.price);
+      const activePromo = findActivePromotion(
+        v.products.promotion_products ?? [],
+      );
+      const finalPrice = activePromo
+        ? calculateDiscountedPrice(
+            originalPrice,
+            activePromo.discount_type as "percentage" | "fixed",
+            Number(activePromo.discount_value),
+          )
+        : originalPrice;
+      regularRows.push({
+        variant_id: v.id,
+        name: v.products.title,
+        price: finalPrice,
+        original_price: activePromo ? originalPrice : null,
+        promo_discount: 0,
+        quantity: p.quantity,
+        weight_g: v.weight_g,
+        mix_composition: null,
+      });
     }
 
+    const boxMap = new Map(boxes.data.map((b) => [b.id, b]));
     const mixRows: OrderItemRow[] = [];
-    if (pendingMixes.length > 0) {
-      const boxIds = [...new Set(pendingMixes.map((m) => m.boxId))];
-      const { data: boxes, error: boxesError } = await supabaseAdmin
-        .from("mix_boxes")
-        .select(
-          `id, name, image_url, cell_count, is_active,
-           presets:mix_box_presets(
-             id, weight_g, price,
-             product:products(id, title, image_url)
-           )`,
-        )
-        .in("id", boxIds);
-
-      if (boxesError || !boxes) {
+    for (const m of pendingMixes) {
+      const box = boxMap.get(m.boxId);
+      if (!box) {
         return {
-          error: "Failed to load mix boxes. Please try again.",
+          error: "One of the selected mix boxes is no longer available.",
           values: customer,
         };
       }
-
-      const boxMap = new Map<string, BoxRow>();
-      for (const b of boxes as unknown as BoxRow[]) {
-        boxMap.set(b.id, b);
+      const built = buildMixOrderRow(box, m.selections);
+      if ("error" in built) {
+        return { error: built.error, values: customer };
       }
-
-      for (const m of pendingMixes) {
-        const box = boxMap.get(m.boxId);
-        if (!box) {
-          return {
-            error: "One of the selected mix boxes is no longer available.",
-            values: customer,
-          };
-        }
-        const built = buildMixOrderRow(box, m.selections);
-        if ("error" in built) {
-          return { error: built.error, values: customer };
-        }
-        mixRows.push(built.row);
-      }
+      mixRows.push(built.row);
     }
 
     const orderRows: OrderItemRow[] = [...regularRows, ...mixRows];
@@ -359,15 +385,13 @@ export async function createManualOrderAction(
     }
     const promotionDiscount = originalSubtotal - subtotal;
 
-    const emirate =
-      (formData.get("emirate") as string | null)?.trim() || DEFAULT_EMIRATE;
-    const setting = await getDeliverySettingByEmirate(emirate);
     const delivery = calculateDelivery(
       subtotal,
       emirate,
-      setting ? [setting] : [],
+      deliverySetting ? [deliverySetting] : [],
     );
 
+    // Phase 4 — write the order.
     const { data: order, error: orderError } = await createOrderWithItems({
       items: orderRows,
       customer,
@@ -384,11 +408,12 @@ export async function createManualOrderAction(
       };
     }
 
-    await Promise.all([
-      deductInventoryForOrder(order.id),
-      Promise.resolve(revalidatePath("/panel/all-orders")),
-      Promise.resolve(revalidatePath("/panel")),
-    ]);
+    // Phase 5 — side-effects. revalidatePath is synchronous, so it runs while
+    // we await the inventory deduction.
+    revalidatePath("/panel/all-orders");
+    revalidatePath("/panel");
+    await deductInventoryForOrder(order.id);
+
     redirect("/panel/all-orders");
   } catch (err) {
     if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowLeft } from "lucide-react";
 import { buttonVariants } from "@/shared/ui";
 import { HashLink } from "@/sections/navbar";
+import { productToGAItem, trackViewItem } from "@/lib/analytics";
 import type { Product } from "@/sections/products/types";
 import {
   ProductHeader,
@@ -57,6 +58,13 @@ export function ProductDetailPage({
     product.variants?.find((v) => v.id === selectedVariantId) ??
     product.variants?.[0];
 
+  const firedViewItem = useRef(false);
+  useEffect(() => {
+    if (firedViewItem.current) return;
+    firedViewItem.current = true;
+    trackViewItem(productToGAItem(product, selectedVariant));
+  }, [product, selectedVariant]);
+
   return (
     <main className="grow min-h-160 bg-cream pt-24 pb-16">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
@@ -86,7 +94,10 @@ export function ProductDetailPage({
               badge={badge}
               extraBadges={
                 product.id && (
-                  <FavoriteButton productId={product.id} tooltipSide="left" />
+                  <FavoriteButton
+                    product={product as typeof product & { id: string }}
+                    tooltipSide="left"
+                  />
                 )
               }
             />

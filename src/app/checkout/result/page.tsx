@@ -12,6 +12,7 @@ import {
   formatOrderNotificationMessage,
   type OrderNotificationParts,
 } from "@/lib/orderNotifications";
+import type { PurchasePayload } from "@/lib/analytics";
 import { ClearCartOnSuccess } from "./ClearCartOnSuccess";
 import { ResultToast } from "./ResultToast";
 import { ResultCard, MissingRefCard } from "./ui";
@@ -30,6 +31,7 @@ interface OrderItem {
   name: string;
   quantity: number;
   variant_id: string | null;
+  price: number;
 }
 
 interface SettledOrder {
@@ -40,12 +42,14 @@ interface SettledOrder {
   first_name: string | null;
   last_name: string | null;
   delivery_schedule: string | null;
+  promo_codes: { code: string } | null;
   order_items: OrderItem[];
 }
 
 interface SettleResult {
   title: string;
   parts: OrderNotificationParts;
+  order: SettledOrder;
 }
 
 async function resolvePaymentState(orderRef: string): Promise<string | undefined> {
@@ -69,7 +73,9 @@ async function transitionOrderStatus(
     .eq("ngenius_ref", orderRef)
     .neq("status", newStatus)
     .select(
-      "id, total, promo_code_id, user_id, first_name, last_name, delivery_schedule, order_items(name, quantity, variant_id)",
+      "id, total, promo_code_id, user_id, first_name, last_name, delivery_schedule, " +
+        "promo_codes(code), " +
+        "order_items(name, quantity, variant_id, price)",
     )
     .single();
   return data as SettledOrder | null;
@@ -133,7 +139,21 @@ async function settleOrder(
     await notifyFailedTransition(order, message);
   }
 
-  return { title, parts };
+  return { title, parts, order };
+}
+
+function buildPurchasePayload(order: SettledOrder): PurchasePayload {
+  return {
+    transactionId: order.id,
+    value: order.total,
+    items: order.order_items.map((item) => ({
+      item_id: item.variant_id ?? item.name,
+      item_name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+    })),
+    ...(order.promo_codes?.code && { coupon: order.promo_codes.code }),
+  };
 }
 
 async function loadDeliverySchedule(orderRef: string): Promise<string | null> {
@@ -183,6 +203,8 @@ export default async function CheckoutResultPage({
   const settledResult = settled ? await safeSettleOrder(orderRef, success) : null;
   const toastTitle = settledResult?.title ?? null;
   const toastParts = settledResult?.parts ?? null;
+  const purchasePayload =
+    success && settledResult ? buildPurchasePayload(settledResult.order) : null;
 
   const deliverySchedule = success ? await loadDeliverySchedule(orderRef) : null;
 
@@ -198,7 +220,12 @@ export default async function CheckoutResultPage({
           <ClearCartOnSuccess success={success} />
         </>
       )}
-      <ResultToast success={success} title={toastTitle} parts={toastParts} />
+      <ResultToast
+        success={success}
+        title={toastTitle}
+        parts={toastParts}
+        purchase={purchasePayload}
+      />
       <ResultCard
         success={success}
         paymentState={paymentState}

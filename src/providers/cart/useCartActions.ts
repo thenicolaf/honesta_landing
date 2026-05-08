@@ -17,6 +17,7 @@ import {
   clearCartInDb,
 } from "@/lib/cartDb";
 import { cleanupOrphanedMixVariants } from "@/pages_flow/mix/actions";
+import { trackAddToCart, trackRemoveFromCart } from "@/lib/analytics";
 import { setStore, getItems, storePromo } from "./store";
 
 export function useCartActions(
@@ -25,9 +26,9 @@ export function useCartActions(
   onClearPromo: () => void,
 ) {
   function addToCart(item: Omit<CartItem, "quantity"> & { quantity?: number }) {
+    const qty = item.quantity ?? 1;
     if (userId && supabaseRef.current) {
       const items = getItems();
-      const qty = item.quantity ?? 1;
       const matchIdx = findMatchingIndex(items, item);
       const existing = matchIdx >= 0 ? items[matchIdx] : null;
       const newQty = existing ? existing.quantity + qty : qty;
@@ -53,9 +54,11 @@ export function useCartActions(
     } else {
       setStore(addItem(item));
     }
+    trackAddToCart({ ...item, quantity: qty }, qty);
   }
 
   function removeFromCart(variantId: string) {
+    const removed = getItems().find((i) => i.variantId === variantId);
     if (userId && supabaseRef.current) {
       setStore(getItems().filter((i) => i.variantId !== variantId));
       removeItemFromDb(supabaseRef.current, userId, variantId);
@@ -63,9 +66,11 @@ export function useCartActions(
       setStore(removeItem(variantId));
     }
     void cleanupOrphanedMixVariants([variantId]);
+    if (removed) trackRemoveFromCart(removed, removed.quantity);
   }
 
   function updateItemQuantity(variantId: string, quantity: number) {
+    const previous = getItems().find((i) => i.variantId === variantId);
     if (userId && supabaseRef.current) {
       if (quantity <= 0) {
         setStore(getItems().filter((i) => i.variantId !== variantId));
@@ -85,6 +90,18 @@ export function useCartActions(
         void cleanupOrphanedMixVariants([variantId]);
       } else {
         setStore(updateQuantity(variantId, quantity));
+      }
+    }
+    if (previous) {
+      if (quantity <= 0) {
+        trackRemoveFromCart(previous, previous.quantity);
+      } else if (quantity > previous.quantity) {
+        trackAddToCart(
+          { ...previous, quantity: quantity - previous.quantity },
+          quantity - previous.quantity,
+        );
+      } else if (quantity < previous.quantity) {
+        trackRemoveFromCart(previous, previous.quantity - quantity);
       }
     }
   }
