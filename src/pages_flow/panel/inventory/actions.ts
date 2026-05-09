@@ -9,7 +9,6 @@ import {
   type StockMovement,
   type StockMovementReason,
 } from "@/lib/inventoryDb";
-import { isHtmlEmpty, sanitizeNoteHtml } from "@/shared/utils/sanitizeHtml";
 
 const MANUAL_REASONS: StockMovementReason[] = [
   "restock",
@@ -56,13 +55,12 @@ export async function adjustStockAction(
 ): Promise<AdjustStockState> {
   const rawDelta = (formData.get("delta_g") as string | null)?.trim() ?? "";
   const reason = (formData.get("reason") as string | null)?.trim() ?? "";
-  const rawNote = (formData.get("note") as string | null) ?? "";
+  const rawNote = ((formData.get("note") as string | null) ?? "").trim();
 
   const values = { delta_g: rawDelta, reason, note: rawNote };
 
   try {
-    const note = isHtmlEmpty(rawNote) ? "" : sanitizeNoteHtml(rawNote);
-    values.note = note;
+    const note = rawNote;
 
     const auth = await requireAdmin();
     if (auth.error) return { error: auth.error, values };

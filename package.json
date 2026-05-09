@@ -30,7 +30,6 @@
     "date-fns": "^4.1.0",
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
-    "isomorphic-dompurify": "^3.11.0",
     "libphonenumber-js": "^1.12.41",
     "lucide-react": "^0.574.0",
     "motion": "^12.34.2",
@@ -42,6 +41,7 @@
     "react-phone-number-input": "^3.4.16",
     "react-photo-album": "^3.5.1",
     "react-toastify": "^11.0.5",
+    "sanitize-html": "^2.17.3",
     "tailwind-merge": "^3.4.1",
     "web-push": "^3.6.7",
     "yet-another-react-lightbox": "^3.29.1"
@@ -51,6 +51,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/sanitize-html": "^2.16.1",
     "@types/web-push": "^3.6.4",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
