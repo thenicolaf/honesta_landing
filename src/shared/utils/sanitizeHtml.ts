@@ -1,7 +1,7 @@
-import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtml from "sanitize-html";
 
-const NOTE_CONFIG = {
-  ALLOWED_TAGS: [
+const NOTE_CONFIG: sanitizeHtml.IOptions = {
+  allowedTags: [
     "p",
     "br",
     "span",
@@ -14,19 +14,24 @@ const NOTE_CONFIG = {
     "li",
     "a",
   ],
-  ALLOWED_ATTR: [
-    "href",
-    "target",
-    "rel",
-    "style",
-    "data-text-color",
-    "data-background-color",
-    "data-text-alignment",
-  ],
+  allowedAttributes: {
+    a: ["href", "target", "rel"],
+    "*": [
+      "style",
+      "data-text-color",
+      "data-background-color",
+      "data-text-alignment",
+    ],
+  },
+  // Pass `style` attribute through verbatim (matches old DOMPurify behaviour).
+  // BlockNote's `tryParseHTMLToBlocks` reads inline `style="color: #hex"` to
+  // restore color marks — sanitize-html's style normalization breaks that round-trip.
+  parseStyleAttributes: false,
+  allowedSchemes: ["http", "https", "mailto", "tel"],
 };
 
 export function sanitizeNoteHtml(html: string): string {
-  return DOMPurify.sanitize(html, NOTE_CONFIG);
+  return sanitizeHtml(html, NOTE_CONFIG);
 }
 
 /**

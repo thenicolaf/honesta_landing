@@ -1,9 +1,10 @@
 "use client";
 
-import { CopyText, RichText, type ColumnDef } from "@/shared/ui";
+import { CopyText, type ColumnDef } from "@/shared/ui";
 import { compareDate, compareNumber, compareString } from "@/shared/ui/Table";
 import { cn } from "@/shared/utils/cn";
 import type { StockMovement } from "@/lib/inventoryDb";
+import { stripHtml } from "@/shared/utils/sanitizeHtml";
 import {
   REASON_LABELS,
   deltaTone,
@@ -78,12 +79,14 @@ const deltaColumn: ColumnDef<StockMovement, MovementColumnKey> = {
 const noteColumn: ColumnDef<StockMovement, MovementColumnKey> = {
   key: "note",
   header: "Note",
-  cell: (m) =>
-    m.note ? (
-      <RichText html={m.note} className="text-2xs text-earth/70 line-clamp-2" />
+  cell: (m) => {
+    const text = stripHtml(m.note);
+    return text ? (
+      <span className="text-2xs text-earth/70 line-clamp-2">{text}</span>
     ) : (
       <span className="text-2xs text-earth/25">—</span>
-    ),
+    );
+  },
   headerClassName: "min-w-48",
 };
 

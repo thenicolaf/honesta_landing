@@ -1,10 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { CopyText, RichText, type ColumnDef } from "@/shared/ui";
+import { CopyText, type ColumnDef } from "@/shared/ui";
 import { compareDate, compareNumber, compareString } from "@/shared/ui/Table";
 import { cn } from "@/shared/utils/cn";
 import type { StockMovementWithProduct } from "@/lib/inventoryDb";
+import { stripHtml } from "@/shared/utils/sanitizeHtml";
 import { REASON_LABELS, deltaTone, formatSignedDelta } from "../inventoryUi";
 
 export type HistoryColumnKey = "date" | "product" | "reason" | "delta" | "note";
@@ -101,12 +102,14 @@ const deltaColumn: ColumnDef<StockMovementWithProduct, HistoryColumnKey> = {
 const noteColumn: ColumnDef<StockMovementWithProduct, HistoryColumnKey> = {
   key: "note",
   header: "Note",
-  cell: (m) =>
-    m.note ? (
-      <RichText html={m.note} className="text-2xs text-earth/70 line-clamp-2" />
+  cell: (m) => {
+    const text = stripHtml(m.note);
+    return text ? (
+      <span className="text-2xs text-earth/70 line-clamp-2">{text}</span>
     ) : (
       <span className="text-2xs text-earth/25">—</span>
-    ),
+    );
+  },
   headerClassName: "min-w-64",
 };
 

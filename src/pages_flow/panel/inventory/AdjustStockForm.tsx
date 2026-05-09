@@ -8,8 +8,8 @@ import {
   FormError,
   FormLabel,
   FormNumberInput,
-  FormRichTextarea,
   FormSelect,
+  FormTextarea,
   Tooltip,
   TooltipTrigger,
   TooltipContent,
@@ -127,11 +127,12 @@ export function AdjustStockForm({ row, onClose }: AdjustStockFormProps) {
 
       <div>
         <FormLabel htmlFor="adjust-note">Note (optional)</FormLabel>
-        <FormRichTextarea
+        <FormTextarea
           id="adjust-note"
           name="note"
           placeholder="Batch from supplier X / spoilage / …"
           defaultValue={state?.values?.note ?? ""}
+          rows={3}
         />
       </div>
 

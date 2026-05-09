@@ -4,9 +4,9 @@ import Image from "next/image";
 import {
   Card,
   CopyText,
-  RichText,
 } from "@/shared/ui";
 import type { StockMovementWithProduct } from "@/lib/inventoryDb";
+import { stripHtml } from "@/shared/utils/sanitizeHtml";
 import {
   REASON_LABELS,
   deltaTone,
@@ -69,11 +69,10 @@ export function HistoryCard({
           {formatSignedDelta(movement.delta_g)}
         </span>
       </div>
-      {movement.note && (
-        <RichText
-          html={movement.note}
-          className="mt-2 text-2xs text-earth/70 line-clamp-2"
-        />
+      {stripHtml(movement.note) && (
+        <p className="mt-2 text-2xs text-earth/70 line-clamp-2">
+          {stripHtml(movement.note)}
+        </p>
       )}
     </Card>
   );

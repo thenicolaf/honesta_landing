@@ -56,7 +56,15 @@ export function FormRichTextarea({
   }
 
   return (
-    <div id={id} className={cn(wrapperVariants({ state }), className)}>
+    <div
+      id={id}
+      className={cn(wrapperVariants({ state }), className)}
+      // Block desktop right-click and any contextmenu the browser still
+      // dispatches on long-press selection. Combined with the iOS
+      // `-webkit-touch-callout: none` rule, this leaves only BlockNote's
+      // formatting toolbar visible above selected text on supported browsers.
+      onContextMenu={(e) => e.preventDefault()}
+    >
       <Editor
         key={prevDefaultValue}
         initialHtml={defaultValue ?? ""}
