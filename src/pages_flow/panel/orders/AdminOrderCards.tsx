@@ -13,6 +13,7 @@ import { formatAed, formatDateTime } from "@/shared/ui/Table";
 import { IconReceipt } from "@/shared/icons";
 import { StatusBadge } from "@/pages_flow/orders/ui/StatusBadge";
 import { CopyOrderId } from "@/pages_flow/orders/ui/CopyOrderId";
+import { WhatsAppLink } from "@/pages_flow/orders/ui/WhatsAppLink";
 import type { AdminOrder } from "@/pages_flow/orders/types";
 import { FulfilledToggle } from "./FulfilledToggle";
 
@@ -178,7 +179,10 @@ export function AdminOrderCards({
           </DataCardBody>
 
           <DataCardFooter className="flex items-center justify-between">
-            <CopyText text={order.phone} className="text-2xs text-earth/40">{order.phone}</CopyText>
+            <div className="flex items-center gap-1">
+              <CopyText text={order.phone} className="text-2xs text-earth/40">{order.phone}</CopyText>
+              <WhatsAppLink phone={order.phone} />
+            </div>
             <span className="text-2xs text-earth/40">
               {formatDateTime(order.created_at)}
             </span>

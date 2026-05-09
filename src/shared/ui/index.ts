@@ -1,5 +1,6 @@
 export { Button, buttonVariants } from "./Button";
 export { CookieConsent } from "./CookieConsent";
+export { WhatsAppFloatingButton } from "./WhatsAppFloatingButton";
 export { Avatar } from "./Avatar";
 export {
   FormLabel,

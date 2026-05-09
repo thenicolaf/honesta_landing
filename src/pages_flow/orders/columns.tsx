@@ -10,6 +10,7 @@ import { CopyText, MixCompositionList } from "@/shared/ui";
 import { displayAddress } from "@/shared/utils/address";
 import { StatusBadge } from "./ui/StatusBadge";
 import { CopyOrderId } from "./ui/CopyOrderId";
+import { WhatsAppLink } from "./ui/WhatsAppLink";
 import type { Order, AdminOrder } from "./types";
 import { FulfilledToggle } from "@/pages_flow/panel/orders/FulfilledToggle";
 
@@ -213,7 +214,10 @@ export const customerColumn: ColumnDef<AdminOrder, OrderKey> = {
         {o.first_name} {o.last_name}
       </span>
       <span className="text-2xs text-earth/50">{o.email}</span>
-      <CopyText text={o.phone} className="text-2xs text-earth/40">{o.phone}</CopyText>
+      <div className="flex items-center gap-1">
+        <CopyText text={o.phone} className="text-2xs text-earth/40">{o.phone}</CopyText>
+        <WhatsAppLink phone={o.phone} />
+      </div>
       {(o.gender || o.birthday) && (
         <span className="text-2xs text-earth/30">
           {o.gender
