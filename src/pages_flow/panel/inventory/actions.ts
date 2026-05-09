@@ -57,11 +57,13 @@ export async function adjustStockAction(
   const rawDelta = (formData.get("delta_g") as string | null)?.trim() ?? "";
   const reason = (formData.get("reason") as string | null)?.trim() ?? "";
   const rawNote = (formData.get("note") as string | null) ?? "";
-  const note = isHtmlEmpty(rawNote) ? "" : sanitizeNoteHtml(rawNote);
 
-  const values = { delta_g: rawDelta, reason, note };
+  const values = { delta_g: rawDelta, reason, note: rawNote };
 
   try {
+    const note = isHtmlEmpty(rawNote) ? "" : sanitizeNoteHtml(rawNote);
+    values.note = note;
+
     const auth = await requireAdmin();
     if (auth.error) return { error: auth.error, values };
 
@@ -93,7 +95,10 @@ export async function adjustStockAction(
   } catch (err) {
     console.error("adjustStockAction error:", err);
     return {
-      error: "Something went wrong. Please try again.",
+      error:
+        err instanceof Error
+          ? `Stock update failed: ${err.message}`
+          : "Something went wrong. Please try again.",
       values,
     };
   }
@@ -121,8 +126,16 @@ export interface UpdateInventorySettingsState {
 export async function loadMovementsAction(
   productId: string,
 ): Promise<{ movements: StockMovement[]; error?: string }> {
-  const movements = await getMovements(productId, 50);
-  return { movements };
+  try {
+    const movements = await getMovements(productId, 50);
+    return { movements };
+  } catch (err) {
+    console.error("loadMovementsAction error:", err);
+    return {
+      movements: [],
+      error: err instanceof Error ? err.message : "Failed to load movements",
+    };
+  }
 }
 
 export async function updateInventorySettingsAction(
@@ -176,7 +189,10 @@ export async function updateInventorySettingsAction(
   } catch (err) {
     console.error("updateInventorySettingsAction error:", err);
     return {
-      error: "Something went wrong. Please try again.",
+      error:
+        err instanceof Error
+          ? `Settings update failed: ${err.message}`
+          : "Something went wrong. Please try again.",
       values,
     };
   }
