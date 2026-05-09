@@ -4,7 +4,6 @@ import { useEffect, useState, useTransition } from "react";
 import {
   DataTable,
   Loader,
-  toastError,
   useTableData,
   useTablePagination,
   useTableSort,
@@ -41,14 +40,10 @@ export function MovementsHistory({ row }: MovementsHistoryProps) {
     startTransition(async () => {
       try {
         const result = await loadMovementsAction(row.product_id);
-        if (result.error) toastError(result.error);
         cache.set(row.product_id, result.movements);
         setMovements(result.movements);
       } catch (err) {
         console.error("MovementsHistory load error:", err);
-        toastError(
-          err instanceof Error ? err.message : "Failed to load movements",
-        );
       } finally {
         setLoaded(true);
       }
