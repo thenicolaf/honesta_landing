@@ -9,7 +9,7 @@ import {
   FavoritesProvider,
   NotificationsProvider,
 } from "@/providers";
-import { ToastProvider, CookieConsent } from "@/shared/ui";
+import { ToastProvider, CookieConsent, WhatsAppFloatingButton } from "@/shared/ui";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
 import { getCartItemCount } from "@/lib/cartDb";
 import { getUnreadCount } from "@/lib/notificationsDb";
@@ -98,6 +98,11 @@ export default async function RootLayout({
         </CartProvider>
         <ToastProvider />
         <CookieConsent show={!hasConsent} />
+        {process.env.NEXT_PUBLIC_WHATSAPP_SUPPORT_PHONE && (
+          <WhatsAppFloatingButton
+            phone={process.env.NEXT_PUBLIC_WHATSAPP_SUPPORT_PHONE}
+          />
+        )}
         <Analytics />
         <Suspense fallback={null}>
           <GAEventDispatcher />

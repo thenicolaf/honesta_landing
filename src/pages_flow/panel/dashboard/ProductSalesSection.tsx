@@ -9,10 +9,7 @@ import {
   TableRow,
   TableCell,
   TablePagination,
-  DataCard,
-  DataCardHeader,
-  DataCardBody,
-  DataCardField,
+  Card,
   DataCardList,
   DataCardPagination,
   useTablePagination,
@@ -31,26 +28,27 @@ export function ProductSalesSection({ sales }: { sales: ProductSales[] }) {
       <div className="md:hidden mb-8">
         <DataCardList className="min-[30rem]:grid-cols-2">
           {paginatedData.map((p) => (
-            <DataCard key={`${p.name}-${p.weight_g}`}>
-              <DataCardHeader>
-                <span className="font-body font-semibold text-sm text-earth">
-                  {p.name}
+            <Card
+              key={`${p.name}-${p.weight_g}`}
+              padding="none"
+              className="px-3 py-2.5"
+            >
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="min-w-0 flex-1">
+                  <p className="font-body font-semibold text-sm text-earth capitalize wrap-break-word">
+                    {p.name}
+                  </p>
+                  <p className="text-2xs text-earth/55 tabular-nums wrap-break-word">
+                    <span>{p.weight_g}g</span>
+                    <span className="text-earth/30"> · </span>
+                    <span>Qty {p.quantity}</span>
+                  </p>
+                </div>
+                <span className="font-semibold text-sm text-earth tabular-nums shrink-0">
+                  {formatAed(p.revenue)}
                 </span>
-              </DataCardHeader>
-              <DataCardBody>
-                <DataCardField label="Weight">
-                  <span className="tabular-nums">{p.weight_g}g</span>
-                </DataCardField>
-                <DataCardField label="Quantity">
-                  <span className="tabular-nums">{p.quantity}</span>
-                </DataCardField>
-                <DataCardField label="Revenue">
-                  <span className="font-semibold tabular-nums">
-                    {formatAed(p.revenue)}
-                  </span>
-                </DataCardField>
-              </DataCardBody>
-            </DataCard>
+              </div>
+            </Card>
           ))}
         </DataCardList>
 

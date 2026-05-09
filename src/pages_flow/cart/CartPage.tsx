@@ -26,11 +26,21 @@ export function CartPage({
   activePromotions,
   belowContent,
 }: CartPageProps) {
-  const { items, total, isHydrated, applyServerPromotions } = useCart();
+  const { items, total, isHydrated, applyServerPromotions, refresh } = useCart();
 
   useLayoutEffect(() => {
     applyServerPromotions(activePromotions);
   }, [activePromotions, applyServerPromotions]);
+
+  // Re-pull cart from DB / Supabase on mount so price/name/image edits made by
+  // admin since the last layout-mount sync are reflected. Ref-guarded — `refresh`
+  // identity changes when items change, but we only want this to fire once.
+  const refreshedOnMount = useRef(false);
+  useEffect(() => {
+    if (refreshedOnMount.current || !isHydrated) return;
+    refreshedOnMount.current = true;
+    void refresh({ force: true });
+  }, [isHydrated, refresh]);
 
   const firedViewCart = useRef(false);
   useEffect(() => {

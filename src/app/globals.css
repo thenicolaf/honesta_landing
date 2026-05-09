@@ -13,6 +13,8 @@
   --color-heading: #3f5123; /* headings */
   --color-moss: #5c6b3a; /* бейджи "natural", eco-метки */
   --color-white-warm: #fffdf8; /* карточки, выделенные блоки */
+  --color-whatsapp: #25d366; /* WhatsApp brand green — floating widget */
+  --color-whatsapp-hover: #1ebe5d; /* WhatsApp hover state */
 
   /* Font sizes (micro scale below Tailwind's text-xs = 0.75rem) */
   --text-xs: 0.625rem;  /* 10px – tiny meta text (overrides Tailwind default) */

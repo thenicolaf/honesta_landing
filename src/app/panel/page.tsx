@@ -28,18 +28,14 @@ export default function PanelPage() {
     <>
       <AdminPageHeader title="Dashboard" actions={<RefreshButton />} />
 
-      <Suspense fallback={<OrdersSkeleton />}>
-        <OrdersOverview />
-      </Suspense>
-
       <Suspense
         fallback={<SkeletonSection count={4} label="Profit" className="grid-cols-2 md:grid-cols-4" />}
       >
         <ProfitOverview />
       </Suspense>
 
-      <Suspense fallback={<SkeletonSection count={8} label="Catalog" className="grid-cols-2 md:grid-cols-3 xl:grid-cols-4" />}>
-        <CatalogOverview />
+      <Suspense fallback={<OrdersSkeleton />}>
+        <OrdersOverview />
       </Suspense>
 
       <Suspense fallback={<SkeletonSection count={1} label="Partnerships" className="grid-cols-2 md:grid-cols-4" />}>
@@ -52,6 +48,10 @@ export default function PanelPage() {
 
       <Suspense fallback={<SkeletonSection count={3} label="Promo Codes" className="grid-cols-1 sm:grid-cols-2 md:grid-cols-3" />}>
         <PromoCodesOverview />
+      </Suspense>
+
+      <Suspense fallback={<SkeletonSection count={8} label="Catalog" className="grid-cols-2 md:grid-cols-3 xl:grid-cols-4" />}>
+        <CatalogOverview />
       </Suspense>
 
       <div className="flex items-center justify-between mb-3">

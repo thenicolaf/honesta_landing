@@ -83,6 +83,7 @@ export function MixCard({
           }))}
           triggerLabel={`Presets · ${mix.presets.length}`}
           showCountBadge={false}
+          compact
         />
 
         <div className="flex flex-row items-center gap-2 pt-1 mt-auto">

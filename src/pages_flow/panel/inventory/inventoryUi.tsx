@@ -13,20 +13,20 @@ export const REASON_LABELS: Record<string, string> = {
 export function InventoryStatusBadge({ status }: { status: InventoryStatus }) {
   if (status === "out") {
     return (
-      <Badge variant="warm" size="xs" className="bg-red-500/10! text-red-600! border-red-200/60!">
+      <Badge variant="warm" size="xs" className="whitespace-nowrap bg-red-500/10! text-red-600! border-red-200/60!">
         Out
       </Badge>
     );
   }
   if (status === "low") {
     return (
-      <Badge variant="warm" size="xs" className="bg-orange/15! text-orange! border-orange/30!">
+      <Badge variant="warm" size="xs" className="whitespace-nowrap bg-orange/15! text-orange! border-orange/30!">
         Low
       </Badge>
     );
   }
   return (
-    <Badge variant="natural" size="xs">
+    <Badge variant="natural" size="xs" className="whitespace-nowrap">
       In stock
     </Badge>
   );

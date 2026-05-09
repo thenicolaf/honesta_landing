@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useCart } from "@/providers";
 import { CheckoutFormSection } from "./ui/CheckoutFormSection";
 import { OrderSummary } from "./ui/OrderSummary";
@@ -36,7 +36,7 @@ export function CheckoutPage({
   isAuthenticated,
   activePromotions,
 }: CheckoutPageProps) {
-  const { items, total, isHydrated, applyServerPromotions } = useCart();
+  const { items, total, isHydrated, applyServerPromotions, refresh } = useCart();
   const [emirate, setEmirate] = useState(() =>
     extractEmirateFromAddress(defaultValues?.address ?? "", addresses),
   );
@@ -44,6 +44,15 @@ export function CheckoutPage({
   useLayoutEffect(() => {
     applyServerPromotions(activePromotions);
   }, [activePromotions, applyServerPromotions]);
+
+  // Re-pull cart from DB / Supabase on mount so price/name/image edits made by
+  // admin since the last layout-mount sync are reflected.
+  const refreshedOnMount = useRef(false);
+  useEffect(() => {
+    if (refreshedOnMount.current || !isHydrated) return;
+    refreshedOnMount.current = true;
+    void refresh({ force: true });
+  }, [isHydrated, refresh]);
 
   const delivery = calculateDelivery(total, emirate, deliverySettings);
 

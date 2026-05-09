@@ -21,7 +21,7 @@ export function StatCard({
           <p className="font-body font-semibold uppercase tracking-[0.12em] text-xs min-[30rem]:text-2xs text-earth/50 truncate">
             {label}
           </p>
-          <p className="font-body font-bold text-base min-[30rem]:text-2xl text-earth leading-tight truncate">
+          <p className="font-body font-bold text-base min-[30rem]:text-2xl text-earth leading-tight wrap-break-word">
             {value}
           </p>
           {sub && <div className="mt-0.5 min-[30rem]:mt-1">{sub}</div>}

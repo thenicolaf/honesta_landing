@@ -40,7 +40,7 @@ interface CartContextValue {
   clearCart: () => void;
   applyPromoCode: (code: string) => Promise<PromoCodeApplyResult>;
   removePromoCode: () => void;
-  refresh: () => Promise<void>;
+  refresh: (opts?: { force?: boolean }) => Promise<void>;
   applyServerPromotions: (promotions: ActivePromotionsMap) => void;
 }
 
@@ -77,18 +77,23 @@ export function CartProvider({
   const hasItems = items.length > 0;
   const hasPromo = !!appliedPromoCode;
 
-  const refresh = useCallback(async () => {
-    if (!hasItems && !hasPromo) return;
-    const now = Date.now();
-    if (now - lastRefreshRef.current < REFRESH_COOLDOWN_MS) return;
-    lastRefreshRef.current = now;
-    try {
-      await Promise.all([refreshPrices(), revalidatePromo()]);
-    } catch (err) {
-      lastRefreshRef.current = 0;
-      throw err;
-    }
-  }, [hasItems, hasPromo, refreshPrices, revalidatePromo]);
+  const refresh = useCallback(
+    async (opts?: { force?: boolean }) => {
+      if (!hasItems && !hasPromo) return;
+      const now = Date.now();
+      if (!opts?.force && now - lastRefreshRef.current < REFRESH_COOLDOWN_MS) {
+        return;
+      }
+      lastRefreshRef.current = now;
+      try {
+        await Promise.all([refreshPrices(), revalidatePromo()]);
+      } catch (err) {
+        lastRefreshRef.current = 0;
+        throw err;
+      }
+    },
+    [hasItems, hasPromo, refreshPrices, revalidatePromo],
+  );
 
   useEffect(() => {
     function onVisibilityChange() {

@@ -68,7 +68,7 @@ export function InventoryCard({ row }: { row: InventoryRow }) {
         </div>
       </DataCardBody>
 
-      <DataCardFooter className="flex flex-wrap items-center gap-2">
+      <DataCardFooter className="flex items-center gap-1.5">
         <Button
           as="button"
           type="button"
@@ -76,6 +76,7 @@ export function InventoryCard({ row }: { row: InventoryRow }) {
           size="sm"
           startIcon={<Plus size={14} aria-hidden="true" />}
           onClick={() => open("adjust", row)}
+          className="flex-1 px-2 tracking-wider"
         >
           Adjust
         </Button>
@@ -86,6 +87,7 @@ export function InventoryCard({ row }: { row: InventoryRow }) {
           size="sm"
           startIcon={<Settings2 size={14} aria-hidden="true" />}
           onClick={() => open("settings", row)}
+          className="flex-1 px-2 tracking-wider"
         >
           Settings
         </Button>
@@ -96,6 +98,7 @@ export function InventoryCard({ row }: { row: InventoryRow }) {
           size="sm"
           startIcon={<Clock size={14} aria-hidden="true" />}
           onClick={() => open("history", row)}
+          className="flex-1 px-2 tracking-wider"
         >
           History
         </Button>
