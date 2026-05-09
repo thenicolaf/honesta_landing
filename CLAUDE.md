@@ -36,6 +36,7 @@ No test suite configured yet.
 - **react-photo-album** — rows-based image gallery (wrapped in `src/shared/ui/Gallery.tsx`)
 - **@blocknote/core + @blocknote/react + @blocknote/mantine** — block-based rich-text editor (Notion-like) used in the admin product form for the `note` field. Loaded lazily via `next/dynamic({ ssr: false })` — never ships in the public bundle.
 - **isomorphic-dompurify** — HTML sanitization for rich-text input. Used **only at write time** in admin server actions; render path trusts the DB and skips sanitization (jsdom is heavy on SSR).
+- **@next/third-parties** — Google Analytics 4 integration via the official `<GoogleAnalytics>` component + `sendGAEvent` helper. See **Analytics (Google Analytics 4)** for the full event catalog.
 - **pnpm** as package manager
 
 ## Path alias
@@ -928,6 +929,75 @@ Native push notifications via Web Push API + Service Worker.
 **UI:** `PushNotificationSection` (`src/pages_flow/profile/PushNotificationSection.tsx`) — shown for all roles on profile page. States: unsupported, prompt, granted, subscribed, denied.
 
 **Env vars:** `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (same as public key, exposed to client).
+
+## Analytics (Google Analytics 4)
+
+GA4 wired via `@next/third-parties/google`. Single-source helper at [src/lib/analytics.ts](src/lib/analytics.ts) wraps `sendGAEvent` with typed `trackXxx` functions and item-mappers (`cartItemToGAItem`, `productToGAItem`). All e-commerce events carry `currency: "AED"`.
+
+### Loading
+
+[src/app/_components/Analytics.tsx](src/app/_components/Analytics.tsx) — server component that mounts `<GoogleAnalytics gaId={NEXT_PUBLIC_GA_ID}>` if the env var is set. **Cookie consent does NOT gate GA loading** (decision: maximize tracking volume; banner exists for compliance disclosure but doesn't block analytics). The cookie value is only used to track Accept/Decline as a `cookie_consent` event in [CookieConsent.tsx](src/shared/ui/CookieConsent.tsx).
+
+### Server-action → client GA bridge
+
+`sendGAEvent` is client-only (writes to `window.dataLayer`), but auth flows finish with `redirect()` from server actions — the form's React state is gone and we can't fire from a `useEffect`. Solution:
+
+- **[withGAEvent](src/shared/utils/analyticsParams.ts)** (pure, no `"use client"`) — appends `?_ga_event=<name>&_ga_method=<method>` to the redirect URL. Used in [signIn](src/pages_flow/login/actions.ts), [verifyOtp](src/pages_flow/verify-email/actions.ts), and [auth/callback/route.ts](src/app/auth/callback/route.ts).
+- **[GAEventDispatcher](src/app/_components/GAEventDispatcher.tsx)** — client component mounted in root layout inside `<Suspense fallback={null}>` (required because `useSearchParams` opts out of SSR). Reads the param on mount, fires the event, then strips the param via `router.replace()` so refresh doesn't re-fire. Internal `fired.current` ref blocks Strict Mode double-firing.
+
+This pattern handles `login` (email + Google) and `sign_up`. Add new server-side-triggered events by importing `withGAEvent` in the action and adding a case in `GAEventDispatcher`.
+
+### Event catalog
+
+**E-commerce voronka** — standard GA4 events, populate Monetization reports automatically:
+
+| Event | Where | Notes |
+|---|---|---|
+| `view_item_list` | [ProductGrid.tsx](src/sections/products/ProductGrid.tsx) — `useTrackViewItemList` hook | Fires on category change, ref-guard blocks dups on search/sort changes |
+| `view_item` | [ProductDetailPage.tsx](src/pages_flow/products/ProductDetailPage.tsx) | `useEffect` + ref-guard, uses `selectedVariant` for price |
+| `add_to_cart` / `remove_from_cart` | [useCartActions.ts](src/providers/cart/useCartActions.ts) | Sends **delta** quantity (not totals), so revenue maths reconcile |
+| `view_cart` | [CartPage.tsx](src/pages_flow/cart/CartPage.tsx) | After `isHydrated && items.length > 0`, ref-guard |
+| `begin_checkout` | [CheckoutFormSection.tsx](src/pages_flow/checkout/ui/CheckoutFormSection.tsx) | On mount, includes `coupon` if applied |
+| `purchase` (key event) | [page.tsx](src/app/checkout/result/page.tsx) → [ResultToast.tsx](src/app/checkout/result/ResultToast.tsx) | See **Purchase pipeline** below |
+
+**Auth** — via redirect-param dispatcher:
+| Event | Trigger |
+|---|---|
+| `sign_up` | Successful `verifyOtp` redirect (= email confirmed, account active) |
+| `login` | Successful `signIn` (email) or `auth/callback` (google) |
+
+**Engagement / wishlist:**
+| Event | Where |
+|---|---|
+| `add_to_wishlist` / `remove_from_wishlist` | [FavoritesProvider.toggleFavorite](src/providers/FavoritesProvider.tsx) — accepts optional `WishlistMeta` to send `item_name`, `price`, `item_category`. `FavoriteButton` passes meta from full `Product` it receives as prop |
+
+**Custom business events:**
+| Event | Where |
+|---|---|
+| `mix_assemble` | [MixBuilderPage.handleAddToCart](src/pages_flow/mix/MixBuilderPage.tsx) — fires alongside `add_to_cart` |
+| `apply_coupon` / `coupon_invalid` | [PromoCodeInput.tsx](src/pages_flow/cart/ui/PromoCodeInput.tsx) — success carries `coupon`, `discount`, `discount_type`, `scope`; failure carries `coupon` + `error` |
+| `partnership_inquiry` | [PartnershipForm.tsx](src/sections/partnership/PartnershipForm.tsx) — on `state.success` |
+| `cookie_consent` | [CookieConsent.tsx](src/shared/ui/CookieConsent.tsx) — `consent: "accepted" \| "declined"` |
+
+### Purchase pipeline (special case)
+
+`purchase` requires extending the server-side data flow because [ResultToast.tsx](src/app/checkout/result/ResultToast.tsx) originally received only formatted display strings (`title`, `parts`):
+
+1. [page.tsx](src/app/checkout/result/page.tsx) `transitionOrderStatus` SELECT extended to include `promo_codes(code)` and `order_items(price)`. `OrderItem` and `SettledOrder` interfaces updated accordingly.
+2. `buildPurchasePayload(order)` collects `transaction_id`, `value`, `items[]` (with `item_id` falling back to `name` for mix rows where `variant_id` is NULL — mix variants are deleted by `cleanupOrphanedMixVariants` after payment), and optional `coupon`.
+3. `<ResultToast>` accepts a new `purchase: PurchasePayload | null` prop and calls `trackPurchase(purchase)` inside the existing `fired.current` ref-guard.
+
+**Idempotency** — `transitionOrderStatus` uses `.neq("status", newStatus)` so the row is returned only on the first state transition. On refresh of `/checkout/result?ref=...`, `settledResult === null` → `purchasePayload === null` → no event. Webhook ([api/payment/webhook](src/app/api/payment/webhook/route.ts)) cannot fire client GA (server-only), so the result page is the single source for `purchase`.
+
+**Manual admin orders** ([src/pages_flow/panel/orders/manual-order/actions.ts](src/pages_flow/panel/orders/manual-order/actions.ts)) deliberately do NOT fire `purchase` — those are off-platform sales (WhatsApp/Instagram) that shouldn't inflate GA revenue.
+
+### GA4 Admin TODOs
+
+Not configurable from code — set up once in the GA4 dashboard:
+- **Key events** (Admin → Настройки ресурса → События → Ключевые события): `purchase` is auto-marked. Manually mark `sign_up` and `partnership_inquiry`.
+- **Custom dimensions** (Admin → Custom definitions → Custom dimensions, scope=Event): `consent`, `method`, `coupon`, `box_id`, `business_type` — required only if you want to filter/group standard reports by these params (Realtime/DebugView already shows them).
+
+A user-facing summary of all events lives in [GA_EVENTS.md](GA_EVENTS.md) at the repo root.
 
 ## Address system
 
