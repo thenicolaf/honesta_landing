@@ -35,9 +35,10 @@ export function useCartSync(userId: string | null | undefined) {
       // render an empty cart on top of an existing badge.
       resetStore();
       supabaseRef.current = supabase;
-      getCartFromDb(supabase).then(async (cartItems) => {
-        const { items: synced } = await syncCartPrices(supabase, cartItems);
-        setStore(synced);
+      // getCartFromDb already JOINs products + variants + promotions, so its
+      // output is fully fresh — no need to run syncCartPrices on top.
+      getCartFromDb(supabase).then((cartItems) => {
+        setStore(cartItems);
       });
     } else {
       supabaseRef.current = null;
@@ -61,12 +62,14 @@ export function useCartSync(userId: string | null | undefined) {
   const refreshPrices = useCallback(async () => {
     const supabase = supabaseRef.current ?? createSupabaseBrowserClient();
     const currentUserId = userIdRef.current;
-    const cartItems = currentUserId
-      ? await getCartFromDb(supabase)
-      : getItems();
-    const { items: synced } = await syncCartPrices(supabase, cartItems);
+    if (currentUserId) {
+      const fresh = await getCartFromDb(supabase);
+      setStore(fresh);
+      return;
+    }
+    const { items: synced } = await syncCartPrices(supabase, getItems());
     setStore(synced);
-    if (!currentUserId) saveCart(synced);
+    saveCart(synced);
   }, []);
 
   const applyServerPromotions = useCallback(

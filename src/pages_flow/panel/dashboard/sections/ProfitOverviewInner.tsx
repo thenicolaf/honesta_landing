@@ -163,7 +163,7 @@ const productColumn: ColumnDef<AggregatedProduct, ProductKey> = {
           />
         ) : null}
       </div>
-      <span className="font-semibold text-sm text-earth capitalize truncate">
+      <span className="font-semibold text-sm text-earth capitalize wrap-break-word">
         {p.name}
       </span>
     </div>
@@ -243,7 +243,7 @@ const productColumns: ColumnDef<AggregatedProduct, ProductKey>[] = [
 function ProductCard({ product }: { product: AggregatedProduct }) {
   return (
     <Card padding="none" className="px-3 py-2.5">
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-start gap-3 min-w-0">
         <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-cream">
           {product.image_url ? (
             <Image
@@ -256,10 +256,10 @@ function ProductCard({ product }: { product: AggregatedProduct }) {
           ) : null}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-sm text-earth capitalize truncate">
+          <p className="font-semibold text-sm text-earth capitalize wrap-break-word">
             {product.name}
           </p>
-          <p className="text-2xs text-earth/55 tabular-nums truncate">
+          <p className="text-2xs text-earth/55 tabular-nums wrap-break-word">
             <span>{formatAed(product.revenue)}</span>
             <span className="text-earth/30"> · </span>
             <span>COGS {formatAed(product.cost)}</span>

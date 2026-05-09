@@ -10,10 +10,7 @@ import {
   TableRow,
   TableCell,
   TablePagination,
-  DataCard,
-  DataCardHeader,
-  DataCardBody,
-  DataCardField,
+  Card,
   DataCardList,
   DataCardPagination,
   Badge,
@@ -108,26 +105,22 @@ export function MixSalesSection({ sales }: { sales: MixSales[] }) {
       <div className="md:hidden mb-8">
         <DataCardList className="min-[30rem]:grid-cols-2">
           {paginatedData.map((m) => (
-            <DataCard key={m.name}>
-              <DataCardHeader>
-                <span className="font-body font-semibold text-sm text-earth">
-                  {m.name}
+            <Card key={m.name} padding="none" className="px-3 py-2.5">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="min-w-0 flex-1">
+                  <p className="font-body font-semibold text-sm text-earth capitalize wrap-break-word">
+                    {m.name}
+                  </p>
+                  <p className="text-2xs text-earth/55 tabular-nums">
+                    Qty {m.quantity}
+                  </p>
+                  <PresetList presets={m.presets} className="mt-1.5" />
+                </div>
+                <span className="font-semibold text-sm text-earth tabular-nums shrink-0">
+                  {formatAed(m.revenue)}
                 </span>
-              </DataCardHeader>
-              <DataCardBody>
-                <DataCardField label="Quantity">
-                  <span className="tabular-nums">{m.quantity}</span>
-                </DataCardField>
-                <DataCardField label="Revenue">
-                  <span className="font-semibold tabular-nums">
-                    {formatAed(m.revenue)}
-                  </span>
-                </DataCardField>
-              </DataCardBody>
-              <div className="px-4 pb-3">
-                <PresetList presets={m.presets} />
               </div>
-            </DataCard>
+            </Card>
           ))}
         </DataCardList>
 
