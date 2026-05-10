@@ -59,6 +59,7 @@ export async function getNotifications(
   limit = 20,
   offset = 0,
   userCreatedAt?: string,
+  sinceIso?: string,
 ): Promise<Notification[]> {
   let query = supabaseAdmin
     .from("notifications")
@@ -72,6 +73,10 @@ export async function getNotifications(
 
   if (userCreatedAt) {
     query = query.gte("created_at", userCreatedAt);
+  }
+
+  if (sinceIso) {
+    query = query.gt("created_at", sinceIso);
   }
 
   const { data, error } = await query;

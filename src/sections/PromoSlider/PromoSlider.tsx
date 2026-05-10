@@ -22,15 +22,18 @@ export function PromoSlider({
   from = "promo",
   backHref,
 }: PromoSliderProps) {
+  const hasMultiple = products.length > 1;
   const [emblaRef, emblaApi] = useEmblaCarousel(
-    { loop: true, align: "start", containScroll: "trimSnaps" },
-    [
-      Autoplay({
-        delay: 3000,
-        stopOnMouseEnter: true,
-        stopOnInteraction: false,
-      }),
-    ],
+    { loop: hasMultiple, align: "start", containScroll: "trimSnaps" },
+    hasMultiple
+      ? [
+          Autoplay({
+            delay: 3000,
+            stopOnMouseEnter: true,
+            stopOnInteraction: false,
+          }),
+        ]
+      : [],
   );
   const [selected, setSelected] = useState(0);
 
@@ -45,6 +48,17 @@ export function PromoSlider({
       emblaApi.off("reInit", onSelect);
     };
   }, [emblaApi]);
+
+  // Single-product fallback: skip embla entirely (loop+autoplay misbehave with 1 slide).
+  if (products.length === 1) {
+    return (
+      <div className="flex justify-center">
+        <div className="w-full max-w-xs">
+          <ProductItem product={products[0]} from={from} backHref={backHref} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

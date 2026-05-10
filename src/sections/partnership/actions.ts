@@ -13,6 +13,7 @@ export interface PartnershipState {
   error?: string;
   fieldErrors?: PartnershipErrors;
   values?: Partial<PartnershipInquiry>;
+  submittedAt?: number;
 }
 
 export async function submitPartnershipInquiry(
@@ -55,7 +56,7 @@ export async function submitPartnershipInquiry(
       message: `${data.business_name!.trim()} — ${data.contact_name!.trim()}`,
     });
 
-    return { success: true, values: {} };
+    return { success: true, submittedAt: Date.now() };
   } catch (err) {
     console.error("Partnership inquiry error:", err);
     return {

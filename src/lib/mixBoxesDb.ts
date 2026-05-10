@@ -6,6 +6,7 @@ export interface MixPresetProductRef {
   title: string;
   slug: string;
   image_url: string | null;
+  status: string;
   category: { id: string; slug: string; name: string } | null;
 }
 
@@ -37,11 +38,18 @@ const MIX_SELECT = `
   presets:mix_box_presets(
     id, product_id, weight_g, price,
     product:products(
-      id, title, slug, image_url,
+      id, title, slug, image_url, status,
       category:categories(id, slug, name)
     )
   )
 `;
+
+function withPublishedPresetsOnly(boxes: MixBox[]): MixBox[] {
+  return boxes.map((box) => ({
+    ...box,
+    presets: box.presets.filter((p) => p.product?.status === "published"),
+  }));
+}
 
 export const getMixBoxes = cache(async (): Promise<MixBox[]> => {
   const { data, error } = await supabaseAdmin
@@ -75,7 +83,7 @@ export const getActiveMixBoxBySlug = cache(
       .single();
 
     if (error || !data) return null;
-    return data as unknown as MixBox;
+    return withPublishedPresetsOnly([data as unknown as MixBox])[0];
   },
 );
 
@@ -88,7 +96,7 @@ export const getActiveMixBoxes = cache(async (): Promise<MixBox[]> => {
     .order("created_at", { ascending: true });
 
   if (error || !data) return [];
-  return data as unknown as MixBox[];
+  return withPublishedPresetsOnly(data as unknown as MixBox[]);
 });
 
 export interface MixProductOption {

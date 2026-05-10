@@ -1,14 +1,16 @@
-import type { Notification } from "@/lib/notificationsDb";
-
 export type PushState = "unsupported" | "prompt" | "granted" | "denied" | "subscribed";
 
 export interface NotificationsContextValue {
-  notifications: Notification[];
+  /** Auth context, exposed so consumer hooks (e.g. `useNotificationsList`) can build their query keys without re-reading auth state. */
+  userId?: string;
+  role: string | null;
+  allowNotifications: boolean;
+
   unreadCount: number;
-  isLoading: boolean;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   refresh: () => void;
+
   pushState: PushState;
   subscribeToPush: () => Promise<boolean>;
   unsubscribeFromPush: () => Promise<void>;

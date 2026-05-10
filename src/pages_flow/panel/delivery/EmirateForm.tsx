@@ -108,7 +108,30 @@ export function EmirateForm({ setting, onDone, onCancel }: EmirateFormProps) {
         </div>
 
         <div>
-          <FormLabel htmlFor={`days_${setting.id}`}>Delivery Days</FormLabel>
+          <div className="flex items-center gap-1.5">
+            <FormLabel htmlFor={`days_${setting.id}`} className="mb-0">
+              Delivery Days
+            </FormLabel>
+            <Tooltip side="top">
+              <TooltipTrigger asChild>
+                <Button
+                  as="button"
+                  type="button"
+                  variant="text"
+                  color="default"
+                  size="icon"
+                  className="w-5! h-5! p-0! text-earth/40 hover:text-earth"
+                  aria-label="What is delivery days?"
+                >
+                  <Info className="w-3.5 h-3.5" aria-hidden="true" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-56 whitespace-normal text-center leading-snug">
+                0 = same-day delivery (before cut-off). 1 = next-day. 2+ = N
+                days lead time.
+              </TooltipContent>
+            </Tooltip>
+          </div>
           <FormNumberInput
             id={`days_${setting.id}`}
             name="days"
@@ -140,8 +163,9 @@ export function EmirateForm({ setting, onDone, onCancel }: EmirateFormProps) {
                 </Button>
               </TooltipTrigger>
               <TooltipContent className="max-w-56 whitespace-normal text-center leading-snug">
-                Before this hour customers may pick &ldquo;tomorrow&rdquo;;
-                after, only the day after.
+                Before this hour customers can still pick the earliest
+                delivery date allowed by Delivery Days; after this hour the
+                earliest is pushed by one extra day.
               </TooltipContent>
             </Tooltip>
           </div>

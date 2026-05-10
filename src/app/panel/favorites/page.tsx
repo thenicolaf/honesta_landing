@@ -36,6 +36,7 @@ async function FavoritesContent() {
               product_variants(id, weight_g, price)`,
             )
             .in("id", productIds)
+            .eq("status", "published")
         ).data ?? []
       : [];
 

@@ -8,12 +8,11 @@ import { Dialog, DialogContent, Button, RichText } from "@/shared/ui";
 import { IconBotanical, IconLeaf } from "@/shared/icons";
 import { cn } from "@/shared/utils/cn";
 
-const STORAGE_KEY = "honesta_popup_seen_versions";
+const STORAGE_KEY = "honesta_popup_seen_session";
 const OPEN_DELAY_MS = 5000;
 
 interface MarketingPopupDialogProps {
   id: string;
-  version: number;
   title: string;
   body: string;
   image_url: string | null;
@@ -25,20 +24,20 @@ function isExternalUrl(url: string): boolean {
   return /^https?:\/\//i.test(url);
 }
 
-function readSeenMap(): Record<string, number> {
+function readSeenSet(): Set<string> {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return new Set();
     const parsed = JSON.parse(raw);
-    return typeof parsed === "object" && parsed !== null ? parsed : {};
+    return Array.isArray(parsed) ? new Set(parsed) : new Set();
   } catch {
-    return {};
+    return new Set();
   }
 }
 
-function writeSeenMap(map: Record<string, number>): void {
+function writeSeenSet(set: Set<string>): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(set)));
   } catch {
     /* ignore quota / privacy-mode errors */
   }
@@ -46,7 +45,6 @@ function writeSeenMap(map: Record<string, number>): void {
 
 export function MarketingPopupDialog({
   id,
-  version,
   title,
   body,
   image_url,
@@ -56,19 +54,17 @@ export function MarketingPopupDialog({
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const map = readSeenMap();
-    const seen = map[id] ?? 0;
-    if (seen >= version) return;
+    if (readSeenSet().has(id)) return;
     const timer = setTimeout(() => setOpen(true), OPEN_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [id, version]);
+  }, [id]);
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
     if (!next) {
-      const map = readSeenMap();
-      map[id] = version;
-      writeSeenMap(map);
+      const set = readSeenSet();
+      set.add(id);
+      writeSeenSet(set);
     }
   };
 

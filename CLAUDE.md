@@ -37,6 +37,8 @@ No test suite configured yet.
 - **@blocknote/core + @blocknote/react + @blocknote/mantine** — block-based rich-text editor (Notion-like) used in the admin product form for the `note` field. Loaded lazily via `next/dynamic({ ssr: false })` — never ships in the public bundle.
 - **isomorphic-dompurify** — HTML sanitization for rich-text input. Used **only at write time** in admin server actions; render path trusts the DB and skips sanitization (jsdom is heavy on SSR).
 - **@next/third-parties** — Google Analytics 4 integration via the official `<GoogleAnalytics>` component + `sendGAEvent` helper. See **Analytics (Google Analytics 4)** for the full event catalog.
+- **@tanstack/react-query** v5 — single source of truth for all client-side data fetching that needs polling/refetch behavior (notifications, admin auto-refresh hooks). Set up in [`<ReactQueryProvider>`](src/providers/ReactQueryProvider.tsx) which exports `DEFAULT_STALE_TIME_MS = 30_000` — bump it to retune cadence across the app. **No Supabase Realtime / WebSockets anywhere** — replaced by TQ-managed polling with `refetchOnWindowFocus + refetchOnReconnect`. See **Notifications** and **Shared `useAutoRouterRefresh` hook** for the canonical patterns.
+- **@vercel/speed-insights** — Vercel's RUM library, mounted as `<SpeedInsights />` in root layout. Reports Core Web Vitals (LCP/FCP/INP/CLS) per route to the Vercel dashboard once the project is deployed.
 - **pnpm** as package manager
 
 ## Path alias
@@ -48,7 +50,7 @@ No test suite configured yet.
 ```
 src/
 ├── app/                        # Next.js App Router routes
-│   ├── layout.tsx              # Root layout — wraps with CartProvider + FavoritesProvider + NotificationsProvider
+│   ├── layout.tsx              # Root layout — wraps with ReactQueryProvider + CartProvider + FavoritesProvider + NotificationsProvider; mounts SpeedInsights + GA + GAEventDispatcher + WhatsAppFloatingButton
 │   ├── page.tsx                # Landing page (Hero, Products, Categories)
 │   ├── cart/page.tsx           # Shopping cart route
 │   ├── checkout/
@@ -125,7 +127,7 @@ src/
 │   ├── orders/                 # OrdersPage + OrderCards (user order history) + OrderMixComposition
 │   ├── mix/                    # MixBuilderPage + BoxSelector + PresetGrid + PresetTile + MixSummary + actions (assembleMix, cleanupOrphanedMixVariants)
 │   ├── panel/
-│   │   ├── dashboard/          # DashboardPage + types + ProfitOverview (sections/) + DateRangeSelector + profitQueries / profitTypes
+│   │   ├── dashboard/          # ProfitOverview + NeedsAttention (sections/) + DateRangeSelector + RecentNotifications + profitQueries / profitTypes
 │   │   ├── orders/             # AllOrdersPage + AdminOrderCards + filters + useOrdersTable
 │   │   ├── partnerships/       # PartnershipsPage + InquiryCards + filters + useInquiriesTable
 │   │   ├── categories/         # CategoryForm + actions
@@ -136,6 +138,7 @@ src/
 │   └── PageLoader.tsx          # Thin wrapper around <Loader /> for route loading.tsx files
 │
 ├── providers/                  # React context providers + hooks
+│   ├── ReactQueryProvider.tsx  # QueryClient + defaults; exports DEFAULT_STALE_TIME_MS
 │   ├── cart/                   # Cart system (decomposed)
 │   │   ├── store.ts            # External store + promo persistence (pure functions, 0 React)
 │   │   ├── useCartSync.ts      # Load from DB/localStorage + syncPrices
@@ -143,12 +146,21 @@ src/
 │   │   ├── useCartActions.ts   # addToCart, removeFromCart, updateQuantity, clearCart
 │   │   └── CartProvider.tsx    # Thin composition of hooks + computed values
 │   ├── FavoritesProvider.tsx   # useSyncExternalStore-based favorites state + useOptimistic
-│   ├── notifications/          # Notification system (decomposed)
-│   │   ├── NotificationsProvider.tsx  # Thin provider composing hooks
-│   │   ├── types.ts            # PushState, NotificationsContextValue
-│   │   ├── hooks/useRealtimeNotifications.ts  # Supabase Realtime + fetch + markAsRead
-│   │   ├── hooks/useServiceWorker.ts  # SW registration + push subscribe/unsubscribe
-│   │   └── utils.ts            # urlBase64ToUint8Array helper
+│   ├── notifications/          # Notification system (decomposed; TQ-only, no WebSockets)
+│   │   ├── NotificationsProvider.tsx  # Thin provider — composes background polling + service worker
+│   │   ├── types.ts            # PushState, NotificationsContextValue (public surface)
+│   │   ├── filters.ts          # isNotificationForUser, formatNotificationMessage, filterByPermissions, NotificationsListData
+│   │   ├── queryKeys.ts        # notificationKeys factory — list / unread / since
+│   │   ├── utils.ts            # urlBase64ToUint8Array helper (SW)
+│   │   └── hooks/
+│   │       ├── useNotificationsBackgroundPolling.ts  # Orchestrator (~50 lines) — composes the sub-hooks below
+│   │       ├── useUnreadCountCache.ts                # unreadCount stored in TQ cache (no useState)
+│   │       ├── useToastDeduplicator.ts               # tryToast helper — at-most-once per id per session
+│   │       ├── useNotificationsSinceQuery.ts         # since-poll query (delta fetcher)
+│   │       ├── useApplySinceResults.ts               # Side-effect bridge — toast + list-cache merge + unread update
+│   │       ├── useMarkReadMutations.ts               # Mark-single + mark-all mutations with optimistic + rollback
+│   │       ├── useNotificationsList.ts               # Consumer hook — useQuery wrapper for full list with select
+│   │       └── useServiceWorker.ts                   # SW registration + push subscribe/unsubscribe
 │   ├── FilterProvider.tsx      # Generic filter context — useFilterBar(key) + useFilterBarMulti(key)
 │   └── SearchParamsFilterProvider.tsx  # Syncs FilterProvider state to URL search params (supports multiKeys)
 │
@@ -162,6 +174,8 @@ src/
 └── shared/
     ├── consts.ts               # CUSTOMER_COOKIE_KEY, DELIVERY_FEE, COOKIE_CONSENT_KEY, PUSH_OPT_OUT_KEY
     ├── consts/navLinks.ts      # SectionId enum, SECTION_IDS, NAV_LINKS, TAB_LINKS
+    ├── hooks/                  # Cross-cutting client hooks
+    │   └── useAutoRouterRefresh.ts  # TQ-scheduled router.refresh() with focus/reconnect refetch — used by admin pages instead of Realtime
     ├── ui/                     # Reusable primitives (Button, Badge, Card, Form, Collapsible, etc.)
     ├── icons/                  # SVG icon components + index.ts barrel
     ├── types/                  # Categories enum, CustomerInfo, OrderStatus, ProfileInfo, UserRole
@@ -365,15 +379,11 @@ Catalog of home-page popups for holiday greetings and exclusive-offer announceme
 
 ### Data model
 
-Multi-row table `marketing_popup`. Columns: `id` (uuid, default `gen_random_uuid()`), `is_active`, `title` (visitor-facing heading, also doubles as admin catalog label — required), `body` (sanitized HTML, written by BlockNote), `image_url`, `cta_label`, `cta_url`, `starts_at` / `ends_at` (nullable timestamptz — optional display window, NULL on either side = unbounded), `version` (integer), `created_at`, `updated_at`. Mutual-exclusion enforced at the DB level by **partial unique index `marketing_popup_one_active ON ((is_active)) WHERE is_active = true`** — at most one row may be active at any time. Storage bucket `marketing` (public read, admin write/delete) — added to `ALLOWED_BUCKETS` in [src/lib/storage.ts](src/lib/storage.ts).
-
-### Auto-bumped `version` (Postgres trigger)
-
-`marketing_popup_bump_version_trg` is a `BEFORE UPDATE` trigger that does `NEW.version := OLD.version + 1; NEW.updated_at := now()`. This means the app fires a single UPDATE without a preceding SELECT to read the current version — saves one round-trip per save (~150-300ms). The trigger fires on every UPDATE, including activate/deactivate flips, so the version always advances.
+Multi-row table `marketing_popup`. Columns: `id` (uuid, default `gen_random_uuid()`), `is_active`, `title` (visitor-facing heading, also doubles as admin catalog label — required), `body` (sanitized HTML, written by BlockNote), `image_url`, `cta_label`, `cta_url`, `starts_at` / `ends_at` (nullable timestamptz — optional display window, NULL on either side = unbounded), `created_at`, `updated_at` (auto-bumped by a `BEFORE UPDATE` trigger that just touches `now()`). Mutual-exclusion enforced at the DB level by **partial unique index `marketing_popup_one_active ON ((is_active)) WHERE is_active = true`** — at most one row may be active at any time. Storage bucket `marketing` (public read, admin write/delete) — added to `ALLOWED_BUCKETS` in [src/lib/storage.ts](src/lib/storage.ts).
 
 ### Re-show strategy
 
-The trigger bumps `version` on every UPDATE. The client component ([src/sections/marketing/MarketingPopupDialog.tsx](src/sections/marketing/MarketingPopupDialog.tsx)) keeps a per-popup map in `localStorage.honesta_popup_seen_versions` — JSON of `{ [popupId]: lastSeenVersion }`. Show iff `seen[popup.id] < popup.version`, then on close write the current version into the map. Per-id keying matters now that admins keep a catalog of popups: switching the active popup makes a fresh `id` show up to every visitor, even if its `version` happens to be lower than the previously dismissed popup's version.
+Per-session, not per-version. The client component ([src/sections/marketing/MarketingPopupDialog.tsx](src/sections/marketing/MarketingPopupDialog.tsx)) keeps a set of seen popup ids in `sessionStorage.honesta_popup_seen_session` — JSON array of strings. Show iff `popup.id` is not in the set, then on close add the id to the set. F5 in the same tab won't re-show; opening a new tab starts a fresh session and re-shows. Switching the active popup gives every visitor a fresh `id` → it shows up regardless of what they had dismissed earlier.
 
 ### Render flow
 
@@ -480,13 +490,13 @@ Customers pick a delivery date + slot during checkout. Admins manage slots and p
 
 - `delivery_slots` — admin-managed list. `start_time`/`end_time` (postgres `time`), `available_weekdays` (`smallint[]`, ISO 1=Mon … 7=Sun, CHECK enforces non-empty + range via `<@ ARRAY[1..7]`), `is_active`. No `sort_order` — UI sorts by `start_time` everywhere.
 - `delivery_blackouts` — `(blackout_date, slot_id)` with `slot_id` nullable. `slot_id IS NULL` = whole day blocked; `slot_id = <uuid>` = only that slot blocked on that date. Unique index uses `NULLS NOT DISTINCT` so `(date, NULL)` can't be inserted twice.
-- `delivery_settings.cutoff_hour` — per-emirate (0–23, default 19). Before this hour in Asia/Dubai, "tomorrow" is the earliest deliverable date; from this hour, earliest becomes "the day after tomorrow".
-- `delivery_settings.delivery_days` — per-emirate lead time (default 1 = next-day). Threaded through `getMinDeliveryDate(cutoffHour, at, deliveryDays)`: earliest deliverable date = `today + max(1, deliveryDays) + (pastCutoff ? 1 : 0)`. Switching emirate in checkout (e.g. Dubai with 1 day → Sharjah with 2 days) re-anchors the date grid automatically — `CheckoutFormSection` reads `emirateSetting?.delivery_days ?? 1` and passes it down to `DeliveryScheduleSection` → `useDeliverySchedulePicker` → `buildDayGrid` / `getAvailableSlotsForDate`. The server `revalidateDeliveryWindow(delivery, cutoffHour, deliveryDays)` uses the same value for the submit-time race check.
+- `delivery_settings.cutoff_hour` — per-emirate (0–23, default 19). The cut-off applies on top of the earliest date allowed by `delivery_days`: before this hour in Asia/Dubai the earliest stays as-is; from this hour onward it's pushed by one extra day. So for `delivery_days=0` the cut-off shifts earliest from today → tomorrow; for `delivery_days=1` it shifts tomorrow → the day after.
+- `delivery_settings.delivery_days` — per-emirate lead time. `0` = same-day, `1` = next-day, `2+` = N-day lead time. Threaded through `getMinDeliveryDate(cutoffHour, at, deliveryDays)`: earliest deliverable date = `today + max(0, deliveryDays) + (pastCutoff ? 1 : 0)`. Switching emirate in checkout (e.g. Dubai with 0 days → Sharjah with 2 days) re-anchors the date grid automatically — `CheckoutFormSection` reads `emirateSetting?.delivery_days ?? 1` and passes it down to `DeliveryScheduleSection` → `useDeliverySchedulePicker` → `buildDayGrid` / `getAvailableSlotsForDate`. The server `revalidateDeliveryWindow(delivery, cutoffHour, deliveryDays)` uses the same value for the submit-time race check. Additionally, `getAvailableSlotsForDate` filters out slots whose `end_time` already passed in Asia/Dubai when the chosen `date` is today — so a same-day customer at 19:00 still sees a `17:30–22:00` slot (it's running but bookable), but no longer sees a `09:15–17:30` slot.
 - `orders.delivery_schedule text` — single human-readable snapshot like `"6 May 2026 · Morning 09:00–15:00"`. No FKs into delivery tables, so admins can edit/delete slots freely without breaking historical orders.
 
 ### Pure resolver — single source of truth
 
-[`getAvailableSlotsForDate(date, slots, blackouts, cutoffHour, now?)`](src/shared/utils/deliverySlots.ts) is a pure function used both for client rendering (date strip / slot tiles) and server-side revalidation at submit time. It rejects dates before `getMinDeliveryDate(cutoffHour)`, drops fully-blocked days, removes per-slot blackouts, and filters by `available_weekdays`. [`findSlotConflict`](src/shared/utils/deliverySlots.ts) is the parallel checker for slot creation/edit (no two active slots can overlap in time on a shared weekday).
+[`getAvailableSlotsForDate(date, slots, blackouts, cutoffHour, now?)`](src/shared/utils/deliverySlots.ts) is a pure function used both for client rendering (date strip / slot tiles) and server-side revalidation at submit time. It rejects dates before `getMinDeliveryDate(cutoffHour)`, drops fully-blocked days, removes per-slot blackouts, filters by `available_weekdays`, and — when `date` is today in Asia/Dubai — drops slots whose `end_time` has already passed (a slot that is currently running stays bookable until its end). [`findSlotConflict`](src/shared/utils/deliverySlots.ts) is the parallel checker for slot creation/edit (no two active slots can overlap in time on a shared weekday).
 
 ### Time zone helpers
 
@@ -629,13 +639,17 @@ Two files, three client instances:
   - `supabaseAdmin` — static service-role client, bypasses RLS (use only in server actions, API routes, and `lib/`)
   - `createSupabaseServerClient()` — async, reads cookies via `@supabase/ssr`; use whenever you need the current user's session
 
-**DB tables:** `orders` (status, is_fulfilled, subtotal, delivery_fee, total, **promotion_discount**, **promo_code_id**, **promo_discount**, **delivery_schedule** text nullable — human-readable snapshot like `"6 May 2026 · Morning 09:00–15:00"`, customer fields, ngenius_ref), `order_items` (order_id, variant_id, name, price, **original_price** nullable, **promo_discount** per unit, weight_g, quantity, **mix_composition** JSONB nullable — snapshot of mix contents, each entry now carries **`product_id`** alongside name/image/count/weight/price so the inventory deduction path doesn't need extra lookups; older rows without `product_id` survive untouched and contribute COGS=0 — all snapshots at order time so historical orders survive promo/promotion/variant edits), `products` (image_url, images JSONB `[]`, in_stock, badge, **note** — sanitized HTML string, not plain text — see **Rich text (product notes)**, nutrition JSONB, status `product_status` enum — `draft | published | archived | system`, **no price/weight_g columns**, these live in `product_variants`), `product_variants` (product_id, weight_g, price — one-to-many with products), `categories` (name, slug, audience, tagline, description, image_url, badge, sort_order), `benefits` (id, name, description — unique on name+description), `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, role `user_role`, gender, birthday, allow_notifications), `cart_items` (user_id, variant_id, quantity — minimal, prices via join), `notifications` (type, title, message, related_id, user_id, audience `user_role` — nullable, NULL = all roles), `notification_reads` (notification_id, user_id, read_at — tracks per-user read status), `push_subscriptions` (user_id, endpoint UNIQUE, p256dh, auth — FK to auth.users + profiles, RLS per user), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id), `promo_codes` (code, scope, discount_type, discount_value, min_order_amount, max_uses, max_uses_per_user, stack_with_promotions, starts_at, ends_at, is_active — code is exactly 6 `[A-Z0-9]` chars enforced by CHECK), `promo_code_products`, `promo_code_users`, `promo_code_redemptions` (`unique(order_id)`), `mix_boxes` (id — **same UUID as corresponding `products.id`**, name, slug UNIQUE, description, image_url, cell_count, is_active, sort_order), `mix_box_presets` (box_id, product_id, weight_g, price — `UNIQUE(box_id, product_id)` means each product appears once in a box's assortment), `mix_variant_cells` (variant_id → product_variants CASCADE, cell_index, preset_id → mix_box_presets CASCADE, `UNIQUE(variant_id, cell_index)` — stores what preset sits in each cell of an assembled mix variant), `marketing_popup` (multi-row catalog of home-page popups; `is_active` with partial unique index `WHERE is_active=true` enforcing at most one active row, `title` doubles as visitor heading + admin catalog label, `body` HTML, `image_url`, `cta_label`, `cta_url`, `starts_at`/`ends_at` nullable display window, `version` auto-bumped by `BEFORE UPDATE` trigger — see **Marketing Popup**), `delivery_settings` (per-emirate row: delivery_fee, free_delivery_threshold, minimum_order, delivery_days, **cutoff_hour** integer 0–23 default 19, is_active), `delivery_slots` (id, label, start_time/end_time, is_active, **available_weekdays** smallint[] ISO 1=Mon … 7=Sun, CHECK enforces non-empty + range — see **Delivery schedule**), `delivery_blackouts` (blackout_date date, slot_id uuid nullable — NULL = entire day blocked, reason text, unique index on (date, slot_id) `NULLS NOT DISTINCT`), `product_inventory` (product_id uuid UNIQUE FK→products CASCADE, **stock_g** integer default 0 + CHECK ≥0, **low_stock_threshold_g** integer default 500, **cost_per_100g** numeric(10,2) default 0, `updated_at` auto-bumped by `BEFORE UPDATE` trigger — operational data kept in a separate table from the catalog so inventory edits don't churn the products row), `stock_movements` (append-only audit log: product_id FK→products CASCADE, **delta_g** integer signed, **reason** `stock_movement_reason` enum `order_paid | restock | correction | damage | manual_adjust`, order_id FK→orders SET NULL, note text nullable, created_by FK→auth.users SET NULL, created_at — `UNIQUE(order_id, product_id)` is the idempotency guard for `deductInventoryForOrder` so the webhook + result-page paths can't double-deduct; admin INSERT/SELECT only, UPDATE/DELETE intentionally ungranted).
+**DB tables:** `orders` (status, is_fulfilled, subtotal, delivery_fee, total, **promotion_discount**, **promo_code_id**, **promo_discount**, **delivery_schedule** text nullable — human-readable snapshot like `"6 May 2026 · Morning 09:00–15:00"`, customer fields, ngenius_ref), `order_items` (order_id, variant_id, name, price, **original_price** nullable, **promo_discount** per unit, weight_g, quantity, **mix_composition** JSONB nullable — snapshot of mix contents, each entry now carries **`product_id`** alongside name/image/count/weight/price so the inventory deduction path doesn't need extra lookups; older rows without `product_id` survive untouched and contribute COGS=0 — all snapshots at order time so historical orders survive promo/promotion/variant edits), `products` (image_url, images JSONB `[]`, in_stock, badge, **note** — sanitized HTML string, not plain text — see **Rich text (product notes)**, nutrition JSONB, status `product_status` enum — `draft | published | archived | system`, **no price/weight_g columns**, these live in `product_variants`), `product_variants` (product_id, weight_g, price — one-to-many with products), `categories` (name, slug, audience, tagline, description, image_url, badge, sort_order), `benefits` (id, name, description — unique on name+description), `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, role `user_role`, gender, birthday, allow_notifications), `cart_items` (user_id, variant_id, quantity — minimal, prices via join), `notifications` (type, title, message, related_id, user_id, audience `user_role` — nullable, NULL = all roles), `notification_reads` (notification_id, user_id, read_at — tracks per-user read status), `push_subscriptions` (user_id, endpoint UNIQUE, p256dh, auth — FK to auth.users + profiles, RLS per user), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id), `promo_codes` (code, scope, discount_type, discount_value, min_order_amount, max_uses, max_uses_per_user, stack_with_promotions, starts_at, ends_at, is_active — code is exactly 6 `[A-Z0-9]` chars enforced by CHECK), `promo_code_products`, `promo_code_users`, `promo_code_redemptions` (`unique(order_id)`), `mix_boxes` (id — **same UUID as corresponding `products.id`**, name, slug UNIQUE, description, image_url, cell_count, is_active, sort_order), `mix_box_presets` (box_id, product_id, weight_g, price — `UNIQUE(box_id, product_id)` means each product appears once in a box's assortment), `mix_variant_cells` (variant_id → product_variants CASCADE, cell_index, preset_id → mix_box_presets CASCADE, `UNIQUE(variant_id, cell_index)` — stores what preset sits in each cell of an assembled mix variant), `marketing_popup` (multi-row catalog of home-page popups; `is_active` with partial unique index `WHERE is_active=true` enforcing at most one active row, `title` doubles as visitor heading + admin catalog label, `body` HTML, `image_url`, `cta_label`, `cta_url`, `starts_at`/`ends_at` nullable display window, `updated_at` auto-bumped by `BEFORE UPDATE` trigger — see **Marketing Popup**), `delivery_settings` (per-emirate row: delivery_fee, free_delivery_threshold, minimum_order, delivery_days, **cutoff_hour** integer 0–23 default 19, is_active), `delivery_slots` (id, label, start_time/end_time, is_active, **available_weekdays** smallint[] ISO 1=Mon … 7=Sun, CHECK enforces non-empty + range — see **Delivery schedule**), `delivery_blackouts` (blackout_date date, slot_id uuid nullable — NULL = entire day blocked, reason text, unique index on (date, slot_id) `NULLS NOT DISTINCT`), `product_inventory` (product_id uuid UNIQUE FK→products CASCADE, **stock_g** integer default 0 + CHECK ≥0, **low_stock_threshold_g** integer default 500, **cost_per_100g** numeric(10,2) default 0, `updated_at` auto-bumped by `BEFORE UPDATE` trigger — operational data kept in a separate table from the catalog so inventory edits don't churn the products row), `stock_movements` (append-only audit log: product_id FK→products CASCADE, **delta_g** integer signed, **reason** `stock_movement_reason` enum `order_paid | restock | correction | damage | manual_adjust`, order_id FK→orders SET NULL, note text nullable, created_by FK→auth.users SET NULL, created_at — `UNIQUE(order_id, product_id)` is the idempotency guard for `deductInventoryForOrder` so the webhook + result-page paths can't double-deduct; admin INSERT/SELECT only, UPDATE/DELETE intentionally ungranted).
 
 **Order display invariant:** `originalSubtotal − promotion_discount − promo_discount + delivery_fee = total`. The order list pages and cards display this breakdown as `Subtotal − Promotion − Promo + Delivery = Total`. Old orders without `original_price`/`promotion_discount` (NULL/0) render correctly without the new lines.
 
 **Order visibility invariant.** PENDING orders are filtered out of both [src/app/panel/orders/page.tsx](src/app/panel/orders/page.tsx) (user view) and [src/app/panel/all-orders/page.tsx](src/app/panel/all-orders/page.tsx) (admin view) via `.neq("status", OrderStatus.PENDING)` in the Supabase query. The `ORDER_STATUS_OPTIONS` filter in [src/pages_flow/panel/orders/helpers.ts](src/pages_flow/panel/orders/helpers.ts) likewise only lists `Paid | Failed | Cancelled`. A freshly-created order is invisible until N-Genius (via webhook or `/checkout/result`) transitions it to PAID/FAILED/CANCELLED.
 
-**Realtime orders hook.** [src/pages_flow/panel/orders/useRealtimeOrders.ts](src/pages_flow/panel/orders/useRealtimeOrders.ts) holds no local state — it subscribes to Supabase Realtime on `orders` and calls `router.refresh()` on any UPDATE or DELETE. INSERT events are ignored (new orders are always PENDING and hidden anyway; they'll be picked up by the UPDATE that flips their status). This simplicity is deliberate — keeps the hook free of `setState`-in-effect cascades and avoids the old INSERT→order_items race condition.
+**Shared `useAutoRouterRefresh` hook.** [src/shared/hooks/useAutoRouterRefresh.ts](src/shared/hooks/useAutoRouterRefresh.ts) — generic TanStack Query hook whose `queryFn` triggers `router.refresh()` as a side-effect (returned data is `null` — TQ is used as a scheduler here, not a data store). Accepts a `queryKey` so each call site has its own cache observer. Settings: `refetchInterval: DEFAULT_STALE_TIME_MS` (30s), `refetchOnWindowFocus: true`, `refetchOnReconnect: true`, `refetchIntervalInBackground: false` (skipped when tab hidden), `staleTime: 3_000` (throttles focus/visibility refetches to once per 3s), `gcTime: 0` (cache cleared on unmount so remount re-arms first-skip). An `isFirstRef` ref skips the very first invocation on mount — the page just SSR'd with fresh data. Used by:
+- [`AllOrdersInner`](src/pages_flow/panel/orders/AllOrdersPage.tsx) — `useAutoRouterRefresh(["panel-orders-refresh"])`. Replaces the old Supabase Realtime subscription on `orders`.
+- [`PartnershipsInner`](src/pages_flow/panel/partnerships/PartnershipsPage.tsx) — `useAutoRouterRefresh(["panel-partnerships-refresh"])`. Replaces the old Supabase Realtime subscription on `partnership_inquiries`.
+
+Both eliminate the WebSocket connection without losing live updates for the admin (max 30s lag, instant on focus). New orders are still always PENDING and filtered out server-side; they appear after the UPDATE that flips status to PAID/FAILED/CANCELLED.
 
 **Order notification messages.** [src/lib/orderNotifications.ts](src/lib/orderNotifications.ts) exposes two helpers built around the same `OrderNotificationParts` shape `{ customer, totalQty, itemsText, totalText, deliverySchedule }`:
 - `buildOrderNotificationParts(order, items)` — structured pieces, used by `ResultToast` to render a multi-line JSX toast.
@@ -874,7 +888,7 @@ Categories have a `sort_order` integer column. Order is controlled via drag-and-
 
 ## Notifications
 
-Multi-role notification system with Supabase Realtime.
+Multi-role notification system, **polling-only via TanStack Query** (no Supabase Realtime / WebSockets).
 
 **Tables:**
 - `notifications` — `user_id` (UUID, nullable) + `audience` (`user_role` enum, nullable). `user_id` set = personal notification. `user_id` NULL = broadcast. `audience` NULL = all roles, specific role = only that role.
@@ -883,15 +897,39 @@ Multi-role notification system with Supabase Realtime.
 
 **Notification types:** `order_paid`, `order_failed`, `order_cancelled` (admin), `new_partnership` (admin), `new_promotion`, `new_product`, `new_category` (broadcast to all). Styles in `src/shared/ui/NotificationTypeConfig.tsx`. `new_order` is **legacy** — no longer created (was fired on PENDING-order creation, which created noise for unpaid abandoned checkouts), but its style/icon is kept in `TYPE_STYLES` so historical rows still render. Order-related admin notifications now only fire on the payment state transition (PAID/FAILED/CANCELLED).
 
-**DB layer:** `src/lib/notificationsDb.ts` — `createNotification({ type, title, message?, relatedId?, audience?, userId? })`. Default `audience = "admin"`. Queries use left join on `notification_reads` to compute `is_read`. New users only see notifications created after their registration (`created_at >= user.created_at`).
+**DB layer:** `src/lib/notificationsDb.ts` — `createNotification({ type, title, message?, relatedId?, audience?, userId? })`. Default `audience = "admin"`. Queries use left join on `notification_reads` to compute `is_read`. New users only see notifications created after their registration (`created_at >= user.created_at`). `getNotifications(..., sinceIso?)` accepts an optional ISO timestamp → adds `.gt("created_at", sinceIso)` for delta polling. The `idx_notifications_created_at` BTREE DESC index keeps these lookups cheap.
 
-**Provider:** `src/providers/notifications/` — decomposed into:
-- `NotificationsProvider.tsx` — thin provider composing `useRealtimeNotifications` + `useServiceWorker`
-- `hooks/useRealtimeNotifications.ts` — Supabase Realtime INSERT listener + fetch + markAsRead. Every accepted INSERT updates the in-memory list, bumps the unread counter, and fires `toastInfo(formatNotificationMessage(n))`. There is no path-based suppression — on `/checkout/result*` the page-level `<ResultToast>` and the realtime plain-text toast can both fire for the same `order_paid` / `order_failed` event when an admin places the order themselves; the page-level toast is the structured one, the realtime toast is the same notification an admin in another tab would see.
-- `hooks/useServiceWorker.ts` — SW registration, push subscribe/unsubscribe, auto-resubscription
-- `types.ts` — `PushState`, `NotificationsContextValue`, `NotificationsProviderProps`
+**TanStack Query setup.** Root layout wraps the tree in [`<ReactQueryProvider>`](src/providers/ReactQueryProvider.tsx) — a `QueryClient` instantiated via `useState` lazy initializer with defaults `refetchOnWindowFocus: true`, `refetchOnReconnect: true`, `staleTime: DEFAULT_STALE_TIME_MS` (30s), `retry: 1`. The exported `DEFAULT_STALE_TIME_MS` constant is reused by individual hooks that want to match the global cadence (`useNotificationsList`, `useNotificationsSinceQuery`, `useAutoRouterRefresh`).
+
+**Provider decomposition.** `src/providers/notifications/` is split by concern:
+- [`NotificationsProvider.tsx`](src/providers/notifications/NotificationsProvider.tsx) — thin provider, composes `useNotificationsBackgroundPolling` + `useServiceWorker`. Holds **no local notifications/list state** — exposes `userId`, `role`, `allowNotifications` (so consumer hooks can build their query keys), `unreadCount`, mutations (`markAsRead`/`markAllAsRead`/`refresh`), and push state.
+- [`filters.ts`](src/providers/notifications/filters.ts) — `isNotificationForUser`, `formatNotificationMessage`, `filterByPermissions`, type `NotificationsListData`. Pure functions reused by both since-effect and list-select.
+- [`queryKeys.ts`](src/providers/notifications/queryKeys.ts) — `notificationKeys` factory: `list(userId)`, `unread(userId)`, `since(userId)`. Centralised so every hook references the same keys.
+- [`types.ts`](src/providers/notifications/types.ts) — public context types (`PushState`, `NotificationsContextValue`, `NotificationsProviderProps`).
+- [`hooks/useNotificationsBackgroundPolling.ts`](src/providers/notifications/hooks/useNotificationsBackgroundPolling.ts) — orchestrator (~50 lines) that composes the focused sub-hooks below into the provider's return value `{ unreadCount, markAsRead, markAllAsRead, refresh }`.
+- [`hooks/useUnreadCountCache.ts`](src/providers/notifications/hooks/useUnreadCountCache.ts) — holds the unread counter in TQ cache via `initialData` + `staleTime: Infinity` + `refetchOn*: false` (queryFn never actually runs). Mutated via `queryClient.setQueryData(notificationKeys.unread(userId), ...)` from the since-effect and from mutations. Stored in cache instead of `useState` so React-Compiler's "setState in effect" rule isn't violated.
+- [`hooks/useToastDeduplicator.ts`](src/providers/notifications/hooks/useToastDeduplicator.ts) — returns `tryToast(n)` that fires `toastInfo` at most once per id per session via a `useRef<Set<string>>`. Prevents focus-refetch + interval double-toast.
+- [`hooks/useNotificationsSinceQuery.ts`](src/providers/notifications/hooks/useNotificationsSinceQuery.ts) — pure delta fetcher: `useQuery` polling `/api/notifications?since=<iso>&limit=20` every `DEFAULT_STALE_TIME_MS` with `refetchOnWindowFocus + refetchOnReconnect`, `staleTime: 0`. The `since` anchor lives in a `useRef` (NOT in queryKey, so the cache entry is stable) and advances inside `queryFn` after each successful response.
+- [`hooks/useApplySinceResults.ts`](src/providers/notifications/hooks/useApplySinceResults.ts) — side-effect bridge. Filters since-data via `isNotificationForUser`, fires `tryToast` for new ones, prepends them to the shared `notificationKeys.list(userId)` cache via `setQueryData` (so any mounted `useNotificationsList` consumer sees them instantly), and writes the authoritative server `unreadCount` to `notificationKeys.unread(userId)`. `onSuccess` was removed in TQ v5; this `useEffect` on `query.data` is the official replacement pattern.
+- [`hooks/useMarkReadMutations.ts`](src/providers/notifications/hooks/useMarkReadMutations.ts) — pair of `useMutation` hooks with **optimistic update + rollback on error** via shared `snapshot()` / `restore(ctx)` helpers: `onMutate` cancels in-flight list queries, snapshots `prevList`/`prevUnread`, writes the optimistic state; `onError` restores the snapshot. Returns `mutateAsync` for each (TQ guarantees these references are stable, so they can flow into context value without re-renders).
+- [`hooks/useNotificationsList.ts`](src/providers/notifications/hooks/useNotificationsList.ts) — consumer hook: pure `useQuery` wrapper around `notificationKeys.list(userId)` with `staleTime: DEFAULT_STALE_TIME_MS`. Returns the standard TQ result `{ data, isLoading, error, ... }`. Multiple consumers with the same `queryKey` share TQ's `ObserverCount` internally — first mounted observer triggers the HTTP fetch, last unmounted observer makes the query inactive. **There is no manual ref-counting in the provider** — TQ handles it. The `select` function applies `allowNotifications` filtering via `filterByPermissions` and is memoised by TQ.
+- [`hooks/useServiceWorker.ts`](src/providers/notifications/hooks/useServiceWorker.ts) — SW registration, push subscribe/unsubscribe, auto-resubscription.
+
+On `/checkout/result*` the page-level `<ResultToast>` and the toast from polling can both fire for the same `order_paid` / `order_failed` event when an admin places the order themselves; the page-level toast is the structured one, the polling toast is the same notification an admin in another tab would see — `toastedIdsRef` dedupe ensures at-most-once delivery within one session.
 
 Accepts `role`, `userId`, `allowNotifications` props. When `allowNotifications = false`, broadcast notifications are hidden (personal still shown).
+
+**Two queries. One shared cache.**
+
+- **Background polling (always active for any authenticated user).** The `since` query runs unconditionally for any user with `role` + `userId`. Interval = 60s, plus immediate refetch on window focus / network reconnect (TanStack Query built-ins). Throttling: `refetchIntervalInBackground: false` skips polls when the tab is hidden, and TQ's own dedup window prevents bursts when both `focus` + `visibilitychange` fire in quick succession. Each poll sends `?since=<lastSeen>&limit=20` — payload is usually empty. The `since` anchor is stored in a `useRef` (NOT in queryKey, so the cache entry is stable) and advances inside `queryFn` after each successful response.
+- **Lazy full list (consumer-driven).** Consumers call `useNotificationsList()` directly — TQ's observer count gates the fetch:
+  - [NotificationBell](src/sections/navbar/NotificationBell.tsx) — the list query lives inside `BellPopoverBody`, which is rendered only as a child of `<PopoverContent>`. Since `PopoverContent` is conditionally rendered only when the popover is open ([Popover.tsx:230](src/shared/ui/Popover/Popover.tsx#L230) — `{open && (...)}`), the body component (and its `useNotificationsList()` hook) mounts on open / unmounts on close. Repeat opens within `staleTime: 30s` use the TQ cache without re-fetching.
+  - [RecentNotifications](src/pages_flow/panel/dashboard/RecentNotifications.tsx) — `RecentNotificationsInner` calls `useNotificationsList()` directly. The component is only rendered on the admin dashboard `/panel/page.tsx` (admin-only via [proxy.ts](src/proxy.ts)), so it gates the lazy fetch by being mounted.
+  - Both consumers use the same `queryKey` → one HTTP request even when both are mounted (e.g. admin opens the bell on `/panel`).
+- **`EMPTY_NOTIFICATIONS` const.** Consumers fall back to a module-level constant array (`data?.notifications ?? EMPTY_NOTIFICATIONS`) instead of `?? []` — a fresh literal would change reference each render and invalidate downstream `useMemo` deps.
+- **Cache cross-talk.** The `since`-effect and the `markAsRead`/`markAllAsRead` mutations all call `queryClient.setQueryData(["notifications", "list", userId], ...)`. Even if a NotificationBell user marks an item read while RecentNotifications is mounted on another tab/panel page, both consumers' `data` updates instantly because TQ broadcasts cache writes to all observers. No prop drilling, no provider state.
+- **Toast deduplication.** `toastedIdsRef = useRef<Set<string>>(new Set())` tracks every notification id that has already been toasted in the current session. The since-effect calls `tryToast` which short-circuits if the id is already in the set. Net effect: each notification toasts at most once per session.
+- **`since` anchor.** Initialized to `new Date().toISOString()` at hook mount. Polling reports notifications created strictly after that anchor; SSR `initialUnreadCount` already counted everything before mount, so the badge stays correct without a backfill request. The anchor advances on every poll that returns rows.
 
 **User preferences:** `profiles.allow_notifications` boolean (default `true`). Toggle via `toggleNotifications()` server action in `src/pages_flow/profile/actions.ts`. UI: `NotificationSettingsSection` on profile page (non-admin only). Toggle calls `router.refresh()` to update provider props without page reload.
 
@@ -1024,6 +1062,32 @@ All phone fields use `FormPhoneInput` (displays `0XX XXX XXXX`, submits normaliz
 Used by `validateCustomer.ts`, `validateProfile.ts`, `validatePartnership.ts`.
 
 **International phone support.** Although the default display/validation is UAE (`+971`), `FormPhoneInput` is intentionally built as a full international input — it wraps `react-phone-number-input/max` with complete country metadata, `libphonenumber-js` for per-country validation, and a searchable country selector with `country-flag-icons` unicode flags. Users can switch country, paste numbers in any format, and get country-aware formatting/validation out of the box. This is a deliberate bundle-size trade-off (~300 KB for full metadata) in exchange for a friction-free UX for international customers — do not swap it for a UAE-only masked input. If bundle size matters on a specific route, prefer `next/dynamic` with conditional render over replacing the component.
+
+## WhatsApp integration
+
+Two pieces, both built around `https://wa.me/{digits}` (phone stripped to digits with `phone.replace(/\D/g, "")`, so the stored `+971…` format works without conversion).
+
+### Floating support widget
+
+[`<WhatsAppFloatingButton phone={...} />`](src/shared/ui/WhatsAppFloatingButton.tsx) is mounted in [layout.tsx](src/app/layout.tsx) only when `NEXT_PUBLIC_WHATSAPP_SUPPORT_PHONE` is set. It's a `<motion.div fixed bottom-6 right-6 z-40>` containing a 44px circular `Button` with the `IconWhatsApp` glyph in pure white on the WhatsApp brand green.
+
+- **Hidden on `/panel/*`** — admins are the support, so `usePathname().startsWith("/panel")` short-circuits the render.
+- **Entrance** — slides in from the right via `initial={{ opacity: 0, x: 100 }}` → `animate={{ opacity: 1, x: 0 }}` (`0.5s easeOut`, `delay: 0.6s`).
+- **Pulse halo** — an `aria-hidden` `motion.span` at `absolute inset-0 rounded-full bg-whatsapp pointer-events-none` runs `scale: [1, 1.6]` + `opacity: [0, 0.45, 0]` forever (`duration: 2.4s`, `easeOut`). Both ends of the cycle are at opacity 0 to avoid the visible snap that happens at the loop boundary if you start the cycle at a non-zero opacity.
+- **Hover scale** — `hover:scale-115` on the Button, eased by Button's existing `transition-all duration-300`.
+- **Tab-bar dodge (mobile only)** — wraps a nested `motion.div` that animates `y` between `0` and `-72px`. `tabBarVisible` is computed with the **same** `current > prev && !atBottom` scroll heuristic [`NavMobileTabBar`](src/sections/navbar/NavMobileTabBar.tsx) uses, so the widget and the tab bar flip together. Mobile detection uses `useSyncExternalStore(subscribeMobile, getMobileSnapshot, getMobileServerSnapshot)` against `matchMedia("(max-width: 1023.98px)")` — same breakpoint as the tab bar's `lg:hidden`. On `lg+` `isMobile` is `false` so the lift never engages.
+
+### Admin orders WhatsApp button
+
+[`<WhatsAppLink phone={...} />`](src/pages_flow/orders/ui/WhatsAppLink.tsx) — small icon-only `Button` (`size="icon"` + `text-moss/60 hover:text-moss`) wrapped in a `Tooltip`, opens `https://wa.me/{digits}` in a new tab. Mounted next to the existing `CopyText` phone in both the admin desktop `customerColumn` ([columns.tsx](src/pages_flow/orders/columns.tsx)) and the mobile [`AdminOrderCards`](src/pages_flow/panel/orders/AdminOrderCards.tsx) footer, giving admins a one-click way to message a customer about their order.
+
+### CSS tokens
+
+Brand green is exposed via `@theme` in [globals.css](src/app/globals.css):
+- `--color-whatsapp: #25d366` → `bg-whatsapp` / `border-whatsapp`
+- `--color-whatsapp-hover: #1ebe5d` → `bg-whatsapp-hover` / `border-whatsapp-hover`
+
+These are integration colours (third-party brand), not part of the design palette in **Design system** — keep them out of generic UI surfaces.
 
 ## Server Actions standard
 
@@ -1227,16 +1291,32 @@ Algorithm:
   - **History** ([MovementsHistory](src/pages_flow/panel/inventory/MovementsHistory.tsx)) — `DataTable` of last 50 movements for one product (`Date · Reason · Δ · Note`) with local `useTableSort` + `useTablePagination`, no URL state (it's modal-scoped). Footer link `View all history → /panel/inventory/history?product=…` opens the global page pre-filtered. Module-level `Map<product_id, StockMovement[]>` cache makes reopening the same product instant; `invalidateMovementsCache(productId)` is exported and called from `AdjustStockForm` after success.
 - **`/panel/inventory/history`** ([app/panel/inventory/history/page.tsx](src/app/panel/inventory/history/page.tsx)) — full audit log, parallel `Promise.all` loads `getAllMovements(1000)` + `getInventoryRows()` (the latter purely to get product options for the filter so even products *without* movements appear in the dropdown). Toolbar: text search (matches product title and note, with `stripHtml` so rich-text content is searchable as plain text), `MultiSelect` for reasons, `MultiSelect` for products (with `maxVisibleTags={2}` so the trigger doesn't blow up the toolbar grid when several are selected). Mobile = `HistoryCard` (1-line layout: thumbnail + product + delta + meta), desktop = `DataTable` with sortable columns via `historyColumns`. Both reuse `useInventoryTable` (URL-synced sort + pagination, default page size 10).
 
-### Profit on the dashboard
+### Admin dashboard (`/panel`)
 
-[`<ProfitOverview />`](src/pages_flow/panel/dashboard/sections/ProfitOverview.tsx) on `/panel`, server shell + client inner (same pattern as `RecentNotifications`):
+The dashboard is intentionally narrow: it shows **performance for the selected period** (single date selector at the top drives everything in this section), **operational tasks that need action** (current state, not period-filtered), and **recent notifications**. Active promotions / promo codes / catalog stats / users count / delivery total — all moved out, accessible from their own `/panel/*` pages.
 
-- Server: [`getProfitClientData()`](src/pages_flow/panel/dashboard/profitQueries.ts) loads ALL paid `order_items` (with order `updated_at`, regular product info, and mix `mix_composition`) plus a batch cost map for every product_id referenced — single round-trip, never per-row.
-- Client: [`ProfitOverviewInner`](src/pages_flow/panel/dashboard/sections/ProfitOverviewInner.tsx) reads the `range` filter via `useFilterBar("range")` (URL-synced through a thin `SearchParamsFilterProvider`), filters rows by `paid_at >= resolveRangeFromMs(range)` and aggregates revenue / COGS / profit / margin in a single `useMemo`. Switching the range pill is **instant** — no server roundtrip. Old orders whose `mix_composition` lacks `product_id` simply contribute COGS=0 (= revenue treated as 100% profit) instead of breaking the screen.
-- 4 `StatCard`s: Revenue · COGS · Net profit · Gross margin (margin sub-text colour-coded `≥30% moss / 10–30% orange / <10% red`).
-- "Top profit products" list — desktop = `DataTable` with sortable columns, mobile = `DataCardList` rows; both share the same `paginatedData` from `useTableSort` + `useTableData` + `useTablePagination`.
-- [`<DateRangeSelector />`](src/pages_flow/panel/dashboard/DateRangeSelector.tsx) uses brand-styled `Select` with options Today / Last 7 days / Last 30 days / This month / All time (default `30d`).
-- **Important — module split for client safety:** `profitQueries.ts` is server-only (imports `supabase.server`); pure types and helpers (`ProfitRange`, `ProfitClientData`, `resolveRangeFromMs`, `isValidRange`) live in [`profitTypes.ts`](src/pages_flow/panel/dashboard/profitTypes.ts) so the client inner imports from there without dragging server modules into the browser bundle.
+Three blocks, in order:
+
+1. **Performance** — [`<ProfitOverview />`](src/pages_flow/panel/dashboard/sections/ProfitOverview.tsx) (server shell + client inner, same pattern as `RecentNotifications`).
+   - Server: [`getProfitClientData()`](src/pages_flow/panel/dashboard/profitQueries.ts) runs **two parallel queries** — paid `order_items` (with order `updated_at`, `promo_discount` per unit, regular product info, and mix `mix_composition`) + all PAID/FAILED/CANCELLED orders (status, `updated_at`, `total`) — plus a batch cost map for every `product_id` referenced. One round-trip; client filters by range and aggregates.
+   - Client: [`ProfitOverviewInner`](src/pages_flow/panel/dashboard/sections/ProfitOverviewInner.tsx) reads the `range` filter via `useFilterBar("range")` (URL-synced through a thin `SearchParamsFilterProvider`), filters items by `paid_at >= resolveRangeFromMs(range)` and orders by `changed_at`, aggregates everything in a single `useMemo`. Switching the range pill is **instant** — no server roundtrip.
+   - 4 `StatCard`s:
+     - **Revenue** — `Σ((price − promo_discount) × quantity)` for PAID order_items in period. Net of product promotions **and** promo codes; excludes delivery fee.
+     - **Profit** — `Revenue − COGS`, with `{margin}% margin · Healthy/Watch/Low` sub colour-coded `≥30% moss / 10–30% orange / <10% red`.
+     - **Orders** — count of PAID orders in period; sub `Avg AED X` = `Σ orders.total / paidCount` (the AOV includes delivery fee, since that's what the customer paid).
+     - **Issues** — count of FAILED + CANCELLED in period; sub `{N} failed · {M} cancelled` in red, or `All clear` in moss when zero.
+   - **Promo-code apportionment in mix top sellers:** for mix lines, per-cell revenue is scaled by `(price − promo_discount) / price` so per-product attribution sums back to the line revenue. COGS attribution is independent of selling price.
+   - "Top sellers" list (was "Top profit products") — desktop = `DataTable` with sortable columns (`Product · Revenue · Cost · Profit · Margin`), mobile = `DataCardList` rows.
+   - [`<DateRangeSelector />`](src/pages_flow/panel/dashboard/DateRangeSelector.tsx) — brand-styled `Select`, options Today / Last 7 days / Last 30 days / This month / All time (default `30d`).
+   - **Module split for client safety:** `profitQueries.ts` is server-only (imports `supabase.server`); pure types and helpers (`ProfitRange`, `ProfitClientData`, `ProfitClientOrder`, `DashboardOrderStatus`, `resolveRangeFromMs`, `isValidRange`) live in [`profitTypes.ts`](src/pages_flow/panel/dashboard/profitTypes.ts) so the client inner imports from there without dragging server modules into the browser bundle.
+
+2. **Needs attention** — [`<NeedsAttention />`](src/pages_flow/panel/dashboard/sections/NeedsAttention.tsx) (server component, **not** period-filtered — these are current-state operational signals).
+   - Two clickable cards rendered only when count > 0:
+     - **Orders to fulfill** — PAID orders with `is_fulfilled=false`. Click → `/panel/all-orders?status=PAID&fulfilled=no`.
+     - **Low stock** — `getInventoryRows()` filtered to `status === "low" || status === "out"`. Click → `/panel/inventory?status=low`.
+   - Renders `null` when nothing needs attention (no empty section heading shown).
+
+3. **Recent notifications** — existing [`RecentNotifications`](src/pages_flow/panel/dashboard/RecentNotifications.tsx) + [`MarkAllReadButton`](src/pages_flow/panel/dashboard/MarkAllReadButton.tsx).
 
 ### Product form integration
 

@@ -123,7 +123,6 @@ export default async function Home() {
       {showPopup && popup && (
         <MarketingPopupDialog
           id={popup.id}
-          version={popup.version}
           title={popup.title}
           body={popup.body}
           image_url={popup.image_url}

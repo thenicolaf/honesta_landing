@@ -12,7 +12,6 @@ export type MarketingPopup = {
   cta_url: string | null;
   starts_at: string | null;
   ends_at: string | null;
-  version: number;
   created_at: string;
   updated_at: string;
 };
@@ -113,8 +112,6 @@ export async function updateMarketingPopup(
       .neq("id", id);
   }
 
-  // version + updated_at are bumped by the BEFORE UPDATE trigger
-  // (marketing_popup_bump_version_trg). One round-trip total.
   const { error } = await supabaseAdmin
     .from("marketing_popup")
     .update(data)

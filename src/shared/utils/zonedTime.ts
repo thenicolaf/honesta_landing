@@ -51,9 +51,10 @@ export function isPastCutoff(
 
 /**
  * Earliest deliverable date considering both `delivery_days` lead time and the
- * daily `cutoff_hour`. Lead time always pushes the date by `deliveryDays` days
- * (default 1 = next-day delivery). Cut-off bumps it by 1 extra day if the
- * order is placed past the hour.
+ * daily `cutoff_hour`. `deliveryDays = 0` = same-day, `1` = next-day, `2+` =
+ * N-day lead time. Cut-off bumps the result by 1 extra day if the order is
+ * placed past the hour — so for `deliveryDays=0`, before cut-off earliest is
+ * today, after cut-off it's tomorrow.
  */
 export function getMinDeliveryDate(
   cutoffHour: number,
@@ -62,7 +63,7 @@ export function getMinDeliveryDate(
   timeZone: string = DEFAULT_TIMEZONE,
 ): Date {
   const today = startOfDay(wallClockIn(timeZone, at));
-  const leadDays = Math.max(1, deliveryDays);
+  const leadDays = Math.max(0, deliveryDays);
   const offset = leadDays + (isPastCutoff(cutoffHour, at, timeZone) ? 1 : 0);
   return addDays(today, offset);
 }

@@ -30,11 +30,24 @@ export async function assembleMixAction(
     const presetIds = selections.map((s) => s.presetId);
     const { data: presets } = await supabaseAdmin
       .from("mix_box_presets")
-      .select("id, product_id, weight_g, price, product:products(title, image_url)")
+      .select(
+        "id, product_id, weight_g, price, product:products(title, image_url, status)",
+      )
       .eq("box_id", boxId)
       .in("id", presetIds);
 
     if (!presets || presets.length !== presetIds.length) {
+      return { error: "Some selected products are no longer available." };
+    }
+
+    const allPublished = presets.every((p) => {
+      const rawProduct = p.product as unknown;
+      const product = (
+        Array.isArray(rawProduct) ? rawProduct[0] : rawProduct
+      ) as { status?: string } | null;
+      return product?.status === "published";
+    });
+    if (!allPublished) {
       return { error: "Some selected products are no longer available." };
     }
 

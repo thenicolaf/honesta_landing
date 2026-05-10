@@ -28,10 +28,15 @@ export function resolveRangeFromMs(
   return d.getTime();
 }
 
+export type DashboardOrderStatus = "PAID" | "FAILED" | "CANCELLED";
+
 export interface ProfitClientRow {
   /** Order updated_at (ms) — used for client-side range filtering. */
   paid_at: number;
+  /** Per-unit price after product promotion, before promo code. */
   price: number;
+  /** Per-unit promo code discount (subtract from price for net unit revenue). */
+  promo_discount: number;
   quantity: number;
   /** Regular item: source product_id (NULL for mix-system rows). */
   product_id: string | null;
@@ -43,8 +48,18 @@ export interface ProfitClientRow {
   mix_composition: MixCompositionEntry[] | null;
 }
 
+export interface ProfitClientOrder {
+  /** Order updated_at (ms). For PAID this is effectively paid_at; for FAILED/CANCELLED it's the transition timestamp. */
+  changed_at: number;
+  status: DashboardOrderStatus;
+  /** orders.total — what the customer actually paid (incl. delivery). Used for AOV. */
+  total: number;
+}
+
 export interface ProfitClientData {
   rows: ProfitClientRow[];
   /** product_id → cost_per_100g map for ALL product_ids referenced by `rows`. */
   costs: Record<string, number>;
+  /** All orders in PAID/FAILED/CANCELLED — for KPI counts & AOV. */
+  orders: ProfitClientOrder[];
 }

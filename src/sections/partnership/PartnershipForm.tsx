@@ -32,19 +32,23 @@ export function PartnershipForm() {
   >(submitPartnershipInquiry, null);
 
   const prevState = useRef(state);
+  const formRef = useRef<HTMLFormElement>(null);
+  const submitKey = state?.submittedAt ?? 0;
+
   useEffect(() => {
     if (state === prevState.current) return;
     prevState.current = state;
     if (state?.success) {
       toastSuccess("Partnership inquiry sent!");
       trackPartnershipInquiry(state.values?.business_type);
+      formRef.current?.reset();
     }
     if (state?.error) toastError(state.error);
     if (state?.fieldErrors) toastError("Please fill in the required fields");
   }, [state]);
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    <form ref={formRef} action={formAction} className="flex flex-col gap-4">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         {/* Left column: fields + message */}
         <div className="flex flex-col gap-4">
@@ -78,6 +82,7 @@ export function PartnershipForm() {
             <div>
               <FormLabel htmlFor="phone">WhatsApp / Phone</FormLabel>
               <FormPhoneInput
+                key={submitKey}
                 id="phone"
                 name="phone"
                 defaultValue={state?.values?.phone}
@@ -94,6 +99,7 @@ export function PartnershipForm() {
                 </span>
               </FormLabel>
               <FormSelect
+                key={submitKey}
                 id="business_type"
                 name="business_type"
                 defaultValue={state?.values?.business_type ?? ""}
@@ -131,6 +137,7 @@ export function PartnershipForm() {
             </CollapsibleTrigger>
             <CollapsibleContent className="pt-2">
               <AddressWithMap
+                key={submitKey}
                 {...parseAddress(state?.values?.address)}
                 defaultLat={state?.values?.lat}
                 defaultLng={state?.values?.lng}
@@ -147,6 +154,7 @@ export function PartnershipForm() {
         </div>
         <div className="hidden lg:block">
           <AddressWithMap
+            key={submitKey}
             {...parseAddress(state?.values?.address)}
             defaultLat={state?.values?.lat}
             defaultLng={state?.values?.lng}

@@ -53,6 +53,11 @@ export async function syncCartPrices(
       return [];
     }
 
+    if (product.status !== "published" && product.status !== "system") {
+      changed = true;
+      return [];
+    }
+
     const variant = product.product_variants.find(
       (v) => v.id === item.variantId,
     );

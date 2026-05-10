@@ -54,7 +54,10 @@ export async function getCartFromDb(
 
   if (error || !data) return [];
 
-  const rows = data as unknown as CartDbRow[];
+  const rows = (data as unknown as CartDbRow[]).filter((r) => {
+    const status = r.product_variants.products.status;
+    return status === "published" || status === "system";
+  });
 
   const mixVariantIds = rows
     .filter((r) => r.product_variants.products.status === "system")

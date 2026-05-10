@@ -199,26 +199,19 @@ export function MarketingPopupForm({ popup }: MarketingPopupFormProps) {
               </TooltipTrigger>
               <TooltipContent className="w-64 whitespace-normal text-left leading-snug">
                 Activating this popup will automatically deactivate any other
-                active popup. Visitors see it once per content version — saving
-                any change re-prompts everyone.
+                active popup. Each visitor sees it at most once per browser
+                session.
               </TooltipContent>
             </Tooltip>
           </div>
         </div>
       </Card>
 
-      <div className="flex items-center justify-between gap-3">
-        {!isCreate && (
-          <p className="font-body text-2xs text-earth/50">
-            Current version: <strong>{popup.version}</strong>
-          </p>
-        )}
-        <div className="ml-auto flex items-center gap-3">
-          <Button href="/panel/marketing-popup" variant="secondary" size="sm">
-            Cancel
-          </Button>
-          <SubmitButton isCreate={isCreate} />
-        </div>
+      <div className="flex items-center justify-end gap-3">
+        <Button href="/panel/marketing-popup" variant="secondary" size="sm">
+          Cancel
+        </Button>
+        <SubmitButton isCreate={isCreate} />
       </div>
     </form>
   );

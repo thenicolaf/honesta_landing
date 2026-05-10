@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState } from "react";
-import { useRealtimeNotifications } from "./hooks/useRealtimeNotifications";
+import { useNotificationsBackgroundPolling } from "./hooks/useNotificationsBackgroundPolling";
 import { useServiceWorker } from "./hooks/useServiceWorker";
 import type {
   NotificationsContextValue,
@@ -29,18 +29,17 @@ export function NotificationsProvider({
   allowNotifications = true,
   initialUnreadCount = 0,
 }: NotificationsProviderProps) {
-  const active = !!role && !!userId;
   const [pushState, setPushState] = useState<PushState>("unsupported");
 
-  const {
-    notifications,
-    unreadCount,
-    isLoading,
-    markAsRead,
-    markAllAsRead,
-    refresh,
-  } = useRealtimeNotifications(active, role, userId, allowNotifications, initialUnreadCount);
+  const { unreadCount, markAsRead, markAllAsRead, refresh } =
+    useNotificationsBackgroundPolling({
+      role,
+      userId,
+      allowNotifications,
+      initialUnreadCount,
+    });
 
+  const active = !!role && !!userId;
   const { subscribeToPush, unsubscribeFromPush } = useServiceWorker(
     active,
     setPushState,
@@ -49,9 +48,10 @@ export function NotificationsProvider({
   return (
     <NotificationsContext.Provider
       value={{
-        notifications,
+        userId,
+        role,
+        allowNotifications,
         unreadCount,
-        isLoading,
         markAsRead,
         markAllAsRead,
         refresh,
