@@ -1,5 +1,9 @@
-import { isBefore, isSameDay } from "date-fns";
-import { getZoneIsoWeekday, getMinDeliveryDate } from "./zonedTime";
+import { format, isBefore, isSameDay, startOfDay } from "date-fns";
+import { getMinDeliveryDate, getZoneIsoWeekday, nowInZone } from "./zonedTime";
+
+function padTime(t: string): string {
+  return t.length === 5 ? `${t}:00` : t;
+}
 
 export interface DeliverySlotShape {
   id: string;
@@ -45,10 +49,14 @@ export function getAvailableSlotsForDate<
   );
 
   const isoWeekday = getZoneIsoWeekday(date);
+  const isToday = isSameDay(date, startOfDay(nowInZone(now)));
+  const nowTimeOfDay = isToday ? format(nowInZone(now), "HH:mm:ss") : null;
+
   return [...slots]
     .filter((s) => s.is_active)
     .filter((s) => s.available_weekdays.includes(isoWeekday))
     .filter((s) => !blockedSlotIds.has(s.id))
+    .filter((s) => !isToday || padTime(s.end_time) > nowTimeOfDay!)
     .sort((a, b) => a.start_time.localeCompare(b.start_time));
 }
 
