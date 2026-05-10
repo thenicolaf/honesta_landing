@@ -127,7 +127,7 @@ src/
 │   ├── orders/                 # OrdersPage + OrderCards (user order history) + OrderMixComposition
 │   ├── mix/                    # MixBuilderPage + BoxSelector + PresetGrid + PresetTile + MixSummary + actions (assembleMix, cleanupOrphanedMixVariants)
 │   ├── panel/
-│   │   ├── dashboard/          # DashboardPage + types + ProfitOverview (sections/) + DateRangeSelector + profitQueries / profitTypes
+│   │   ├── dashboard/          # ProfitOverview + NeedsAttention (sections/) + DateRangeSelector + RecentNotifications + profitQueries / profitTypes
 │   │   ├── orders/             # AllOrdersPage + AdminOrderCards + filters + useOrdersTable
 │   │   ├── partnerships/       # PartnershipsPage + InquiryCards + filters + useInquiriesTable
 │   │   ├── categories/         # CategoryForm + actions
@@ -1291,16 +1291,32 @@ Algorithm:
   - **History** ([MovementsHistory](src/pages_flow/panel/inventory/MovementsHistory.tsx)) — `DataTable` of last 50 movements for one product (`Date · Reason · Δ · Note`) with local `useTableSort` + `useTablePagination`, no URL state (it's modal-scoped). Footer link `View all history → /panel/inventory/history?product=…` opens the global page pre-filtered. Module-level `Map<product_id, StockMovement[]>` cache makes reopening the same product instant; `invalidateMovementsCache(productId)` is exported and called from `AdjustStockForm` after success.
 - **`/panel/inventory/history`** ([app/panel/inventory/history/page.tsx](src/app/panel/inventory/history/page.tsx)) — full audit log, parallel `Promise.all` loads `getAllMovements(1000)` + `getInventoryRows()` (the latter purely to get product options for the filter so even products *without* movements appear in the dropdown). Toolbar: text search (matches product title and note, with `stripHtml` so rich-text content is searchable as plain text), `MultiSelect` for reasons, `MultiSelect` for products (with `maxVisibleTags={2}` so the trigger doesn't blow up the toolbar grid when several are selected). Mobile = `HistoryCard` (1-line layout: thumbnail + product + delta + meta), desktop = `DataTable` with sortable columns via `historyColumns`. Both reuse `useInventoryTable` (URL-synced sort + pagination, default page size 10).
 
-### Profit on the dashboard
+### Admin dashboard (`/panel`)
 
-[`<ProfitOverview />`](src/pages_flow/panel/dashboard/sections/ProfitOverview.tsx) on `/panel`, server shell + client inner (same pattern as `RecentNotifications`):
+The dashboard is intentionally narrow: it shows **performance for the selected period** (single date selector at the top drives everything in this section), **operational tasks that need action** (current state, not period-filtered), and **recent notifications**. Active promotions / promo codes / catalog stats / users count / delivery total — all moved out, accessible from their own `/panel/*` pages.
 
-- Server: [`getProfitClientData()`](src/pages_flow/panel/dashboard/profitQueries.ts) loads ALL paid `order_items` (with order `updated_at`, regular product info, and mix `mix_composition`) plus a batch cost map for every product_id referenced — single round-trip, never per-row.
-- Client: [`ProfitOverviewInner`](src/pages_flow/panel/dashboard/sections/ProfitOverviewInner.tsx) reads the `range` filter via `useFilterBar("range")` (URL-synced through a thin `SearchParamsFilterProvider`), filters rows by `paid_at >= resolveRangeFromMs(range)` and aggregates revenue / COGS / profit / margin in a single `useMemo`. Switching the range pill is **instant** — no server roundtrip. Old orders whose `mix_composition` lacks `product_id` simply contribute COGS=0 (= revenue treated as 100% profit) instead of breaking the screen.
-- 4 `StatCard`s: Revenue · COGS · Net profit · Gross margin (margin sub-text colour-coded `≥30% moss / 10–30% orange / <10% red`).
-- "Top profit products" list — desktop = `DataTable` with sortable columns, mobile = `DataCardList` rows; both share the same `paginatedData` from `useTableSort` + `useTableData` + `useTablePagination`.
-- [`<DateRangeSelector />`](src/pages_flow/panel/dashboard/DateRangeSelector.tsx) uses brand-styled `Select` with options Today / Last 7 days / Last 30 days / This month / All time (default `30d`).
-- **Important — module split for client safety:** `profitQueries.ts` is server-only (imports `supabase.server`); pure types and helpers (`ProfitRange`, `ProfitClientData`, `resolveRangeFromMs`, `isValidRange`) live in [`profitTypes.ts`](src/pages_flow/panel/dashboard/profitTypes.ts) so the client inner imports from there without dragging server modules into the browser bundle.
+Three blocks, in order:
+
+1. **Performance** — [`<ProfitOverview />`](src/pages_flow/panel/dashboard/sections/ProfitOverview.tsx) (server shell + client inner, same pattern as `RecentNotifications`).
+   - Server: [`getProfitClientData()`](src/pages_flow/panel/dashboard/profitQueries.ts) runs **two parallel queries** — paid `order_items` (with order `updated_at`, `promo_discount` per unit, regular product info, and mix `mix_composition`) + all PAID/FAILED/CANCELLED orders (status, `updated_at`, `total`) — plus a batch cost map for every `product_id` referenced. One round-trip; client filters by range and aggregates.
+   - Client: [`ProfitOverviewInner`](src/pages_flow/panel/dashboard/sections/ProfitOverviewInner.tsx) reads the `range` filter via `useFilterBar("range")` (URL-synced through a thin `SearchParamsFilterProvider`), filters items by `paid_at >= resolveRangeFromMs(range)` and orders by `changed_at`, aggregates everything in a single `useMemo`. Switching the range pill is **instant** — no server roundtrip.
+   - 4 `StatCard`s:
+     - **Revenue** — `Σ((price − promo_discount) × quantity)` for PAID order_items in period. Net of product promotions **and** promo codes; excludes delivery fee.
+     - **Profit** — `Revenue − COGS`, with `{margin}% margin · Healthy/Watch/Low` sub colour-coded `≥30% moss / 10–30% orange / <10% red`.
+     - **Orders** — count of PAID orders in period; sub `Avg AED X` = `Σ orders.total / paidCount` (the AOV includes delivery fee, since that's what the customer paid).
+     - **Issues** — count of FAILED + CANCELLED in period; sub `{N} failed · {M} cancelled` in red, or `All clear` in moss when zero.
+   - **Promo-code apportionment in mix top sellers:** for mix lines, per-cell revenue is scaled by `(price − promo_discount) / price` so per-product attribution sums back to the line revenue. COGS attribution is independent of selling price.
+   - "Top sellers" list (was "Top profit products") — desktop = `DataTable` with sortable columns (`Product · Revenue · Cost · Profit · Margin`), mobile = `DataCardList` rows.
+   - [`<DateRangeSelector />`](src/pages_flow/panel/dashboard/DateRangeSelector.tsx) — brand-styled `Select`, options Today / Last 7 days / Last 30 days / This month / All time (default `30d`).
+   - **Module split for client safety:** `profitQueries.ts` is server-only (imports `supabase.server`); pure types and helpers (`ProfitRange`, `ProfitClientData`, `ProfitClientOrder`, `DashboardOrderStatus`, `resolveRangeFromMs`, `isValidRange`) live in [`profitTypes.ts`](src/pages_flow/panel/dashboard/profitTypes.ts) so the client inner imports from there without dragging server modules into the browser bundle.
+
+2. **Needs attention** — [`<NeedsAttention />`](src/pages_flow/panel/dashboard/sections/NeedsAttention.tsx) (server component, **not** period-filtered — these are current-state operational signals).
+   - Two clickable cards rendered only when count > 0:
+     - **Orders to fulfill** — PAID orders with `is_fulfilled=false`. Click → `/panel/all-orders?status=PAID&fulfilled=no`.
+     - **Low stock** — `getInventoryRows()` filtered to `status === "low" || status === "out"`. Click → `/panel/inventory?status=low`.
+   - Renders `null` when nothing needs attention (no empty section heading shown).
+
+3. **Recent notifications** — existing [`RecentNotifications`](src/pages_flow/panel/dashboard/RecentNotifications.tsx) + [`MarkAllReadButton`](src/pages_flow/panel/dashboard/MarkAllReadButton.tsx).
 
 ### Product form integration
 

@@ -1,24 +1,21 @@
 import { Suspense } from "react";
 import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
 import { RefreshButton } from "@/app/panel/_components/RefreshButton";
-import { SkeletonSection } from "@/shared/ui";
+import { Skeleton, SkeletonSection } from "@/shared/ui";
 import { SectionHeading } from "@/pages_flow/panel/dashboard/ui";
-import { OrdersOverview } from "@/pages_flow/panel/dashboard/sections/OrdersOverview";
 import { ProfitOverview } from "@/pages_flow/panel/dashboard/sections/ProfitOverview";
-import { CatalogOverview } from "@/pages_flow/panel/dashboard/sections/CatalogOverview";
-import { PartnershipsOverview } from "@/pages_flow/panel/dashboard/sections/PartnershipsOverview";
-import { PromotionsOverview } from "@/pages_flow/panel/dashboard/sections/PromotionsOverview";
-import { PromoCodesOverview } from "@/pages_flow/panel/dashboard/sections/PromoCodesOverview";
+import { NeedsAttention } from "@/pages_flow/panel/dashboard/sections/NeedsAttention";
 import { RecentNotifications } from "@/pages_flow/panel/dashboard/RecentNotifications";
 import { MarkAllReadButton } from "@/pages_flow/panel/dashboard/MarkAllReadButton";
 
-function OrdersSkeleton() {
+function PerformanceSkeleton() {
   return (
     <>
-      <SkeletonSection count={4} className="grid-cols-2 md:grid-cols-3 xl:grid-cols-4" />
-      <SkeletonSection count={3} label="Orders by Status" className="grid-cols-1 sm:grid-cols-3" />
-      <SkeletonSection count={3} label="Product Sales" className="grid-cols-1 sm:grid-cols-2 md:grid-cols-3" />
-      <SkeletonSection count={3} label="Mix Sales" className="grid-cols-1 sm:grid-cols-2 md:grid-cols-3" />
+      <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
+        <Skeleton className="h-4 w-28" />
+        <Skeleton className="h-9 w-full sm:w-48" />
+      </div>
+      <SkeletonSection count={4} className="grid-cols-2 md:grid-cols-4" />
     </>
   );
 }
@@ -28,30 +25,12 @@ export default function PanelPage() {
     <>
       <AdminPageHeader title="Dashboard" actions={<RefreshButton />} />
 
-      <Suspense
-        fallback={<SkeletonSection count={4} label="Profit" className="grid-cols-2 md:grid-cols-4" />}
-      >
+      <Suspense fallback={<PerformanceSkeleton />}>
         <ProfitOverview />
       </Suspense>
 
-      <Suspense fallback={<OrdersSkeleton />}>
-        <OrdersOverview />
-      </Suspense>
-
-      <Suspense fallback={<SkeletonSection count={1} label="Partnerships" className="grid-cols-2 md:grid-cols-4" />}>
-        <PartnershipsOverview />
-      </Suspense>
-
-      <Suspense fallback={<SkeletonSection count={3} label="Active Promotions" className="grid-cols-1 sm:grid-cols-2 md:grid-cols-3" />}>
-        <PromotionsOverview />
-      </Suspense>
-
-      <Suspense fallback={<SkeletonSection count={3} label="Promo Codes" className="grid-cols-1 sm:grid-cols-2 md:grid-cols-3" />}>
-        <PromoCodesOverview />
-      </Suspense>
-
-      <Suspense fallback={<SkeletonSection count={8} label="Catalog" className="grid-cols-2 md:grid-cols-3 xl:grid-cols-4" />}>
-        <CatalogOverview />
+      <Suspense fallback={null}>
+        <NeedsAttention />
       </Suspense>
 
       <div className="flex items-center justify-between mb-3">
