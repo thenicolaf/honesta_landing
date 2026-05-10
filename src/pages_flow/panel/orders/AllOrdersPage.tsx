@@ -6,12 +6,13 @@ import { adminOrderColumns } from "@/pages_flow/orders/columns";
 import type { AdminOrder } from "@/pages_flow/orders/types";
 import { useFilteredOrders } from "./useFilteredOrders";
 import { useOrdersTable } from "./useOrdersTable";
-import { useRealtimeOrders } from "./useRealtimeOrders";
+import { useAutoRouterRefresh } from "@/shared/hooks/useAutoRouterRefresh";
 import { OrderFilters } from "./OrderFilters";
 import { AdminOrderCards } from "./AdminOrderCards";
 
-export function AllOrdersInner({ orders: initial }: { orders: AdminOrder[] }) {
-  const orders = useRealtimeOrders(initial);
+export function AllOrdersInner({ orders }: { orders: AdminOrder[] }) {
+  useAutoRouterRefresh(["panel-orders-refresh"]);
+
   const { filtered, searchFilter, statusFilter, fulfilledFilter } =
     useFilteredOrders(orders);
 

@@ -8,6 +8,7 @@ import {
   CartProvider,
   FavoritesProvider,
   NotificationsProvider,
+  ReactQueryProvider,
 } from "@/providers";
 import { ToastProvider, CookieConsent, WhatsAppFloatingButton } from "@/shared/ui";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
@@ -17,6 +18,7 @@ import { COOKIE_CONSENT_KEY } from "@/shared/consts";
 import { cookies } from "next/headers";
 import { Analytics } from "./_components/Analytics";
 import { GAEventDispatcher } from "./_components/GAEventDispatcher";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Suspense } from "react";
 
 export { siteMetadata as metadata };
@@ -76,26 +78,28 @@ export default async function RootLayout({
         className={`${cormorant.variable} ${jost.variable} antialiased flex flex-col min-h-screen`}
         suppressHydrationWarning
       >
-        <CartProvider
-          userId={user?.id ?? null}
-          initialItemCount={cartItemCount}
-        >
-          <FavoritesProvider userId={user?.id ?? null}>
-            <NotificationsProvider
-              role={profile?.role ?? null}
-              userId={user?.id}
-              allowNotifications={profile?.allow_notifications ?? true}
-              initialUnreadCount={unreadNotificationCount}
-            >
-              <Navbar
-                user={user ? { email: user.email! } : null}
-                isAdmin={profile?.role === "admin"}
-              />
-              {children}
-              <Footer />
-            </NotificationsProvider>
-          </FavoritesProvider>
-        </CartProvider>
+        <ReactQueryProvider>
+          <CartProvider
+            userId={user?.id ?? null}
+            initialItemCount={cartItemCount}
+          >
+            <FavoritesProvider userId={user?.id ?? null}>
+              <NotificationsProvider
+                role={profile?.role ?? null}
+                userId={user?.id}
+                allowNotifications={profile?.allow_notifications ?? true}
+                initialUnreadCount={unreadNotificationCount}
+              >
+                <Navbar
+                  user={user ? { email: user.email! } : null}
+                  isAdmin={profile?.role === "admin"}
+                />
+                {children}
+                <Footer />
+              </NotificationsProvider>
+            </FavoritesProvider>
+          </CartProvider>
+        </ReactQueryProvider>
         <ToastProvider />
         <CookieConsent show={!hasConsent} />
         {process.env.NEXT_PUBLIC_WHATSAPP_SUPPORT_PHONE && (
@@ -104,6 +108,7 @@ export default async function RootLayout({
           />
         )}
         <Analytics />
+        <SpeedInsights />
         <Suspense fallback={null}>
           <GAEventDispatcher />
         </Suspense>

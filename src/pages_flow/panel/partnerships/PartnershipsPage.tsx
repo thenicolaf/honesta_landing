@@ -3,19 +3,19 @@
 import { DataTable, DataCardPagination } from "@/shared/ui";
 import { Handshake } from "lucide-react";
 import { inquiryColumns } from "./columns";
+import { useAutoRouterRefresh } from "@/shared/hooks/useAutoRouterRefresh";
 import { useFilteredInquiries } from "./useFilteredInquiries";
 import { useInquiriesTable } from "./useInquiriesTable";
-import { useRealtimeInquiries } from "./useRealtimeInquiries";
 import { InquiryFilters } from "./InquiryFilters";
 import { InquiryCards } from "./InquiryCards";
 import type { PartnershipInquiry } from "./types";
 
 export function PartnershipsInner({
-  inquiries: initial,
+  inquiries,
 }: {
   inquiries: PartnershipInquiry[];
 }) {
-  const inquiries = useRealtimeInquiries(initial);
+  useAutoRouterRefresh(["panel-partnerships-refresh"]);
   const { filtered, searchFilter, typeFilter } = useFilteredInquiries(inquiries);
 
   const { paginatedData, sort, onSort, pagination } = useInquiriesTable(

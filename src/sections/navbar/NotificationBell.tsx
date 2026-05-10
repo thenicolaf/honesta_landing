@@ -14,7 +14,7 @@ import {
 import { resolveNotificationHref } from "@/shared/utils/resolveNotificationHref";
 import { usePopover } from "@/shared/ui/Popover";
 import { formatDateTime } from "@/shared/ui/Table";
-import { useNotifications } from "@/providers";
+import { useNotifications, useNotificationsList } from "@/providers";
 import { cn } from "@/shared/utils/cn";
 
 function NotificationItem({
@@ -141,10 +141,59 @@ function DashboardLink() {
   );
 }
 
-export function NotificationBell({ isAdmin = false }: { isAdmin?: boolean }) {
-  const { notifications, unreadCount, markAsRead, markAllAsRead } =
-    useNotifications();
+function BellPopoverBody({ isAdmin }: { isAdmin: boolean }) {
+  const { unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const { data, isLoading } = useNotificationsList();
   const router = useRouter();
+  const notifications = data?.notifications ?? [];
+
+  return (
+    <>
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-earth/6">
+        <p className="font-body font-semibold text-sm text-earth">
+          Notifications
+        </p>
+        {unreadCount > 0 && (
+          <Button
+            as="button"
+            type="button"
+            variant="text"
+            size="inline"
+            onClick={markAllAsRead}
+          >
+            Mark all as read
+          </Button>
+        )}
+      </div>
+
+      {/* List */}
+      <div className="max-h-80 overflow-auto">
+        {isLoading && notifications.length === 0 ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-earth/15 border-t-earth" />
+          </div>
+        ) : notifications.length === 0 ? (
+          <p className="font-body text-sm text-earth/40 text-center py-8">
+            No notifications yet
+          </p>
+        ) : (
+          <NotificationList
+            notifications={notifications.slice(0, 10)}
+            onRead={markAsRead}
+            router={router}
+          />
+        )}
+      </div>
+
+      {/* Footer — admin only */}
+      {isAdmin && <DashboardLink />}
+    </>
+  );
+}
+
+export function NotificationBell({ isAdmin = false }: { isAdmin?: boolean }) {
+  const { unreadCount } = useNotifications();
 
   return (
     <Popover>
@@ -162,41 +211,7 @@ export function NotificationBell({ isAdmin = false }: { isAdmin?: boolean }) {
       </PopoverTrigger>
 
       <PopoverContent align="auto" className="flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-earth/6">
-          <p className="font-body font-semibold text-sm text-earth">
-            Notifications
-          </p>
-          {unreadCount > 0 && (
-            <Button
-              as="button"
-              type="button"
-              variant="text"
-              size="inline"
-              onClick={markAllAsRead}
-            >
-              Mark all as read
-            </Button>
-          )}
-        </div>
-
-        {/* List */}
-        <div className="max-h-80 overflow-auto">
-          {notifications.length === 0 ? (
-            <p className="font-body text-sm text-earth/40 text-center py-8">
-              No notifications yet
-            </p>
-          ) : (
-            <NotificationList
-              notifications={notifications.slice(0, 10)}
-              onRead={markAsRead}
-              router={router}
-            />
-          )}
-        </div>
-
-        {/* Footer — admin only */}
-        {isAdmin && <DashboardLink />}
+        <BellPopoverBody isAdmin={isAdmin} />
       </PopoverContent>
     </Popover>
   );

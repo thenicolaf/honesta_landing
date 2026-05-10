@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
+import type { Notification } from "@/lib/notificationsDb";
 import {
   Card,
   Loader,
@@ -21,7 +22,7 @@ import {
 import { FormLabel, FormDatePicker } from "@/shared/ui/Form";
 import { resolveNotificationHref } from "@/shared/utils/resolveNotificationHref";
 import { formatDateTime } from "@/shared/ui/Table";
-import { useNotifications } from "@/providers";
+import { useNotifications, useNotificationsList } from "@/providers";
 import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvider";
 import { useFilterBar, useFilterBarMulti } from "@/providers/FilterProvider";
 import { cn } from "@/shared/utils/cn";
@@ -33,6 +34,7 @@ const TYPE_OPTIONS = NOTIFICATION_TYPES.map((t) => ({
 
 const FILTER_KEYS = ["notifType", "dateFrom", "dateTo"];
 const MULTI_KEYS = ["notifType"];
+const EMPTY_NOTIFICATIONS: Notification[] = [];
 
 function parseDate(value: string): Date | undefined {
   if (!value) return undefined;
@@ -41,7 +43,9 @@ function parseDate(value: string): Date | undefined {
 }
 
 function RecentNotificationsInner() {
-  const { notifications, isLoading, markAsRead } = useNotifications();
+  const { markAsRead } = useNotifications();
+  const { data, isLoading } = useNotificationsList();
+  const notifications = data?.notifications ?? EMPTY_NOTIFICATIONS;
   const typeFilter = useFilterBarMulti("notifType");
   const dateFromFilter = useFilterBar("dateFrom");
   const dateToFilter = useFilterBar("dateTo");

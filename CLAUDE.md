@@ -37,6 +37,8 @@ No test suite configured yet.
 - **@blocknote/core + @blocknote/react + @blocknote/mantine** — block-based rich-text editor (Notion-like) used in the admin product form for the `note` field. Loaded lazily via `next/dynamic({ ssr: false })` — never ships in the public bundle.
 - **isomorphic-dompurify** — HTML sanitization for rich-text input. Used **only at write time** in admin server actions; render path trusts the DB and skips sanitization (jsdom is heavy on SSR).
 - **@next/third-parties** — Google Analytics 4 integration via the official `<GoogleAnalytics>` component + `sendGAEvent` helper. See **Analytics (Google Analytics 4)** for the full event catalog.
+- **@tanstack/react-query** v5 — single source of truth for all client-side data fetching that needs polling/refetch behavior (notifications, admin auto-refresh hooks). Set up in [`<ReactQueryProvider>`](src/providers/ReactQueryProvider.tsx) which exports `DEFAULT_STALE_TIME_MS = 30_000` — bump it to retune cadence across the app. **No Supabase Realtime / WebSockets anywhere** — replaced by TQ-managed polling with `refetchOnWindowFocus + refetchOnReconnect`. See **Notifications** and **Shared `useAutoRouterRefresh` hook** for the canonical patterns.
+- **@vercel/speed-insights** — Vercel's RUM library, mounted as `<SpeedInsights />` in root layout. Reports Core Web Vitals (LCP/FCP/INP/CLS) per route to the Vercel dashboard once the project is deployed.
 - **pnpm** as package manager
 
 ## Path alias
@@ -48,7 +50,7 @@ No test suite configured yet.
 ```
 src/
 ├── app/                        # Next.js App Router routes
-│   ├── layout.tsx              # Root layout — wraps with CartProvider + FavoritesProvider + NotificationsProvider
+│   ├── layout.tsx              # Root layout — wraps with ReactQueryProvider + CartProvider + FavoritesProvider + NotificationsProvider; mounts SpeedInsights + GA + GAEventDispatcher + WhatsAppFloatingButton
 │   ├── page.tsx                # Landing page (Hero, Products, Categories)
 │   ├── cart/page.tsx           # Shopping cart route
 │   ├── checkout/
@@ -136,6 +138,7 @@ src/
 │   └── PageLoader.tsx          # Thin wrapper around <Loader /> for route loading.tsx files
 │
 ├── providers/                  # React context providers + hooks
+│   ├── ReactQueryProvider.tsx  # QueryClient + defaults; exports DEFAULT_STALE_TIME_MS
 │   ├── cart/                   # Cart system (decomposed)
 │   │   ├── store.ts            # External store + promo persistence (pure functions, 0 React)
 │   │   ├── useCartSync.ts      # Load from DB/localStorage + syncPrices
@@ -143,12 +146,21 @@ src/
 │   │   ├── useCartActions.ts   # addToCart, removeFromCart, updateQuantity, clearCart
 │   │   └── CartProvider.tsx    # Thin composition of hooks + computed values
 │   ├── FavoritesProvider.tsx   # useSyncExternalStore-based favorites state + useOptimistic
-│   ├── notifications/          # Notification system (decomposed)
-│   │   ├── NotificationsProvider.tsx  # Thin provider composing hooks
-│   │   ├── types.ts            # PushState, NotificationsContextValue
-│   │   ├── hooks/useRealtimeNotifications.ts  # Supabase Realtime + fetch + markAsRead
-│   │   ├── hooks/useServiceWorker.ts  # SW registration + push subscribe/unsubscribe
-│   │   └── utils.ts            # urlBase64ToUint8Array helper
+│   ├── notifications/          # Notification system (decomposed; TQ-only, no WebSockets)
+│   │   ├── NotificationsProvider.tsx  # Thin provider — composes background polling + service worker
+│   │   ├── types.ts            # PushState, NotificationsContextValue (public surface)
+│   │   ├── filters.ts          # isNotificationForUser, formatNotificationMessage, filterByPermissions, NotificationsListData
+│   │   ├── queryKeys.ts        # notificationKeys factory — list / unread / since
+│   │   ├── utils.ts            # urlBase64ToUint8Array helper (SW)
+│   │   └── hooks/
+│   │       ├── useNotificationsBackgroundPolling.ts  # Orchestrator (~50 lines) — composes the sub-hooks below
+│   │       ├── useUnreadCountCache.ts                # unreadCount stored in TQ cache (no useState)
+│   │       ├── useToastDeduplicator.ts               # tryToast helper — at-most-once per id per session
+│   │       ├── useNotificationsSinceQuery.ts         # since-poll query (delta fetcher)
+│   │       ├── useApplySinceResults.ts               # Side-effect bridge — toast + list-cache merge + unread update
+│   │       ├── useMarkReadMutations.ts               # Mark-single + mark-all mutations with optimistic + rollback
+│   │       ├── useNotificationsList.ts               # Consumer hook — useQuery wrapper for full list with select
+│   │       └── useServiceWorker.ts                   # SW registration + push subscribe/unsubscribe
 │   ├── FilterProvider.tsx      # Generic filter context — useFilterBar(key) + useFilterBarMulti(key)
 │   └── SearchParamsFilterProvider.tsx  # Syncs FilterProvider state to URL search params (supports multiKeys)
 │
@@ -162,6 +174,8 @@ src/
 └── shared/
     ├── consts.ts               # CUSTOMER_COOKIE_KEY, DELIVERY_FEE, COOKIE_CONSENT_KEY, PUSH_OPT_OUT_KEY
     ├── consts/navLinks.ts      # SectionId enum, SECTION_IDS, NAV_LINKS, TAB_LINKS
+    ├── hooks/                  # Cross-cutting client hooks
+    │   └── useAutoRouterRefresh.ts  # TQ-scheduled router.refresh() with focus/reconnect refetch — used by admin pages instead of Realtime
     ├── ui/                     # Reusable primitives (Button, Badge, Card, Form, Collapsible, etc.)
     ├── icons/                  # SVG icon components + index.ts barrel
     ├── types/                  # Categories enum, CustomerInfo, OrderStatus, ProfileInfo, UserRole
@@ -635,7 +649,11 @@ Two files, three client instances:
 
 **Order visibility invariant.** PENDING orders are filtered out of both [src/app/panel/orders/page.tsx](src/app/panel/orders/page.tsx) (user view) and [src/app/panel/all-orders/page.tsx](src/app/panel/all-orders/page.tsx) (admin view) via `.neq("status", OrderStatus.PENDING)` in the Supabase query. The `ORDER_STATUS_OPTIONS` filter in [src/pages_flow/panel/orders/helpers.ts](src/pages_flow/panel/orders/helpers.ts) likewise only lists `Paid | Failed | Cancelled`. A freshly-created order is invisible until N-Genius (via webhook or `/checkout/result`) transitions it to PAID/FAILED/CANCELLED.
 
-**Realtime orders hook.** [src/pages_flow/panel/orders/useRealtimeOrders.ts](src/pages_flow/panel/orders/useRealtimeOrders.ts) holds no local state — it subscribes to Supabase Realtime on `orders` and calls `router.refresh()` on any UPDATE or DELETE. INSERT events are ignored (new orders are always PENDING and hidden anyway; they'll be picked up by the UPDATE that flips their status). This simplicity is deliberate — keeps the hook free of `setState`-in-effect cascades and avoids the old INSERT→order_items race condition.
+**Shared `useAutoRouterRefresh` hook.** [src/shared/hooks/useAutoRouterRefresh.ts](src/shared/hooks/useAutoRouterRefresh.ts) — generic TanStack Query hook whose `queryFn` triggers `router.refresh()` as a side-effect (returned data is `null` — TQ is used as a scheduler here, not a data store). Accepts a `queryKey` so each call site has its own cache observer. Settings: `refetchInterval: DEFAULT_STALE_TIME_MS` (30s), `refetchOnWindowFocus: true`, `refetchOnReconnect: true`, `refetchIntervalInBackground: false` (skipped when tab hidden), `staleTime: 3_000` (throttles focus/visibility refetches to once per 3s), `gcTime: 0` (cache cleared on unmount so remount re-arms first-skip). An `isFirstRef` ref skips the very first invocation on mount — the page just SSR'd with fresh data. Used by:
+- [`AllOrdersInner`](src/pages_flow/panel/orders/AllOrdersPage.tsx) — `useAutoRouterRefresh(["panel-orders-refresh"])`. Replaces the old Supabase Realtime subscription on `orders`.
+- [`PartnershipsInner`](src/pages_flow/panel/partnerships/PartnershipsPage.tsx) — `useAutoRouterRefresh(["panel-partnerships-refresh"])`. Replaces the old Supabase Realtime subscription on `partnership_inquiries`.
+
+Both eliminate the WebSocket connection without losing live updates for the admin (max 30s lag, instant on focus). New orders are still always PENDING and filtered out server-side; they appear after the UPDATE that flips status to PAID/FAILED/CANCELLED.
 
 **Order notification messages.** [src/lib/orderNotifications.ts](src/lib/orderNotifications.ts) exposes two helpers built around the same `OrderNotificationParts` shape `{ customer, totalQty, itemsText, totalText, deliverySchedule }`:
 - `buildOrderNotificationParts(order, items)` — structured pieces, used by `ResultToast` to render a multi-line JSX toast.
@@ -874,7 +892,7 @@ Categories have a `sort_order` integer column. Order is controlled via drag-and-
 
 ## Notifications
 
-Multi-role notification system with Supabase Realtime.
+Multi-role notification system, **polling-only via TanStack Query** (no Supabase Realtime / WebSockets).
 
 **Tables:**
 - `notifications` — `user_id` (UUID, nullable) + `audience` (`user_role` enum, nullable). `user_id` set = personal notification. `user_id` NULL = broadcast. `audience` NULL = all roles, specific role = only that role.
@@ -883,15 +901,39 @@ Multi-role notification system with Supabase Realtime.
 
 **Notification types:** `order_paid`, `order_failed`, `order_cancelled` (admin), `new_partnership` (admin), `new_promotion`, `new_product`, `new_category` (broadcast to all). Styles in `src/shared/ui/NotificationTypeConfig.tsx`. `new_order` is **legacy** — no longer created (was fired on PENDING-order creation, which created noise for unpaid abandoned checkouts), but its style/icon is kept in `TYPE_STYLES` so historical rows still render. Order-related admin notifications now only fire on the payment state transition (PAID/FAILED/CANCELLED).
 
-**DB layer:** `src/lib/notificationsDb.ts` — `createNotification({ type, title, message?, relatedId?, audience?, userId? })`. Default `audience = "admin"`. Queries use left join on `notification_reads` to compute `is_read`. New users only see notifications created after their registration (`created_at >= user.created_at`).
+**DB layer:** `src/lib/notificationsDb.ts` — `createNotification({ type, title, message?, relatedId?, audience?, userId? })`. Default `audience = "admin"`. Queries use left join on `notification_reads` to compute `is_read`. New users only see notifications created after their registration (`created_at >= user.created_at`). `getNotifications(..., sinceIso?)` accepts an optional ISO timestamp → adds `.gt("created_at", sinceIso)` for delta polling. The `idx_notifications_created_at` BTREE DESC index keeps these lookups cheap.
 
-**Provider:** `src/providers/notifications/` — decomposed into:
-- `NotificationsProvider.tsx` — thin provider composing `useRealtimeNotifications` + `useServiceWorker`
-- `hooks/useRealtimeNotifications.ts` — Supabase Realtime INSERT listener + fetch + markAsRead. Every accepted INSERT updates the in-memory list, bumps the unread counter, and fires `toastInfo(formatNotificationMessage(n))`. There is no path-based suppression — on `/checkout/result*` the page-level `<ResultToast>` and the realtime plain-text toast can both fire for the same `order_paid` / `order_failed` event when an admin places the order themselves; the page-level toast is the structured one, the realtime toast is the same notification an admin in another tab would see.
-- `hooks/useServiceWorker.ts` — SW registration, push subscribe/unsubscribe, auto-resubscription
-- `types.ts` — `PushState`, `NotificationsContextValue`, `NotificationsProviderProps`
+**TanStack Query setup.** Root layout wraps the tree in [`<ReactQueryProvider>`](src/providers/ReactQueryProvider.tsx) — a `QueryClient` instantiated via `useState` lazy initializer with defaults `refetchOnWindowFocus: true`, `refetchOnReconnect: true`, `staleTime: DEFAULT_STALE_TIME_MS` (30s), `retry: 1`. The exported `DEFAULT_STALE_TIME_MS` constant is reused by individual hooks that want to match the global cadence (`useNotificationsList`, `useNotificationsSinceQuery`, `useAutoRouterRefresh`).
+
+**Provider decomposition.** `src/providers/notifications/` is split by concern:
+- [`NotificationsProvider.tsx`](src/providers/notifications/NotificationsProvider.tsx) — thin provider, composes `useNotificationsBackgroundPolling` + `useServiceWorker`. Holds **no local notifications/list state** — exposes `userId`, `role`, `allowNotifications` (so consumer hooks can build their query keys), `unreadCount`, mutations (`markAsRead`/`markAllAsRead`/`refresh`), and push state.
+- [`filters.ts`](src/providers/notifications/filters.ts) — `isNotificationForUser`, `formatNotificationMessage`, `filterByPermissions`, type `NotificationsListData`. Pure functions reused by both since-effect and list-select.
+- [`queryKeys.ts`](src/providers/notifications/queryKeys.ts) — `notificationKeys` factory: `list(userId)`, `unread(userId)`, `since(userId)`. Centralised so every hook references the same keys.
+- [`types.ts`](src/providers/notifications/types.ts) — public context types (`PushState`, `NotificationsContextValue`, `NotificationsProviderProps`).
+- [`hooks/useNotificationsBackgroundPolling.ts`](src/providers/notifications/hooks/useNotificationsBackgroundPolling.ts) — orchestrator (~50 lines) that composes the focused sub-hooks below into the provider's return value `{ unreadCount, markAsRead, markAllAsRead, refresh }`.
+- [`hooks/useUnreadCountCache.ts`](src/providers/notifications/hooks/useUnreadCountCache.ts) — holds the unread counter in TQ cache via `initialData` + `staleTime: Infinity` + `refetchOn*: false` (queryFn never actually runs). Mutated via `queryClient.setQueryData(notificationKeys.unread(userId), ...)` from the since-effect and from mutations. Stored in cache instead of `useState` so React-Compiler's "setState in effect" rule isn't violated.
+- [`hooks/useToastDeduplicator.ts`](src/providers/notifications/hooks/useToastDeduplicator.ts) — returns `tryToast(n)` that fires `toastInfo` at most once per id per session via a `useRef<Set<string>>`. Prevents focus-refetch + interval double-toast.
+- [`hooks/useNotificationsSinceQuery.ts`](src/providers/notifications/hooks/useNotificationsSinceQuery.ts) — pure delta fetcher: `useQuery` polling `/api/notifications?since=<iso>&limit=20` every `DEFAULT_STALE_TIME_MS` with `refetchOnWindowFocus + refetchOnReconnect`, `staleTime: 0`. The `since` anchor lives in a `useRef` (NOT in queryKey, so the cache entry is stable) and advances inside `queryFn` after each successful response.
+- [`hooks/useApplySinceResults.ts`](src/providers/notifications/hooks/useApplySinceResults.ts) — side-effect bridge. Filters since-data via `isNotificationForUser`, fires `tryToast` for new ones, prepends them to the shared `notificationKeys.list(userId)` cache via `setQueryData` (so any mounted `useNotificationsList` consumer sees them instantly), and writes the authoritative server `unreadCount` to `notificationKeys.unread(userId)`. `onSuccess` was removed in TQ v5; this `useEffect` on `query.data` is the official replacement pattern.
+- [`hooks/useMarkReadMutations.ts`](src/providers/notifications/hooks/useMarkReadMutations.ts) — pair of `useMutation` hooks with **optimistic update + rollback on error** via shared `snapshot()` / `restore(ctx)` helpers: `onMutate` cancels in-flight list queries, snapshots `prevList`/`prevUnread`, writes the optimistic state; `onError` restores the snapshot. Returns `mutateAsync` for each (TQ guarantees these references are stable, so they can flow into context value without re-renders).
+- [`hooks/useNotificationsList.ts`](src/providers/notifications/hooks/useNotificationsList.ts) — consumer hook: pure `useQuery` wrapper around `notificationKeys.list(userId)` with `staleTime: DEFAULT_STALE_TIME_MS`. Returns the standard TQ result `{ data, isLoading, error, ... }`. Multiple consumers with the same `queryKey` share TQ's `ObserverCount` internally — first mounted observer triggers the HTTP fetch, last unmounted observer makes the query inactive. **There is no manual ref-counting in the provider** — TQ handles it. The `select` function applies `allowNotifications` filtering via `filterByPermissions` and is memoised by TQ.
+- [`hooks/useServiceWorker.ts`](src/providers/notifications/hooks/useServiceWorker.ts) — SW registration, push subscribe/unsubscribe, auto-resubscription.
+
+On `/checkout/result*` the page-level `<ResultToast>` and the toast from polling can both fire for the same `order_paid` / `order_failed` event when an admin places the order themselves; the page-level toast is the structured one, the polling toast is the same notification an admin in another tab would see — `toastedIdsRef` dedupe ensures at-most-once delivery within one session.
 
 Accepts `role`, `userId`, `allowNotifications` props. When `allowNotifications = false`, broadcast notifications are hidden (personal still shown).
+
+**Two queries. One shared cache.**
+
+- **Background polling (always active for any authenticated user).** The `since` query runs unconditionally for any user with `role` + `userId`. Interval = 60s, plus immediate refetch on window focus / network reconnect (TanStack Query built-ins). Throttling: `refetchIntervalInBackground: false` skips polls when the tab is hidden, and TQ's own dedup window prevents bursts when both `focus` + `visibilitychange` fire in quick succession. Each poll sends `?since=<lastSeen>&limit=20` — payload is usually empty. The `since` anchor is stored in a `useRef` (NOT in queryKey, so the cache entry is stable) and advances inside `queryFn` after each successful response.
+- **Lazy full list (consumer-driven).** Consumers call `useNotificationsList()` directly — TQ's observer count gates the fetch:
+  - [NotificationBell](src/sections/navbar/NotificationBell.tsx) — the list query lives inside `BellPopoverBody`, which is rendered only as a child of `<PopoverContent>`. Since `PopoverContent` is conditionally rendered only when the popover is open ([Popover.tsx:230](src/shared/ui/Popover/Popover.tsx#L230) — `{open && (...)}`), the body component (and its `useNotificationsList()` hook) mounts on open / unmounts on close. Repeat opens within `staleTime: 30s` use the TQ cache without re-fetching.
+  - [RecentNotifications](src/pages_flow/panel/dashboard/RecentNotifications.tsx) — `RecentNotificationsInner` calls `useNotificationsList()` directly. The component is only rendered on the admin dashboard `/panel/page.tsx` (admin-only via [proxy.ts](src/proxy.ts)), so it gates the lazy fetch by being mounted.
+  - Both consumers use the same `queryKey` → one HTTP request even when both are mounted (e.g. admin opens the bell on `/panel`).
+- **`EMPTY_NOTIFICATIONS` const.** Consumers fall back to a module-level constant array (`data?.notifications ?? EMPTY_NOTIFICATIONS`) instead of `?? []` — a fresh literal would change reference each render and invalidate downstream `useMemo` deps.
+- **Cache cross-talk.** The `since`-effect and the `markAsRead`/`markAllAsRead` mutations all call `queryClient.setQueryData(["notifications", "list", userId], ...)`. Even if a NotificationBell user marks an item read while RecentNotifications is mounted on another tab/panel page, both consumers' `data` updates instantly because TQ broadcasts cache writes to all observers. No prop drilling, no provider state.
+- **Toast deduplication.** `toastedIdsRef = useRef<Set<string>>(new Set())` tracks every notification id that has already been toasted in the current session. The since-effect calls `tryToast` which short-circuits if the id is already in the set. Net effect: each notification toasts at most once per session.
+- **`since` anchor.** Initialized to `new Date().toISOString()` at hook mount. Polling reports notifications created strictly after that anchor; SSR `initialUnreadCount` already counted everything before mount, so the badge stays correct without a backfill request. The anchor advances on every poll that returns rows.
 
 **User preferences:** `profiles.allow_notifications` boolean (default `true`). Toggle via `toggleNotifications()` server action in `src/pages_flow/profile/actions.ts`. UI: `NotificationSettingsSection` on profile page (non-admin only). Toggle calls `router.refresh()` to update provider props without page reload.
 
@@ -1024,6 +1066,32 @@ All phone fields use `FormPhoneInput` (displays `0XX XXX XXXX`, submits normaliz
 Used by `validateCustomer.ts`, `validateProfile.ts`, `validatePartnership.ts`.
 
 **International phone support.** Although the default display/validation is UAE (`+971`), `FormPhoneInput` is intentionally built as a full international input — it wraps `react-phone-number-input/max` with complete country metadata, `libphonenumber-js` for per-country validation, and a searchable country selector with `country-flag-icons` unicode flags. Users can switch country, paste numbers in any format, and get country-aware formatting/validation out of the box. This is a deliberate bundle-size trade-off (~300 KB for full metadata) in exchange for a friction-free UX for international customers — do not swap it for a UAE-only masked input. If bundle size matters on a specific route, prefer `next/dynamic` with conditional render over replacing the component.
+
+## WhatsApp integration
+
+Two pieces, both built around `https://wa.me/{digits}` (phone stripped to digits with `phone.replace(/\D/g, "")`, so the stored `+971…` format works without conversion).
+
+### Floating support widget
+
+[`<WhatsAppFloatingButton phone={...} />`](src/shared/ui/WhatsAppFloatingButton.tsx) is mounted in [layout.tsx](src/app/layout.tsx) only when `NEXT_PUBLIC_WHATSAPP_SUPPORT_PHONE` is set. It's a `<motion.div fixed bottom-6 right-6 z-40>` containing a 44px circular `Button` with the `IconWhatsApp` glyph in pure white on the WhatsApp brand green.
+
+- **Hidden on `/panel/*`** — admins are the support, so `usePathname().startsWith("/panel")` short-circuits the render.
+- **Entrance** — slides in from the right via `initial={{ opacity: 0, x: 100 }}` → `animate={{ opacity: 1, x: 0 }}` (`0.5s easeOut`, `delay: 0.6s`).
+- **Pulse halo** — an `aria-hidden` `motion.span` at `absolute inset-0 rounded-full bg-whatsapp pointer-events-none` runs `scale: [1, 1.6]` + `opacity: [0, 0.45, 0]` forever (`duration: 2.4s`, `easeOut`). Both ends of the cycle are at opacity 0 to avoid the visible snap that happens at the loop boundary if you start the cycle at a non-zero opacity.
+- **Hover scale** — `hover:scale-115` on the Button, eased by Button's existing `transition-all duration-300`.
+- **Tab-bar dodge (mobile only)** — wraps a nested `motion.div` that animates `y` between `0` and `-72px`. `tabBarVisible` is computed with the **same** `current > prev && !atBottom` scroll heuristic [`NavMobileTabBar`](src/sections/navbar/NavMobileTabBar.tsx) uses, so the widget and the tab bar flip together. Mobile detection uses `useSyncExternalStore(subscribeMobile, getMobileSnapshot, getMobileServerSnapshot)` against `matchMedia("(max-width: 1023.98px)")` — same breakpoint as the tab bar's `lg:hidden`. On `lg+` `isMobile` is `false` so the lift never engages.
+
+### Admin orders WhatsApp button
+
+[`<WhatsAppLink phone={...} />`](src/pages_flow/orders/ui/WhatsAppLink.tsx) — small icon-only `Button` (`size="icon"` + `text-moss/60 hover:text-moss`) wrapped in a `Tooltip`, opens `https://wa.me/{digits}` in a new tab. Mounted next to the existing `CopyText` phone in both the admin desktop `customerColumn` ([columns.tsx](src/pages_flow/orders/columns.tsx)) and the mobile [`AdminOrderCards`](src/pages_flow/panel/orders/AdminOrderCards.tsx) footer, giving admins a one-click way to message a customer about their order.
+
+### CSS tokens
+
+Brand green is exposed via `@theme` in [globals.css](src/app/globals.css):
+- `--color-whatsapp: #25d366` → `bg-whatsapp` / `border-whatsapp`
+- `--color-whatsapp-hover: #1ebe5d` → `bg-whatsapp-hover` / `border-whatsapp-hover`
+
+These are integration colours (third-party brand), not part of the design palette in **Design system** — keep them out of generic UI surfaces.
 
 ## Server Actions standard
 

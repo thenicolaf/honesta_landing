@@ -33,9 +33,17 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const limit = Number(searchParams.get("limit")) || 20;
   const offset = Number(searchParams.get("offset")) || 0;
+  const since = searchParams.get("since") ?? undefined;
 
   const [notifications, unreadCount] = await Promise.all([
-    getNotifications(auth.userId, auth.role, limit, offset, auth.createdAt),
+    getNotifications(
+      auth.userId,
+      auth.role,
+      limit,
+      offset,
+      auth.createdAt,
+      since,
+    ),
     getUnreadCount(auth.userId, auth.role, auth.createdAt),
   ]);
 
