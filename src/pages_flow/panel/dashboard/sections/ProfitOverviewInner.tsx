@@ -133,6 +133,25 @@ function aggregate(
           cost: itemCost,
         });
       }
+    } else if (row.product_name) {
+      // Orphan row — variant_id was nulled when the underlying variant was
+      // deleted (typical cause: pre-fix wholesale variant re-save). The
+      // order_items snapshot still has name/price/quantity, so we count
+      // revenue from the snapshot exactly like the All Orders page does.
+      // Cost stays 0 — `order_items` doesn't snapshot cost_per_100g, and
+      // matching by name across renamed/duplicated products is unreliable.
+      const key = `orphan:${row.product_name}`;
+      const existing = productAgg.get(key);
+      if (existing) {
+        existing.revenue += itemRevenue;
+      } else {
+        productAgg.set(key, {
+          name: row.product_name,
+          image_url: null,
+          revenue: itemRevenue,
+          cost: 0,
+        });
+      }
     }
   }
 

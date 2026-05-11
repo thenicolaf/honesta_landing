@@ -9,6 +9,7 @@ import type {
 } from "./profitTypes";
 
 interface RawOrderItem {
+  name: string | null;
   price: string | number;
   promo_discount: string | number | null;
   quantity: number;
@@ -87,7 +88,7 @@ export async function getProfitClientData(): Promise<ProfitClientData> {
     supabaseAdmin
       .from("order_items")
       .select(
-        `price, promo_discount, quantity, weight_g, mix_composition,
+        `name, price, promo_discount, quantity, weight_g, mix_composition,
          order:orders!inner(updated_at, status),
          product_variants:variant_id(
            product_id,
@@ -137,7 +138,31 @@ export async function getProfitClientData(): Promise<ProfitClientData> {
     } else {
       const variant = pickFirst(r.product_variants);
       const product = variant ? pickFirst(variant.products) : null;
-      if (!product || product.status === "system") continue;
+      // Mix-system products always skipped — they're virtual containers and
+      // their revenue is already attributed via the mix-composition branch.
+      if (product?.status === "system") continue;
+
+      if (!product) {
+        // ORPHAN row — variant_id was nulled (ON DELETE SET NULL) when the
+        // underlying variant was deleted. Historical cause: pre-fix wholesale
+        // DELETE+INSERT in the product form re-issued variant UUIDs and
+        // orphaned every order_items.variant_id pointing at the old IDs.
+        // The order_items snapshot (name, price, quantity, weight_g) survives,
+        // so we use it directly — same way the All Orders page does.
+        rows.push({
+          paid_at: paidAt,
+          price: Number(r.price),
+          promo_discount: promoDiscount,
+          quantity: r.quantity,
+          product_id: null,
+          weight_g: r.weight_g ?? 0,
+          product_name: r.name?.trim() || "Deleted product",
+          product_image_url: null,
+          mix_composition: null,
+        });
+        continue;
+      }
+
       productIds.add(product.id);
       rows.push({
         paid_at: paidAt,
