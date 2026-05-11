@@ -5,6 +5,7 @@ import { Tag, X } from "lucide-react";
 import { useCart } from "@/providers";
 import { Button, FormInput } from "@/shared/ui";
 import { trackApplyCoupon, trackCouponInvalid } from "@/lib/analytics";
+import { PROMO_CODE_MAX_LENGTH } from "@/shared/utils/promoCode";
 
 interface PromoCodeInputProps {
   isAuthenticated: boolean;
@@ -103,8 +104,15 @@ export function PromoCodeInput({
           name="promo_code_input"
           placeholder="Enter promo code"
           value={code}
-          onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 6))}
-          maxLength={6}
+          onChange={(e) =>
+            setCode(
+              e.target.value
+                .toUpperCase()
+                .replace(/[^A-Z0-9%_-]/g, "")
+                .slice(0, PROMO_CODE_MAX_LENGTH),
+            )
+          }
+          maxLength={PROMO_CODE_MAX_LENGTH}
           onClear={() => setCode("")}
           clearable
           startIcon={<Tag size={13} />}

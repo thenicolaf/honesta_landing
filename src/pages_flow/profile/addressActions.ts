@@ -21,6 +21,7 @@ export interface AddressState {
     addressCity?: string;
     addressArea?: string;
     addressBuilding?: string;
+    addressFlat?: string;
   };
   values?: AddressValues;
 }
@@ -51,11 +52,13 @@ function validateAddressFields(
   const city = (formData.get("addressCity") as string)?.trim();
   const area = (formData.get("addressArea") as string)?.trim();
   const building = (formData.get("addressBuilding") as string)?.trim();
+  const flat = (formData.get("addressFlat") as string)?.trim();
 
   if (!emirate) fieldErrors.emirate = "Emirate is required.";
   if (!city) fieldErrors.addressCity = "City is required.";
   if (!area) fieldErrors.addressArea = "Area is required.";
   if (!building) fieldErrors.addressBuilding = "Building is required.";
+  if (!flat) fieldErrors.addressFlat = "Flat / Villa is required.";
 
   return Object.keys(fieldErrors).length > 0 ? fieldErrors : null;
 }

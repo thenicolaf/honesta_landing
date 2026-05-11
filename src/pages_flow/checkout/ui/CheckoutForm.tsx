@@ -58,7 +58,7 @@ export function CheckoutForm({
   scheduleRequired,
   scheduleSelected,
 }: CheckoutFormProps) {
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(true);
 
   const addressFieldErrors = {
     ...mapAddressFieldErrors(fieldErrors),

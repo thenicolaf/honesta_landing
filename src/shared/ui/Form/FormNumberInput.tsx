@@ -100,7 +100,7 @@ export function FormNumberInput({
         placeholder={placeholder}
         min={min}
         max={max}
-        step={step}
+        step="any"
         className={cn(
           "w-full min-w-0 bg-transparent py-0 text-center",
           "font-body font-light text-sm text-earth placeholder:text-earth/30",

@@ -15,7 +15,7 @@ import {
   CollapsibleChevron,
   CollapsibleContent,
 } from "@/shared/ui";
-import { parseAddress } from "@/shared/utils/address";
+import { mapAddressFieldErrors, parseAddress } from "@/shared/utils/address";
 import { trackPartnershipInquiry } from "@/lib/analytics";
 
 const AddressWithMap = dynamic(
@@ -142,12 +142,7 @@ export function PartnershipForm() {
                 defaultLat={state?.values?.lat}
                 defaultLng={state?.values?.lng}
                 required={false}
-                fieldErrors={{
-                  emirate: state?.fieldErrors?.emirate,
-                  city: state?.fieldErrors?.addressCity,
-                  area: state?.fieldErrors?.addressArea,
-                  buildingName: state?.fieldErrors?.addressBuilding,
-                }}
+                fieldErrors={mapAddressFieldErrors(state?.fieldErrors)}
               />
             </CollapsibleContent>
           </Collapsible>
@@ -159,12 +154,7 @@ export function PartnershipForm() {
             defaultLat={state?.values?.lat}
             defaultLng={state?.values?.lng}
             required={false}
-            fieldErrors={{
-              emirate: state?.fieldErrors?.emirate,
-              city: state?.fieldErrors?.addressCity,
-              area: state?.fieldErrors?.addressArea,
-              buildingName: state?.fieldErrors?.addressBuilding,
-            }}
+            fieldErrors={mapAddressFieldErrors(state?.fieldErrors)}
           />
         </div>
       </div>

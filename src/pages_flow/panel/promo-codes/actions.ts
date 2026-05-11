@@ -85,7 +85,7 @@ function validate(values: PromoCodeValues) {
   if (!values.code) {
     fieldErrors.code = "Code is required";
   } else if (!isValidPromoCodeFormat(values.code)) {
-    fieldErrors.code = "Code must be exactly 6 characters (A-Z, 0-9)";
+    fieldErrors.code = "Code must be 3–24 characters (A-Z, 0-9, %, -, _)";
   }
 
   const dv = parseFloat(values.discount_value);
@@ -114,7 +114,6 @@ function validate(values: PromoCodeValues) {
   }
 
   if (!values.starts_at) fieldErrors.starts_at = "Start date is required";
-  if (!values.ends_at) fieldErrors.ends_at = "End date is required";
   if (
     values.starts_at &&
     values.ends_at &&
@@ -157,7 +156,7 @@ export async function createPromoCodeAction(
         max_uses_per_user: parseOptionalInt(values.max_uses_per_user),
         stack_with_promotions: values.stack_with_promotions,
         starts_at: new Date(values.starts_at).toISOString(),
-        ends_at: new Date(values.ends_at).toISOString(),
+        ends_at: values.ends_at ? new Date(values.ends_at).toISOString() : null,
         is_active: values.is_active,
       },
       productIds,
@@ -200,7 +199,7 @@ export async function updatePromoCodeAction(
         max_uses_per_user: parseOptionalInt(values.max_uses_per_user),
         stack_with_promotions: values.stack_with_promotions,
         starts_at: new Date(values.starts_at).toISOString(),
-        ends_at: new Date(values.ends_at).toISOString(),
+        ends_at: values.ends_at ? new Date(values.ends_at).toISOString() : null,
         is_active: values.is_active,
       },
       productIds,

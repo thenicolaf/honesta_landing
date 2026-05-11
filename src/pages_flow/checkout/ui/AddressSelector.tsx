@@ -147,6 +147,11 @@ function AddressHiddenInputs({ address }: { address: UserAddress }) {
       />
       <input
         type="hidden"
+        name="addressFlat"
+        value={parsed.defaultFlatNumber ?? ""}
+      />
+      <input
+        type="hidden"
         name="lat"
         value={address.coordinates ? String(address.coordinates.lat) : ""}
       />

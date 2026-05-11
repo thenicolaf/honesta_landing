@@ -23,6 +23,7 @@ import { formatDateTime } from "@/shared/ui/Table";
 import type { PromoCodeListItem } from "@/lib/promoCodesDb";
 import { deletePromoCodeAction } from "./actions";
 import { getPromoCodeStatus, type PromoCodeStatus } from "./types";
+import { cn } from "@/shared/utils/cn";
 
 const STATUS_BADGE: Record<
   PromoCodeStatus,
@@ -93,29 +94,39 @@ function PromoCodeCard({ promo }: { promo: PromoCodeListItem }) {
       ? `${promo.used_count} / ${promo.max_uses}`
       : `${promo.used_count} used`;
 
-  const scopeLabel = promo.scope === "cart" ? "Whole cart" : "Specific products";
+  const scopeLabel =
+    promo.scope === "cart" ? "Whole cart" : "Specific products";
 
   return (
     <Card>
       <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <CopyText
             text={promo.code}
-            className="font-mono font-semibold text-earth text-base tracking-widest"
+            className="font-mono font-semibold text-earth text-base tracking-widest max-w-full! wrap-anywhere"
           >
-            {promo.code}
+            <span className="wrap-anywhere text-left">{promo.code}</span>
           </CopyText>
           <p className="font-body text-2xs text-earth/50 mt-0.5">
             {discountLabel} off · {scopeLabel}
           </p>
         </div>
-        <Badge variant={badge.variant} size="sm" className={badge.className}>
+        <Badge
+          variant={badge.variant}
+          size="sm"
+          className={cn("shrink-0", badge.className)}
+        >
           {badge.label}
         </Badge>
       </div>
 
       <p className="font-body text-xs text-earth/40 mb-1">
-        {formatDateTime(promo.starts_at)} → {formatDateTime(promo.ends_at)}
+        {formatDateTime(promo.starts_at)} →{" "}
+        {promo.ends_at ? (
+          formatDateTime(promo.ends_at)
+        ) : (
+          <span className="text-earth/40">No expiry</span>
+        )}
       </p>
       <p className="font-body text-2xs text-earth/40 mb-4">{usageLabel}</p>
 
@@ -186,8 +197,26 @@ export function PromoCodeList({
   }
 
   const sorted = [...promoCodes].sort((a, b) => {
-    const sa = STATUS_ORDER[getPromoCodeStatus(a.is_active, a.starts_at, a.ends_at, a.used_count, a.max_uses)];
-    const sb = STATUS_ORDER[getPromoCodeStatus(b.is_active, b.starts_at, b.ends_at, b.used_count, b.max_uses)];
+    const sa =
+      STATUS_ORDER[
+        getPromoCodeStatus(
+          a.is_active,
+          a.starts_at,
+          a.ends_at,
+          a.used_count,
+          a.max_uses,
+        )
+      ];
+    const sb =
+      STATUS_ORDER[
+        getPromoCodeStatus(
+          b.is_active,
+          b.starts_at,
+          b.ends_at,
+          b.used_count,
+          b.max_uses,
+        )
+      ];
     return sa - sb;
   });
 

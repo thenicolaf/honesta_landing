@@ -14,7 +14,7 @@ export type PromoCode = {
   max_uses_per_user: number | null;
   stack_with_promotions: boolean;
   starts_at: string;
-  ends_at: string;
+  ends_at: string | null;
   is_active: boolean;
   created_at: string;
 };

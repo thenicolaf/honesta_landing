@@ -22,6 +22,7 @@ export interface AddressFieldErrors {
   city?: string;
   area?: string;
   buildingName?: string;
+  flatNumber?: string;
 }
 
 interface Props {
@@ -446,14 +447,18 @@ export function AddressWithMap({
 
         {/* Flat Number */}
         <div>
-          <FormLabel htmlFor="address-flat">Flat / Villa</FormLabel>
+          <FormLabel htmlFor="address-flat" required={required}>
+            Flat / Villa
+          </FormLabel>
           <FormInput
             id="address-flat"
             type="text"
             value={flatNumber}
             onChange={(e) => setFlatNumber(e.target.value)}
             placeholder="Flat / villa number"
+            state={fieldErrors?.flatNumber ? "error" : "default"}
           />
+          <FormError message={fieldErrors?.flatNumber} />
         </div>
       </div>
 
@@ -465,6 +470,7 @@ export function AddressWithMap({
       <input type="hidden" name="addressCity" value={city} />
       <input type="hidden" name="addressArea" value={area} />
       <input type="hidden" name="addressBuilding" value={buildingName} />
+      <input type="hidden" name="addressFlat" value={flatNumber} />
 
       {isLoaded && (
         <div className="mt-3 overflow-hidden rounded-xl border border-parchment">

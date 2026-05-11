@@ -128,11 +128,13 @@ export function mapAddressFieldErrors(fieldErrors?: {
   addressCity?: string;
   addressArea?: string;
   addressBuilding?: string;
+  addressFlat?: string;
 }) {
   return {
     emirate: fieldErrors?.emirate,
     city: fieldErrors?.addressCity,
     area: fieldErrors?.addressArea,
     buildingName: fieldErrors?.addressBuilding,
+    flatNumber: fieldErrors?.addressFlat,
   };
 }
