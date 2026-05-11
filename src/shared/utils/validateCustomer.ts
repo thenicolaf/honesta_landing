@@ -6,6 +6,7 @@ export type CustomerErrors = Partial<Record<keyof CustomerInfo, string>> & {
   addressCity?: string;
   addressArea?: string;
   addressBuilding?: string;
+  addressFlat?: string;
   deliveryDate?: string;
   deliverySlot?: string;
 };
@@ -35,11 +36,13 @@ export function validateCustomer(
   const addressBuilding = (
     customer.addressBuilding as string | undefined
   )?.trim();
+  const addressFlat = (customer.addressFlat as string | undefined)?.trim();
 
   if (!emirate) errors.emirate = "Emirate is required.";
   if (!addressCity) errors.addressCity = "City is required.";
   if (!addressArea) errors.addressArea = "Area is required.";
   if (!addressBuilding) errors.addressBuilding = "Building is required.";
+  if (!addressFlat) errors.addressFlat = "Flat / Villa is required.";
 
   return Object.keys(errors).length > 0 ? errors : null;
 }

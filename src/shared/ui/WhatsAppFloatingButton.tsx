@@ -13,6 +13,11 @@ interface WhatsAppFloatingButtonProps {
 
 const TAB_BAR_LIFT = 72;
 const MOBILE_QUERY = "(max-width: 1023.98px)";
+const USER_PANEL_PREFIXES = [
+  "/panel/profile",
+  "/panel/favorites",
+  "/panel/orders",
+];
 
 const subscribeMobile = (cb: () => void) => {
   if (typeof window === "undefined") return () => {};
@@ -48,7 +53,10 @@ export function WhatsAppFloatingButton({ phone }: WhatsAppFloatingButtonProps) {
 
   const digits = phone.replace(/\D/g, "");
   if (!digits) return null;
-  if (pathname?.startsWith("/panel")) return null;
+  const isUserPanelRoute = USER_PANEL_PREFIXES.some(
+    (p) => pathname === p || pathname?.startsWith(`${p}/`),
+  );
+  if (pathname?.startsWith("/panel") && !isUserPanelRoute) return null;
 
   const liftY = isMobile && tabBarVisible ? -TAB_BAR_LIFT : 0;
 

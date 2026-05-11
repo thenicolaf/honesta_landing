@@ -20,7 +20,7 @@ export function CartGrid() {
           key={item.variantId}
           item={item}
           promoDiscountPerUnit={perItemPromoDiscounts.get(item.variantId) ?? 0}
-          promoCodeEndsAt={appliedPromoCode?.endsAt}
+          promoCodeEndsAt={appliedPromoCode?.endsAt ?? undefined}
           onUpdateQuantity={updateItemQuantity}
           onRemove={removeFromCart}
         />

@@ -6,7 +6,6 @@ import { motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
 import { Dialog, DialogContent, Button, RichText } from "@/shared/ui";
 import { IconBotanical, IconLeaf } from "@/shared/icons";
-import { cn } from "@/shared/utils/cn";
 
 const STORAGE_KEY = "honesta_popup_seen_session";
 const OPEN_DELAY_MS = 5000;
@@ -75,32 +74,27 @@ export function MarketingPopupDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        size="full"
+        size="xl"
         className="overflow-hidden p-0 rounded-3xl shadow-2xl shadow-earth/30"
       >
-        <div
-          className={cn(
-            "relative grid grid-cols-1",
-            hasImage && "md:grid-cols-[5fr_6fr]",
-          )}
-        >
+        <div className="relative flex flex-col">
           {hasImage && (
-            <div className="relative aspect-3/2 sm:aspect-16/10 md:aspect-auto md:min-h-115 bg-sand">
+            <div className="relative w-full bg-cream aspect-3/2 sm:aspect-2/1 md:aspect-21/9">
               <Image
                 src={image_url!}
                 alt=""
                 fill
-                sizes="(min-width: 1024px) 465px, (min-width: 768px) 45vw, 100vw"
-                className="object-cover object-center"
+                sizes="(min-width: 768px) 768px, 100vw"
+                className="object-contain object-center"
                 quality={85}
                 priority
               />
-              {/* Soft brand-colored vignette to blend the image into the content panel */}
-              <div className="absolute inset-0 bg-linear-to-b from-transparent via-transparent to-cream/45 md:bg-linear-to-r md:from-transparent md:via-transparent md:to-cream/55 pointer-events-none" />
+              {/* Soft bottom fade to blend the image into the content panel */}
+              <div className="absolute inset-x-0 bottom-0 h-16 bg-linear-to-b from-transparent to-cream pointer-events-none" />
             </div>
           )}
 
-          <div className="noise relative overflow-hidden flex flex-col justify-center bg-cream px-8 py-10 md:px-12 md:py-14">
+          <div className="noise relative overflow-hidden flex flex-col bg-cream px-6 py-8 sm:px-10 sm:py-10 md:px-14 md:py-12">
             {/* Subtle botanical decorations — corner accents inside the panel */}
             <IconBotanical
               className="absolute top-3 right-3 w-20 h-20 md:w-24 md:h-24 text-orange/15 rotate-12 pointer-events-none"

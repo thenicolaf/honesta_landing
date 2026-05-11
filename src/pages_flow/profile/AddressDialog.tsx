@@ -25,7 +25,7 @@ import {
   updateAddressAction,
   type AddressState,
 } from "./addressActions";
-import { parseAddress } from "@/shared/utils/address";
+import { mapAddressFieldErrors, parseAddress } from "@/shared/utils/address";
 import type { UserAddress } from "@/lib/addressesDb";
 
 interface AddressDialogProps {
@@ -125,12 +125,7 @@ function AddressDialogForm({
         {...parsed}
         defaultLat={defaultLat}
         defaultLng={defaultLng}
-        fieldErrors={{
-          emirate: state?.fieldErrors?.emirate,
-          city: state?.fieldErrors?.addressCity,
-          area: state?.fieldErrors?.addressArea,
-          buildingName: state?.fieldErrors?.addressBuilding,
-        }}
+        fieldErrors={mapAddressFieldErrors(state?.fieldErrors)}
       />
 
       <div className="flex items-center justify-end gap-3 pt-2">

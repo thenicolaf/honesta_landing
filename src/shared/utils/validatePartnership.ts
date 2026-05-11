@@ -16,6 +16,7 @@ export type PartnershipErrors = Partial<
   addressCity?: string;
   addressArea?: string;
   addressBuilding?: string;
+  addressFlat?: string;
 };
 
 import { validatePhone } from "./validatePhone";
@@ -34,18 +35,20 @@ export function validatePartnership(
   const phoneError = validatePhone(data.phone);
   if (phoneError) errors.phone = phoneError;
 
-  // Address: all-or-nothing — if any field filled, all 4 required
+  // Address: all-or-nothing — if any field filled, all 5 required
   const emirate = (data.emirate as string | undefined)?.trim();
   const city = (data.addressCity as string | undefined)?.trim();
   const area = (data.addressArea as string | undefined)?.trim();
   const building = (data.addressBuilding as string | undefined)?.trim();
+  const flat = (data.addressFlat as string | undefined)?.trim();
 
-  const anyFilled = [emirate, city, area, building].some(Boolean);
+  const anyFilled = [emirate, city, area, building, flat].some(Boolean);
   if (anyFilled) {
     if (!emirate) errors.emirate = "Emirate is required.";
     if (!city) errors.addressCity = "City is required.";
     if (!area) errors.addressArea = "Area is required.";
     if (!building) errors.addressBuilding = "Building is required.";
+    if (!flat) errors.addressFlat = "Flat / Villa is required.";
   }
 
   return Object.keys(errors).length > 0 ? errors : null;

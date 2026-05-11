@@ -24,7 +24,10 @@ import {
 } from "@/pages_flow/panel/promotions/ProductPicker";
 import { UserPicker, type UserOption } from "./UserPicker";
 import type { PromoCodeWithRelations } from "@/lib/promoCodesDb";
-import { generatePromoCode } from "@/shared/utils/promoCode";
+import {
+  generatePromoCode,
+  PROMO_CODE_MAX_LENGTH,
+} from "@/shared/utils/promoCode";
 import {
   createPromoCodeAction,
   updatePromoCodeAction,
@@ -85,16 +88,19 @@ export function PromoCodeForm({
         ? new Date(promoCode.starts_at)
         : undefined,
   );
-  const [endsAt, setEndsAt] = useState<Date | undefined>(() =>
-    state?.values?.ends_at
-      ? new Date(state.values.ends_at)
-      : promoCode
-        ? new Date(promoCode.ends_at)
-        : undefined,
-  );
+  const [endsAt, setEndsAt] = useState<Date | undefined>(() => {
+    if (state?.values?.ends_at) return new Date(state.values.ends_at);
+    if (promoCode?.ends_at) return new Date(promoCode.ends_at);
+    return undefined;
+  });
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCode(e.target.value.toUpperCase().slice(0, 6));
+    setCode(
+      e.target.value
+        .toUpperCase()
+        .replace(/[^A-Z0-9%_-]/g, "")
+        .slice(0, PROMO_CODE_MAX_LENGTH),
+    );
   };
 
   const handleGenerate = () => {
@@ -116,11 +122,10 @@ export function PromoCodeForm({
             <FormInput
               id="promo-code"
               name="code"
-              placeholder="ABC123"
+              placeholder="ANNA-VIP"
               value={code}
               onChange={handleCodeChange}
-              maxLength={6}
-              pattern="[A-Z0-9]{6}"
+              maxLength={PROMO_CODE_MAX_LENGTH}
               className="font-mono tracking-widest uppercase"
               wrapperClassName="flex-1"
               state={state?.fieldErrors?.code ? "error" : "default"}
@@ -222,9 +227,8 @@ export function PromoCodeForm({
             id="promo-ends"
             name="ends_at"
             label="End Date"
-            placeholder="When code expires"
+            placeholder="Optional — unlimited if empty"
             showTime
-            required
             clearable
             value={endsAt}
             onValueChange={setEndsAt}

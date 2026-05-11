@@ -17,15 +17,15 @@ function SummaryRow({ label, value, color = "earth", bold = false }: {
   bold?: boolean;
 }) {
   return (
-    <div className="flex justify-between items-center">
+    <div className="flex justify-between items-baseline gap-3">
       <span className={cn(
-        "font-body text-sm",
+        "font-body text-sm min-w-0 wrap-break-word",
         bold ? "font-semibold text-earth text-base" : `font-light text-${color === "earth" ? "earth/60" : color}`,
       )}>
         {label}
       </span>
       <span className={cn(
-        "font-body font-semibold",
+        "font-body font-semibold shrink-0 whitespace-nowrap",
         bold ? "text-orange text-lg" : `text-${color} text-sm`,
       )}>
         {value}
@@ -157,7 +157,7 @@ export function OrderSummary({
               key={item.variantId}
               item={item}
               promoPerUnit={perItemPromoDiscounts.get(item.variantId) ?? 0}
-              promoCodeEndsAt={appliedPromoCode?.endsAt}
+              promoCodeEndsAt={appliedPromoCode?.endsAt ?? undefined}
             />
           ))}
         </div>

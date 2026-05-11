@@ -18,7 +18,7 @@ export interface AppliedPromoCode {
   /** product IDs the code targets (empty for cart scope) */
   eligibleProductIds: string[];
   /** ISO date string — when the promo code expires */
-  endsAt: string;
+  endsAt: string | null;
 }
 
 export type PromoCodeApplyResult =
@@ -105,7 +105,7 @@ export async function validatePromoCode({
   if (new Date(promoCode.starts_at) > now) {
     return { ok: false, error: "Promo code is not active yet" };
   }
-  if (new Date(promoCode.ends_at) <= now) {
+  if (promoCode.ends_at && new Date(promoCode.ends_at) <= now) {
     return { ok: false, error: "Promo code has expired" };
   }
 
