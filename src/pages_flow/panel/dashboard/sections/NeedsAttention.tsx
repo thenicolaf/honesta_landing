@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Package, Truck } from "lucide-react";
-import { Card } from "@/shared/ui";
+import { Card, Skeleton } from "@/shared/ui";
 import { supabaseAdmin } from "@/lib/supabase.server";
 import { getInventoryRows } from "@/lib/inventoryDb";
 import { OrderStatus } from "@/shared/types";
@@ -94,6 +94,29 @@ export async function NeedsAttention() {
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         {items.map((item) => (
           <AttentionCard key={item.label} item={item} />
+        ))}
+      </section>
+    </>
+  );
+}
+
+export function NeedsAttentionSkeleton() {
+  return (
+    <>
+      <Skeleton className="h-3 w-32 mb-3" />
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        {Array.from({ length: 2 }, (_, i) => (
+          <Card key={i} padding="sm" className="min-[30rem]:p-6">
+            <div className="flex items-start gap-3 min-[30rem]:gap-4">
+              <Skeleton className="h-9 w-9 rounded-xl shrink-0" />
+              <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+                <Skeleton className="h-3 w-32" />
+                <Skeleton className="h-8 w-12" />
+                <Skeleton className="h-3 w-40" />
+              </div>
+              <Skeleton className="h-4 w-4 shrink-0" />
+            </div>
+          </Card>
         ))}
       </section>
     </>
