@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Suspense } from "react";
 import { Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -141,11 +142,39 @@ function DashboardLink() {
   );
 }
 
-function BellPopoverBody({ isAdmin }: { isAdmin: boolean }) {
-  const { unreadCount, markAsRead, markAllAsRead } = useNotifications();
-  const { data, isLoading } = useNotificationsList();
+function BellLoading() {
+  return (
+    <div className="flex items-center justify-center py-8">
+      <div className="h-6 w-6 animate-spin rounded-full border-2 border-earth/15 border-t-earth" />
+    </div>
+  );
+}
+
+function BellNotificationsList() {
+  const { markAsRead } = useNotifications();
+  const { data } = useNotificationsList();
   const router = useRouter();
   const notifications = data?.notifications ?? [];
+
+  if (notifications.length === 0) {
+    return (
+      <p className="font-body text-sm text-earth/40 text-center py-8">
+        No notifications yet
+      </p>
+    );
+  }
+
+  return (
+    <NotificationList
+      notifications={notifications.slice(0, 10)}
+      onRead={markAsRead}
+      router={router}
+    />
+  );
+}
+
+function BellPopoverBody({ isAdmin }: { isAdmin: boolean }) {
+  const { unreadCount, markAllAsRead } = useNotifications();
 
   return (
     <>
@@ -169,21 +198,9 @@ function BellPopoverBody({ isAdmin }: { isAdmin: boolean }) {
 
       {/* List */}
       <div className="max-h-80 overflow-auto">
-        {isLoading && notifications.length === 0 ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-earth/15 border-t-earth" />
-          </div>
-        ) : notifications.length === 0 ? (
-          <p className="font-body text-sm text-earth/40 text-center py-8">
-            No notifications yet
-          </p>
-        ) : (
-          <NotificationList
-            notifications={notifications.slice(0, 10)}
-            onRead={markAsRead}
-            router={router}
-          />
-        )}
+        <Suspense fallback={<BellLoading />}>
+          <BellNotificationsList />
+        </Suspense>
       </div>
 
       {/* Footer — admin only */}

@@ -6,7 +6,7 @@ import { Bell } from "lucide-react";
 import type { Notification } from "@/lib/notificationsDb";
 import {
   Card,
-  Loader,
+  Skeleton,
   EmptyState,
   DataCardPagination,
   useTablePagination,
@@ -44,7 +44,7 @@ function parseDate(value: string): Date | undefined {
 
 function RecentNotificationsInner() {
   const { markAsRead } = useNotifications();
-  const { data, isLoading } = useNotificationsList();
+  const { data } = useNotificationsList();
   const notifications = data?.notifications ?? EMPTY_NOTIFICATIONS;
   const typeFilter = useFilterBarMulti("notifType");
   const dateFromFilter = useFilterBar("dateFrom");
@@ -65,8 +65,6 @@ function RecentNotificationsInner() {
   }, [notifications, typeFilter.values, dateFrom, dateTo]);
 
   const { paginatedData, pagination } = useTablePagination(filtered, 10);
-
-  if (isLoading) return <Loader />;
 
   if (notifications.length === 0) {
     return (
@@ -208,5 +206,34 @@ export function RecentNotifications() {
     <SearchParamsFilterProvider keys={FILTER_KEYS} multiKeys={MULTI_KEYS}>
       <RecentNotificationsInner />
     </SearchParamsFilterProvider>
+  );
+}
+
+export function RecentNotificationsSkeleton() {
+  return (
+    <div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+        {Array.from({ length: 3 }, (_, i) => (
+          <div key={i}>
+            <Skeleton className="h-3 w-12 mb-2" />
+            <Skeleton className="h-9 w-full" />
+          </div>
+        ))}
+      </div>
+      <Card padding="none">
+        <div className="divide-y divide-earth/6">
+          {Array.from({ length: 6 }, (_, i) => (
+            <div key={i} className="flex items-start gap-3 px-4 py-3">
+              <Skeleton className="h-9 w-9 rounded-lg shrink-0" />
+              <div className="min-w-0 flex-1 flex flex-col gap-1.5">
+                <Skeleton className="h-4 w-44" />
+                <Skeleton className="h-3 w-60 max-w-full" />
+                <Skeleton className="h-3 w-24 mt-0.5" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
   );
 }
