@@ -2,6 +2,7 @@ export const CUSTOMER_COOKIE_KEY = "honesta_customer";
 export const COORDINATES_KEY = "honesta_coordinates";
 export const COOKIE_CONSENT_KEY = "honesta_cookie_consent";
 export const PUSH_OPT_OUT_KEY = "honesta_push_opt_out";
+export const PRODUCTS_SHUFFLE_SEED_COOKIE = "honesta_products_shuffle_seed";
 
 export const UAE_EMIRATES = [
   { value: "Abu Dhabi", label: "Abu Dhabi" },

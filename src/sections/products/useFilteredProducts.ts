@@ -3,7 +3,12 @@
 import { useMemo, useDeferredValue } from "react";
 import { useFilterBar } from "@/providers/FilterProvider";
 import { findActivePromotion } from "@/shared/utils/calculateDiscount";
-import { mapDbProducts, sortProducts, type ProductSortKey } from "./utils";
+import {
+  mapDbProducts,
+  shuffleBySessionSeed,
+  sortProducts,
+  type ProductSortKey,
+} from "./utils";
 import type { DbProduct } from "./types";
 
 function buildSearchIndex(products: DbProduct[]): string[] {
@@ -26,6 +31,7 @@ function matchesMark(p: DbProduct, mark: string): boolean {
 export function useFilteredProducts(
   rawProducts: DbProduct[],
   salesMap?: Record<string, number>,
+  shuffleSeed?: string | null,
 ) {
   const categoryFilter = useFilterBar("category");
   const sortFilter = useFilterBar("sort");
@@ -56,7 +62,10 @@ export function useFilteredProducts(
       return true;
     });
 
-    return sortProducts(mapDbProducts(filtered, salesMap), effectiveSort);
+    const sorted = sortProducts(mapDbProducts(filtered, salesMap), effectiveSort);
+    return effectiveSort === ""
+      ? shuffleBySessionSeed(sorted, shuffleSeed ?? null)
+      : sorted;
   }, [
     rawProducts,
     salesMap,
@@ -65,6 +74,7 @@ export function useFilteredProducts(
     effectiveSort,
     deferredSearch,
     markFilter.value,
+    shuffleSeed,
   ]);
 
   return {

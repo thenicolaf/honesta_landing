@@ -47,4 +47,5 @@ export interface DbProductGridProps {
   rawProducts: DbProduct[];
   categories?: CategoryItem[];
   salesMap?: Record<string, number>;
+  shuffleSeed?: string | null;
 }

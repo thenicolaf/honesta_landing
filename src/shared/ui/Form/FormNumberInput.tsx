@@ -34,18 +34,29 @@ export function FormNumberInput({
   state,
   className,
 }: FormNumberInputProps) {
-  const [internalValue, setInternalValue] = useState(String(defaultValue));
   const isControlled = controlledValue !== undefined;
-  const value = isControlled ? String(controlledValue) : internalValue;
 
-  const updateValue = (v: string) => {
-    if (!isControlled) setInternalValue(v);
-    const num = parseFloat(v);
-    if (!isNaN(num)) onValueChange?.(num);
-  };
+  const [draft, setDraft] = useState(
+    String(isControlled ? controlledValue : defaultValue),
+  );
+  const draftNum = parseFloat(draft);
+
+  if (
+    isControlled &&
+    !Number.isNaN(draftNum) &&
+    draftNum !== controlledValue
+  ) {
+    setDraft(String(controlledValue));
+  }
+
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const numValue = parseFloat(value) || 0;
+  const numValue = Number.isNaN(draftNum)
+    ? isControlled
+      ? controlledValue
+      : 0
+    : draftNum;
+
   const canDecrement = min === undefined || numValue - step >= min;
   const canIncrement = max === undefined || numValue + step <= max;
 
@@ -54,6 +65,12 @@ export function FormNumberInput({
     if (min !== undefined) v = Math.max(min, v);
     if (max !== undefined) v = Math.min(max, v);
     return String(v);
+  };
+
+  const updateValue = (v: string) => {
+    setDraft(v);
+    const num = parseFloat(v);
+    if (!Number.isNaN(num)) onValueChange?.(num);
   };
 
   const decrement = () => {
@@ -95,11 +112,9 @@ export function FormNumberInput({
         id={id}
         type="number"
         name={name}
-        value={value}
+        value={draft}
         onChange={(e) => updateValue(e.target.value)}
         placeholder={placeholder}
-        min={min}
-        max={max}
         step="any"
         className={cn(
           "w-full min-w-0 bg-transparent py-0 text-center",

@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { PRODUCTS_SHUFFLE_SEED_COOKIE } from "@/shared/consts";
 
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -64,6 +65,14 @@ export async function proxy(request: NextRequest) {
     url.pathname = next.startsWith("/") ? next : "/";
     url.search = "";
     return NextResponse.redirect(url);
+  }
+
+  if (!request.cookies.get(PRODUCTS_SHUFFLE_SEED_COOKIE)) {
+    supabaseResponse.cookies.set(PRODUCTS_SHUFFLE_SEED_COOKIE, crypto.randomUUID(), {
+      path: "/",
+      sameSite: "lax",
+      httpOnly: true,
+    });
   }
 
   return supabaseResponse;
