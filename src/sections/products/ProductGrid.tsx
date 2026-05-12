@@ -82,8 +82,9 @@ export function ProductGrid({
   rawProducts,
   categories,
   salesMap,
+  shuffleSeed,
 }: DbProductGridProps) {
-  const filters = useFilteredProducts(rawProducts, salesMap);
+  const filters = useFilteredProducts(rawProducts, salesMap, shuffleSeed);
 
   useTrackViewItemList(filters.products, filters.categoryFilter.value, categories);
 
