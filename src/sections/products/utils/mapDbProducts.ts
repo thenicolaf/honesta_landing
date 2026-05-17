@@ -40,6 +40,7 @@ export function mapDbProducts(
       variants,
       image_url: p.image_url ?? "",
       images: (p.images as string[] | null) ?? [],
+      video_url: p.video_url ?? null,
       in_stock: p.in_stock ?? true,
       badge: p.badge ?? undefined,
       note: p.note ?? undefined,

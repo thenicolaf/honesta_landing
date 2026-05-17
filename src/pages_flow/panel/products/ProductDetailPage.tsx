@@ -73,6 +73,7 @@ function ProductDetailContent({
         <ProductDetailImage
           image_url={product.image_url ?? ""}
           images={(product.images as string[] | null) ?? []}
+          video_url={product.video_url}
           title={product.title}
           sale={!!promotion}
           mark={product.mark}

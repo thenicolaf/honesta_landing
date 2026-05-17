@@ -15,6 +15,9 @@ interface UploadZoneBase {
   items: DeferredItem[];
   onItemsChange: (items: DeferredItem[]) => void;
   onPreview?: (index: number) => void;
+  mimePrefix?: string;
+  noun?: string;
+  acceptLabel?: string;
 }
 
 type UploadZoneProps = UploadZoneBase & UploadMultipleProps;
@@ -29,6 +32,9 @@ export function UploadZone(props: UploadZoneProps) {
     items,
     onItemsChange,
     onPreview,
+    mimePrefix = "image/",
+    noun,
+    acceptLabel,
   } = props;
 
   const multiple = props.multiple ?? true;
@@ -39,6 +45,7 @@ export function UploadZone(props: UploadZoneProps) {
     maxSizeMb,
     items,
     onItemsChange,
+    mimePrefix,
   );
 
   const atLimit = items.length >= maxFiles;
@@ -52,6 +59,8 @@ export function UploadZone(props: UploadZoneProps) {
         disabled={atLimit}
         state={state}
         onFiles={addFiles}
+        noun={noun}
+        acceptLabel={acceptLabel}
       />
 
       {/* Hybrid hidden inputs: text for existing URLs, file for new uploads */}
@@ -80,6 +89,7 @@ export function UploadZone(props: UploadZoneProps) {
         onReorder={reorder}
         onRemove={(item) => removeItem(item.id)}
         onPreview={onPreview}
+        kind={mimePrefix.startsWith("video") ? "video" : "image"}
       />
     </div>
   );

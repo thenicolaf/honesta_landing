@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { UploadZone, type DeferredItem, type UploadMultipleProps } from "../UploadZone";
-import { Lightbox } from "../Lightbox";
+import { Lightbox, type LightboxSlide } from "../Lightbox";
+import { getPlayableVideoMime } from "@/shared/utils/videoUrl";
 
 type FormUploadZoneProps = UploadMultipleProps & {
   name: string;
@@ -18,6 +19,12 @@ type FormUploadZoneProps = UploadMultipleProps & {
   slug?: string;
   /** Storage bucket name (default: "products") */
   bucket?: string;
+  /** File MIME prefix for filtering (default: "image/") */
+  mimePrefix?: string;
+  /** Noun used in dropzone hint text (default: "images") */
+  noun?: string;
+  /** Format hint shown under the dropzone (default: "PNG, JPG, WEBP") */
+  acceptLabel?: string;
 };
 
 function buildInitialItems(
@@ -49,6 +56,9 @@ export function FormUploadZone(props: FormUploadZoneProps) {
     initialUrls,
     slug = "product",
     bucket = "products",
+    mimePrefix,
+    noun,
+    acceptLabel,
     ...multipleProps
   } = props;
 
@@ -62,6 +72,17 @@ export function FormUploadZone(props: FormUploadZoneProps) {
     setPreviewIndex(index);
     setPreviewOpen(true);
   };
+  const handleClosePreview = () => setPreviewOpen(false);
+
+  const slides: LightboxSlide[] = items.map((i) =>
+    mimePrefix === "video/"
+      ? {
+          type: "video",
+          sources: [{ src: i.preview, type: getPlayableVideoMime(i.file?.type) }],
+          alt: i.name,
+        }
+      : { src: i.preview, alt: i.name },
+  );
 
   return (
     <>
@@ -78,15 +99,23 @@ export function FormUploadZone(props: FormUploadZoneProps) {
         onPreview={handlePreview}
         state={state}
         className={className}
+        mimePrefix={mimePrefix}
+        noun={noun}
+        acceptLabel={acceptLabel}
         {...multipleProps}
       />
 
-      <Lightbox
-        open={previewOpen}
-        onClose={() => setPreviewOpen(false)}
-        slides={items.map((i) => ({ src: i.preview, alt: i.name }))}
-        index={previewIndex}
-      />
+      {/* Conditionally mount Lightbox only when open — avoids YARLightbox
+          holding stale state across open/close cycles and avoids it reacting
+          to slides prop changes while invisible. */}
+      {previewOpen && (
+        <Lightbox
+          open
+          onClose={handleClosePreview}
+          slides={slides}
+          index={previewIndex}
+        />
+      )}
     </>
   );
 }

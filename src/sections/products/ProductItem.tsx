@@ -12,6 +12,7 @@ import {
   ProductPriceAndCart,
   ProductVariantSelector,
   NoteButton,
+  VideoButton,
   ViewButton,
   FavoriteButton,
   ShareButton,
@@ -65,7 +66,14 @@ export function ProductItem({ product, from, backHref }: ProductItemProps) {
           />
         )}
         {href && <ViewButton href={href} />}
-        <NoteButton note={product.note} />
+        {(product.note || product.video_url) && (
+          <div className="absolute bottom-2 right-2 z-30 flex flex-col-reverse gap-1.5">
+            {product.note && <NoteButton note={product.note} />}
+            {product.video_url && (
+              <VideoButton video_url={product.video_url} title={title} />
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 p-3 flex flex-col gap-2">

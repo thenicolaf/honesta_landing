@@ -5,6 +5,7 @@ import { Button, toastError } from "@/shared/ui";
 import type { AdminDbProduct, ProductFormOptions } from "@/lib/productsDb";
 import { createProduct, updateProduct, type ProductState } from "./actions";
 import { BasicInfoSection } from "./product-form/BasicInfoSection";
+import { VideoSection } from "./product-form/VideoSection";
 import { VariantsSection } from "./product-form/VariantsSection";
 import { InventorySection } from "./product-form/InventorySection";
 import { CategorySection } from "./product-form/CategorySection";
@@ -39,6 +40,7 @@ export function ProductForm({ product, options }: ProductFormProps) {
   return (
     <form action={dispatch} className="flex flex-col gap-6">
       <BasicInfoSection {...sectionProps} />
+      <VideoSection {...sectionProps} />
       <VariantsSection {...sectionProps} />
       <InventorySection {...sectionProps} />
       <CategorySection {...sectionProps} />

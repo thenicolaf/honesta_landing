@@ -82,6 +82,7 @@ export function ProductDetailPage({
           <ProductDetailImage
             image_url={image_url}
             images={product.images}
+            video_url={product.video_url}
             title={title}
             sale={!!product.promotion}
             mark={product.mark}
