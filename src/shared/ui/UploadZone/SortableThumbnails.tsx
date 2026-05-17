@@ -10,6 +10,7 @@ interface SortableThumbnailsProps {
   onReorder: (items: DeferredItem[]) => void;
   onRemove: (item: DeferredItem) => void;
   onPreview?: (index: number) => void;
+  kind?: "image" | "video";
 }
 
 function moveItem<T>(items: T[], from: number, to: number): T[] {
@@ -25,6 +26,7 @@ export function SortableThumbnails({
   onReorder,
   onRemove,
   onPreview,
+  kind,
 }: SortableThumbnailsProps) {
   if (items.length === 0) return null;
 
@@ -54,6 +56,7 @@ export function SortableThumbnails({
             sortable={items.length > 1}
             onRemove={() => onRemove(item)}
             onPreview={onPreview ? () => onPreview(idx) : undefined}
+            kind={kind}
           />
         ))}
       </ul>

@@ -89,16 +89,20 @@ export function InventorySection({ product, state }: SectionProps) {
       </div>
 
       {product && (
-        <div className="flex items-center justify-between rounded-2xl border border-parchment bg-cream/60 px-4 py-3">
-          <div className="flex items-center gap-2 text-2xs uppercase tracking-[0.12em] text-earth/55">
-            <Boxes size={14} aria-hidden="true" />
+        <div className="flex items-center justify-between rounded-xl border border-parchment bg-cream/60 px-3 py-1.5">
+          <div className="flex items-center gap-2 font-body text-2xs uppercase tracking-[0.12em] text-earth/55">
+            <Boxes size={12} aria-hidden="true" />
             Current stock
           </div>
-          <div className="flex items-center gap-3">
-            <span className="font-display font-semibold text-base text-heading tabular-nums">
+          <div className="flex items-center gap-2">
+            <span className="font-body font-semibold text-2xs text-earth tabular-nums">
               {inv.stock_g.toLocaleString("en-US")} g
             </span>
-            <Button href="/panel/inventory" variant="text" size="sm">
+            <Button
+              href={`/panel/inventory?${new URLSearchParams({ search: product.title }).toString()}`}
+              variant="text"
+              size="sm"
+            >
               Manage
             </Button>
           </div>

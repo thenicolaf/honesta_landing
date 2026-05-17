@@ -20,6 +20,7 @@ export { ProductDetailImage } from "./ProductDetailImage";
 export { ProductTagline } from "./ProductTagline";
 export { ProductNote } from "./ProductNote";
 export { NoteButton } from "./NoteButton";
+export { VideoButton } from "./VideoButton";
 export { ViewButton } from "./ViewButton";
 export { ShareButton } from "./ShareButton";
 export { ProductPrice } from "./ProductPrice";

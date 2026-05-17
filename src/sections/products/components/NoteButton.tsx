@@ -8,18 +8,16 @@ import {
   TooltipContent,
 } from "@/shared/ui";
 import { IconInfo } from "@/shared/icons";
-import { cn } from "@/shared/utils/cn";
 
 interface NoteButtonProps {
   note?: string;
-  className?: string;
 }
 
-export function NoteButton({ note, className }: NoteButtonProps) {
+export function NoteButton({ note }: NoteButtonProps) {
   if (!note) return null;
 
   return (
-    <Tooltip side="top" className={cn("absolute bottom-2 right-2 z-30", className)}>
+    <Tooltip side="top">
       <TooltipTrigger asChild>
         <Button
           as="button"

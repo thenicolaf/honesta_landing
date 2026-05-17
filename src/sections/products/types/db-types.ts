@@ -5,6 +5,7 @@ export interface DbProduct {
   tagline: string | null;
   image_url: string | null;
   images: string[] | null;
+  video_url: string | null;
   in_stock: boolean | null;
   status: "draft" | "published" | "archived";
   badge: string | null;

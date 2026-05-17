@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { format, isValid, parseISO } from "date-fns";
-import { Cake, Mail, User, Venus, Mars } from "lucide-react";
+import { Cake, Mail, User } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import {
   MultiSelect,
@@ -11,6 +10,10 @@ import {
   MultiSelectItem,
   MultiSelectEmpty,
 } from "@/shared/ui";
+import {
+  GenderIcon,
+  formatBirthday,
+} from "@/pages_flow/panel/users/userDisplay";
 
 export interface UserOption {
   value: string;
@@ -26,18 +29,6 @@ interface UserPickerProps {
   defaultValue?: string[];
   placeholder?: string;
   state?: "default" | "error";
-}
-
-function formatBirthday(birthday: string): string {
-  const date = parseISO(birthday);
-  return isValid(date) ? format(date, "d MMM yyyy") : birthday;
-}
-
-function GenderIcon({ gender }: { gender: "male" | "female" }) {
-  if (gender === "female") {
-    return <Venus size={11} className="text-pink-500/70" aria-label="Female" />;
-  }
-  return <Mars size={11} className="text-sky-500/70" aria-label="Male" />;
 }
 
 export function UserPicker({

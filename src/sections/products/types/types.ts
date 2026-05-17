@@ -37,6 +37,8 @@ export interface Product {
   image_url: string;
   /** All product images (ordered), image_url = images[0] */
   images: string[];
+  /** Optional product video — either a Supabase Storage MP4 URL or a YouTube link */
+  video_url?: string | null;
   /** Default price (from smallest variant) — required for cart and checkout */
   price?: number;
   /** Default weight (from smallest variant) */

@@ -2,11 +2,17 @@
 
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase.server";
-import { deleteImage, parseFormImages, type StorageBucket } from "@/lib/storage";
+import {
+  deleteImage,
+  parseFormImages,
+  parseFormVideo,
+  type StorageBucket,
+} from "@/lib/storage";
 import { createNotification } from "@/lib/notificationsDb";
 import { upsertInventorySettings } from "@/lib/inventoryDb";
 import type { NutritionJson } from "./product-form/nutrition";
 import { isHtmlEmpty, sanitizeNoteHtml } from "@/shared/utils/sanitizeHtml";
+import { getVideoKind, isValidVideoUrl } from "@/shared/utils/videoUrl";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -47,6 +53,7 @@ export interface ProductState {
     category_id?: string;
     ingredientIds?: string;
     images?: string;
+    video_url?: string;
     cost_per_100g?: string;
     low_stock_threshold_g?: string;
   };
@@ -242,6 +249,49 @@ async function parseUploads(formData: FormData): Promise<{ image_url: string | n
   return { image_url: all[0] || null, images: all.slice(1) };
 }
 
+async function parseVideoUpload(
+  formData: FormData,
+): Promise<{ video_url: string | null; error?: string }> {
+  const mode = formData.get("video_mode") as string | null;
+
+  if (mode === "youtube") {
+    const raw = (formData.get("video_youtube_url") as string | null)?.trim() ?? "";
+    if (!raw) return { video_url: null };
+    if (getVideoKind(raw) !== "youtube" || !isValidVideoUrl(raw)) {
+      return {
+        video_url: null,
+        error: "Enter a valid YouTube link (youtube.com/watch?v=… or youtu.be/…).",
+      };
+    }
+    return { video_url: raw };
+  }
+
+  // Default to upload mode.
+  const slug =
+    (formData.get("video_file__slug") as string | null) || "product-video";
+  const bucket = ((formData.get("video_file__bucket") as string | null) ||
+    "product-videos") as StorageBucket;
+  const url = await parseFormVideo(formData, "video_file", slug, bucket);
+  if (!url) return { video_url: null };
+  if (!isValidVideoUrl(url)) {
+    return {
+      video_url: null,
+      error: "Uploaded video failed validation. Please try again.",
+    };
+  }
+  return { video_url: url };
+}
+
+async function cleanupRemovedVideo(
+  oldUrl: string | null | undefined,
+  newUrl: string | null,
+) {
+  if (!oldUrl) return;
+  if (oldUrl === newUrl) return;
+  if (getVideoKind(oldUrl) !== "mp4") return;
+  await deleteImage(oldUrl, "product-videos");
+}
+
 function collectAllUrls(
   imageUrl: string | null | undefined,
   images: string[] | null | undefined,
@@ -268,20 +318,31 @@ async function parseProductValues(
   formData: FormData,
 ) {
   const title = values.title!.trim();
-  const { image_url, images } = await parseUploads(formData);
+  const [{ image_url, images }, videoResult] = await Promise.all([
+    parseUploads(formData),
+    parseVideoUpload(formData),
+  ]);
 
   return {
-    slug: toSlug(title),
-    title,
-    tagline: values.tagline?.trim() || null,
-    note: isHtmlEmpty(values.note) ? null : sanitizeNoteHtml(values.note ?? ""),
-    badge: values.badge?.trim() || null,
-    image_url,
-    images,
-    in_stock: values.in_stock === "true",
-    mark: values.mark || "new",
-    category_id: values.category_id || null,
-    nutrition: JSON.parse((formData.get("nutrition") as string) || "[]") as NutritionJson,
+    data: {
+      slug: toSlug(title),
+      title,
+      tagline: values.tagline?.trim() || null,
+      note: isHtmlEmpty(values.note)
+        ? null
+        : sanitizeNoteHtml(values.note ?? ""),
+      badge: values.badge?.trim() || null,
+      image_url,
+      images,
+      video_url: videoResult.video_url,
+      in_stock: values.in_stock === "true",
+      mark: values.mark || "new",
+      category_id: values.category_id || null,
+      nutrition: JSON.parse(
+        (formData.get("nutrition") as string) || "[]",
+      ) as NutritionJson,
+    },
+    videoError: videoResult.error,
   };
 }
 
@@ -420,7 +481,13 @@ export async function createProduct(
   }
 
   try {
-    const productData = await parseProductValues(values, formData);
+    const { data: productData, videoError } = await parseProductValues(
+      values,
+      formData,
+    );
+    if (videoError) {
+      return { fieldErrors: { video_url: videoError }, values };
+    }
     const status = (formData.get("status") as string) || "draft";
     const variants = parseVariants(values.variants);
 
@@ -475,11 +542,17 @@ export async function updateProduct(
   }
 
   try {
-    const productData = await parseProductValues(values, formData);
+    const { data: productData, videoError } = await parseProductValues(
+      values,
+      formData,
+    );
+    if (videoError) {
+      return { fieldErrors: { video_url: videoError }, values };
+    }
 
     const { data: existing } = await supabaseAdmin
       .from("products")
-      .select("image_url, images")
+      .select("image_url, images, video_url")
       .eq("id", id)
       .single();
 
@@ -495,10 +568,13 @@ export async function updateProduct(
       return { error: "Failed to update product. Please try again.", values };
     }
 
-    await cleanupRemovedImages(
-      collectAllUrls(existing?.image_url, existing?.images as string[] | null),
-      collectAllUrls(productData.image_url, productData.images),
-    );
+    await Promise.all([
+      cleanupRemovedImages(
+        collectAllUrls(existing?.image_url, existing?.images as string[] | null),
+        collectAllUrls(productData.image_url, productData.images),
+      ),
+      cleanupRemovedVideo(existing?.video_url ?? null, productData.video_url),
+    ]);
 
     const variants = parseVariants(values.variants);
 
@@ -527,7 +603,7 @@ export async function deleteProduct(
   try {
     const { data: existing } = await supabaseAdmin
       .from("products")
-      .select("image_url, images")
+      .select("image_url, images, video_url")
       .eq("id", id)
       .single();
 
@@ -536,10 +612,13 @@ export async function deleteProduct(
       return { error: "Failed to delete product. Please try again." };
     }
 
-    await cleanupRemovedImages(
-      collectAllUrls(existing?.image_url, existing?.images as string[] | null),
-      [],
-    );
+    await Promise.all([
+      cleanupRemovedImages(
+        collectAllUrls(existing?.image_url, existing?.images as string[] | null),
+        [],
+      ),
+      cleanupRemovedVideo(existing?.video_url ?? null, null),
+    ]);
 
     return { success: true };
   } catch (err) {

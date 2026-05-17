@@ -43,12 +43,14 @@ interface PromoCodeFormProps {
   promoCode?: PromoCodeWithRelations;
   products: ProductOption[];
   users: UserOption[];
+  prefilledUserIds?: string[];
 }
 
 export function PromoCodeForm({
   promoCode,
   products,
   users,
+  prefilledUserIds,
 }: PromoCodeFormProps) {
   const action = promoCode
     ? updatePromoCodeAction.bind(null, promoCode.id)
@@ -319,7 +321,7 @@ export function PromoCodeForm({
           <UserPicker
             name="user_ids"
             options={users}
-            defaultValue={promoCode?.user_ids ?? []}
+            defaultValue={promoCode?.user_ids ?? prefilledUserIds ?? []}
           />
         </div>
 

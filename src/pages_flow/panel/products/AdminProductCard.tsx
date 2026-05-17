@@ -10,6 +10,7 @@ import {
   ProductTitle,
   IngredientsInline,
   NoteButton,
+  VideoButton,
   ViewButton,
   ProductAdminActions,
 } from "@/sections/products/components";
@@ -54,7 +55,17 @@ export function AdminProductCard({ product }: { product: AdminDbProduct }) {
           />
         </Link>
         <ViewButton href={href} />
-        <NoteButton note={product.note ?? undefined} />
+        {(product.note || product.video_url) && (
+          <div className="absolute bottom-2 right-2 z-30 flex flex-col-reverse gap-1.5">
+            {product.note && <NoteButton note={product.note} />}
+            {product.video_url && (
+              <VideoButton
+                video_url={product.video_url}
+                title={product.title}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 p-3 flex flex-col gap-2">

@@ -18,6 +18,7 @@ interface SortableThumbnailProps {
   sortable?: boolean;
   onRemove: () => void;
   onPreview?: () => void;
+  kind?: "image" | "video";
 }
 
 export function SortableThumbnail({
@@ -29,6 +30,7 @@ export function SortableThumbnail({
   sortable = true,
   onRemove,
   onPreview,
+  kind,
 }: SortableThumbnailProps) {
   const handleRef = useRef<HTMLButtonElement>(null);
   const { ref, isDragging } = useSortable({
@@ -54,7 +56,7 @@ export function SortableThumbnail({
         </span>
       )}
 
-      <Thumbnail src={src} alt={alt} onClick={onPreview}>
+      <Thumbnail src={src} alt={alt} onClick={onPreview} kind={kind}>
         {/* Drag handle */}
         {sortable && (
           <Button

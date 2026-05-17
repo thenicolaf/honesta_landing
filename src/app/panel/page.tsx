@@ -11,6 +11,10 @@ import {
   NeedsAttentionSkeleton,
 } from "@/pages_flow/panel/dashboard/sections/NeedsAttention";
 import {
+  RecentUsers,
+  RecentUsersSkeleton,
+} from "@/pages_flow/panel/dashboard/sections/RecentUsers";
+import {
   RecentNotifications,
   RecentNotificationsSkeleton,
 } from "@/pages_flow/panel/dashboard/RecentNotifications";
@@ -27,6 +31,10 @@ export default function PanelPage() {
 
       <Suspense fallback={<NeedsAttentionSkeleton />}>
         <NeedsAttention />
+      </Suspense>
+
+      <Suspense fallback={<RecentUsersSkeleton />}>
+        <RecentUsers />
       </Suspense>
 
       <div className="flex items-center justify-between mb-3">

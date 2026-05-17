@@ -75,7 +75,8 @@ src/
 │   │   ├── categories/         # /panel/categories CRUD (admin only)
 │   │   ├── products/           # /panel/products CRUD (admin only)
 │   │   ├── mixes/              # /panel/mixes CRUD — mix constructor (admin only)
-│   │   └── promotions/         # /panel/promotions CRUD (admin only)
+│   │   ├── promotions/         # /panel/promotions CRUD (admin only)
+│   │   └── users/              # /panel/users — registered users browser (admin only)
 │   ├── mix/                    # /mix — public mix builder page
 │   ├── api/
 │   │   ├── payment/webhook/    # N-Genius webhook → updates order status in Supabase
@@ -101,13 +102,14 @@ src/
 │   ├── promotionsDb.ts         # Promotions CRUD
 │   ├── notificationsDb.ts      # Notifications CRUD + triggers push via pushNotification.ts
 │   ├── pushNotification.ts     # Server-side web-push sending (VAPID, lazy init)
-│   ├── storage.ts              # Image upload/delete to Supabase Storage
+│   ├── storage.ts              # Image + video upload/delete to Supabase Storage (uploadImage / uploadVideo / parseFormImages / parseFormVideo / deleteImage)
 │   ├── syncCartPrices.ts       # Syncs cart prices with active promotions
 │   ├── deliveryDb.ts           # Per-emirate delivery_settings (incl. cutoff_hour)
 │   ├── deliverySlotsDb.ts      # delivery_slots CRUD + cached queries (re-exports getAvailableSlotsForDate / findSlotConflict)
 │   ├── deliveryBlackoutsDb.ts  # delivery_blackouts CRUD (date or date+slot)
 │   ├── orderNotifications.ts   # buildOrderNotificationParts (structured) + formatOrderNotificationMessage (string)
-│   └── inventoryDb.ts          # product_inventory + stock_movements: getInventoryRows, deductInventoryForOrder, recordStockMovement, getMovements / getAllMovements, upsertInventorySettings, getProductCosts
+│   ├── inventoryDb.ts          # product_inventory + stock_movements: getInventoryRows, deductInventoryForOrder, recordStockMovement, getMovements / getAllMovements, upsertInventorySettings, getProductCosts
+│   └── usersDb.ts              # getAdminUsers (auth.listUsers + profiles + PAID-order aggregation, React.cache'd) + getRecentUsers(limit)
 │
 ├── proxy.ts                    # Next.js middleware helper — refreshes auth session + protects private routes
 │
@@ -127,14 +129,15 @@ src/
 │   ├── orders/                 # OrdersPage + OrderCards (user order history) + OrderMixComposition
 │   ├── mix/                    # MixBuilderPage + BoxSelector + PresetGrid + PresetTile + MixSummary + actions (assembleMix, cleanupOrphanedMixVariants)
 │   ├── panel/
-│   │   ├── dashboard/          # ProfitOverview + NeedsAttention (sections/) + DateRangeSelector + RecentNotifications + profitQueries / profitTypes
+│   │   ├── dashboard/          # ProfitOverview + NeedsAttention + RecentUsers (sections/) + DateRangeSelector + RecentNotifications + profitQueries / profitTypes
 │   │   ├── orders/             # AllOrdersPage + AdminOrderCards + filters + useOrdersTable
 │   │   ├── partnerships/       # PartnershipsPage + InquiryCards + filters + useInquiriesTable
 │   │   ├── categories/         # CategoryForm + actions
 │   │   ├── products/           # ProductForm + actions (incl. InventorySection: cost_per_100g + low_stock_threshold_g)
 │   │   ├── mixes/              # MixForm + MixesPage + SortableMixGrid + actions (auto system product)
 │   │   ├── inventory/          # InventoryPage + Toolbar + Card + columns + Adjust/Settings/History dialogs + useInventoryTable; history/ subroute = full movements log with filters
-│   │   └── promotions/         # PromotionsPage + PromotionForm + actions
+│   │   ├── promotions/         # PromotionsPage + PromotionForm + actions
+│   │   └── users/              # UsersPage + AdminUserCards + UserFilters + UserActions + columns + useFilteredUsers / useUsersTable + userDisplay (shared GenderIcon/formatBirthday)
 │   └── PageLoader.tsx          # Thin wrapper around <Loader /> for route loading.tsx files
 │
 ├── providers/                  # React context providers + hooks
@@ -179,7 +182,7 @@ src/
     ├── ui/                     # Reusable primitives (Button, Badge, Card, Form, Collapsible, etc.)
     ├── icons/                  # SVG icon components + index.ts barrel
     ├── types/                  # Categories enum, CustomerInfo, OrderStatus, ProfileInfo, UserRole
-    └── utils/                  # cn.ts, validateCustomer.ts, validatePartnership.ts, validateProfile.ts, validateAuth.ts, validatePhone.ts, calculateDiscount.ts, resolveNotificationHref.ts, zonedTime.ts (Asia/Dubai wall-clock + cut-off helpers), deliverySlots.ts (pure getAvailableSlotsForDate + findSlotConflict resolver)
+    └── utils/                  # cn.ts, validateCustomer.ts, validatePartnership.ts, validateProfile.ts, validateAuth.ts, validatePhone.ts, calculateDiscount.ts, resolveNotificationHref.ts, zonedTime.ts (Asia/Dubai wall-clock + cut-off helpers), deliverySlots.ts (pure getAvailableSlotsForDate + findSlotConflict resolver), videoUrl.ts (YouTube/MP4 detection, embed URL, getPlayableVideoMime for MOV→mp4 remap)
 ```
 
 **Rule:** backend/data-access → `src/lib/`, page-level component trees → `src/pages_flow/`, landing sections → `src/sections/`, generic primitives → `src/shared/ui/`, SVG icons → `src/shared/icons/`, React context providers → `src/providers/`.
@@ -226,6 +229,7 @@ src/
 | `/panel/promotions` | Promotion management (admin only) |
 | `/panel/promotions/create` | Create new promotion (admin only) |
 | `/panel/promotions/[id]/edit` | Edit promotion (admin only) |
+| `/panel/users` | Registered users browser — search/sort/filter, WhatsApp + Create promo code + View orders per row (admin only) |
 | `/panel/marketing-popup` | Marketing popups catalog — list with Activate/Edit/Delete (admin only) |
 | `/panel/marketing-popup/create` | Create new popup (admin only) |
 | `/panel/marketing-popup/[id]/edit` | Edit popup (admin only) |
@@ -333,6 +337,8 @@ Manual codes a user enters in the cart/checkout to get an extra discount, parall
 **RLS.** All four `promo_code*` tables have RLS enabled with admin-only policies. Server actions go through `supabaseAdmin` (service_role bypasses RLS), so regular users never touch these tables directly from the browser. See `src/lib/promoCodesDb.ts` — every query uses `supabaseAdmin`.
 
 **Admin UI.** `/panel/promo-codes` — CRUD by analogy with `/panel/promotions`. The `PromoCodeForm` uses `FormTileRadio` for scope, `FormNumberInput` for all numeric fields, `ProductPicker` (reused from promotions, only when `scope=product`), and `UserPicker` (loads users via `supabaseAdmin.auth.admin.listUsers` joined with `profiles` for name/gender/birthday). The list page shows a status badge: `active | scheduled | exhausted | expired` — `exhausted` (orange) appears when `used_count >= max_uses`. The status helper `getPromoCodeStatus(isActive, startsAt, endsAt, usedCount, maxUses)` is in [src/pages_flow/panel/promo-codes/types.ts](src/pages_flow/panel/promo-codes/types.ts).
+
+**`/panel/promo-codes/create?user={uuid}` prefill.** The create route accepts a `?user=<uuid>` query param ([src/app/panel/promo-codes/create/page.tsx](src/app/panel/promo-codes/create/page.tsx)). When present and the UUID matches a known user, it's threaded down as `prefilledUserIds={[uuid]}` into `PromoCodeForm`, which falls back to it as the default for `<UserPicker>` when no existing `promoCode.user_ids` is present. This is the one-click flow used by `/panel/users` and the dashboard `Recent users` section to issue a targeted promo without manually searching for the recipient.
 
 ## Rich text (product notes)
 
@@ -639,7 +645,7 @@ Two files, three client instances:
   - `supabaseAdmin` — static service-role client, bypasses RLS (use only in server actions, API routes, and `lib/`)
   - `createSupabaseServerClient()` — async, reads cookies via `@supabase/ssr`; use whenever you need the current user's session
 
-**DB tables:** `orders` (status, is_fulfilled, subtotal, delivery_fee, total, **promotion_discount**, **promo_code_id**, **promo_discount**, **delivery_schedule** text nullable — human-readable snapshot like `"6 May 2026 · Morning 09:00–15:00"`, customer fields, ngenius_ref), `order_items` (order_id, variant_id, name, price, **original_price** nullable, **promo_discount** per unit, weight_g, quantity, **mix_composition** JSONB nullable — snapshot of mix contents, each entry now carries **`product_id`** alongside name/image/count/weight/price so the inventory deduction path doesn't need extra lookups; older rows without `product_id` survive untouched and contribute COGS=0 — all snapshots at order time so historical orders survive promo/promotion/variant edits), `products` (image_url, images JSONB `[]`, in_stock, badge, **note** — sanitized HTML string, not plain text — see **Rich text (product notes)**, nutrition JSONB, status `product_status` enum — `draft | published | archived | system`, **no price/weight_g columns**, these live in `product_variants`), `product_variants` (product_id, weight_g, price — one-to-many with products), `categories` (name, slug, audience, tagline, description, image_url, badge, sort_order), `benefits` (id, name, description — unique on name+description), `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, role `user_role`, gender, birthday, allow_notifications), `cart_items` (user_id, variant_id, quantity — minimal, prices via join), `notifications` (type, title, message, related_id, user_id, audience `user_role` — nullable, NULL = all roles), `notification_reads` (notification_id, user_id, read_at — tracks per-user read status), `push_subscriptions` (user_id, endpoint UNIQUE, p256dh, auth — FK to auth.users + profiles, RLS per user), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id), `promo_codes` (code, scope, discount_type, discount_value, min_order_amount, max_uses, max_uses_per_user, stack_with_promotions, starts_at, ends_at, is_active — code is exactly 6 `[A-Z0-9]` chars enforced by CHECK), `promo_code_products`, `promo_code_users`, `promo_code_redemptions` (`unique(order_id)`), `mix_boxes` (id — **same UUID as corresponding `products.id`**, name, slug UNIQUE, description, image_url, cell_count, is_active, sort_order), `mix_box_presets` (box_id, product_id, weight_g, price — `UNIQUE(box_id, product_id)` means each product appears once in a box's assortment), `mix_variant_cells` (variant_id → product_variants CASCADE, cell_index, preset_id → mix_box_presets CASCADE, `UNIQUE(variant_id, cell_index)` — stores what preset sits in each cell of an assembled mix variant), `marketing_popup` (multi-row catalog of home-page popups; `is_active` with partial unique index `WHERE is_active=true` enforcing at most one active row, `title` doubles as visitor heading + admin catalog label, `body` HTML, `image_url`, `cta_label`, `cta_url`, `starts_at`/`ends_at` nullable display window, `updated_at` auto-bumped by `BEFORE UPDATE` trigger — see **Marketing Popup**), `delivery_settings` (per-emirate row: delivery_fee, free_delivery_threshold, minimum_order, delivery_days, **cutoff_hour** integer 0–23 default 19, is_active), `delivery_slots` (id, label, start_time/end_time, is_active, **available_weekdays** smallint[] ISO 1=Mon … 7=Sun, CHECK enforces non-empty + range — see **Delivery schedule**), `delivery_blackouts` (blackout_date date, slot_id uuid nullable — NULL = entire day blocked, reason text, unique index on (date, slot_id) `NULLS NOT DISTINCT`), `product_inventory` (product_id uuid UNIQUE FK→products CASCADE, **stock_g** integer default 0 + CHECK ≥0, **low_stock_threshold_g** integer default 500, **cost_per_100g** numeric(10,2) default 0, `updated_at` auto-bumped by `BEFORE UPDATE` trigger — operational data kept in a separate table from the catalog so inventory edits don't churn the products row), `stock_movements` (append-only audit log: product_id FK→products CASCADE, **delta_g** integer signed, **reason** `stock_movement_reason` enum `order_paid | restock | correction | damage | manual_adjust`, order_id FK→orders SET NULL, note text nullable, created_by FK→auth.users SET NULL, created_at — `UNIQUE(order_id, product_id)` is the idempotency guard for `deductInventoryForOrder` so the webhook + result-page paths can't double-deduct; admin INSERT/SELECT only, UPDATE/DELETE intentionally ungranted).
+**DB tables:** `orders` (status, is_fulfilled, subtotal, delivery_fee, total, **promotion_discount**, **promo_code_id**, **promo_discount**, **delivery_schedule** text nullable — human-readable snapshot like `"6 May 2026 · Morning 09:00–15:00"`, customer fields, ngenius_ref), `order_items` (order_id, variant_id, name, price, **original_price** nullable, **promo_discount** per unit, weight_g, quantity, **mix_composition** JSONB nullable — snapshot of mix contents, each entry now carries **`product_id`** alongside name/image/count/weight/price so the inventory deduction path doesn't need extra lookups; older rows without `product_id` survive untouched and contribute COGS=0 — all snapshots at order time so historical orders survive promo/promotion/variant edits), `products` (image_url, images JSONB `[]`, **video_url** text nullable — optional MP4 storage URL or YouTube link, see **Product video**, in_stock, badge, **note** — sanitized HTML string, not plain text — see **Rich text (product notes)**, nutrition JSONB, status `product_status` enum — `draft | published | archived | system`, **no price/weight_g columns**, these live in `product_variants`), `product_variants` (product_id, weight_g, price — one-to-many with products), `categories` (name, slug, audience, tagline, description, image_url, badge, sort_order), `benefits` (id, name, description — unique on name+description), `partnership_inquiries` (business_name, contact_name, phone, business_type, message), `user_favorites` (user_id, product_id), `profiles` (id, first_name, last_name, phone, role `user_role`, gender, birthday, allow_notifications), `cart_items` (user_id, variant_id, quantity — minimal, prices via join), `notifications` (type, title, message, related_id, user_id, audience `user_role` — nullable, NULL = all roles), `notification_reads` (notification_id, user_id, read_at — tracks per-user read status), `push_subscriptions` (user_id, endpoint UNIQUE, p256dh, auth — FK to auth.users + profiles, RLS per user), `promotions` (name, discount_type, discount_value, starts_at, ends_at, is_active), `promotion_products` (promotion_id, product_id), `promo_codes` (code, scope, discount_type, discount_value, min_order_amount, max_uses, max_uses_per_user, stack_with_promotions, starts_at, ends_at, is_active — code is exactly 6 `[A-Z0-9]` chars enforced by CHECK), `promo_code_products`, `promo_code_users`, `promo_code_redemptions` (`unique(order_id)`), `mix_boxes` (id — **same UUID as corresponding `products.id`**, name, slug UNIQUE, description, image_url, cell_count, is_active, sort_order), `mix_box_presets` (box_id, product_id, weight_g, price — `UNIQUE(box_id, product_id)` means each product appears once in a box's assortment), `mix_variant_cells` (variant_id → product_variants CASCADE, cell_index, preset_id → mix_box_presets CASCADE, `UNIQUE(variant_id, cell_index)` — stores what preset sits in each cell of an assembled mix variant), `marketing_popup` (multi-row catalog of home-page popups; `is_active` with partial unique index `WHERE is_active=true` enforcing at most one active row, `title` doubles as visitor heading + admin catalog label, `body` HTML, `image_url`, `cta_label`, `cta_url`, `starts_at`/`ends_at` nullable display window, `updated_at` auto-bumped by `BEFORE UPDATE` trigger — see **Marketing Popup**), `delivery_settings` (per-emirate row: delivery_fee, free_delivery_threshold, minimum_order, delivery_days, **cutoff_hour** integer 0–23 default 19, is_active), `delivery_slots` (id, label, start_time/end_time, is_active, **available_weekdays** smallint[] ISO 1=Mon … 7=Sun, CHECK enforces non-empty + range — see **Delivery schedule**), `delivery_blackouts` (blackout_date date, slot_id uuid nullable — NULL = entire day blocked, reason text, unique index on (date, slot_id) `NULLS NOT DISTINCT`), `product_inventory` (product_id uuid UNIQUE FK→products CASCADE, **stock_g** integer default 0 + CHECK ≥0, **low_stock_threshold_g** integer default 500, **cost_per_100g** numeric(10,2) default 0, `updated_at` auto-bumped by `BEFORE UPDATE` trigger — operational data kept in a separate table from the catalog so inventory edits don't churn the products row), `stock_movements` (append-only audit log: product_id FK→products CASCADE, **delta_g** integer signed, **reason** `stock_movement_reason` enum `order_paid | restock | correction | damage | manual_adjust`, order_id FK→orders SET NULL, note text nullable, created_by FK→auth.users SET NULL, created_at — `UNIQUE(order_id, product_id)` is the idempotency guard for `deductInventoryForOrder` so the webhook + result-page paths can't double-deduct; admin INSERT/SELECT only, UPDATE/DELETE intentionally ungranted).
 
 **Order display invariant:** `originalSubtotal − promotion_discount − promo_discount + delivery_fee = total`. The order list pages and cards display this breakdown as `Subtotal − Promotion − Promo + Delivery = Total`. Old orders without `original_price`/`promotion_discount` (NULL/0) render correctly without the new lines.
 
@@ -721,7 +727,7 @@ Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React conte
 - **`Collapsible` / `CollapsibleTrigger` / `CollapsibleChevron` / `CollapsibleContent`** — animated accordion using `motion/react` `AnimatePresence`.
 - **`Select` / `SelectTrigger` / `SelectValue` / `SelectContent` / `SelectItem` / `SelectGroup` / `SelectSeparator`** — custom dropdown, context-based, supports controlled/uncontrolled, `clearable` prop, auto up/down direction.
 - **`FormTileRadio` / `FormTileRadioItem`** — single-select tile radio group. Sizes: `sm` (compact, for product cards) | `md` (default). `FormTileRadioItem` accepts `disabled?: boolean` — adds `aria-disabled`, native `disabled`, and a dashed muted state via the CVA `state` variant (`active | idle | disabled`). Override the default flex layout with `className` (used by checkout date grid: `grid grid-cols-7 gap-1.5`). Context-based compound component with controlled/uncontrolled support.
-- **`Form` components** — `FormLabel` (`required` prop adds red `*`), `FormInput` (supports `startIcon` for left icon, `wrapperClassName` for outer div, `clearable` + `onClear`), `FormSelect`, `FormTextarea`, `FormRichTextarea` (BlockNote-backed rich-text editor — see **Rich text (product notes)** below), `FormError`, `FormPasswordInput` (visibility toggle), `FormPhoneInput` (UAE format: displays `0XX XXX XXXX`, submits `+971XXXXXXXXX` via hidden input), `FormOtpInput` (6-digit OTP with `defaultValue` + `useResendCooldown` hook), `FormCheckbox`, `FormNumberInput` (stepper with +/- buttons, controlled via `value`/`onValueChange`), `FormUploadZone` (supports `initialUrl` for single image edit mode, `initialUrls` for multi-image; integrated Lightbox preview + sortable thumbnails), **`FormDatePicker`** (calendar + optional time), **`FormTimePicker`** (HH:mm only — wraps the same `DatePicker` compound with `timeOnly` mode + `DatePickerTimeContent` so the popover renders just the wheels, no calendar) — CVA variants with `default` / `error` states. `FormSelect` wraps the `Select` compound component.
+- **`Form` components** — `FormLabel` (`required` prop adds red `*`), `FormInput` (supports `startIcon` for left icon, `wrapperClassName` for outer div, `clearable` + `onClear`), `FormSelect`, `FormTextarea`, `FormRichTextarea` (BlockNote-backed rich-text editor — see **Rich text (product notes)** below), `FormError`, `FormPasswordInput` (visibility toggle), `FormPhoneInput` (UAE format: displays `0XX XXX XXXX`, submits `+971XXXXXXXXX` via hidden input), `FormOtpInput` (6-digit OTP with `defaultValue` + `useResendCooldown` hook), `FormCheckbox`, `FormNumberInput` (stepper with +/- buttons, controlled via `value`/`onValueChange`), `FormUploadZone` (supports `initialUrl` for single image edit mode, `initialUrls` for multi-image; integrated Lightbox preview + sortable thumbnails; reusable for video uploads via `mimePrefix="video/"`, `noun="a video"`, `acceptLabel="MP4, WebM, MOV"` — see **Product video**. Rejections from react-dropzone (size, type, count) surface as toast messages.), **`FormDatePicker`** (calendar + optional time), **`FormTimePicker`** (HH:mm only — wraps the same `DatePicker` compound with `timeOnly` mode + `DatePickerTimeContent` so the popover renders just the wheels, no calendar) — CVA variants with `default` / `error` states. `FormSelect` wraps the `Select` compound component.
 - **`DropdownMenu` / `DropdownMenuTrigger` / `DropdownMenuContent` / `DropdownMenuItem` / `DropdownMenuSeparator` / `DropdownMenuLabel`** — context-based dropdown menu with auto up/down direction, outside-click and Escape close, `destructive` + `disabled` item variants.
 - **`Table` / `TableHeader` / `TableHeaderRow` / `TableHead` / `TableBody` / `TableRow` / `TableCell` / `TableEmpty` / `TablePagination`** — compound table with sticky header, sort indicators, dividers. Context-based (`useTable`).
 - **`DataTable`** — declarative wrapper: pass `data`, `columns: ColumnDef[]`, `sort`, `pagination` and it renders a full `Table`. Hooks: `useTableSort`, `useTableData`, `useTableSearch`, `useTablePagination`. Helpers: `formatAed`, `formatDate`, `formatDateTime`, `shortId`, comparators (`compareString`, `compareNumber`, `compareDate`).
@@ -730,7 +736,7 @@ Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React conte
 - **`Popover` / `PopoverTrigger` / `PopoverContent`** — context-based popover with auto up/down direction, outside-click close, viewport clamping. Supports **controlled mode** via `open`/`onOpenChange` props (used by `BenefitsSection`, `NutritionSection`). `usePopover()` hook for child components.
 - **`MultiSelect` / `MultiSelectTrigger` / `MultiSelectContent` / `MultiSelectItem` / `MultiSelectEmpty` / `MultiSelectCreate` / `MultiSelectDelete`** — compound multi-select with search, selected-items-first sorting, scroll preservation. Context-based (`useMultiSelect`). `MultiSelectCreate` for inline option creation, `MultiSelectDelete` for inline deletion. `MultiSelectTrigger` accepts an optional `maxVisibleTags?: number` — extra tags collapse into a single `+N more` pill (used by `/panel/inventory/history` to keep the toolbar tidy with many products selected).
 - **`Tooltip` / `TooltipTrigger` / `TooltipContent`** — hover/focus tooltip with 4-direction support (`side` prop: `top | bottom | left | right`), auto-fallback to opposite side if no space. `delay` prop (default 200ms). Toggle on click for touch devices. **Always use `asChild`** on `TooltipTrigger` — it merges all handlers (onClick, onMouseEnter, etc.) with the child element's handlers via `cloneElement`. No `useId()` — safe inside Suspense boundaries. **`TooltipContent` renders into a `createPortal(..., document.body)` with `position: fixed` and JS-computed coords from the trigger's `getBoundingClientRect()` — this lets the tooltip escape any `overflow: hidden | clip` ancestor (e.g. embla carousel viewport, modal scroll containers). Coords are clamped to the viewport with an 8px pad. Recomputed on `resize` and `scroll` (capture phase, so any scrollable ancestor triggers the update). SSR-safe via `useSyncExternalStore` mount detection (no effect-driven setState). Do not write tooltip-specific positioning hacks like `w-full left-0 translate-x-0!` — the portal handles it.**
-- **`Gallery`** — rows-based image gallery using `react-photo-album`. Props: `images: GalleryImage[]`, `rowHeight`, `maxPerRow`, `spacing`, `onClick(index)`. No built-in Lightbox — compose with `<Lightbox>` externally.
+- **`Gallery`** — rows-based image gallery using `react-photo-album`. Props: `images: GalleryImage[]`, `rowHeight`, `maxPerRow`, `spacing`, `onClick(index)`. `GalleryImage` accepts optional `isVideo?: boolean` (centered Play overlay) and `videoSrc?: string` (renders `<video preload="metadata" muted>` instead of `<img>` so the tile shows the actual first frame for MP4). `render.image` passes through the library's `.react-photo-album--image` className so both `<img>` and `<video>` get the `aspect-ratio` CSS — without it `<video>` falls back to its natural intrinsic aspect (often 16:9 for phone clips) and renders a shorter tile than image siblings. No built-in Lightbox — compose with `<Lightbox>` externally.
 - **`MixCompositionList`** — shared Collapsible with rows `[thumbnail with ×count pill] / name + total weight / total price`. Single source of truth for mix composition display across cart, mix constructor, checkout, order views, and admin mix cards. See **Mix composition rendering (shared)** below for full usage.
 - **`RichText`** — renders sanitized HTML via `dangerouslySetInnerHTML` inside a `<div class="rich-text">` (paired with prose-style overrides in `globals.css`). Used to display the rich-text product `note` in tooltips and detail blockquotes. **Does not sanitize on render** — content is sanitized once at write time in admin actions; render path trusts the DB to avoid running jsdom on every SSR.
 - **`CartEmpty`** — empty cart placeholder screen.
@@ -802,20 +808,116 @@ Products have a **main image** (`image_url`) and an optional **gallery** (`image
 - **Admin form:** One `FormUploadZone` with `name="images"`, `multiple={true}`, `maxFiles={8}`. First uploaded image = `image_url`, rest = `images`. Drag-and-drop reordering via `@dnd-kit/react` — first position always gets "Main" badge.
 - **Server action parsing:** `parseUploads(formData)` splits `formData.getAll("images")` → `image_url` (index 0) + `images` (index 1+). Helper `cleanupRemovedImages(oldUrls, newUrls)` deletes removed files from Supabase Storage on update/delete.
 - **Edit mode initialization:** `getInitialUrls(product)` merges `[image_url, ...images]` back into a single array for the upload zone.
-- **Public display:** `ProductDetailImage` combines `[image_url, ...images]`, shows main image + thumbnail strip + `Lightbox` for fullscreen zoom.
+- **Public display:** `ProductDetailImage` combines `[image_url, ...images]`, shows main image + thumbnail strip + `Lightbox` for fullscreen zoom. When `product.video_url` is set, an extra video tile is appended at the end of the strip — see **Product video**.
 - **Cards:** `ProductImage` continues to use only `image_url` for card thumbnails.
 - **Types:** `Product.images: string[]`, `DbProduct.images: string[] | null`
 - **Mapper:** `mapDbProducts` sets `images: p.images ?? []` (independent from `image_url`)
 
+## Product video
+
+Each product can optionally carry **one** review/recipe video — either an uploaded MP4 (Supabase Storage) or a YouTube link. Single field `products.video_url` stores both; type is detected from URL pattern at runtime via `getVideoKind(url)` in [src/shared/utils/videoUrl.ts](src/shared/utils/videoUrl.ts) — no `video_type` column needed.
+
+### Data + storage
+
+- **DB column:** `products.video_url text` (nullable). SQL ships as `video_url_migration.sql` at the repo root (apply manually, same convention as `delivery_slots_migration.sql` / `inventory_migration.sql`).
+- **Storage bucket:** `product-videos` (public read, admin write). Added to `ALLOWED_BUCKETS` in [src/lib/storage.ts](src/lib/storage.ts). Create it manually in Supabase Dashboard.
+- **MP4 URL shape:** `https://*.supabase.co/storage/v1/object/public/product-videos/product-video-{uuid}.{mp4|mov|webm|m4v}`.
+
+### videoUrl utilities
+
+[src/shared/utils/videoUrl.ts](src/shared/utils/videoUrl.ts) — shared between client and server:
+- `getVideoKind(url)` → `"youtube" | "mp4" | null`. Pattern-matches.
+- `extractYouTubeId(url)` — handles `youtube.com/watch?v=`, `youtu.be/`, `youtube.com/shorts/`, `youtube.com/embed/`, `/live/`. Validates the 11-char id.
+- `getYouTubeThumbnail(id)` → `https://img.youtube.com/vi/{id}/hqdefault.jpg`.
+- `getYouTubeEmbedUrl(id)` → `https://www.youtube.com/embed/{id}?modestbranding=1&rel=0`.
+- `isValidVideoUrl(url)` — server-side validator: accepts YouTube of any supported shape, or Supabase Storage URLs scoped to the configured project + `product-videos` bucket.
+- `getPlayableVideoMime(type)` — remaps `video/quicktime` → `video/mp4`. **Chrome refuses to play `<source type="video/quicktime">`** even when the inner H.264 stream is fully supported (most phone-recorded MOVs); this lie makes the browser actually attempt playback. Used both client-side (`<source>` for blob preview) and server-side (`Content-Type` on `uploadVideo` to Supabase). Bypasses Chrome's `canPlayType` rejection for MOV.
+
+### Storage helpers ([src/lib/storage.ts](src/lib/storage.ts))
+
+- `uploadVideo(file, slug, bucket)` — sibling of `uploadImage`. Whitelists `mp4 | webm | mov | m4v`, validates MIME prefix OR extension (some browsers report empty `file.type` for MOV on Windows), sets `Content-Type` via `getPlayableVideoMime` so subsequent fetches play.
+- `parseFormVideo(formData, fieldName, slug, bucket)` — single-value sibling of `parseFormImages`. Existing URL passes through, new `File` is uploaded. Returns `string | null`.
+
+### Lightbox extension for video / YouTube
+
+[src/shared/ui/Lightbox.tsx](src/shared/ui/Lightbox.tsx) uses the YARLightbox **Video plugin** for MP4 slides (`type: "video"`, `sources: [{src, type}]`) — autoplay/fullscreen/PiP behaviour built in. YouTube slides (`type: "youtube"`, `videoId`) are rendered by our own `render.slide` that returns an iframe with `getYouTubeEmbedUrl(id)`. The library doesn't have a YouTube plugin, so we provide one ourselves via module-augmentation:
+
+```ts
+declare module "yet-another-react-lightbox" {
+  interface SlideTypes { youtube: SlideYouTube }
+  interface SlideYouTube extends GenericSlide { type: "youtube"; videoId: string; poster?: string; alt?: string }
+}
+```
+
+Plus `render.thumbnail` covers both: `<video preload="metadata" muted>` for mp4 (browser shows first frame), `<img>` of YouTube `hqdefault.jpg` for YouTube. Both also get YARLightbox's standard Play overlay.
+
+**Autoplay**: `VIDEO_SETTINGS.autoPlay = true` enables MP4 autoplay when the slide becomes active (plugin handles `offset === 0`). For YouTube, the iframe URL is built per-render — active slide gets `?autoplay=1&mute=1`, off-screen slides get the base URL so they don't all start at once. `mute=1` is required because cross-origin iframe autoplay is blocked without it on Chrome/Safari.
+
+**Stability**: `slides` are memoized inside the Lightbox wrapper by a stringified slide-identity key, so a freshly-built `slides` array from the caller doesn't trigger YARLightbox's internal reducer to reset `globalIndex` and re-key the carousel slide (which would tear down the `<video>` element).
+
+### Gallery extension for video
+
+[src/shared/ui/Gallery.tsx](src/shared/ui/Gallery.tsx) — `GalleryImage` now accepts:
+- `isVideo?: boolean` — adds a centered Play-icon overlay on the tile (used for both mp4 and YouTube thumbnails).
+- `videoSrc?: string` — if set, renders a `<video preload="metadata" muted>` element instead of `<img>`, so the browser shows the actual first frame for MP4 thumbnails. YouTube thumbnails use `<img>` with `hqdefault.jpg`.
+
+`render.image` now **passes `className` from `react-photo-album`'s props through** to both `<img>` and `<video>`. Critical: the library's `.react-photo-album--image` class sets `width: 100%; aspect-ratio: var(--photo-width)/var(--photo-height); display: block;` via CSS variables. Without it, `<video>` falls back to its natural intrinsic aspect (often 16:9 for phone clips) and renders a shorter tile than image siblings in the same row.
+
+### Admin form
+
+[VideoSection](src/pages_flow/panel/products/product-form/VideoSection.tsx) sits between `BasicInfoSection` and `VariantsSection`. Structure:
+- `FormTileRadio name="video_mode"` toggle between `upload` and `youtube`.
+- **Upload mode**: `<FormUploadZone>` with `name="video_file"`, `accept="video/*"`, `mimePrefix="video/"`, `noun="a video"`, `acceptLabel="MP4, WebM, MOV"`, `maxSizeMb={80}`, `multiple={false}`, `bucket="product-videos"`, `slug="product-video"`. `initialUrl` is populated only when DB value is mp4-kind.
+- **YouTube mode**: `<FormInput name="video_youtube_url">`. `defaultValue` populated only when DB value is youtube-kind.
+
+Mode autoresolves from `product?.video_url` via `getVideoKind` on mount. Switching modes unmounts the inactive input, so only the active value is submitted.
+
+### Server actions ([src/pages_flow/panel/products/actions.ts](src/pages_flow/panel/products/actions.ts))
+
+- `parseVideoUpload(formData)` reads `video_mode`, then either `parseFormVideo` (upload mode) or trimmed `video_youtube_url` (youtube mode). Validates via `isValidVideoUrl`. Returns `{ video_url, error? }`.
+- `parseProductValues` runs `parseUploads` (images) and `parseVideoUpload` in `Promise.all`. Surfaces `videoError` as `fieldErrors.video_url` for the form.
+- `cleanupRemovedVideo(oldUrl, newUrl)` — if old was an MP4 storage URL and changed, deletes the file from `product-videos`. Skipped for YouTube (external links). Called from `updateProduct` after the row update and from `deleteProduct`.
+
+### Public + admin card (VideoButton)
+
+[VideoButton](src/sections/products/components/VideoButton.tsx) — icon button (`Play` from `lucide-react`) overlaid in the bottom-right of every product card (public [ProductItem](src/sections/products/ProductItem.tsx) and admin [AdminProductCard](src/pages_flow/panel/products/AdminProductCard.tsx)) when `product.video_url` is set. Click stops propagation (so the card's `<Link>` doesn't fire) and opens a single-slide `<Lightbox>` directly on the current page — no navigation to product detail. Note and Video buttons share the same `bottom-right` corner via `flex flex-col-reverse gap-1.5`; Note sits below, Video stacks above.
+
+### Product detail page
+
+[ProductDetailImage](src/sections/products/components/ProductDetailImage.tsx) consumes `product.video_url` and appends a video entry to both the Lightbox slides array (`slides`) and the thumbnail strip (`restThumbnails`). Video tile is **always last** in the gallery; for MP4 it's rendered as `<video>` showing the first frame, for YouTube as an `<img>` of `hqdefault.jpg` — both with a Play overlay.
+
+### Config — body size limits
+
+Two limits in [next.config.ts](next.config.ts) must both clear the video size:
+- `experimental.serverActions.bodySizeLimit: "100mb"` — applies to the action handler.
+- `experimental.proxyClientMaxBodySize: "100mb"` — Next 16 middleware (`src/proxy.ts`) caps request body at **10 MB by default**, which truncates multipart uploads before they reach the action and surfaces as the very misleading `Unexpected end of form` from busboy. **Both** settings need bumping for video uploads to work; raising only `bodySizeLimit` does nothing if middleware is active.
+
+### MOV / codec caveats
+
+Browser support varies by codec inside the MOV container:
+- H.264 inside MOV — plays in Chrome via the `getPlayableVideoMime` remap to `video/mp4`. Most phone MOVs fall here.
+- HEVC / ProRes inside MOV — Chrome can't decode regardless of MIME. No frontend fix; would need server-side transcoding.
+
+`DropZone` shows a toast for any react-dropzone rejection (size/type/count), so users get clear feedback when an upload silently fails the size cap or the MIME filter.
+
 ## Lightbox
 
-`Lightbox` (`src/shared/ui/Lightbox.tsx`) wraps `yet-another-react-lightbox` with brand theming.
+`Lightbox` (`src/shared/ui/Lightbox.tsx`) wraps `yet-another-react-lightbox` with brand theming and three slide types.
 
 - **API:** `<Lightbox open onClose slides={LightboxSlide[]} index? />`
-- **Plugins:** Zoom always; Counter + Thumbnails when `slides.length > 1`
-- **Theming:** CSS variables inline — earth backdrop, white-warm buttons, orange active/thumbnail border
-- **Single image:** hides prev/next buttons, disables carousel loop
-- Replaces the old custom `ImagePreview` + `Dialog` pattern everywhere
+- **`LightboxSlide` union:**
+  - `LightboxImageSlide` — `{ src, alt?, width?, height? }` (or `{ type: "image", … }`).
+  - `LightboxVideoSlide` — `{ type: "video", sources: [{src, type}], poster?, alt? }`. Rendered by YARLightbox **Video plugin** (autoplay/fullscreen/PiP built in).
+  - `LightboxYouTubeSlide` — `{ type: "youtube", videoId, poster?, alt? }`. Rendered by our own `render.slide` as an `<iframe>` via `getYouTubeEmbedUrl(id)`; `youtube` type is added via module augmentation since YARLightbox has no YouTube plugin.
+- **Plugins:** Zoom + Video always; Counter + Thumbnails added when `slides.length > 1`.
+- **Autoplay:** `VIDEO_SETTINGS.autoPlay = true` for MP4 (plugin handles `offset === 0`). YouTube iframe URL gets `&autoplay=1&mute=1` only for the active slide (off-screen preloaded slides get the base URL so they don't all play at once). `mute=1` is mandatory for cross-origin iframe autoplay.
+- **Custom thumbnails for non-image slides** via `render.thumbnail`: MP4 → `<video preload="metadata" muted>` first-frame; YouTube → `<img>` of `hqdefault.jpg`. Library's standard Play overlay sits on top.
+- **Slide-identity memoization** (`stableSlides` via `useMemo` keyed on `slides.map(getSlideIdentity).join("\n")`) prevents YARLightbox's reducer from resetting `globalIndex` and re-keying the carousel slide when the caller rebuilds the `slides` array with same content — that re-key would tear down the `<video>` and reset playback.
+- **Theming:** CSS variables inline — earth backdrop, white-warm buttons, orange active/thumbnail border.
+- **Single image:** hides prev/next buttons, disables carousel loop.
+- Replaces the old custom `ImagePreview` + `Dialog` pattern everywhere.
+
+See **Product video** for the full set of changes when MP4/YouTube slides are involved (autoplay config, MOV remap, etc.).
 
 ## Sortable Upload Thumbnails
 
@@ -1293,9 +1395,9 @@ Algorithm:
 
 ### Admin dashboard (`/panel`)
 
-The dashboard is intentionally narrow: it shows **performance for the selected period** (single date selector at the top drives everything in this section), **operational tasks that need action** (current state, not period-filtered), and **recent notifications**. Active promotions / promo codes / catalog stats / users count / delivery total — all moved out, accessible from their own `/panel/*` pages.
+The dashboard is intentionally narrow: it shows **performance for the selected period** (single date selector at the top drives everything in this section), **operational tasks that need action** (current state, not period-filtered), **most recent registrations**, and **recent notifications**. Active promotions / promo codes / catalog stats / delivery total — all moved out, accessible from their own `/panel/*` pages.
 
-Three blocks, in order:
+Four blocks, in order:
 
 1. **Performance** — [`<ProfitOverview />`](src/pages_flow/panel/dashboard/sections/ProfitOverview.tsx) (server shell + client inner, same pattern as `RecentNotifications`).
    - Server: [`getProfitClientData()`](src/pages_flow/panel/dashboard/profitQueries.ts) runs **two parallel queries** — paid `order_items` (with order `updated_at`, `promo_discount` per unit, regular product info, and mix `mix_composition`) + all PAID/FAILED/CANCELLED orders (status, `updated_at`, `total`) — plus a batch cost map for every `product_id` referenced. One round-trip; client filters by range and aggregates.
@@ -1316,7 +1418,9 @@ Three blocks, in order:
      - **Low stock** — `getInventoryRows()` filtered to `status === "low" || status === "out"`. Click → `/panel/inventory?status=low`.
    - Renders `null` when nothing needs attention (no empty section heading shown).
 
-3. **Recent notifications** — existing [`RecentNotifications`](src/pages_flow/panel/dashboard/RecentNotifications.tsx) + [`MarkAllReadButton`](src/pages_flow/panel/dashboard/MarkAllReadButton.tsx).
+3. **Recent users** — [`<RecentUsers />`](src/pages_flow/panel/dashboard/sections/RecentUsers.tsx) (server shell + [`RecentUsersInner`](src/pages_flow/panel/dashboard/sections/RecentUsersInner.tsx) client inner). Compact list of the **last 5 registrations** with name + GenderIcon, email/phone (both `CopyText`'d) + inline `WhatsAppLink`, birthday, registration date and order count + total spent (when there are PAID orders). `View all →` link in the header navigates to `/panel/users`. Each row reuses [`<UserActions />`](src/pages_flow/panel/users/UserActions.tsx) for the three icon buttons (WhatsApp / Create promo code / View orders). Renders an empty `Card` placeholder when the table is empty.
+
+4. **Recent notifications** — existing [`RecentNotifications`](src/pages_flow/panel/dashboard/RecentNotifications.tsx) + [`MarkAllReadButton`](src/pages_flow/panel/dashboard/MarkAllReadButton.tsx).
 
 ### Product form integration
 
@@ -1328,3 +1432,41 @@ Three blocks, in order:
 
 - **Low-stock notifications** (push/in-app). The `low_stock_threshold_g` field exists and drives the UI highlight, but no realtime alerts are sent — the alert pipeline is reserved for a follow-up iteration.
 - Multi-warehouse / batch / FEFO / supplier management / reservation on PENDING orders / blocking checkout when out-of-stock / restoring stock on CANCELLED-after-PAID / FIFO weighted-average costing / CSV import. Stock can technically go to zero (UI clamps via `GREATEST(0, …)`) without blocking checkout — this is acceptable for the current business stage.
+
+## Users (admin browser)
+
+Admin-facing index of every registered user with one-click access to WhatsApp, targeted promo code creation, and the user's order history. Built on top of the same data plumbing that already powers `UserPicker` in `/panel/promo-codes/create`, extended with PAID-order aggregation.
+
+### Data — [src/lib/usersDb.ts](src/lib/usersDb.ts)
+
+`getAdminUsers()` is a single `React.cache`-wrapped server function. It runs `supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 })` first (gives ids + email + auth `created_at`), then in a `Promise.all` fires two batched queries against the resolved ids: `profiles(id, first_name, last_name, phone, gender, birthday, role, allow_notifications)` and PAID `orders(user_id, total, updated_at)`. The PAID-orders list is aggregated in JS into `Map<user_id, { count, totalSpent, lastOrderAt }>` — cheaper than a SQL RPC and reuses the same idiomatic pattern as the dashboard's `getProfitClientData`. Returns `AdminUser[]` sorted by `createdAt desc`. `getRecentUsers(limit)` just slices that result. The 1000-row cap matches the existing `loadUserOptions` in `/panel/promo-codes/_data.ts` and is documented with a TODO inside `usersDb.ts` for when registrations grow past it.
+
+`AdminUser` shape: `id, email, firstName, lastName, phone, gender, birthday, role, allowNotifications, createdAt, orderCount, totalSpent, lastOrderAt`. Mix-system products / PENDING orders are excluded from the aggregation by the `.eq("status", OrderStatus.PAID)` filter, matching the project-wide **Order visibility invariant**.
+
+### `/panel/users` page
+
+[src/app/panel/users/page.tsx](src/app/panel/users/page.tsx) is the server shell — wraps `<UsersContent>` (calls `getAdminUsers()`) in a `Suspense` boundary with a custom skeleton, all under a `SearchParamsFilterProvider` keyed on `["search", "gender", "hasOrders", "sortKey", "sortDir", "page", "pageSize"]`. Mirrors `/panel/all-orders` patterns 1:1.
+
+Client tree under [src/pages_flow/panel/users/](src/pages_flow/panel/users/):
+- [`UsersPage`](src/pages_flow/panel/users/UsersPage.tsx) — composes `useFilteredUsers` + `useUsersTable`, renders mobile `<AdminUserCards>` (`xl:hidden`) + desktop `<DataTable>` (`hidden xl:block`). No `useAutoRouterRefresh` — registrations are infrequent and the page already refreshes on focus.
+- [`useFilteredUsers`](src/pages_flow/panel/users/useFilteredUsers.ts) — search index over `id + firstName + lastName + email + phone`, `useDeferredValue` defers the input, plus `gender` and `hasOrders` predicates. Same shape as `useFilteredOrders`.
+- [`useUsersTable`](src/pages_flow/panel/users/useUsersTable.ts) — thin re-export of `useOrdersTable` (the hook is generic over `T, K` already; bumping it into `@/shared/hooks` is a later cleanup).
+- [`UserFilters`](src/pages_flow/panel/users/UserFilters.tsx) — search input + gender select (Male/Female) + hasOrders select (With orders / No orders). All reset `page` on change.
+- [`columns.tsx`](src/pages_flow/panel/users/columns.tsx) — `adminUserColumns`: `User` (name + email with `CopyText` + `GenderIcon` + role `Badge` when non-`user`), `Contact` (phone `CopyText` + `WhatsAppLink`), `Birthday`, `Orders` (count + `formatAed(totalSpent)` orange; "No orders" muted), `Last order`, `Registered`, `Actions` (right-aligned `<UserActions>`).
+- [`AdminUserCards`](src/pages_flow/panel/users/AdminUserCards.tsx) — mobile `DataCardList` (`sm:grid-cols-2`) with name + GenderIcon + role badge in header, email/phone/birthday in body, orders block + last-order line, footer = `Registered {date}` + `<UserActions>`. Reuses the same icon set (`Mail`, `Cake`).
+- [`UserActions`](src/pages_flow/panel/users/UserActions.tsx) — shared icon row used by table cells, mobile cards, and the dashboard `Recent users` block. Three buttons (tooltip'd via `Tooltip` / `TooltipContent`):
+  1. `WhatsAppLink` (reuse from `@/pages_flow/orders/ui/WhatsAppLink`) — only when `phone` is non-null.
+  2. **Create promo code** — `Ticket` icon link to `/panel/promo-codes/create?user={uuid}`. Lands the admin in the existing promo code form with the recipient pre-selected (see the prefill paragraph in **Promo codes**).
+  3. **View orders** — `Receipt` icon link to `/panel/all-orders?search={email}`. Hidden when `orderCount === 0`. Uses the orders page's built-in `search` filter which already matches against email.
+- [`userDisplay.tsx`](src/pages_flow/panel/users/userDisplay.tsx) — shared helpers: `GenderIcon`, `formatBirthday`, `fullName`, `userLabel`. Promoted out of `UserPicker.tsx` so the picker, the table, the cards and the dashboard row all render the same way. `UserPicker` now imports `GenderIcon` / `formatBirthday` from here.
+
+### Dashboard `Recent users` block
+
+See **Admin dashboard (`/panel`) → block 3** above — same data via `getRecentUsers(5)`, same `<UserActions>` row, with a `View all →` link to `/panel/users`. The compact row layout sits in a single `Card padding="none"` with internal dividers, so the visual weight matches `Recent notifications` directly below it.
+
+### Out of scope (intentionally not built yet)
+
+- Server-side pagination through `auth.admin.listUsers({ page })` — not needed under 1000 users.
+- Bulk actions (multi-select → send a group promo code). Could be layered on top of `MultiSelect` later.
+- CSV export.
+- Editing user role / soft-delete / disable account — different workflow with stronger auditing requirements.

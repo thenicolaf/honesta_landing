@@ -4,8 +4,12 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   experimental: {
     serverActions: {
-      bodySizeLimit: "50mb",
+      bodySizeLimit: "100mb",
     },
+    // Next 16 middleware proxy caps request body at 10 MB by default, which
+    // truncates large multipart uploads (video files) before they reach the
+    // server action handler. Bump to match serverActions.bodySizeLimit.
+    proxyClientMaxBodySize: "100mb",
     optimizePackageImports: [
       "@/shared/ui",
       "@/shared/icons",
