@@ -75,7 +75,8 @@ src/
 │   │   ├── categories/         # /panel/categories CRUD (admin only)
 │   │   ├── products/           # /panel/products CRUD (admin only)
 │   │   ├── mixes/              # /panel/mixes CRUD — mix constructor (admin only)
-│   │   └── promotions/         # /panel/promotions CRUD (admin only)
+│   │   ├── promotions/         # /panel/promotions CRUD (admin only)
+│   │   └── users/              # /panel/users — registered users browser (admin only)
 │   ├── mix/                    # /mix — public mix builder page
 │   ├── api/
 │   │   ├── payment/webhook/    # N-Genius webhook → updates order status in Supabase
@@ -107,7 +108,8 @@ src/
 │   ├── deliverySlotsDb.ts      # delivery_slots CRUD + cached queries (re-exports getAvailableSlotsForDate / findSlotConflict)
 │   ├── deliveryBlackoutsDb.ts  # delivery_blackouts CRUD (date or date+slot)
 │   ├── orderNotifications.ts   # buildOrderNotificationParts (structured) + formatOrderNotificationMessage (string)
-│   └── inventoryDb.ts          # product_inventory + stock_movements: getInventoryRows, deductInventoryForOrder, recordStockMovement, getMovements / getAllMovements, upsertInventorySettings, getProductCosts
+│   ├── inventoryDb.ts          # product_inventory + stock_movements: getInventoryRows, deductInventoryForOrder, recordStockMovement, getMovements / getAllMovements, upsertInventorySettings, getProductCosts
+│   └── usersDb.ts              # getAdminUsers (auth.listUsers + profiles + PAID-order aggregation, React.cache'd) + getRecentUsers(limit)
 │
 ├── proxy.ts                    # Next.js middleware helper — refreshes auth session + protects private routes
 │
@@ -127,14 +129,15 @@ src/
 │   ├── orders/                 # OrdersPage + OrderCards (user order history) + OrderMixComposition
 │   ├── mix/                    # MixBuilderPage + BoxSelector + PresetGrid + PresetTile + MixSummary + actions (assembleMix, cleanupOrphanedMixVariants)
 │   ├── panel/
-│   │   ├── dashboard/          # ProfitOverview + NeedsAttention (sections/) + DateRangeSelector + RecentNotifications + profitQueries / profitTypes
+│   │   ├── dashboard/          # ProfitOverview + NeedsAttention + RecentUsers (sections/) + DateRangeSelector + RecentNotifications + profitQueries / profitTypes
 │   │   ├── orders/             # AllOrdersPage + AdminOrderCards + filters + useOrdersTable
 │   │   ├── partnerships/       # PartnershipsPage + InquiryCards + filters + useInquiriesTable
 │   │   ├── categories/         # CategoryForm + actions
 │   │   ├── products/           # ProductForm + actions (incl. InventorySection: cost_per_100g + low_stock_threshold_g)
 │   │   ├── mixes/              # MixForm + MixesPage + SortableMixGrid + actions (auto system product)
 │   │   ├── inventory/          # InventoryPage + Toolbar + Card + columns + Adjust/Settings/History dialogs + useInventoryTable; history/ subroute = full movements log with filters
-│   │   └── promotions/         # PromotionsPage + PromotionForm + actions
+│   │   ├── promotions/         # PromotionsPage + PromotionForm + actions
+│   │   └── users/              # UsersPage + AdminUserCards + UserFilters + UserActions + columns + useFilteredUsers / useUsersTable + userDisplay (shared GenderIcon/formatBirthday)
 │   └── PageLoader.tsx          # Thin wrapper around <Loader /> for route loading.tsx files
 │
 ├── providers/                  # React context providers + hooks
@@ -226,6 +229,7 @@ src/
 | `/panel/promotions` | Promotion management (admin only) |
 | `/panel/promotions/create` | Create new promotion (admin only) |
 | `/panel/promotions/[id]/edit` | Edit promotion (admin only) |
+| `/panel/users` | Registered users browser — search/sort/filter, WhatsApp + Create promo code + View orders per row (admin only) |
 | `/panel/marketing-popup` | Marketing popups catalog — list with Activate/Edit/Delete (admin only) |
 | `/panel/marketing-popup/create` | Create new popup (admin only) |
 | `/panel/marketing-popup/[id]/edit` | Edit popup (admin only) |
@@ -333,6 +337,8 @@ Manual codes a user enters in the cart/checkout to get an extra discount, parall
 **RLS.** All four `promo_code*` tables have RLS enabled with admin-only policies. Server actions go through `supabaseAdmin` (service_role bypasses RLS), so regular users never touch these tables directly from the browser. See `src/lib/promoCodesDb.ts` — every query uses `supabaseAdmin`.
 
 **Admin UI.** `/panel/promo-codes` — CRUD by analogy with `/panel/promotions`. The `PromoCodeForm` uses `FormTileRadio` for scope, `FormNumberInput` for all numeric fields, `ProductPicker` (reused from promotions, only when `scope=product`), and `UserPicker` (loads users via `supabaseAdmin.auth.admin.listUsers` joined with `profiles` for name/gender/birthday). The list page shows a status badge: `active | scheduled | exhausted | expired` — `exhausted` (orange) appears when `used_count >= max_uses`. The status helper `getPromoCodeStatus(isActive, startsAt, endsAt, usedCount, maxUses)` is in [src/pages_flow/panel/promo-codes/types.ts](src/pages_flow/panel/promo-codes/types.ts).
+
+**`/panel/promo-codes/create?user={uuid}` prefill.** The create route accepts a `?user=<uuid>` query param ([src/app/panel/promo-codes/create/page.tsx](src/app/panel/promo-codes/create/page.tsx)). When present and the UUID matches a known user, it's threaded down as `prefilledUserIds={[uuid]}` into `PromoCodeForm`, which falls back to it as the default for `<UserPicker>` when no existing `promoCode.user_ids` is present. This is the one-click flow used by `/panel/users` and the dashboard `Recent users` section to issue a targeted promo without manually searching for the recipient.
 
 ## Rich text (product notes)
 
@@ -1293,9 +1299,9 @@ Algorithm:
 
 ### Admin dashboard (`/panel`)
 
-The dashboard is intentionally narrow: it shows **performance for the selected period** (single date selector at the top drives everything in this section), **operational tasks that need action** (current state, not period-filtered), and **recent notifications**. Active promotions / promo codes / catalog stats / users count / delivery total — all moved out, accessible from their own `/panel/*` pages.
+The dashboard is intentionally narrow: it shows **performance for the selected period** (single date selector at the top drives everything in this section), **operational tasks that need action** (current state, not period-filtered), **most recent registrations**, and **recent notifications**. Active promotions / promo codes / catalog stats / delivery total — all moved out, accessible from their own `/panel/*` pages.
 
-Three blocks, in order:
+Four blocks, in order:
 
 1. **Performance** — [`<ProfitOverview />`](src/pages_flow/panel/dashboard/sections/ProfitOverview.tsx) (server shell + client inner, same pattern as `RecentNotifications`).
    - Server: [`getProfitClientData()`](src/pages_flow/panel/dashboard/profitQueries.ts) runs **two parallel queries** — paid `order_items` (with order `updated_at`, `promo_discount` per unit, regular product info, and mix `mix_composition`) + all PAID/FAILED/CANCELLED orders (status, `updated_at`, `total`) — plus a batch cost map for every `product_id` referenced. One round-trip; client filters by range and aggregates.
@@ -1316,7 +1322,9 @@ Three blocks, in order:
      - **Low stock** — `getInventoryRows()` filtered to `status === "low" || status === "out"`. Click → `/panel/inventory?status=low`.
    - Renders `null` when nothing needs attention (no empty section heading shown).
 
-3. **Recent notifications** — existing [`RecentNotifications`](src/pages_flow/panel/dashboard/RecentNotifications.tsx) + [`MarkAllReadButton`](src/pages_flow/panel/dashboard/MarkAllReadButton.tsx).
+3. **Recent users** — [`<RecentUsers />`](src/pages_flow/panel/dashboard/sections/RecentUsers.tsx) (server shell + [`RecentUsersInner`](src/pages_flow/panel/dashboard/sections/RecentUsersInner.tsx) client inner). Compact list of the **last 5 registrations** with name + GenderIcon, email/phone (both `CopyText`'d) + inline `WhatsAppLink`, birthday, registration date and order count + total spent (when there are PAID orders). `View all →` link in the header navigates to `/panel/users`. Each row reuses [`<UserActions />`](src/pages_flow/panel/users/UserActions.tsx) for the three icon buttons (WhatsApp / Create promo code / View orders). Renders an empty `Card` placeholder when the table is empty.
+
+4. **Recent notifications** — existing [`RecentNotifications`](src/pages_flow/panel/dashboard/RecentNotifications.tsx) + [`MarkAllReadButton`](src/pages_flow/panel/dashboard/MarkAllReadButton.tsx).
 
 ### Product form integration
 
@@ -1328,3 +1336,41 @@ Three blocks, in order:
 
 - **Low-stock notifications** (push/in-app). The `low_stock_threshold_g` field exists and drives the UI highlight, but no realtime alerts are sent — the alert pipeline is reserved for a follow-up iteration.
 - Multi-warehouse / batch / FEFO / supplier management / reservation on PENDING orders / blocking checkout when out-of-stock / restoring stock on CANCELLED-after-PAID / FIFO weighted-average costing / CSV import. Stock can technically go to zero (UI clamps via `GREATEST(0, …)`) without blocking checkout — this is acceptable for the current business stage.
+
+## Users (admin browser)
+
+Admin-facing index of every registered user with one-click access to WhatsApp, targeted promo code creation, and the user's order history. Built on top of the same data plumbing that already powers `UserPicker` in `/panel/promo-codes/create`, extended with PAID-order aggregation.
+
+### Data — [src/lib/usersDb.ts](src/lib/usersDb.ts)
+
+`getAdminUsers()` is a single `React.cache`-wrapped server function. It runs `supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 })` first (gives ids + email + auth `created_at`), then in a `Promise.all` fires two batched queries against the resolved ids: `profiles(id, first_name, last_name, phone, gender, birthday, role, allow_notifications)` and PAID `orders(user_id, total, updated_at)`. The PAID-orders list is aggregated in JS into `Map<user_id, { count, totalSpent, lastOrderAt }>` — cheaper than a SQL RPC and reuses the same idiomatic pattern as the dashboard's `getProfitClientData`. Returns `AdminUser[]` sorted by `createdAt desc`. `getRecentUsers(limit)` just slices that result. The 1000-row cap matches the existing `loadUserOptions` in `/panel/promo-codes/_data.ts` and is documented with a TODO inside `usersDb.ts` for when registrations grow past it.
+
+`AdminUser` shape: `id, email, firstName, lastName, phone, gender, birthday, role, allowNotifications, createdAt, orderCount, totalSpent, lastOrderAt`. Mix-system products / PENDING orders are excluded from the aggregation by the `.eq("status", OrderStatus.PAID)` filter, matching the project-wide **Order visibility invariant**.
+
+### `/panel/users` page
+
+[src/app/panel/users/page.tsx](src/app/panel/users/page.tsx) is the server shell — wraps `<UsersContent>` (calls `getAdminUsers()`) in a `Suspense` boundary with a custom skeleton, all under a `SearchParamsFilterProvider` keyed on `["search", "gender", "hasOrders", "sortKey", "sortDir", "page", "pageSize"]`. Mirrors `/panel/all-orders` patterns 1:1.
+
+Client tree under [src/pages_flow/panel/users/](src/pages_flow/panel/users/):
+- [`UsersPage`](src/pages_flow/panel/users/UsersPage.tsx) — composes `useFilteredUsers` + `useUsersTable`, renders mobile `<AdminUserCards>` (`xl:hidden`) + desktop `<DataTable>` (`hidden xl:block`). No `useAutoRouterRefresh` — registrations are infrequent and the page already refreshes on focus.
+- [`useFilteredUsers`](src/pages_flow/panel/users/useFilteredUsers.ts) — search index over `id + firstName + lastName + email + phone`, `useDeferredValue` defers the input, plus `gender` and `hasOrders` predicates. Same shape as `useFilteredOrders`.
+- [`useUsersTable`](src/pages_flow/panel/users/useUsersTable.ts) — thin re-export of `useOrdersTable` (the hook is generic over `T, K` already; bumping it into `@/shared/hooks` is a later cleanup).
+- [`UserFilters`](src/pages_flow/panel/users/UserFilters.tsx) — search input + gender select (Male/Female) + hasOrders select (With orders / No orders). All reset `page` on change.
+- [`columns.tsx`](src/pages_flow/panel/users/columns.tsx) — `adminUserColumns`: `User` (name + email with `CopyText` + `GenderIcon` + role `Badge` when non-`user`), `Contact` (phone `CopyText` + `WhatsAppLink`), `Birthday`, `Orders` (count + `formatAed(totalSpent)` orange; "No orders" muted), `Last order`, `Registered`, `Actions` (right-aligned `<UserActions>`).
+- [`AdminUserCards`](src/pages_flow/panel/users/AdminUserCards.tsx) — mobile `DataCardList` (`sm:grid-cols-2`) with name + GenderIcon + role badge in header, email/phone/birthday in body, orders block + last-order line, footer = `Registered {date}` + `<UserActions>`. Reuses the same icon set (`Mail`, `Cake`).
+- [`UserActions`](src/pages_flow/panel/users/UserActions.tsx) — shared icon row used by table cells, mobile cards, and the dashboard `Recent users` block. Three buttons (tooltip'd via `Tooltip` / `TooltipContent`):
+  1. `WhatsAppLink` (reuse from `@/pages_flow/orders/ui/WhatsAppLink`) — only when `phone` is non-null.
+  2. **Create promo code** — `Ticket` icon link to `/panel/promo-codes/create?user={uuid}`. Lands the admin in the existing promo code form with the recipient pre-selected (see the prefill paragraph in **Promo codes**).
+  3. **View orders** — `Receipt` icon link to `/panel/all-orders?search={email}`. Hidden when `orderCount === 0`. Uses the orders page's built-in `search` filter which already matches against email.
+- [`userDisplay.tsx`](src/pages_flow/panel/users/userDisplay.tsx) — shared helpers: `GenderIcon`, `formatBirthday`, `fullName`, `userLabel`. Promoted out of `UserPicker.tsx` so the picker, the table, the cards and the dashboard row all render the same way. `UserPicker` now imports `GenderIcon` / `formatBirthday` from here.
+
+### Dashboard `Recent users` block
+
+See **Admin dashboard (`/panel`) → block 3** above — same data via `getRecentUsers(5)`, same `<UserActions>` row, with a `View all →` link to `/panel/users`. The compact row layout sits in a single `Card padding="none"` with internal dividers, so the visual weight matches `Recent notifications` directly below it.
+
+### Out of scope (intentionally not built yet)
+
+- Server-side pagination through `auth.admin.listUsers({ page })` — not needed under 1000 users.
+- Bulk actions (multi-select → send a group promo code). Could be layered on top of `MultiSelect` later.
+- CSV export.
+- Editing user role / soft-delete / disable account — different workflow with stronger auditing requirements.

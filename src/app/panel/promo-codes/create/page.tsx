@@ -5,12 +5,24 @@ import { Button, Skeleton } from "@/shared/ui";
 import { PromoCodeForm } from "@/pages_flow/panel/promo-codes/PromoCodeForm";
 import { loadProductOptions, loadUserOptions } from "../_data";
 
-async function CreateContent() {
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+async function CreateContent({ prefilledUserId }: { prefilledUserId?: string }) {
   const [products, users] = await Promise.all([
     loadProductOptions(),
     loadUserOptions(),
   ]);
-  return <PromoCodeForm products={products} users={users} />;
+  const prefilledUserIds =
+    prefilledUserId && users.some((u) => u.value === prefilledUserId)
+      ? [prefilledUserId]
+      : undefined;
+  return (
+    <PromoCodeForm
+      products={products}
+      users={users}
+      prefilledUserIds={prefilledUserIds}
+    />
+  );
 }
 
 function FormSkeleton() {
@@ -29,7 +41,15 @@ function FormSkeleton() {
   );
 }
 
-export default function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ user?: string }>;
+}) {
+  const params = await searchParams;
+  const userParam = params.user;
+  const prefilledUserId = userParam && UUID_RE.test(userParam) ? userParam : undefined;
+
   return (
     <>
       <div className="mb-6">
@@ -45,7 +65,7 @@ export default function Page() {
 
       <AdminPageHeader title="New Promo Code" label="Admin Panel" />
       <Suspense fallback={<FormSkeleton />}>
-        <CreateContent />
+        <CreateContent prefilledUserId={prefilledUserId} />
       </Suspense>
     </>
   );
