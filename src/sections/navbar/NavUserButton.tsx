@@ -17,7 +17,11 @@ import { SignOutButton } from "@/pages_flow/profile/SignOutButton";
 import { USER_ROUTES, ADMIN_ROUTES } from "@/shared/consts/routes";
 
 interface NavUserButtonProps {
-  user: { email: string } | null;
+  user: {
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+  } | null;
   isAdmin: boolean;
 }
 
@@ -29,14 +33,21 @@ export function NavUserButton({ user, isAdmin }: NavUserButtonProps) {
     href === "/panel" ? pathname === "/panel" : pathname.startsWith(href);
 
   if (user) {
+    const fullName = [user.firstName, user.lastName]
+      .filter((part): part is string => Boolean(part?.trim()))
+      .join(" ")
+      .trim();
+    const avatarInitial = user.firstName?.trim() || user.email;
+    const menuLabel = fullName || user.email;
+
     return (
       <>
         <DropdownMenu>
           <DropdownMenuTrigger className="p-1">
-            <Avatar initial={user.email} size="sm" title={user.email} />
+            <Avatar initial={avatarInitial} size="sm" title={menuLabel} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="right">
-            <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
+            <DropdownMenuLabel>{menuLabel}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {USER_ROUTES.map((route) => (
               <DropdownMenuItem key={route.href} asChild className={isActive(route.href) ? "text-orange!" : ""}>

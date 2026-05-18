@@ -56,7 +56,7 @@ export function ProfileForm({ defaultValues, onDone }: ProfileFormProps) {
       {/* Name row */}
       <div className="grid grid-cols-1 gap-4 min-[26.25rem]:grid-cols-2">
         <div>
-          <FormLabel htmlFor="firstName">First Name</FormLabel>
+          <FormLabel htmlFor="firstName" required>First Name</FormLabel>
           <FormInput
             id="firstName"
             name="firstName"
@@ -87,7 +87,7 @@ export function ProfileForm({ defaultValues, onDone }: ProfileFormProps) {
 
       {/* Phone */}
       <div>
-        <FormLabel htmlFor="phone">Phone</FormLabel>
+        <FormLabel htmlFor="phone" required>Phone</FormLabel>
         <FormPhoneInput
           id="phone"
           name="phone"

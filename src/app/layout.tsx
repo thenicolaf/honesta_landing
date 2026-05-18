@@ -54,7 +54,7 @@ export default async function RootLayout({
     ? await Promise.all([
         supabase
           .from("profiles")
-          .select("role, allow_notifications")
+          .select("role, allow_notifications, first_name, last_name")
           .eq("id", user.id)
           .single(),
         getCartItemCount(supabase, user.id),
@@ -91,7 +91,15 @@ export default async function RootLayout({
                 initialUnreadCount={unreadNotificationCount}
               >
                 <Navbar
-                  user={user ? { email: user.email! } : null}
+                  user={
+                    user
+                      ? {
+                          email: user.email!,
+                          firstName: profile?.first_name ?? null,
+                          lastName: profile?.last_name ?? null,
+                        }
+                      : null
+                  }
                   isAdmin={profile?.role === "admin"}
                 />
                 {children}

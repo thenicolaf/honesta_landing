@@ -9,6 +9,7 @@ import { validateSignup, type SignupErrors } from "@/shared/utils/validateAuth";
 interface SignupValues {
   firstName: string;
   lastName: string;
+  phone: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -26,6 +27,7 @@ function parseSignupValues(formData: FormData): SignupValues {
   return {
     firstName: (formData.get("firstName") as string)?.trim(),
     lastName: (formData.get("lastName") as string)?.trim(),
+    phone: (formData.get("phone") as string)?.trim(),
     email: (formData.get("email") as string)?.trim(),
     password: formData.get("password") as string,
     confirmPassword: formData.get("confirmPassword") as string,
@@ -43,11 +45,13 @@ async function createProfile(
   userId: string,
   firstName: string,
   lastName: string,
+  phone: string,
 ) {
   const { error } = await supabaseAdmin.from("profiles").upsert({
     id: userId,
     first_name: firstName,
     last_name: lastName,
+    phone,
     updated_at: new Date().toISOString(),
   });
   return error;
@@ -60,11 +64,12 @@ export async function signUp(
   formData: FormData,
 ): Promise<SignupState> {
   const values = parseSignupValues(formData);
-  const { firstName, lastName, email, password, confirmPassword } = values;
+  const { firstName, lastName, phone, email, password, confirmPassword } = values;
 
   const fieldErrors = validateSignup({
     firstName,
     lastName,
+    phone,
     email,
     password,
     confirmPassword,
@@ -78,7 +83,7 @@ export async function signUp(
       email,
       password,
       options: {
-        data: { first_name: firstName, last_name: lastName },
+        data: { first_name: firstName, last_name: lastName, phone },
       },
     });
 
@@ -87,8 +92,9 @@ export async function signUp(
     }
 
     if (data.user) {
-      const profileError = await createProfile(data.user.id, firstName, lastName);
+      const profileError = await createProfile(data.user.id, firstName, lastName, phone);
       if (profileError) {
+        console.error("Signup profile upsert failed:", profileError);
         return {
           error:
             "Account created but profile setup failed. Please update your profile later.",

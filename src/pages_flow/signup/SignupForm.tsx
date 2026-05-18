@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
-import { FormLabel, FormInput, FormPasswordInput, FormError, Button, toastError } from "@/shared/ui";
+import { FormLabel, FormInput, FormPhoneInput, FormPasswordInput, FormError, Button, toastError } from "@/shared/ui";
 import { signUp, type SignupState } from "./actions";
 
 function SubmitButton() {
@@ -40,7 +40,7 @@ export function SignupForm() {
       {/* Name row */}
       <div className="grid grid-cols-1 gap-4 min-[26.25rem]:grid-cols-2">
         <div>
-          <FormLabel htmlFor="firstName">First Name</FormLabel>
+          <FormLabel htmlFor="firstName" required>First Name</FormLabel>
           <FormInput
             id="firstName"
             name="firstName"
@@ -65,6 +65,17 @@ export function SignupForm() {
           />
           <FormError message={state?.fieldErrors?.lastName} />
         </div>
+      </div>
+
+      <div>
+        <FormLabel htmlFor="phone" required>Phone</FormLabel>
+        <FormPhoneInput
+          id="phone"
+          name="phone"
+          defaultValue={state?.values?.phone}
+          state={state?.fieldErrors?.phone ? "error" : "default"}
+        />
+        <FormError message={state?.fieldErrors?.phone} />
       </div>
 
       <div>

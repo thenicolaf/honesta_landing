@@ -16,6 +16,7 @@ import type { AdminUser } from "@/lib/usersDb";
 
 interface RecentUsersInnerProps {
   users: AdminUser[];
+  total: number;
 }
 
 function UserRow({ user }: { user: AdminUser }) {
@@ -72,22 +73,20 @@ function UserRow({ user }: { user: AdminUser }) {
   );
 }
 
-export function RecentUsersInner({ users }: RecentUsersInnerProps) {
+export function RecentUsersInner({ users, total }: RecentUsersInnerProps) {
   return (
     <>
       <div className="flex items-center justify-between mb-3">
-        <SectionHeading className="mb-0">Recent users</SectionHeading>
-        <Link
-          href="/panel/users"
-          className="group flex items-center gap-1 font-body font-semibold uppercase tracking-[0.12em] text-2xs text-earth/50 hover:text-earth transition-colors"
-        >
-          View all
-          <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
-        </Link>
+        <SectionHeading className="mb-0">
+          Recent users
+          <span className="ml-1.5 text-earth/30 normal-case tracking-normal">
+            · {total}
+          </span>
+        </SectionHeading>
       </div>
 
       {users.length === 0 ? (
-        <Card padding="md" className="text-center">
+        <Card padding="md" className="text-center mb-8">
           <p className="font-body text-2xs text-earth/50">
             No registered users yet.
           </p>
@@ -97,6 +96,13 @@ export function RecentUsersInner({ users }: RecentUsersInnerProps) {
           {users.map((u) => (
             <UserRow key={u.id} user={u} />
           ))}
+          <Link
+            href="/panel/users"
+            className="group flex items-center justify-center gap-1.5 px-3 py-3 border-t border-earth/8 font-body font-semibold text-sm text-orange hover:bg-orange/5 transition-colors"
+          >
+            View all {total} {total === 1 ? "user" : "users"}
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+          </Link>
         </Card>
       )}
     </>
