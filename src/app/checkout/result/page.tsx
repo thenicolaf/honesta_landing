@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { getOrderStatus } from "@/lib/ngenius";
 import { supabaseAdmin } from "@/lib/supabase.server";
 import { OrderStatus } from "@/shared/types";
@@ -13,6 +14,7 @@ import {
   type OrderNotificationParts,
 } from "@/lib/orderNotifications";
 import type { PurchasePayload } from "@/lib/analytics";
+import { Card, Skeleton } from "@/shared/ui";
 import { ClearCartOnSuccess } from "./ClearCartOnSuccess";
 import { ResultToast } from "./ResultToast";
 import { ResultCard, MissingRefCard } from "./ui";
@@ -193,6 +195,14 @@ export default async function CheckoutResultPage({
 
   if (!orderRef) return <MissingRefCard />;
 
+  return (
+    <Suspense fallback={<PaymentConfirmSkeleton />}>
+      <ResultDataLoader orderRef={orderRef} />
+    </Suspense>
+  );
+}
+
+async function ResultDataLoader({ orderRef }: { orderRef: string }) {
   const paymentState = await resolvePaymentState(orderRef);
 
   const success = paymentState ? SUCCESS_STATES.has(paymentState) : false;
@@ -232,6 +242,26 @@ export default async function CheckoutResultPage({
         orderRef={orderRef}
         deliverySchedule={deliverySchedule}
       />
+    </main>
+  );
+}
+
+function PaymentConfirmSkeleton() {
+  return (
+    <main className="grow min-h-160 bg-cream flex items-center justify-center px-4 py-16">
+      <Card variant="default" padding="lg" className="max-w-md w-full text-center">
+        <div className="w-16 h-16 rounded-full bg-sand mx-auto mb-6" />
+        <h1 className="font-display font-semibold text-heading text-2xl mb-2">
+          Confirming payment...
+        </h1>
+        <p className="font-body font-light text-earth/60 text-sm mb-8">
+          Please wait while we verify your transaction.
+        </p>
+        <div className="flex flex-col gap-3">
+          <Skeleton className="h-10 rounded-full" />
+          <Skeleton className="h-10 rounded-full" />
+        </div>
+      </Card>
     </main>
   );
 }

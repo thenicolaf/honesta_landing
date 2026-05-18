@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import {
   DataTable,
-  Loader,
+  Skeleton,
   useTableData,
   useTablePagination,
   useTableSort,
@@ -55,11 +55,7 @@ export function MovementsHistory({ row }: MovementsHistoryProps) {
   const { paginatedData, pagination } = useTablePagination(sorted, 10);
 
   if (!loaded || (isPending && movements.length === 0)) {
-    return (
-      <div className="flex items-center justify-center py-10">
-        <Loader />
-      </div>
-    );
+    return <MovementsHistorySkeleton />;
   }
 
   if (movements.length === 0) {
@@ -80,5 +76,29 @@ export function MovementsHistory({ row }: MovementsHistoryProps) {
       pagination={pagination}
       wrapperClassName="overscroll-auto!"
     />
+  );
+}
+
+function MovementsHistorySkeleton() {
+  return (
+    <div className="flex flex-col gap-2 py-2">
+      <div className="grid grid-cols-[8rem_9rem_7rem_minmax(0,1fr)] gap-3 px-3 py-2 border-b border-earth/10">
+        <Skeleton className="h-3 w-12" />
+        <Skeleton className="h-3 w-16" />
+        <Skeleton className="h-3 w-6 ml-auto" />
+        <Skeleton className="h-3 w-10" />
+      </div>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div
+          key={i}
+          className="grid grid-cols-[8rem_9rem_7rem_minmax(0,1fr)] gap-3 px-3 py-2.5 items-center"
+        >
+          <Skeleton className="h-3 w-28" />
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-3 w-14 ml-auto" />
+          <Skeleton className="h-3 w-full" />
+        </div>
+      ))}
+    </div>
   );
 }

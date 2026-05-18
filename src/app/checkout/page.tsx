@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
+import { Suspense } from "react";
 import { CheckoutPage } from "@/pages_flow/checkout";
+import { CheckoutSkeleton } from "@/pages_flow/checkout/ui/CheckoutSkeleton";
 import { CUSTOMER_COOKIE_KEY } from "@/shared/consts";
 import { CustomerInfo } from "@/shared/types";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
@@ -16,7 +18,15 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function CheckoutRoute() {
+export default function CheckoutRoute() {
+  return (
+    <Suspense fallback={<CheckoutSkeleton />}>
+      <CheckoutDataLoader />
+    </Suspense>
+  );
+}
+
+async function CheckoutDataLoader() {
   const [
     cookieStore,
     supabase,
