@@ -4,8 +4,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useCart } from "@/providers";
 import { CheckoutFormSection } from "./ui/CheckoutFormSection";
 import { OrderSummary } from "./ui/OrderSummary";
+import { CheckoutSkeleton } from "./ui/CheckoutSkeleton";
 import { EmptyCart } from "@/pages_flow/cart/EmptyCart";
-import { Loader } from "@/shared/ui/Loader";
 import { Button } from "@/shared/ui";
 import { IconChevron } from "@/shared/icons";
 import { calculateDelivery } from "@/shared/utils/calculateDelivery";
@@ -57,11 +57,7 @@ export function CheckoutPage({
   const delivery = calculateDelivery(total, emirate, deliverySettings);
 
   if (!isHydrated) {
-    return (
-      <main className="grow min-h-160">
-        <Loader />
-      </main>
-    );
+    return <CheckoutSkeleton />;
   }
 
   if (items.length === 0) {

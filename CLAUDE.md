@@ -138,7 +138,6 @@ src/
 │   │   ├── inventory/          # InventoryPage + Toolbar + Card + columns + Adjust/Settings/History dialogs + useInventoryTable; history/ subroute = full movements log with filters
 │   │   ├── promotions/         # PromotionsPage + PromotionForm + actions
 │   │   └── users/              # UsersPage + AdminUserCards + UserFilters + UserActions + columns + useFilteredUsers / useUsersTable + userDisplay (shared GenderIcon/formatBirthday)
-│   └── PageLoader.tsx          # Thin wrapper around <Loader /> for route loading.tsx files
 │
 ├── providers/                  # React context providers + hooks
 │   ├── ReactQueryProvider.tsx  # QueryClient + defaults; exports DEFAULT_STALE_TIME_MS
@@ -254,11 +253,17 @@ All panel routes live under `/panel` and share an authenticated layout:
 
 ## Loading pattern
 
-Pages use **Suspense + Skeleton** instead of `loading.tsx`. Each page wraps async server components in `<Suspense fallback={<SomeSkeleton />}>`. Skeleton components live in `src/shared/ui/Skeleton.tsx`: `Skeleton`, `SkeletonCard`, `SkeletonGrid`, `SkeletonProductGrid`, `SkeletonSection`. Page-specific skeletons (e.g. `CartSkeleton`, `ProfileSkeleton`, `OrdersSkeleton`) are defined inline in the page file or co-located.
+Pages use **Suspense + Skeleton** instead of route-level `loading.tsx`. The canonical pattern (see [src/app/page.tsx](src/app/page.tsx), [src/app/checkout/page.tsx](src/app/checkout/page.tsx), [src/app/checkout/result/page.tsx](src/app/checkout/result/page.tsx), [src/app/checkout/cancel/page.tsx](src/app/checkout/cancel/page.tsx)):
 
-**Do NOT create `loading.tsx` files** — they override Suspense fallbacks. Use inline `<Suspense>` with custom skeleton components instead.
+1. The route's `page.tsx` is **synchronous** (or only `await`s `searchParams` — a mandatory dynamic API, fast). No top-level data fetching.
+2. Data fetching lives in an **async sub-component** (e.g. `CheckoutDataLoader`, `ResultDataLoader`, `MarketingPopupAsync`, `HomeStructuredDataAsync`) defined in the same file.
+3. The sub-component is wrapped in `<Suspense fallback={<SomeSkeleton />}>`. Sections that don't depend on data (Hero, AboutUs, Philosophy, static cancel-card) render in the first HTML stream **immediately** — no waiting on the slowest data dependency.
 
-`PageLoader` (`src/pages_flow/PageLoader.tsx`) is only used for auth route `loading.tsx` files.
+Skeleton primitives live in [src/shared/ui/Skeleton.tsx](src/shared/ui/Skeleton.tsx): `Skeleton`, `SkeletonCard`, `SkeletonGrid`, `SkeletonProductGrid`, `SkeletonSection`. Page-specific skeletons (`CartSkeleton`, `CheckoutSkeleton`, `ProfileSkeleton`, `OrdersSkeleton`, `MovementsHistorySkeleton`, etc.) are defined inline in the page file or co-located in `src/pages_flow/<route>/ui/`. Each skeleton **mirrors the final layout** (same grid, same heights, same padding) so the Suspense → real-content swap has zero CLS.
+
+**Shared between Suspense fallback and `!isHydrated` branches.** [`CheckoutSkeleton`](src/pages_flow/checkout/ui/CheckoutSkeleton.tsx) is rendered in **two phases** of the same page: first by the route's `<Suspense fallback>` during server-side data fetch, then by `CheckoutPage` itself when `useCart()` hasn't hydrated yet. The same component covers both — no visual jump between the two loading phases. Reuse this pattern anywhere a client component needs a `!isHydrated` branch (`CartPage` → `CartSkeleton`, `MixSummary` → `MixSummarySkeleton`, `FavoritesGrid` → `ProductGridSkeleton`).
+
+**`loading.tsx` policy.** Do not create root or section-level `loading.tsx` files — they fire on every navigation under the segment and override nested `<Suspense>` fallbacks, defeating the streaming pattern above. **Exception:** `src/app/(auth)/<route>/loading.tsx` — each of the 5 auth pages (`login`, `signup`, `verify-email`, `forgot-password`, `reset-password`) has its own per-route `loading.tsx` with a form-specific skeleton, because auth pages don't have inline data sources to wrap in Suspense and `loading.tsx` is the only hook for the route-segment fallback. They render inside `(auth)/layout.tsx` and reuse `<AuthHeader>` with the real subtitle text (no CLS on title). The generic `<Loader />` / `<PageLoader />` components have been **removed** from the codebase — every loading state is now a form-mirroring skeleton.
 
 ## E-commerce & Payment Flow
 
@@ -612,7 +617,7 @@ Both `ProductDetailPage` (client component) and `CartPage` (client component) ac
 
 Two auth methods: **email/password** and **Google OAuth**.
 
-**Email/password flow:** `/signup` → email + password + confirm → Supabase sends OTP email → `/verify-email` → OTP verified → session created → redirect to `/`.
+**Email/password flow:** `/signup` → **first name (required), phone (required), last name (optional), email, password, confirm** → Supabase sends OTP email → `/verify-email` → OTP verified → session created → redirect to `/`. Required-field contract is centralised in [`validateSignup`](src/shared/utils/validateAuth.ts) and mirrors [`validateProfile`](src/shared/utils/validateProfile.ts): `firstName` + `phone` (via shared [`validatePhone`](src/shared/utils/validatePhone.ts), E.164) are required, `lastName` is optional. The signup server action persists the trio into `profiles` on `auth.users` row creation AND also into `auth.users.user_metadata` (`first_name`, `last_name`, `phone`) — `auth.users.user_metadata` is the fallback the OAuth callback already reads for Google signups, so both paths converge on the same shape. **Do NOT pass `phone` as a top-level field to `signUp({ phone })`** — that switches Supabase to SMS-OTP and breaks the email flow.
 
 **Google OAuth flow:** `/login` → `GoogleSignInButton` calls `supabase.auth.signInWithOAuth({ provider: "google" })` → Google redirects to `/auth/callback?code=…` → `createSupabaseServerClient().auth.exchangeCodeForSession(code)` sets a cookie → redirect to `/` (or `next` param). This is a **full page reload** (NextResponse.redirect).
 
@@ -628,6 +633,8 @@ Session refresh: `src/proxy.ts` exports a middleware helper (`proxy()`) that mus
 - `/panel/*` → unauthenticated users redirected to `/login?next={pathname}`
 - `/panel/*` (except `/profile`, `/favorites`, `/orders`) → require `role=admin`
 - Guest-only routes (`/login`, `/signup`, `/verify-email`, `/forgot-password`, `/reset-password`) → authenticated users redirected away
+
+**Navbar avatar + dropdown label.** [`NavUserButton`](src/sections/navbar/NavUserButton.tsx) renders the circular avatar with the first character of the user's **`firstName`** (not email), and the dropdown header shows `firstName lastName` joined and trimmed. Both fall back to `email` when the profile name is empty (e.g. legacy users from before the signup form started capturing the name). The pair (`firstName`, `lastName`) is sourced server-side in [`layout.tsx`](src/app/layout.tsx) via the same `profiles` SELECT that already loads `role` + `allow_notifications` — no extra round-trip.
 
 **Client selection guide:**
 | Situation | Use |
@@ -740,7 +747,6 @@ Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React conte
 - **`MixCompositionList`** — shared Collapsible with rows `[thumbnail with ×count pill] / name + total weight / total price`. Single source of truth for mix composition display across cart, mix constructor, checkout, order views, and admin mix cards. See **Mix composition rendering (shared)** below for full usage.
 - **`RichText`** — renders sanitized HTML via `dangerouslySetInnerHTML` inside a `<div class="rich-text">` (paired with prose-style overrides in `globals.css`). Used to display the rich-text product `note` in tooltips and detail blockquotes. **Does not sanitize on render** — content is sanitized once at write time in admin actions; render path trusts the DB to avoid running jsdom on every SSR.
 - **`CartEmpty`** — empty cart placeholder screen.
-- **`Loader`** — loading spinner (used during cart hydration).
 - **`Dialog` focus behaviour** — on open, the dialog **focuses its container** (`tabIndex={-1}` + `outline-none` on the motion.div), **not** the first focusable child. This avoids the unwanted focus ring on the auto-targeted close button for simple/info dialogs. Escape, Tab navigation, and the close button all still work. Form dialogs that need to auto-focus a specific field should use the standard React `autoFocus` prop on that field — relying on Dialog's old "first focusable" behaviour will not work.
 
 ## Responsive table/cards pattern
@@ -1418,7 +1424,7 @@ Four blocks, in order:
      - **Low stock** — `getInventoryRows()` filtered to `status === "low" || status === "out"`. Click → `/panel/inventory?status=low`.
    - Renders `null` when nothing needs attention (no empty section heading shown).
 
-3. **Recent users** — [`<RecentUsers />`](src/pages_flow/panel/dashboard/sections/RecentUsers.tsx) (server shell + [`RecentUsersInner`](src/pages_flow/panel/dashboard/sections/RecentUsersInner.tsx) client inner). Compact list of the **last 5 registrations** with name + GenderIcon, email/phone (both `CopyText`'d) + inline `WhatsAppLink`, birthday, registration date and order count + total spent (when there are PAID orders). `View all →` link in the header navigates to `/panel/users`. Each row reuses [`<UserActions />`](src/pages_flow/panel/users/UserActions.tsx) for the three icon buttons (WhatsApp / Create promo code / View orders). Renders an empty `Card` placeholder when the table is empty.
+3. **Recent users** — [`<RecentUsers />`](src/pages_flow/panel/dashboard/sections/RecentUsers.tsx) (server shell + [`RecentUsersInner`](src/pages_flow/panel/dashboard/sections/RecentUsersInner.tsx) client inner). Compact list of the **last 5 registrations** with name + GenderIcon, email/phone (both `CopyText`'d) + inline `WhatsAppLink`, birthday, registration date and order count + total spent (when there are PAID orders). The section heading shows the **total registered count** next to the title (`Recent users · N`), and the card has a prominent full-width footer link `View all N users →` in brand orange — visible whenever there's at least one user. Server fetch goes through `getAdminUsers()` directly (not `getRecentUsers`) so we get the total alongside the slice; `getAdminUsers` is `React.cache`-wrapped, so it's free even if other dashboard blocks call it. Each row reuses [`<UserActions />`](src/pages_flow/panel/users/UserActions.tsx) for the three icon buttons (WhatsApp / Create promo code / View orders). Renders an empty `Card` placeholder when the table is empty (no footer CTA in that case — nowhere to go).
 
 4. **Recent notifications** — existing [`RecentNotifications`](src/pages_flow/panel/dashboard/RecentNotifications.tsx) + [`MarkAllReadButton`](src/pages_flow/panel/dashboard/MarkAllReadButton.tsx).
 
@@ -1462,7 +1468,7 @@ Client tree under [src/pages_flow/panel/users/](src/pages_flow/panel/users/):
 
 ### Dashboard `Recent users` block
 
-See **Admin dashboard (`/panel`) → block 3** above — same data via `getRecentUsers(5)`, same `<UserActions>` row, with a `View all →` link to `/panel/users`. The compact row layout sits in a single `Card padding="none"` with internal dividers, so the visual weight matches `Recent notifications` directly below it.
+See **Admin dashboard (`/panel`) → block 3** above — same `<UserActions>` row, total count next to the heading, and a full-width `View all N users →` footer CTA inside the card. Data is fetched via `getAdminUsers()` directly (so the total and the 5-row slice come from one call); since `getAdminUsers` is `React.cache`'d, this stays free. The compact row layout sits in a single `Card padding="none"` with internal dividers, so the visual weight matches `Recent notifications` directly below it.
 
 ### Out of scope (intentionally not built yet)
 
