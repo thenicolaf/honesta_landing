@@ -123,7 +123,11 @@ function NavDesktopLinks() {
 // ─── Navbar ───────────────────────────────────────────────────────────────────
 
 interface NavbarProps {
-  user: { email: string } | null;
+  user: {
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+  } | null;
   isAdmin: boolean;
 }
 

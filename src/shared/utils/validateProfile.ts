@@ -11,9 +11,6 @@ export function validateProfile(
   if (!profile.firstName?.trim()) {
     errors.firstName = "First name is required.";
   }
-  if (!profile.lastName?.trim()) {
-    errors.lastName = "Last name is required.";
-  }
   const phoneError = validatePhone(profile.phone);
   if (phoneError) errors.phone = phoneError;
 

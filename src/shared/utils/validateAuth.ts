@@ -1,3 +1,5 @@
+import { validatePhone } from "./validatePhone";
+
 // --- Shared email validation ---
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -34,6 +36,7 @@ export function validateLogin(info: Partial<LoginInfo>): LoginErrors | null {
 export interface SignupInfo {
   firstName: string;
   lastName: string;
+  phone: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -43,6 +46,13 @@ export type SignupErrors = Partial<Record<keyof SignupInfo, string>>;
 
 export function validateSignup(info: Partial<SignupInfo>): SignupErrors | null {
   const errors: SignupErrors = {};
+
+  if (!info.firstName?.trim()) {
+    errors.firstName = "First name is required.";
+  }
+
+  const phoneError = validatePhone(info.phone);
+  if (phoneError) errors.phone = phoneError;
 
   const emailError = validateEmail(info.email);
   if (emailError) errors.email = emailError;

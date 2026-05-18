@@ -1,12 +1,17 @@
 import { Card, Skeleton } from "@/shared/ui";
-import { getRecentUsers } from "@/lib/usersDb";
+import { getAdminUsers } from "@/lib/usersDb";
 import { RecentUsersInner } from "./RecentUsersInner";
 
 const RECENT_USERS_LIMIT = 5;
 
 export async function RecentUsers() {
-  const users = await getRecentUsers(RECENT_USERS_LIMIT);
-  return <RecentUsersInner users={users} />;
+  const all = await getAdminUsers();
+  return (
+    <RecentUsersInner
+      users={all.slice(0, RECENT_USERS_LIMIT)}
+      total={all.length}
+    />
+  );
 }
 
 function UserRowSkeleton() {
