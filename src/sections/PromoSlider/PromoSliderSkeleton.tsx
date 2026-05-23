@@ -13,7 +13,7 @@ export function PromoSliderSkeleton() {
             {Array.from({ length: 4 }, (_, i) => (
               <div
                 key={i}
-                className="pl-4 min-w-0 shrink-0 grow-0 basis-[85%] sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                className="pl-4 min-w-0 shrink-0 grow-0 basis-[62%] sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
               >
                 <SkeletonProductCard />
               </div>

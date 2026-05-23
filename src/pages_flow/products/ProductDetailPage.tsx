@@ -86,6 +86,7 @@ export function ProductDetailPage({
             title={title}
             sale={!!product.promotion}
             mark={product.mark}
+            totalSold={product.totalSold}
           />
 
           {/* Content column */}

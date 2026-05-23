@@ -27,5 +27,6 @@ export { ProductPrice } from "./ProductPrice";
 export { ProductPriceAndCart } from "./ProductPriceAndCart";
 export { ProductVariantSelector } from "./ProductVariantSelector";
 export { FavoriteButton } from "./FavoriteButton";
+export { SoldBadge } from "./SoldBadge";
 export { ProductAdminActions } from "./ProductAdminActions";
 export { ProductStatusMenu } from "./ProductStatusMenu";

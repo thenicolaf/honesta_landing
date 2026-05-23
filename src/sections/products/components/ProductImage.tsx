@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Badge } from "@/shared/ui";
+import { SoldBadge } from "./SoldBadge";
 
 interface ProductImageProps {
   image_url: string;
@@ -10,6 +11,8 @@ interface ProductImageProps {
   sale?: boolean;
   /** Product mark — shows colored badge (best_seller / new); standard = hidden */
   mark?: "standard" | "best_seller" | "new";
+  /** Aggregate paid-order quantity for this product (drives SoldBadge). */
+  totalSold?: number;
 }
 
 export function ProductImage({
@@ -18,6 +21,7 @@ export function ProductImage({
   topRight,
   sale,
   mark,
+  totalSold,
 }: ProductImageProps) {
   return (
     <div className="relative aspect-3/2 rounded-t-2xl overflow-hidden bg-sand">
@@ -31,25 +35,24 @@ export function ProductImage({
         />
       ) : null}
 
-      {(sale || (mark && mark !== "standard")) && (
-        <div className="absolute top-2 left-2 z-20 flex flex-wrap gap-1">
-          {sale && (
-            <Badge variant="counter" size="xs">
-              SALE
-            </Badge>
-          )}
-          {mark === "best_seller" && (
-            <Badge variant="counter" size="xs" className="bg-red-700!">
-              BEST SELLER
-            </Badge>
-          )}
-          {mark === "new" && (
-            <Badge variant="counter" size="xs" className="bg-moss!">
-              NEW
-            </Badge>
-          )}
-        </div>
-      )}
+      <div className="absolute top-2 left-2 z-20 flex flex-wrap gap-1">
+        {sale && (
+          <Badge variant="counter" size="xs">
+            SALE
+          </Badge>
+        )}
+        {mark === "best_seller" && (
+          <Badge variant="counter" size="xs" className="bg-red-700!">
+            BEST SELLER
+          </Badge>
+        )}
+        {mark === "new" && (
+          <Badge variant="counter" size="xs" className="bg-moss!">
+            NEW
+          </Badge>
+        )}
+        <SoldBadge totalSold={totalSold} size="xs" />
+      </div>
 
       {topRight}
     </div>

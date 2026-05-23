@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { Badge } from "@/shared/ui";
 import type { GalleryImage } from "@/shared/ui/Gallery";
 import type { LightboxSlide } from "@/shared/ui/Lightbox";
+import { SoldBadge } from "./SoldBadge";
 import {
   extractYouTubeId,
   getVideoKind,
@@ -28,6 +29,7 @@ interface ProductDetailImageProps {
   title: string;
   sale?: boolean;
   mark?: "standard" | "best_seller" | "new";
+  totalSold?: number;
 }
 
 interface MediaEntry {
@@ -77,6 +79,7 @@ export function ProductDetailImage({
   title,
   sale,
   mark,
+  totalSold,
 }: ProductDetailImageProps) {
   const [lightboxIndex, setLightboxIndex] = useState(-1);
 
@@ -135,25 +138,24 @@ export function ProductDetailImage({
             sizes="(max-width: 768px) 100vw, 50vw"
             priority
           />
-          {(sale || (mark && mark !== "standard")) && (
-            <div className="absolute top-4 left-4 z-10 flex gap-2">
-              {sale && (
-                <Badge variant="counter" size="sm">
-                  SALE
-                </Badge>
-              )}
-              {mark === "best_seller" && (
-                <Badge variant="counter" size="sm" className="bg-red-700!">
-                  BEST SELLER
-                </Badge>
-              )}
-              {mark === "new" && (
-                <Badge variant="counter" size="sm" className="bg-moss!">
-                  NEW
-                </Badge>
-              )}
-            </div>
-          )}
+          <div className="absolute top-4 left-4 z-10 flex flex-wrap gap-2">
+            {sale && (
+              <Badge variant="counter" size="sm">
+                SALE
+              </Badge>
+            )}
+            {mark === "best_seller" && (
+              <Badge variant="counter" size="sm" className="bg-red-700!">
+                BEST SELLER
+              </Badge>
+            )}
+            {mark === "new" && (
+              <Badge variant="counter" size="sm" className="bg-moss!">
+                NEW
+              </Badge>
+            )}
+            <SoldBadge totalSold={totalSold} size="sm" />
+          </div>
         </button>
       )}
 

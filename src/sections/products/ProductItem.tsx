@@ -8,7 +8,6 @@ import {
   ProductImage,
   ProductHeader,
   ProductTitle,
-  IngredientsInline,
   ProductPriceAndCart,
   ProductVariantSelector,
   NoteButton,
@@ -26,7 +25,7 @@ interface ProductItemProps {
 }
 
 export function ProductItem({ product, from, backHref }: ProductItemProps) {
-  const { title, category, ingredients, image_url } = product;
+  const { title, category, image_url } = product;
 
   const [selectedVariantId, setSelectedVariantId] = useState(
     () => product.variants?.[0]?.id ?? "",
@@ -48,6 +47,7 @@ export function ProductItem({ product, from, backHref }: ProductItemProps) {
               title={title}
               sale={!!product.promotion}
               mark={product.mark}
+              totalSold={product.totalSold}
             />
           </Link>
         ) : (
@@ -56,6 +56,7 @@ export function ProductItem({ product, from, backHref }: ProductItemProps) {
             title={title}
             sale={!!product.promotion}
             mark={product.mark}
+            totalSold={product.totalSold}
           />
         )}
         {product.id && (
@@ -67,7 +68,7 @@ export function ProductItem({ product, from, backHref }: ProductItemProps) {
         )}
         {href && <ViewButton href={href} />}
         {(product.note || product.video_url) && (
-          <div className="absolute bottom-2 right-2 z-30 flex flex-col-reverse gap-1.5">
+          <div className="absolute bottom-2 right-2 z-30 flex gap-1.5">
             {product.note && <NoteButton note={product.note} />}
             {product.video_url && (
               <VideoButton video_url={product.video_url} title={title} />
@@ -76,7 +77,7 @@ export function ProductItem({ product, from, backHref }: ProductItemProps) {
         )}
       </div>
 
-      <div className="flex-1 p-3 flex flex-col gap-2">
+      <div className="flex-1 p-2.5 flex flex-col gap-1.5">
         <ProductHeader category={category} badge={product.badge} />
         <ProductTitle title={title} />
         {product.variants.length > 0 && (
@@ -87,7 +88,6 @@ export function ProductItem({ product, from, backHref }: ProductItemProps) {
             size="sm"
           />
         )}
-        <IngredientsInline ingredients={ingredients} />
         <ProductPriceAndCart
           product={product}
           selectedVariant={selectedVariant}

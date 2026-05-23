@@ -20,4 +20,5 @@ export interface CategoryCard {
   image_url?: string | null;
   badge?: string | null;
   href: string;
+  productCount?: number;
 }

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
 import { Dialog, DialogContent, Button, RichText } from "@/shared/ui";
-import { IconBotanical, IconLeaf } from "@/shared/icons";
+import { IconBotanical, IconLeaf, IconX } from "@/shared/icons";
 
 const STORAGE_KEY = "honesta_popup_seen_session";
 const OPEN_DELAY_MS = 5000;
@@ -75,9 +75,22 @@ export function MarketingPopupDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         size="xl"
+        showCloseButton={false}
         className="overflow-hidden p-0 rounded-3xl shadow-2xl shadow-earth/30"
       >
         <div className="relative flex flex-col">
+          <Button
+            as="button"
+            type="button"
+            variant="text"
+            size="icon"
+            onClick={() => handleOpenChange(false)}
+            aria-label="Close"
+            className="absolute top-3 right-3 z-20 rounded-full bg-white-warm/90 backdrop-blur-sm text-earth shadow-md shadow-earth/20 hover:bg-white-warm hover:text-orange"
+          >
+            <IconX width={16} height={16} aria-hidden="true" />
+          </Button>
+
           {hasImage && (
             <div className="relative w-full bg-cream aspect-3/2 sm:aspect-2/1 md:aspect-21/9">
               <Image

@@ -18,7 +18,7 @@ export function MixCTA({ hasActiveBoxes }: MixCTAProps) {
   return (
     <section
       id={SectionId.Mix}
-      className="noise relative bg-earth overflow-hidden py-24 md:py-32"
+      className="noise relative bg-earth overflow-hidden py-14 md:py-24"
     >
       <div className="absolute inset-0 bg-earth/80" />
 
@@ -38,14 +38,14 @@ export function MixCTA({ hasActiveBoxes }: MixCTAProps) {
           <motion.div
             variants={fadeUp}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="relative w-full max-w-md lg:max-w-lg aspect-3/2 rounded-3xl overflow-hidden border border-white/10 mb-10 lg:mb-0 shrink-0"
+            className="relative w-full max-w-xs sm:max-w-sm lg:max-w-lg aspect-5/3 lg:aspect-3/2 rounded-2xl lg:rounded-3xl overflow-hidden border border-white/10 mb-6 lg:mb-0 shrink-0"
           >
             <Image
               src="/images/sections/mix.jpg"
               alt="Mix box with dried fruits"
               fill
               className="object-cover"
-              sizes="(max-width: 1024px) 100vw, 50vw"
+              sizes="(max-width: 1024px) 80vw, 50vw"
             />
           </motion.div>
 
@@ -54,7 +54,7 @@ export function MixCTA({ hasActiveBoxes }: MixCTAProps) {
             <motion.p
               variants={fadeUp}
               transition={{ duration: 0.5, ease: "easeOut" }}
-              className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-white-warm/60 mb-5"
+              className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-white-warm/60 mb-3 lg:mb-5"
             >
               Mix Constructor
             </motion.p>
@@ -62,8 +62,8 @@ export function MixCTA({ hasActiveBoxes }: MixCTAProps) {
             <motion.h2
               variants={fadeUp}
               transition={{ duration: 0.6, ease: "easeOut" }}
-              className="font-display font-bold italic text-white-warm leading-tight mb-5"
-              style={{ fontSize: "clamp(1.9rem, 5vw, 3.2rem)" }}
+              className="font-display font-bold italic text-white-warm leading-tight mb-3 lg:mb-5"
+              style={{ fontSize: "clamp(1.6rem, 5vw, 3.2rem)" }}
             >
               Build your perfect mix
             </motion.h2>
@@ -71,7 +71,7 @@ export function MixCTA({ hasActiveBoxes }: MixCTAProps) {
             <motion.p
               variants={fadeUp}
               transition={{ duration: 0.6, ease: "easeOut" }}
-              className="font-body font-light text-white-warm/80 text-base md:text-lg leading-relaxed mb-8 max-w-lg"
+              className="font-body font-light text-white-warm/80 text-sm md:text-base lg:text-lg leading-relaxed mb-6 lg:mb-8 max-w-lg"
             >
               Choose a box, fill each cell with your favourite dried fruits and
               fruit leathers — create a unique combination tailored to your
@@ -83,11 +83,11 @@ export function MixCTA({ hasActiveBoxes }: MixCTAProps) {
               transition={{ duration: 0.6, ease: "easeOut" }}
             >
               {hasActiveBoxes ? (
-                <Button href="/mix" variant="primary" size="lg">
+                <Button href="/mix" variant="primary" size="md">
                   Build Your Mix
                 </Button>
               ) : (
-                <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full border border-white-warm/20 bg-white-warm/5">
+                <div className="inline-flex items-center gap-3 px-5 py-2.5 lg:px-6 lg:py-3 rounded-full border border-white-warm/20 bg-white-warm/5">
                   <span className="w-2 h-2 rounded-full bg-orange animate-pulse" />
                   <span className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-white-warm/80">
                     Mixes coming soon

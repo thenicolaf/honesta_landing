@@ -14,6 +14,7 @@ export function CategoryCard({
   image_url,
   badge,
   href,
+  productCount,
 }: CategoryCardData) {
   const { Icon, placeholderBg } = CATEGORY_UI_MAP[slug] ?? {
     Icon: IconLeaf,
@@ -21,7 +22,7 @@ export function CategoryCard({
   };
 
   return (
-    <div className="h-full flex flex-col rounded-2xl bg-white-warm border border-parchment/60 hover:shadow-lg hover:border-transparent transition-colors duration-200">
+    <div className="h-full flex flex-col rounded-2xl bg-white-warm border border-parchment/60 hover:shadow-lg hover:border-transparent hover:-translate-y-0.5 transition-all duration-200">
       <HashLink
         href={href}
         className="block relative aspect-3/2 rounded-t-2xl overflow-hidden"
@@ -48,6 +49,9 @@ export function CategoryCard({
         <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
           <p className="font-body font-semibold uppercase tracking-[0.13em] text-2xs text-earth/60">
             {audience}
+            {typeof productCount === "number" && productCount > 0 && (
+              <span className="text-earth/40"> · {productCount} products</span>
+            )}
           </p>
           {badge && (
             <Badge variant="natural" size="xs">
@@ -66,10 +70,10 @@ export function CategoryCard({
           </p>
         )}
 
-        <div className="mt-auto pt-1 flex">
+        <div className="mt-auto pt-2 flex">
           <HashLink
             href={href}
-            className={`${buttonVariants({ variant: "text", color: "warning", size: "sm" })} group whitespace-nowrap self-start`}
+            className={`${buttonVariants({ variant: "outline", color: "warning", size: "sm" })} group whitespace-nowrap self-start`}
           >
             Explore
             <ArrowRight

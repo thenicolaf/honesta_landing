@@ -84,7 +84,7 @@ export function PromoSlider({
             {products.map((p, i) => (
               <div
                 key={p.id ?? p.slug ?? i}
-                className="pl-4 min-w-0 shrink-0 grow-0 basis-[85%] sm:basis-1/2 lg:basis-1/3 xl:basis-1/4 relative hover:z-20"
+                className="pl-4 min-w-0 shrink-0 grow-0 basis-[62%] sm:basis-1/2 lg:basis-1/3 xl:basis-1/4 relative hover:z-20"
                 role="group"
                 aria-roledescription="slide"
                 aria-label={`${i + 1} of ${products.length}`}
