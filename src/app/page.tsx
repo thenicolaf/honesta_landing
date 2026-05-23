@@ -151,13 +151,7 @@ async function HomeStructuredDataAsync() {
 export default function Home() {
   return (
     <main className="grow min-h-160">
-      <AboutExpandedProvider>
-        <Hero />
-        <AboutUs />
-      </AboutExpandedProvider>
-      <Suspense fallback={<MixCTASkeleton />}>
-        <MixCTAAsync />
-      </Suspense>
+      <Hero />
       <Suspense fallback={<PromoSliderSkeleton />}>
         <PromoSliderSection />
       </Suspense>
@@ -169,6 +163,12 @@ export default function Home() {
           <ProductsSection />
         </Suspense>
       </SearchParamsFilterProvider>
+      <Suspense fallback={<MixCTASkeleton />}>
+        <MixCTAAsync />
+      </Suspense>
+      <AboutExpandedProvider>
+        <AboutUs />
+      </AboutExpandedProvider>
       <PhilosophyBlock />
       <PartnershipCTA />
       <Suspense fallback={null}>

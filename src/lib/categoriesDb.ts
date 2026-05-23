@@ -13,6 +13,23 @@ export const getCategories = cache(async (): Promise<DbCategory[]> => {
   return data as DbCategory[];
 });
 
+export const getCategoryProductCountMap = cache(
+  async (): Promise<Record<string, number>> => {
+    const { data } = await supabaseAdmin
+      .from("products")
+      .select("category_id")
+      .eq("status", "published");
+
+    const map: Record<string, number> = {};
+    if (!data) return map;
+    for (const row of data as { category_id: string | null }[]) {
+      if (!row.category_id) continue;
+      map[row.category_id] = (map[row.category_id] ?? 0) + 1;
+    }
+    return map;
+  },
+);
+
 export async function getCategoryById(id: string): Promise<DbCategory | null> {
   const { data, error } = await supabaseAdmin
     .from("categories")

@@ -3,13 +3,16 @@ import { Badge } from "@/shared/ui";
 interface ProductHeaderProps {
   category: string;
   badge?: string;
-  /** Extra badges rendered after the badge */
+  /** Inline meta rendered after the badge (e.g. SoldBadge) */
+  meta?: React.ReactNode;
+  /** Extra badges rendered on the right side */
   extraBadges?: React.ReactNode;
 }
 
 export function ProductHeader({
   category,
   badge,
+  meta,
   extraBadges,
 }: ProductHeaderProps) {
   return (
@@ -22,6 +25,7 @@ export function ProductHeader({
           {badge}
         </Badge>
       )}
+      {meta}
       {extraBadges && <div className="ml-auto">{extraBadges}</div>}
     </div>
   );

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { Skeleton } from "@/shared/ui";
-import { getProductBySlug } from "@/lib/productsDb";
+import { getProductBySlug, getProductSalesMap } from "@/lib/productsDb";
 import { mapDbProducts } from "@/sections/products/utils";
 import { ProductDetailPage } from "@/pages_flow/products/ProductDetailPage";
 import { PromoSliderSection } from "@/pages_flow/home";
@@ -101,11 +101,14 @@ async function ProductContent({
   from?: string;
   back?: string;
 }) {
-  const dbProduct = await getProductBySlug(id);
+  const [dbProduct, salesMap] = await Promise.all([
+    getProductBySlug(id),
+    getProductSalesMap(),
+  ]);
   if (!dbProduct) notFound();
 
   const siteUrl = process.env.PUBLIC_BASE_URL!;
-  const [product] = mapDbProducts([dbProduct]);
+  const [product] = mapDbProducts([dbProduct], salesMap);
 
   // Resolve the back link: prefer an explicit `?back=` URL (carries filter
   // state), fall back to the static FROM_MAP entry; label always comes from

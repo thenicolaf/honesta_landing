@@ -142,15 +142,39 @@ export interface ProductFormOptions {
 export const getProductSalesMap = cache(async (): Promise<Record<string, number>> => {
   const { data } = await supabaseAdmin
     .from("order_items")
-    .select("quantity, variant_id, orders!inner(status), product_variants!inner(product_id)")
+    .select(
+      `quantity, mix_composition, orders!inner(status),
+       product_variants:variant_id(product_id)`,
+    )
     .eq("orders.status", "PAID");
 
   const map: Record<string, number> = {};
-  if (data) {
-    for (const row of data as { quantity: number; product_variants: { product_id: string }[] }[]) {
-      const pid = row.product_variants[0]?.product_id;
-      if (!pid) continue;
-      map[pid] = (map[pid] ?? 0) + row.quantity;
+  if (!data) return map;
+
+  type Variant = { product_id: string };
+  type Row = {
+    quantity: number;
+    mix_composition: { product_id?: string; count?: number }[] | null;
+    product_variants: Variant | Variant[] | null;
+  };
+
+  for (const row of data as unknown as Row[]) {
+    const variant = Array.isArray(row.product_variants)
+      ? row.product_variants[0] ?? null
+      : row.product_variants;
+    if (variant?.product_id) {
+      map[variant.product_id] =
+        (map[variant.product_id] ?? 0) + row.quantity;
+      continue;
+    }
+    // Mix order: variant_id is NULL, attribute sales to constituent products.
+    if (Array.isArray(row.mix_composition)) {
+      for (const entry of row.mix_composition) {
+        if (!entry?.product_id) continue;
+        const count = entry.count ?? 1;
+        map[entry.product_id] =
+          (map[entry.product_id] ?? 0) + row.quantity * count;
+      }
     }
   }
   return map;

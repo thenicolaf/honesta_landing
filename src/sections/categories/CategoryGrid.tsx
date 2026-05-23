@@ -4,8 +4,10 @@ import type { DbCategory, CategoryCard as CategoryCardData } from "./types";
 
 export function CategoryGrid({
   categories: dbCategories,
+  productCountMap,
 }: {
   categories?: DbCategory[];
+  productCountMap?: Record<string, number>;
 }) {
   const categories: CategoryCardData[] = (dbCategories ?? []).map((c) => ({
     id: c.id,
@@ -17,6 +19,7 @@ export function CategoryGrid({
     image_url: c.image_url,
     badge: c.badge,
     href: `/?category=${c.slug}#products`,
+    productCount: productCountMap?.[c.id],
   }));
 
   return (
