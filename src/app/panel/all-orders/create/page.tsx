@@ -2,10 +2,12 @@ import { Suspense } from "react";
 import { ArrowLeft } from "lucide-react";
 import { AdminPageHeader } from "@/app/panel/_components/AdminPageHeader";
 import { Button, Skeleton } from "@/shared/ui";
-import { supabaseAdmin } from "@/lib/supabase.server";
+import { createSupabaseServerClient, supabaseAdmin } from "@/lib/supabase.server";
 import { getDeliverySettings } from "@/lib/deliveryDb";
 import { getActiveDeliverySlots } from "@/lib/deliverySlotsDb";
 import { getActiveMixBoxes } from "@/lib/mixBoxesDb";
+import { getUserAddresses } from "@/lib/addressesDb";
+import type { CustomerInfo } from "@/shared/types";
 import {
   calculateDiscountedPrice,
   findActivePromotion,
@@ -79,19 +81,51 @@ async function getManualOrderProducts(): Promise<Product[]> {
   });
 }
 
-async function CreateContent() {
-  const [products, deliverySettings, slots, boxes] = await Promise.all([
-    getManualOrderProducts(),
-    getDeliverySettings(),
-    getActiveDeliverySlots(),
-    getActiveMixBoxes(),
+async function getAdminInitialValues(): Promise<Partial<CustomerInfo>> {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return {};
+
+  const [{ data: profile }, addresses] = await Promise.all([
+    supabaseAdmin
+      .from("profiles")
+      .select("first_name, last_name, phone")
+      .eq("id", user.id)
+      .single(),
+    getUserAddresses(user.id),
   ]);
+
+  const defaultAddress = addresses.find((a) => a.is_default) ?? addresses[0];
+
+  return {
+    firstName: profile?.first_name ?? undefined,
+    lastName: profile?.last_name ?? undefined,
+    email: user.email ?? undefined,
+    phone: profile?.phone ?? undefined,
+    address: defaultAddress?.address,
+    lat: defaultAddress?.coordinates?.lat?.toString(),
+    lng: defaultAddress?.coordinates?.lng?.toString(),
+  };
+}
+
+async function CreateContent() {
+  const [products, deliverySettings, slots, boxes, initialValues] =
+    await Promise.all([
+      getManualOrderProducts(),
+      getDeliverySettings(),
+      getActiveDeliverySlots(),
+      getActiveMixBoxes(),
+      getAdminInitialValues(),
+    ]);
   return (
     <ManualOrderForm
       products={products}
       deliverySettings={deliverySettings}
       slots={slots}
       boxes={boxes}
+      initialValues={initialValues}
     />
   );
 }

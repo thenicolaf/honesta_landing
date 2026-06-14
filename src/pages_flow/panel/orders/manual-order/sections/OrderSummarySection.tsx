@@ -4,13 +4,9 @@ import { ManualOrderSection } from "./ManualOrderSection";
 
 interface OrderSummarySectionProps {
   totals: ManualOrderTotals;
-  emirate: string;
 }
 
-export function OrderSummarySection({
-  totals,
-  emirate,
-}: OrderSummarySectionProps) {
+export function OrderSummarySection({ totals }: OrderSummarySectionProps) {
   const { subtotal, promotionDiscount, delivery, total } = totals;
 
   return (
@@ -37,12 +33,6 @@ export function OrderSummarySection({
           </span>
           <span>{formatAed(delivery.fee)}</span>
         </div>
-
-        {delivery.belowMinimum && delivery.minimumOrder != null && (
-          <p className="text-2xs text-red-500">
-            Minimum order for {emirate} is {formatAed(delivery.minimumOrder)}
-          </p>
-        )}
 
         <div className="border-t border-earth/10 mt-1 pt-2 flex justify-between font-semibold text-base">
           <span>Total</span>

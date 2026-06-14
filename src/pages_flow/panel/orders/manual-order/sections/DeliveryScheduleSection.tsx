@@ -33,7 +33,7 @@ export function DeliveryScheduleSection({
     <ManualOrderSection title="Delivery schedule">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <FormLabel required>Date</FormLabel>
+          <FormLabel>Date</FormLabel>
           <FormDatePicker
             name="delivery_date_unused"
             value={date}
@@ -45,7 +45,7 @@ export function DeliveryScheduleSection({
           <FormError message={fieldErrors?.deliveryDate} />
         </div>
         <div>
-          <FormLabel required>Slot</FormLabel>
+          <FormLabel>Slot</FormLabel>
           <FormSelect
             name="delivery_slot_id_unused"
             value={slotId}
