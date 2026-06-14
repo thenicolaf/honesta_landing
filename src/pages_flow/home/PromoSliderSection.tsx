@@ -34,10 +34,10 @@ export async function PromoSliderSection({
   return (
     <section
       {...(withAnchor ? { id: "promo" } : {})}
-      className="bg-cream py-20 md:py-28"
+      className="bg-cream py-12 md:py-16"
     >
       <div className="mx-auto max-w-screen-2xl px-6 lg:px-10">
-        <div className={cn("mb-10 text-center", headerClassName)}>
+        <div className={cn("mb-6 text-center", headerClassName)}>
           <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-moss mb-4">
             {kicker}
           </p>

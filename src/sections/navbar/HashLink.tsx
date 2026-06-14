@@ -56,7 +56,13 @@ export function HashLink({ href, children, onClick, ...props }: HashLinkProps) {
   }
 
   return (
-    <Link href={href} scroll={false} onClick={handleClick} {...props}>
+    <Link
+      href={href}
+      // Hash links manage their own scroll; plain route links must scroll to top.
+      scroll={!hash}
+      onClick={handleClick}
+      {...props}
+    >
       {children}
     </Link>
   );
