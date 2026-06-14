@@ -12,7 +12,6 @@ import {
   type MixCompositionEntry,
 } from "@/lib/orders";
 import { getDeliverySettingByEmirate } from "@/lib/deliveryDb";
-import { getActiveDeliverySlots } from "@/lib/deliverySlotsDb";
 import { deductInventoryForOrder } from "@/lib/inventoryDb";
 import { calculateDelivery } from "@/shared/utils/calculateDelivery";
 import {
@@ -292,18 +291,13 @@ export async function createManualOrderAction(
 
     // Phase 1 — fan out all read-only I/O in parallel. Auth + profile is the
     // only chained step; everything else only depends on synchronously-parsed
-    // formData. Active-slot lookup is skipped when the schedule is already set,
-    // keeping the soft-required mode cheap.
-    const [auth, deliverySetting, activeSlots, variants, boxes] =
-      await Promise.all([
-        loadAuthorizedAdmin(supabase),
-        getDeliverySettingByEmirate(emirate),
-        deliverySchedule
-          ? Promise.resolve([] as Awaited<ReturnType<typeof getActiveDeliverySlots>>)
-          : getActiveDeliverySlots(),
-        loadVariants(variantIds),
-        loadMixBoxes(boxIds),
-      ]);
+    // formData.
+    const [auth, deliverySetting, variants, boxes] = await Promise.all([
+      loadAuthorizedAdmin(supabase),
+      getDeliverySettingByEmirate(emirate),
+      loadVariants(variantIds),
+      loadMixBoxes(boxIds),
+    ]);
 
     if (!auth.ok) return { error: auth.error, values: customer };
 
@@ -314,9 +308,8 @@ export async function createManualOrderAction(
     if (picked.length === 0 && pendingMixes.length === 0) {
       fieldErrors.items = "Add at least one product or mix";
     }
-    if (!deliverySchedule && activeSlots.length > 0) {
-      fieldErrors.deliveryDate = "Select delivery date and slot";
-    }
+    // Delivery date/slot are optional for manual admin orders — the admin may
+    // leave them empty (order is saved with delivery_schedule = null).
     if (Object.keys(fieldErrors).length > 0) {
       return { fieldErrors, values: customer };
     }

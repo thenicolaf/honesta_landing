@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { toastError } from "@/shared/ui";
+import type { CustomerInfo } from "@/shared/types";
 import type { Product } from "@/sections/products/types/types";
 import type { DeliverySetting } from "@/lib/deliveryDb";
 import type { DeliverySlot } from "@/lib/deliverySlotsDb";
@@ -28,6 +29,8 @@ interface Props {
   deliverySettings: DeliverySetting[];
   slots: DeliverySlot[];
   boxes: MixBox[];
+  /** Prefill for Customer info + Delivery address — current admin's profile/address. */
+  initialValues?: Partial<CustomerInfo>;
 }
 
 function useToastOnStateChange(state: ManualOrderState | null) {
@@ -45,11 +48,15 @@ export function ManualOrderForm({
   deliverySettings,
   slots,
   boxes,
+  initialValues,
 }: Props) {
   const [state, dispatch, isPending] = useActionState<
     ManualOrderState | null,
     FormData
   >(createManualOrderAction, null);
+
+  // Submitted values (on validation error) take precedence over the prefill.
+  const displayValues = state?.values ?? initialValues;
 
   const [rows, setRows] = useState<ItemRow[]>([emptyRow()]);
   const [mixes, setMixes] = useState<PendingMix[]>([]);
@@ -70,12 +77,12 @@ export function ManualOrderForm({
   return (
     <form action={dispatch} className="flex flex-col gap-6">
       <CustomerInfoSection
-        values={state?.values}
+        values={displayValues}
         fieldErrors={state?.fieldErrors}
       />
 
       <DeliveryAddressSection
-        values={state?.values}
+        values={displayValues}
         fieldErrors={state?.fieldErrors}
         onEmirateChange={setEmirate}
       />
@@ -103,7 +110,7 @@ export function ManualOrderForm({
 
       <NotesSection defaultValue={state?.values?.notes} />
 
-      <OrderSummarySection totals={totals} emirate={emirate} />
+      <OrderSummarySection totals={totals} />
 
       <ManualOrderFooter isPending={isPending} />
     </form>

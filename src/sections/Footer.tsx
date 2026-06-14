@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { IconInstagram } from "@/shared/icons";
-import { FOOTER_NAV_LINKS } from "@/shared/consts/navLinks";
+import { NAV_LINKS } from "@/shared/consts/navLinks";
 import { HashLink } from "./navbar/HashLink";
 
 export function Footer() {
@@ -38,7 +38,7 @@ export function Footer() {
               Navigate
             </p>
             <ul className="flex flex-col gap-3">
-              {FOOTER_NAV_LINKS.map(({ href, label }) => (
+              {NAV_LINKS.map(({ href, label }) => (
                 <li key={href}>
                   <HashLink
                     href={href}

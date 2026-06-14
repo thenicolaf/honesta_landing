@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { useScroll, useMotionValueEvent } from "motion/react";
 import { cn } from "@/shared/utils/cn";
 import { HashLink } from "./HashLink";
@@ -11,6 +12,7 @@ export function NavMobileTabBar() {
   const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
   const activeHash = useActiveHash();
+  const pathname = usePathname();
 
   useMotionValueEvent(scrollY, "change", (current) => {
     const prev = scrollY.getPrevious() ?? 0;
@@ -35,7 +37,9 @@ export function NavMobileTabBar() {
       >
         {TAB_LINKS.map(({ href, label, Icon }) => {
           const hash = href.split("#")[1];
-          const isActive = hash ? activeHash === `#${hash}` : false;
+          const isActive = hash
+            ? pathname === "/" && activeHash === `#${hash}`
+            : pathname === href;
 
           return (
             <HashLink

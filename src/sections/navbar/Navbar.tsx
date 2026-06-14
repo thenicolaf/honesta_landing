@@ -93,12 +93,15 @@ function NavLogo({
 
 function NavDesktopLinks() {
   const activeHash = useActiveHash();
+  const pathname = usePathname();
 
   return (
     <ul className="hidden lg:flex items-center gap-8">
       {NAV_LINKS.map((link) => {
         const hash = link.href.split("#")[1];
-        const isActive = hash ? activeHash === `#${hash}` : false;
+        const isActive = hash
+          ? pathname === "/" && activeHash === `#${hash}`
+          : pathname === link.href;
 
         return (
           <li key={link.href}>

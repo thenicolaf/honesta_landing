@@ -2,22 +2,14 @@ import type { Metadata } from "next";
 import {
   Hero,
   PhilosophyBlock,
-  AboutUs,
   MixCTA,
-  PartnershipCTA,
   MarketingPopupDialog,
   PromoSliderSkeleton,
 } from "@/sections";
-import { CategoryGridSkeleton } from "@/sections/categories/CategoryGridSkeleton";
-import { AboutExpandedProvider } from "@/sections/about/AboutExpandedProvider";
 import { Skeleton } from "@/shared/ui";
 import { ProductGridSkeleton } from "@/sections/products/ProductGridSkeleton";
 import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvider";
-import {
-  CategoriesSection,
-  ProductsSection,
-  PromoSliderSection,
-} from "@/pages_flow/home";
+import { ProductsSection, PromoSliderSection } from "@/pages_flow/home";
 import { HashTracker } from "./_components/HashTracker";
 import { Suspense } from "react";
 import { getCategories } from "@/lib/categoriesDb";
@@ -60,19 +52,19 @@ export async function generateMetadata({
   return {};
 }
 
-function CategoriesSkeleton() {
-  return (
-    <section className="bg-sand py-20 md:py-28">
-      <div className="mx-auto max-w-screen-2xl px-6 lg:px-10">
-        <div className="mb-10 text-center">
-          <Skeleton className="h-3 w-20 mx-auto mb-4" />
-          <Skeleton className="h-8 w-64 mx-auto" />
-        </div>
-        <CategoryGridSkeleton count={4} />
-      </div>
-    </section>
-  );
-}
+// function CategoriesSkeleton() {
+//   return (
+//     <section className="bg-sand py-20 md:py-28">
+//       <div className="mx-auto max-w-screen-2xl px-6 lg:px-10">
+//         <div className="mb-10 text-center">
+//           <Skeleton className="h-3 w-20 mx-auto mb-4" />
+//           <Skeleton className="h-8 w-64 mx-auto" />
+//         </div>
+//         <CategoryGridSkeleton count={4} />
+//       </div>
+//     </section>
+//   );
+// }
 
 function ProductsSkeleton() {
   return (
@@ -156,9 +148,6 @@ export default function Home() {
         <PromoSliderSection />
       </Suspense>
       <SearchParamsFilterProvider keys={["category", "sort", "search", "mark"]}>
-        <Suspense fallback={<CategoriesSkeleton />}>
-          <CategoriesSection />
-        </Suspense>
         <Suspense fallback={<ProductsSkeleton />}>
           <ProductsSection />
         </Suspense>
@@ -166,11 +155,7 @@ export default function Home() {
       <Suspense fallback={<MixCTASkeleton />}>
         <MixCTAAsync />
       </Suspense>
-      <AboutExpandedProvider>
-        <AboutUs />
-      </AboutExpandedProvider>
       <PhilosophyBlock />
-      <PartnershipCTA />
       <Suspense fallback={null}>
         <MarketingPopupAsync />
       </Suspense>

@@ -24,7 +24,7 @@ const fadeUp = {
 
 export function PhilosophyBlock() {
   return (
-    <section id="story" className="noise relative bg-earth overflow-hidden">
+    <section id="story" className="noise relative bg-sand overflow-hidden">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] min-h-150">
           {/* ── Left: text ─────────────────────────────── */}
@@ -43,7 +43,7 @@ export function PhilosophyBlock() {
             <motion.p
               variants={fadeUp}
               transition={{ duration: 0.5, ease: "easeOut" }}
-              className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-orange-light mb-6"
+              className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-orange mb-6"
             >
               Our Philosophy
             </motion.p>
@@ -52,7 +52,7 @@ export function PhilosophyBlock() {
             <motion.h2
               variants={fadeUp}
               transition={{ duration: 0.6, ease: "easeOut" }}
-              className="font-display font-bold italic text-white-warm leading-tight mb-10"
+              className="font-display font-bold italic text-heading leading-tight mb-10"
               style={{ fontSize: "clamp(2rem, 4vw, 3.2rem)" }}
             >
               Sweetness Before Marketing
@@ -67,10 +67,10 @@ export function PhilosophyBlock() {
               {manifestLines.map(({ prefix, emphasis, suffix }) => (
                 <li
                   key={emphasis}
-                  className="font-body font-light text-sand/65 text-base leading-relaxed"
+                  className="font-body font-light text-earth/70 text-base leading-relaxed"
                 >
                   {prefix}{" "}
-                  <span className="font-medium text-sand/85 italic">
+                  <span className="font-medium text-earth italic">
                     {emphasis}
                   </span>{" "}
                   {suffix}
@@ -84,19 +84,19 @@ export function PhilosophyBlock() {
               transition={{ duration: 0.6, ease: "easeOut" }}
               className="mb-10 space-y-1"
             >
-              <p className="font-body font-light text-sand/65 text-base leading-relaxed">
+              <p className="font-body font-light text-earth/70 text-base leading-relaxed">
                 What we{" "}
-                <span className="font-semibold text-orange-light">DO</span> add
+                <span className="font-semibold text-orange">DO</span> add
                 — is{" "}
-                <span className="font-semibold text-orange-light italic">
+                <span className="font-semibold text-orange italic">
                   time
                 </span>
                 .
               </p>
-              <p className="font-body font-light text-sand/65 text-base leading-relaxed">
+              <p className="font-body font-light text-earth/70 text-base leading-relaxed">
                 Each batch is made slowly, by hand, with care.
               </p>
-              <p className="font-body font-semibold text-sand/90 text-base pt-1">
+              <p className="font-body font-semibold text-earth text-base pt-1">
                 That&apos;s the whole recipe.
               </p>
             </motion.div>
@@ -108,7 +108,7 @@ export function PhilosophyBlock() {
               className="lg:border-l-2 lg:border-orange lg:pl-5"
             >
               <p
-                className="font-display italic text-white-warm/85 leading-snug"
+                className="font-display italic text-earth/80 leading-snug"
                 style={{ fontSize: "clamp(1.05rem, 2vw, 1.3rem)" }}
               >
                 &ldquo;If it grows on a tree, it belongs in the bag.
@@ -134,11 +134,11 @@ export function PhilosophyBlock() {
                 alt="Hands holding fresh fruit — Honesta"
               />
               {/* Left edge blend */}
-              <div className="absolute inset-y-0 left-0 w-1/4 bg-linear-to-r from-earth to-transparent" />
+              <div className="absolute inset-y-0 left-0 w-1/4 bg-linear-to-r from-sand to-transparent" />
               {/* Right edge blend */}
-              <div className="absolute inset-y-0 right-0 w-1/4 bg-linear-to-l from-earth to-transparent" />
+              <div className="absolute inset-y-0 right-0 w-1/4 bg-linear-to-l from-sand to-transparent" />
               {/* Subtle top/bottom vignette */}
-              <div className="absolute inset-0 bg-linear-to-b from-earth/40 via-transparent to-earth/40" />
+              <div className="absolute inset-0 bg-linear-to-b from-sand/40 via-transparent to-sand/40" />
             </div>
           </motion.div>
         </div>

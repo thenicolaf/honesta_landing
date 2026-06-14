@@ -1,13 +1,5 @@
-"use client";
-
 import { GraduationCap, Sparkles } from "lucide-react";
-import {
-  Card,
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsibleChevron,
-  CollapsibleContent,
-} from "@/shared/ui";
+import { Card } from "@/shared/ui";
 import {
   IconLeaf,
   IconLightning,
@@ -16,7 +8,6 @@ import {
   IconCleanLabel,
   IconNoSugar,
 } from "@/shared/icons";
-import { useAboutExpanded } from "./about/AboutExpandedProvider";
 
 const audienceCards = [
   {
@@ -78,11 +69,9 @@ const badges = [
 ];
 
 export function AboutUs() {
-  const { expanded, setExpanded } = useAboutExpanded();
-
   return (
-    <section id="about" className="noise relative bg-cream overflow-hidden">
-      <div className="mx-auto max-w-7xl px-6 lg:px-10 py-20 lg:py-28">
+    <section className="noise relative bg-cream overflow-hidden">
+      <div className="mx-auto max-w-7xl px-6 lg:px-10 pt-28 lg:pt-36 pb-20 lg:pb-28">
         {/* ── Header ─────────────────────────────────── */}
         <div className="mx-auto max-w-3xl text-center mb-8 lg:mb-10">
           <p
@@ -92,7 +81,7 @@ export function AboutUs() {
             About Us
           </p>
 
-          <h2
+          <h1
             className="font-display font-bold italic text-heading leading-tight mb-8 animate-hero-fade-up"
             style={{
               fontSize: "clamp(2rem, 4vw, 3rem)",
@@ -100,7 +89,7 @@ export function AboutUs() {
             }}
           >
             A Taste You Can Trust
-          </h2>
+          </h1>
 
           <p
             className="font-body font-light text-earth/70 text-base lg:text-lg leading-relaxed animate-hero-fade-up"
@@ -114,10 +103,8 @@ export function AboutUs() {
           </p>
         </div>
 
-        {/* ── Collapsible details ─────────────────────── */}
-        <Collapsible open={expanded} onOpenChange={setExpanded}>
-          <CollapsibleContent>
-            <div className="flex flex-col gap-12 lg:gap-16 pt-6">
+        {/* ── Full details ────────────────────────────── */}
+        <div className="flex flex-col gap-12 lg:gap-16 pt-6">
               {/* Why HONESTA? */}
               <div className="mx-auto max-w-3xl text-center">
                 <h3
@@ -229,13 +216,6 @@ export function AboutUs() {
                 </p>
               </div>
             </div>
-          </CollapsibleContent>
-
-          <CollapsibleTrigger className="mx-auto mt-8 flex items-center gap-2 font-body font-semibold uppercase tracking-[0.12em] text-2xs text-earth/55 hover:text-orange transition-colors duration-200">
-            {expanded ? "Read Less" : "Read More"}
-            <CollapsibleChevron />
-          </CollapsibleTrigger>
-        </Collapsible>
       </div>
     </section>
   );
