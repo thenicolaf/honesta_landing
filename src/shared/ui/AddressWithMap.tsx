@@ -10,7 +10,7 @@ import {
   CopyText,
 } from "@/shared/ui";
 import { AddressSuggestInput } from "@/shared/ui/AddressSuggestInput";
-import { UAE_EMIRATES } from "@/shared/consts";
+import { UAE_EMIRATES, GOOGLE_MAPS_ENABLED } from "@/shared/consts";
 import { composeAddress, displayAddress } from "@/shared/utils/address";
 
 const DUBAI_CENTER = { lat: 25.2048, lng: 55.2708 };
@@ -90,10 +90,13 @@ export function AddressWithMap({
   onEmirateChange,
   disabledEmirates,
 }: Props) {
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "",
+  const { isLoaded: mapsLoaded } = useJsApiLoader({
+    googleMapsApiKey: GOOGLE_MAPS_ENABLED
+      ? (process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "")
+      : "",
     libraries: LIBRARIES,
   });
+  const isLoaded = GOOGLE_MAPS_ENABLED && mapsLoaded;
 
   const initPos = (() => {
     const lat = defaultLat ? parseFloat(defaultLat) : NaN;
@@ -337,8 +340,9 @@ export function AddressWithMap({
   return (
     <div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {/* Emirate */}
-        <div className="sm:col-span-2">
+        {/* Emirate — full width only while the map/Area layout is active;
+            with the map off it sits in a single column like the other fields. */}
+        <div className={GOOGLE_MAPS_ENABLED ? "sm:col-span-2" : undefined}>
           <FormLabel htmlFor="address-emirate-select" required={required}>
             Emirate
           </FormLabel>
@@ -388,33 +392,35 @@ export function AddressWithMap({
         </div>
 
         {/* Area */}
-        <div>
-          <FormLabel htmlFor="address-area" required={required}>
-            Area
-          </FormLabel>
-          {isLoaded ? (
-            <AddressSuggestInput
-              id="address-area"
-              value={area}
-              onChange={handleAreaChange}
-              onSelect={onAreaSelect}
-              placeholder="Area / district"
-              state={fieldErrors?.area ? "error" : "default"}
-              types={["sublocality", "neighborhood"]}
-              locationBias={locationBias}
-            />
-          ) : (
-            <FormInput
-              id="address-area"
-              type="text"
-              value={area}
-              onChange={(e) => handleAreaChange(e.target.value)}
-              placeholder="Area / district"
-              state={fieldErrors?.area ? "error" : "default"}
-            />
-          )}
-          <FormError message={fieldErrors?.area} />
-        </div>
+        {GOOGLE_MAPS_ENABLED && (
+          <div>
+            <FormLabel htmlFor="address-area" required={required}>
+              Area
+            </FormLabel>
+            {isLoaded ? (
+              <AddressSuggestInput
+                id="address-area"
+                value={area}
+                onChange={handleAreaChange}
+                onSelect={onAreaSelect}
+                placeholder="Area / district"
+                state={fieldErrors?.area ? "error" : "default"}
+                types={["sublocality", "neighborhood"]}
+                locationBias={locationBias}
+              />
+            ) : (
+              <FormInput
+                id="address-area"
+                type="text"
+                value={area}
+                onChange={(e) => handleAreaChange(e.target.value)}
+                placeholder="Area / district"
+                state={fieldErrors?.area ? "error" : "default"}
+              />
+            )}
+            <FormError message={fieldErrors?.area} />
+          </div>
+        )}
 
         {/* Building Name */}
         <div>
@@ -465,10 +471,20 @@ export function AddressWithMap({
       {/* Hidden inputs for form submission */}
       <input type="hidden" name="emirate" value={emirate} />
       <input type="hidden" name="address" value={composed} />
-      <input type="hidden" name="lat" value={markerPos.lat} />
-      <input type="hidden" name="lng" value={markerPos.lng} />
+      <input
+        type="hidden"
+        name="lat"
+        value={GOOGLE_MAPS_ENABLED ? markerPos.lat : (defaultLat ?? "")}
+      />
+      <input
+        type="hidden"
+        name="lng"
+        value={GOOGLE_MAPS_ENABLED ? markerPos.lng : (defaultLng ?? "")}
+      />
       <input type="hidden" name="addressCity" value={city} />
-      <input type="hidden" name="addressArea" value={area} />
+      {GOOGLE_MAPS_ENABLED && (
+        <input type="hidden" name="addressArea" value={area} />
+      )}
       <input type="hidden" name="addressBuilding" value={buildingName} />
       <input type="hidden" name="addressFlat" value={flatNumber} />
 

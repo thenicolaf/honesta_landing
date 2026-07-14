@@ -7,7 +7,6 @@ interface SubmitButtonProps {
   totalWithDelivery: number;
   belowMinimum?: boolean;
   minimumOrder?: number | null;
-  agreedToTerms?: boolean;
   scheduleRequired?: boolean;
   scheduleSelected?: boolean;
 }
@@ -38,14 +37,12 @@ export function SubmitButton({
   totalWithDelivery,
   belowMinimum,
   minimumOrder,
-  agreedToTerms,
   scheduleRequired,
   scheduleSelected,
 }: SubmitButtonProps) {
   const { pending } = useFormStatus();
   const scheduleMissing = !!scheduleRequired && !scheduleSelected;
-  const disabled =
-    pending || !!belowMinimum || !agreedToTerms || scheduleMissing;
+  const disabled = pending || !!belowMinimum || scheduleMissing;
 
   const state: SubmitState = {
     pending,

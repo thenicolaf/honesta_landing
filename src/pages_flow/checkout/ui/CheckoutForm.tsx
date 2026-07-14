@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import dynamic from "next/dynamic";
 import {
   FormLabel,
@@ -8,7 +7,6 @@ import {
   FormPhoneInput,
   FormTextarea,
   FormError,
-  FormCheckbox,
 } from "@/shared/ui";
 
 const AddressWithMap = dynamic(
@@ -58,8 +56,6 @@ export function CheckoutForm({
   scheduleRequired,
   scheduleSelected,
 }: CheckoutFormProps) {
-  const [agreedToTerms, setAgreedToTerms] = useState(true);
-
   const addressFieldErrors = {
     ...mapAddressFieldErrors(fieldErrors),
     emirate: fieldErrors?.emirate ?? emirateWarning,
@@ -69,7 +65,9 @@ export function CheckoutForm({
       {/* Name row */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <FormLabel htmlFor="firstName">First Name</FormLabel>
+          <FormLabel htmlFor="firstName" required>
+            First Name
+          </FormLabel>
           <FormInput
             id="firstName"
             name="firstName"
@@ -81,7 +79,9 @@ export function CheckoutForm({
           <FormError message={fieldErrors?.firstName} />
         </div>
         <div>
-          <FormLabel htmlFor="lastName">Last Name</FormLabel>
+          <FormLabel htmlFor="lastName" required>
+            Last Name
+          </FormLabel>
           <FormInput
             id="lastName"
             name="lastName"
@@ -96,7 +96,9 @@ export function CheckoutForm({
 
       {/* Email */}
       <div>
-        <FormLabel htmlFor="email">Email</FormLabel>
+        <FormLabel htmlFor="email" required>
+          Email
+        </FormLabel>
         <FormInput
           id="email"
           name="email"
@@ -110,7 +112,9 @@ export function CheckoutForm({
 
       {/* Phone */}
       <div>
-        <FormLabel htmlFor="phone">Phone</FormLabel>
+        <FormLabel htmlFor="phone" required>
+          Phone
+        </FormLabel>
         <FormPhoneInput
           id="phone"
           name="phone"
@@ -169,30 +173,22 @@ export function CheckoutForm({
         {promoCodeError && <FormError message={promoCodeError} />}
       </div>
 
-      <FormCheckbox
-        name="terms"
-        checked={agreedToTerms}
-        onChange={(e) => setAgreedToTerms(e.target.checked)}
-        label={
-          <>
-            I have read and agree to the{" "}
-            <Link href="/terms" className="underline text-orange">
-              Terms and Conditions
-            </Link>
-          </>
-        }
-      />
-
       <SubmitButton
         totalWithDelivery={totalWithDelivery}
         belowMinimum={belowMinimum}
         minimumOrder={minimumOrder}
-        agreedToTerms={agreedToTerms}
         scheduleRequired={scheduleRequired}
         scheduleSelected={scheduleSelected}
       />
 
-      <p className="font-body font-light text-earth/40 text-xs text-center">
+      <p className="font-body font-light text-earth/60 text-2xs text-center">
+        By placing your order you agree to the{" "}
+        <Link href="/terms" className="underline text-orange">
+          Terms and Conditions
+        </Link>
+      </p>
+
+      <p className="font-body text-earth/70 text-2xs text-center">
         Payments secured by N-Genius
       </p>
     </>

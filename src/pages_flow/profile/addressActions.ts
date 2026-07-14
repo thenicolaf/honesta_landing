@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase.server";
+import { GOOGLE_MAPS_ENABLED } from "@/shared/consts";
 import {
   createAddress,
   updateAddress,
@@ -56,7 +57,9 @@ function validateAddressFields(
 
   if (!emirate) fieldErrors.emirate = "Emirate is required.";
   if (!city) fieldErrors.addressCity = "City is required.";
-  if (!area) fieldErrors.addressArea = "Area is required.";
+  // Area is only required while the Google Maps address feature is enabled.
+  if (GOOGLE_MAPS_ENABLED && !area)
+    fieldErrors.addressArea = "Area is required.";
   if (!building) fieldErrors.addressBuilding = "Building is required.";
   if (!flat) fieldErrors.addressFlat = "Flat / Villa is required.";
 

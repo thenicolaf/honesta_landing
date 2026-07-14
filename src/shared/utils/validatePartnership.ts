@@ -19,6 +19,7 @@ export type PartnershipErrors = Partial<
   addressFlat?: string;
 };
 
+import { GOOGLE_MAPS_ENABLED } from "@/shared/consts";
 import { validatePhone } from "./validatePhone";
 
 export function validatePartnership(
@@ -35,18 +36,19 @@ export function validatePartnership(
   const phoneError = validatePhone(data.phone);
   if (phoneError) errors.phone = phoneError;
 
-  // Address: all-or-nothing — if any field filled, all 5 required
+  // Address: all-or-nothing — if any field filled, the rest required.
+  // Area participates only while the Google Maps address feature is enabled.
   const emirate = (data.emirate as string | undefined)?.trim();
   const city = (data.addressCity as string | undefined)?.trim();
   const area = (data.addressArea as string | undefined)?.trim();
   const building = (data.addressBuilding as string | undefined)?.trim();
   const flat = (data.addressFlat as string | undefined)?.trim();
 
-  const anyFilled = [emirate, city, area, building, flat].some(Boolean);
+  const anyFilled = [emirate, city, building, flat].some(Boolean);
   if (anyFilled) {
     if (!emirate) errors.emirate = "Emirate is required.";
     if (!city) errors.addressCity = "City is required.";
-    if (!area) errors.addressArea = "Area is required.";
+    if (GOOGLE_MAPS_ENABLED && !area) errors.addressArea = "Area is required.";
     if (!building) errors.addressBuilding = "Building is required.";
     if (!flat) errors.addressFlat = "Flat / Villa is required.";
   }
