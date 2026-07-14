@@ -94,15 +94,7 @@ export function Footer() {
         {/* ── Bottom bar ────────────────────────────────── */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="font-body font-light text-2xs text-sand/30 tracking-wide">
-            © {year} HONESTA. All rights reserved. Built by{" "}
-            <a
-              href="https://github.com/thenicolaf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sand/50 hover:text-orange-light transition-colors duration-200"
-            >
-              thenicolaf
-            </a>
+            © {year} HONESTA. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             <Link
