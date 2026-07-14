@@ -54,7 +54,9 @@ export function PartnershipForm() {
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <FormLabel htmlFor="business_name">Business name</FormLabel>
+              <FormLabel htmlFor="business_name" required>
+                Business name
+              </FormLabel>
               <FormInput
                 id="business_name"
                 name="business_name"
@@ -67,7 +69,9 @@ export function PartnershipForm() {
             </div>
 
             <div>
-              <FormLabel htmlFor="contact_name">Contact person</FormLabel>
+              <FormLabel htmlFor="contact_name" required>
+                Contact person
+              </FormLabel>
               <FormInput
                 id="contact_name"
                 name="contact_name"
@@ -80,7 +84,9 @@ export function PartnershipForm() {
             </div>
 
             <div>
-              <FormLabel htmlFor="phone">WhatsApp / Phone</FormLabel>
+              <FormLabel htmlFor="phone" required>
+                WhatsApp / Phone
+              </FormLabel>
               <FormPhoneInput
                 key={submitKey}
                 id="phone"

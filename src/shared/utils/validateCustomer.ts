@@ -1,4 +1,5 @@
 import type { CustomerInfo } from "@/shared/types";
+import { GOOGLE_MAPS_ENABLED } from "@/shared/consts";
 import { validatePhone } from "./validatePhone";
 
 export type CustomerErrors = Partial<Record<keyof CustomerInfo, string>> & {
@@ -40,7 +41,9 @@ export function validateCustomer(
 
   if (!emirate) errors.emirate = "Emirate is required.";
   if (!addressCity) errors.addressCity = "City is required.";
-  if (!addressArea) errors.addressArea = "Area is required.";
+  // Area is only required while the Google Maps address feature is enabled.
+  if (GOOGLE_MAPS_ENABLED && !addressArea)
+    errors.addressArea = "Area is required.";
   if (!addressBuilding) errors.addressBuilding = "Building is required.";
   if (!addressFlat) errors.addressFlat = "Flat / Villa is required.";
 
