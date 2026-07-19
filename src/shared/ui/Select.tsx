@@ -6,7 +6,11 @@ import {
   useState,
   useRef,
   useEffect,
+  useLayoutEffect,
+  useCallback,
+  useSyncExternalStore,
 } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { IconChevron, IconX } from "@/shared/icons";
 import { cn } from "@/shared/utils/cn";
@@ -32,6 +36,7 @@ interface SelectContextValue {
   search: string;
   setSearch: (v: string) => void;
   direction: "down" | "up";
+  triggerRef: React.RefObject<HTMLDivElement | null>;
   toggle: () => void;
   close: () => void;
   select: (value: string) => void;
@@ -128,7 +133,7 @@ export function Select({
 
   return (
     <SelectContext.Provider
-      value={{ open, value, options, clearable, searchable, search, setSearch, direction, toggle, close, select, clear }}
+      value={{ open, value, options, clearable, searchable, search, setSearch, direction, triggerRef: rootRef, toggle, close, select, clear }}
     >
       <div ref={rootRef} className={cn("relative block", className)}>
         {children}
@@ -240,18 +245,75 @@ interface SelectContentProps {
   searchPlaceholder?: string;
 }
 
+// useSyncExternalStore helpers for SSR-safe mount detection (createPortal needs document.body)
+const subscribeNoop = () => () => {};
+const getMountedTrue = () => true;
+const getMountedFalse = () => false;
+
+const DROPDOWN_GAP = 6; // px between trigger and dropdown
+const VIEWPORT_PAD = 8;
+
 export function SelectContent({ children, className, searchPlaceholder = "Search..." }: SelectContentProps) {
-  const { open, options, searchable, search, setSearch, direction } = useSelect();
+  const { open, options, searchable, search, setSearch, direction, triggerRef } = useSelect();
   const searchRef = useRef<HTMLInputElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
 
   const isUp = direction === "up";
   const yOffset = isUp ? 6 : -6;
+
+  // SSR safety — createPortal needs document.body. Returns false on server,
+  // true on client without an effect-driven setState (same pattern as Tooltip).
+  const mounted = useSyncExternalStore(
+    subscribeNoop,
+    getMountedTrue,
+    getMountedFalse,
+  );
 
   const filtered = searchable && search
     ? options.filter((o) => o.label.toLowerCase().includes(search.toLowerCase()))
     : options;
 
   const resolved = typeof children === "function" ? children(filtered) : children;
+
+  // Position the portaled dropdown against the trigger, in viewport (fixed) coords.
+  // offsetHeight ignores motion's `scale` transform so the "up" placement is exact.
+  const updatePosition = useCallback(() => {
+    const trigger = triggerRef.current;
+    const content = contentRef.current;
+    if (!trigger || !content) return;
+
+    const rect = trigger.getBoundingClientRect();
+    const contentHeight = content.offsetHeight;
+    const vw = window.innerWidth;
+
+    let top = isUp
+      ? rect.top - contentHeight - DROPDOWN_GAP
+      : rect.bottom + DROPDOWN_GAP;
+    top = Math.max(VIEWPORT_PAD, top);
+
+    let left = rect.left;
+    const maxLeft = vw - VIEWPORT_PAD - rect.width;
+    if (left > maxLeft) left = maxLeft;
+    if (left < VIEWPORT_PAD) left = VIEWPORT_PAD;
+
+    setCoords({ top, left, width: rect.width });
+  }, [isUp, triggerRef]);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open, updatePosition]);
 
   // Auto-focus search on open
   useEffect(() => {
@@ -261,17 +323,29 @@ export function SelectContent({ children, className, searchPlaceholder = "Search
     }
   }, [open, searchable]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence initial={false}>
       {open && (
         <motion.div
+          ref={contentRef}
+          // Prevent the Select's document `mousedown` outside-click handler from
+          // firing when interacting with the portaled dropdown (it lives outside rootRef).
+          onMouseDown={(e) => e.stopPropagation()}
           initial={{ opacity: 0, y: yOffset, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: yOffset, scale: 0.98 }}
           transition={{ duration: 0.18, ease: "easeOut" }}
+          style={{
+            position: "fixed",
+            top: coords?.top ?? 0,
+            left: coords?.left ?? 0,
+            width: coords?.width,
+            visibility: coords ? "visible" : "hidden",
+          }}
           className={cn(
-            "absolute left-0 right-0 z-50",
-            isUp ? "bottom-full mb-1.5" : "top-full mt-1.5",
+            "z-50",
             "rounded-xl border border-earth/12 bg-white-warm shadow-lg shadow-earth/8",
             "overflow-hidden",
             className,
@@ -321,7 +395,8 @@ export function SelectContent({ children, className, searchPlaceholder = "Search
           </ul>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }
 

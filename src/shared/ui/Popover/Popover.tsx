@@ -6,10 +6,12 @@ import {
   useEffect,
   useLayoutEffect,
   useCallback,
+  useSyncExternalStore,
   Children,
   cloneElement,
   isValidElement,
 } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/shared/utils/cn";
 import { PopoverContext, usePopover } from "./context";
@@ -17,6 +19,12 @@ import { PopoverContext, usePopover } from "./context";
 const POPOVER_MAX_H = 360;
 const POPOVER_MIN_W = 320;
 const VIEWPORT_PAD = 16;
+const POPOVER_GAP = 6; // px between trigger and popover
+
+// useSyncExternalStore helpers for SSR-safe mount detection (createPortal needs document.body)
+const subscribeNoop = () => () => {};
+const getMountedTrue = () => true;
+const getMountedFalse = () => false;
 
 // ─── Popover (root) ─────────────────────────────────────────────────────────
 
@@ -93,7 +101,7 @@ export function Popover({
 
   return (
     <PopoverContext.Provider
-      value={{ open, direction, toggle, close }}
+      value={{ open, direction, triggerRef: rootRef, toggle, close }}
     >
       <div ref={rootRef} className={cn("relative inline-block", className)}>
         {children}
@@ -177,55 +185,73 @@ export function PopoverContent({
   width = "w-80",
   className,
 }: PopoverContentProps) {
-  const { open, direction } = usePopover();
+  const { open, direction, triggerRef } = usePopover();
   const contentRef = useRef<HTMLDivElement>(null);
-
-  // Clamp to viewport after mount / resize — no state, direct DOM mutation.
-  // Uses offsetWidth / offsetParent so measurements are NOT affected by motion's
-  // `scale` transform in the enter animation — otherwise clamp would run with
-  // scaled-down dimensions and miss overflow until the animation completes.
-  const clamp = useCallback(() => {
-    const el = contentRef.current;
-    const parent = el?.offsetParent as HTMLElement | null;
-    if (!el || !parent) return;
-
-    // Reset previous inline positioning so we measure from CSS baseline
-    el.style.left = "";
-    el.style.right = "";
-
-    const parentRect = parent.getBoundingClientRect();
-    const width = el.offsetWidth;
-    // Untransformed top-left of el in viewport coords
-    const baseLeft = parentRect.left + el.offsetLeft;
-    const baseRight = baseLeft + width;
-    const vw = window.innerWidth;
-
-    const overflowLeft = VIEWPORT_PAD - baseLeft;
-    const overflowRight = baseRight - (vw - VIEWPORT_PAD);
-
-    if (overflowLeft > 0 || overflowRight > 0) {
-      let desiredLeft = baseLeft;
-      if (overflowRight > 0) desiredLeft -= overflowRight;
-      if (desiredLeft < VIEWPORT_PAD) desiredLeft = VIEWPORT_PAD;
-
-      el.style.left = `${desiredLeft - parentRect.left}px`;
-      el.style.right = "auto";
-      el.classList.remove("right-0", "left-0");
-    }
-  }, []);
-
-  useLayoutEffect(() => {
-    if (!open) return;
-    clamp();
-    window.addEventListener("resize", clamp);
-    return () => window.removeEventListener("resize", clamp);
-  }, [open, clamp]);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(
+    null,
+  );
 
   const isUp = direction.vertical === "up";
   const resolvedAlign = align === "auto" ? direction.horizontal : align;
   const yOffset = isUp ? 6 : -6;
 
-  return (
+  // SSR safety — createPortal needs document.body. Returns false on server,
+  // true on client without an effect-driven setState (same pattern as Tooltip).
+  const mounted = useSyncExternalStore(
+    subscribeNoop,
+    getMountedTrue,
+    getMountedFalse,
+  );
+
+  // Position the portaled popover against the trigger, in viewport (fixed) coords.
+  // offsetWidth/Height ignore motion's `scale` transform so placement is exact
+  // even during the enter animation.
+  const updatePosition = useCallback(() => {
+    const trigger = triggerRef.current;
+    const content = contentRef.current;
+    if (!trigger || !content) return;
+
+    const rect = trigger.getBoundingClientRect();
+    const contentWidth = content.offsetWidth;
+    const contentHeight = content.offsetHeight;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    let top = isUp
+      ? rect.top - contentHeight - POPOVER_GAP
+      : rect.bottom + POPOVER_GAP;
+
+    let left = resolvedAlign === "right" ? rect.right - contentWidth : rect.left;
+
+    // Clamp to viewport
+    const maxLeft = vw - VIEWPORT_PAD - contentWidth;
+    if (left > maxLeft) left = maxLeft;
+    if (left < VIEWPORT_PAD) left = VIEWPORT_PAD;
+
+    const maxTop = vh - VIEWPORT_PAD - contentHeight;
+    if (top > maxTop) top = maxTop;
+    if (top < VIEWPORT_PAD) top = VIEWPORT_PAD;
+
+    setCoords({ top, left });
+  }, [isUp, resolvedAlign, triggerRef]);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    // Measure-then-position is the canonical use case for useLayoutEffect:
+    // read DOM size + trigger position and commit coords before paint.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- DOM measurement requires setState in layout effect
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open, updatePosition]);
+
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence initial={false}>
       {open && (
         <motion.div
@@ -236,11 +262,16 @@ export function PopoverContent({
           exit={{ opacity: 0, y: yOffset, scale: 0.97 }}
           transition={{ duration: 0.18, ease: "easeOut" }}
           onMouseDown={(e) => e.stopPropagation()}
+          style={{
+            position: "fixed",
+            top: coords?.top ?? 0,
+            left: coords?.left ?? 0,
+            visibility: coords ? "visible" : "hidden",
+          }}
           className={cn(
-            "absolute z-50",
+            "z-50",
             width,
-            isUp ? "bottom-full mb-1.5" : "top-full mt-1.5",
-            resolvedAlign === "right" ? "right-0" : "left-0",
+            "max-w-[calc(100vw-2rem)]",
             "rounded-[16px] border border-earth/8 bg-white-warm shadow-lg shadow-earth/8",
             "overflow-hidden",
             className,
@@ -249,6 +280,7 @@ export function PopoverContent({
           {children}
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }

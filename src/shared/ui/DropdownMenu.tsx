@@ -6,20 +6,32 @@ import {
   useState,
   useRef,
   useEffect,
+  useLayoutEffect,
+  useCallback,
+  useSyncExternalStore,
   Children,
   cloneElement,
   isValidElement,
 } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/shared/utils/cn";
 
 const DROPDOWN_MAX_H = 240;
+const DROPDOWN_GAP = 6; // px between trigger and menu
+const VIEWPORT_PAD = 8;
+
+// useSyncExternalStore helpers for SSR-safe mount detection (createPortal needs document.body)
+const subscribeNoop = () => () => {};
+const getMountedTrue = () => true;
+const getMountedFalse = () => false;
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 
 interface DropdownMenuContextValue {
   open: boolean;
   direction: "down" | "up";
+  triggerRef: React.RefObject<HTMLDivElement | null>;
   toggle: () => void;
   close: () => void;
 }
@@ -101,7 +113,7 @@ export function DropdownMenu({
 
   return (
     <DropdownMenuContext.Provider
-      value={{ open, direction, toggle, close }}
+      value={{ open, direction, triggerRef: rootRef, toggle, close }}
     >
       <div ref={rootRef} className={cn("relative inline-block", className)}>
         {children}
@@ -174,22 +186,85 @@ interface DropdownMenuContentProps {
   children: React.ReactNode;
   className?: string;
   align?: "left" | "right";
+  /** Stretch the menu to the trigger's width (e.g. autocomplete inputs). */
+  matchTriggerWidth?: boolean;
 }
 
 export function DropdownMenuContent({
   children,
   className,
   align = "left",
+  matchTriggerWidth = false,
 }: DropdownMenuContentProps) {
-  const { open, direction } = useDropdownMenu();
+  const { open, direction, triggerRef } = useDropdownMenu();
+  const contentRef = useRef<HTMLUListElement>(null);
+  const [coords, setCoords] = useState<{
+    top: number;
+    left: number;
+    width?: number;
+  } | null>(null);
 
   const isUp = direction === "up";
   const yOffset = isUp ? 6 : -6;
 
-  return (
+  // SSR safety — createPortal needs document.body (same pattern as Tooltip).
+  const mounted = useSyncExternalStore(
+    subscribeNoop,
+    getMountedTrue,
+    getMountedFalse,
+  );
+
+  // Position the portaled menu against the trigger, in viewport (fixed) coords.
+  // offsetWidth/Height ignore motion's `scale` transform so placement is exact.
+  const updatePosition = useCallback(() => {
+    const trigger = triggerRef.current;
+    const content = contentRef.current;
+    if (!trigger || !content) return;
+
+    const rect = trigger.getBoundingClientRect();
+    const contentWidth = matchTriggerWidth ? rect.width : content.offsetWidth;
+    const contentHeight = content.offsetHeight;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    let top = isUp
+      ? rect.top - contentHeight - DROPDOWN_GAP
+      : rect.bottom + DROPDOWN_GAP;
+
+    let left = align === "right" ? rect.right - contentWidth : rect.left;
+
+    // Clamp to viewport
+    const maxLeft = vw - VIEWPORT_PAD - contentWidth;
+    if (left > maxLeft) left = maxLeft;
+    if (left < VIEWPORT_PAD) left = VIEWPORT_PAD;
+
+    const maxTop = vh - VIEWPORT_PAD - contentHeight;
+    if (top > maxTop) top = maxTop;
+    if (top < VIEWPORT_PAD) top = VIEWPORT_PAD;
+
+    setCoords({ top, left, width: matchTriggerWidth ? rect.width : undefined });
+  }, [isUp, align, matchTriggerWidth, triggerRef]);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    // Measure-then-position: read DOM size + trigger position, commit before paint.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- DOM measurement requires setState in layout effect
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open, updatePosition]);
+
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence initial={false}>
       {open && (
         <motion.ul
+          ref={contentRef}
           role="menu"
           initial={{ opacity: 0, y: yOffset, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -200,10 +275,15 @@ export function DropdownMenuContent({
             e.stopPropagation();
             e.preventDefault();
           }}
+          style={{
+            position: "fixed",
+            top: coords?.top ?? 0,
+            left: coords?.left ?? 0,
+            width: coords?.width,
+            visibility: coords ? "visible" : "hidden",
+          }}
           className={cn(
-            "absolute z-50 min-w-40",
-            isUp ? "bottom-full mb-1.5" : "top-full mt-1.5",
-            align === "right" ? "right-0" : "left-0",
+            "z-50 min-w-40 max-w-[calc(100vw-1rem)]",
             "rounded-xl border border-earth/12 bg-white-warm shadow-lg shadow-earth/8",
             "overflow-y-auto overscroll-contain",
             className,
@@ -212,7 +292,8 @@ export function DropdownMenuContent({
           {children}
         </motion.ul>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }
 
