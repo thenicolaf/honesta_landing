@@ -1,12 +1,12 @@
 import {
-  Hero,
   PhilosophyBlock,
   MixCTA,
   MarketingPopupDialog,
   PromoSliderSkeleton,
 } from "@/sections";
 import { Skeleton } from "@/shared/ui";
-import { PromoSliderSection } from "@/pages_flow/home";
+import { CategoryGridSkeleton } from "@/sections";
+import { CategoriesSection, PromoSliderSection } from "@/pages_flow/home";
 import { HashTracker } from "./_components/HashTracker";
 import { Suspense } from "react";
 import { getCategories } from "@/lib/categoriesDb";
@@ -76,10 +76,24 @@ async function HomeStructuredDataAsync() {
 
 export default function Home() {
   return (
-    <main className="grow min-h-160">
-      <Hero />
+    <main className="grow min-h-160 pt-16 md:pt-20">
       <Suspense fallback={<PromoSliderSkeleton />}>
         <PromoSliderSection title="Best Offers" kicker="Top picks & deals" />
+      </Suspense>
+      <Suspense
+        fallback={
+          <section className="bg-sand py-20 md:py-28">
+            <div className="mx-auto max-w-screen-2xl px-6 lg:px-10">
+              <div className="mb-10 text-center">
+                <Skeleton className="h-3 w-24 mx-auto mb-4" />
+                <Skeleton className="h-8 w-64 mx-auto" />
+              </div>
+              <CategoryGridSkeleton count={4} />
+            </div>
+          </section>
+        }
+      >
+        <CategoriesSection />
       </Suspense>
       <Suspense fallback={<MixCTASkeleton />}>
         <MixCTAAsync />

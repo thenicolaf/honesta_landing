@@ -2,7 +2,6 @@ import type { ComponentType, SVGProps } from "react";
 import { ShoppingBag, Package, Sparkles, Info, Handshake } from "lucide-react";
 
 export enum SectionId {
-  Hero = "hero",
   Mix = "mix",
   Promo = "promo",
   Categories = "categories",

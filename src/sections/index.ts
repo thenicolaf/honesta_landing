@@ -1,5 +1,4 @@
 export * from "./navbar";
-export { Hero } from "./hero";
 export * from "./categories";
 export * from "./products";
 export { PhilosophyBlock } from "./PhilosophyBlock";
