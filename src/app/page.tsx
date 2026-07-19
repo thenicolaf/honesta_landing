@@ -145,7 +145,7 @@ export default function Home() {
     <main className="grow min-h-160">
       <Hero />
       <Suspense fallback={<PromoSliderSkeleton />}>
-        <PromoSliderSection />
+        <PromoSliderSection title="Best Offers" kicker="Top picks & deals" />
       </Suspense>
       <SearchParamsFilterProvider keys={["category", "sort", "search", "mark"]}>
         <Suspense fallback={<ProductsSkeleton />}>

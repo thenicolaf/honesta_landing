@@ -27,7 +27,8 @@ export function CartPage({
   activePromotions,
   belowContent,
 }: CartPageProps) {
-  const { items, total, isHydrated, applyServerPromotions, refresh } = useCart();
+  const { items, total, isHydrated, applyServerPromotions, refresh } =
+    useCart();
 
   useLayoutEffect(() => {
     applyServerPromotions(activePromotions);
@@ -88,11 +89,13 @@ export function CartPage({
             <ClearCartButton />
           </div>
           <CartGrid />
+        </div>
+        {belowContent}
+        <div className="mx-auto max-w-2xl">
           <PromoCodeBlock isAuthenticated={isAuthenticated} />
           <CartSummary />
         </div>
       </div>
-      {belowContent}
     </main>
   );
 }

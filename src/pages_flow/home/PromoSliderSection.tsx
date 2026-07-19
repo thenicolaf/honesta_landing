@@ -21,8 +21,8 @@ interface PromoSliderSectionProps {
 
 export async function PromoSliderSection({
   excludeId,
-  kicker = "Top picks & deals",
-  title = "Best Offers",
+  kicker,
+  title,
   withAnchor = true,
   headerClassName,
   from,
@@ -38,15 +38,20 @@ export async function PromoSliderSection({
     >
       <div className="mx-auto max-w-screen-2xl px-6 lg:px-10">
         <div className={cn("mb-6 text-center", headerClassName)}>
-          <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-moss mb-4">
-            {kicker}
-          </p>
-          <h2
-            className="font-display font-semibold text-heading leading-tight"
-            style={{ fontSize: "clamp(2rem, 4vw, 3rem)" }}
-          >
-            {title}
-          </h2>
+          {kicker && (
+            <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-moss mb-4">
+              {kicker}
+            </p>
+          )}
+
+          {title && (
+            <h2
+              className="font-display font-semibold text-heading leading-tight"
+              style={{ fontSize: "clamp(2rem, 4vw, 3rem)" }}
+            >
+              {title}
+            </h2>
+          )}
         </div>
 
         <PromoSlider products={products} from={from} backHref={backHref} />
