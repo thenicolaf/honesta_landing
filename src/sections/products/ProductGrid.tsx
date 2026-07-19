@@ -88,7 +88,7 @@ export function ProductGrid({
   useTrackViewItemList(filters.products, filters.categoryFilter.value, categories);
 
   return (
-    <section id="products" className="bg-white-warm py-20 md:py-28">
+    <section id="products" className="bg-cream pt-28 pb-20 md:pt-32 md:pb-28">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <ProductHeader />
         <ProductToolbar categories={categories} filters={filters} />
