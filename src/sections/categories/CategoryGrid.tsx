@@ -18,7 +18,7 @@ export function CategoryGrid({
     description: c.description,
     image_url: c.image_url,
     badge: c.badge,
-    href: `/?category=${c.slug}#products`,
+    href: `/shop?category=${c.slug}`,
     productCount: productCountMap?.[c.id],
   }));
 

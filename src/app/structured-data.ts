@@ -33,7 +33,7 @@ export const structuredData = {
         "@type": "SearchAction",
         target: {
           "@type": "EntryPoint",
-          urlTemplate: `${siteUrl}/?category={search_term_string}#products`,
+          urlTemplate: `${siteUrl}/shop?category={search_term_string}`,
         },
         "query-input": "required name=search_term_string",
       },

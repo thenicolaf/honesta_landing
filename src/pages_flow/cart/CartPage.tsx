@@ -65,7 +65,7 @@ export function CartPage({
       <div className="px-4">
         <div className="mx-auto max-w-2xl">
           <HashLink
-            href="/#products"
+            href="/shop"
             className={cn(
               buttonVariants({ variant: "outline", size: "sm" }),
               "mb-5 inline-flex sticky top-18 lg:top-22 z-30 bg-cream",

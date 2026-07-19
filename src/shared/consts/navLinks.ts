@@ -6,7 +6,6 @@ export enum SectionId {
   Mix = "mix",
   Promo = "promo",
   Categories = "categories",
-  Products = "products",
   Story = "story",
 }
 
@@ -23,7 +22,7 @@ type NavIconLink = NavLink<{ Icon: ComponentType<SVGProps<SVGSVGElement>> }> & {
 };
 
 export const NAV_LINKS: NavLink[] = [
-  { href: `/#${SectionId.Products}`, label: "Shop" },
+  { href: "/shop", label: "Shop" },
   { href: `/#${SectionId.Mix}`, label: "Mix" },
   { href: `/#${SectionId.Promo}`, label: "Offers" },
   { href: "/about", label: "About" },
@@ -31,7 +30,7 @@ export const NAV_LINKS: NavLink[] = [
 ];
 
 export const TAB_LINKS: NavIconLink[] = [
-  { href: `/#${SectionId.Products}`, label: "Shop", Icon: ShoppingBag },
+  { href: "/shop", label: "Shop", Icon: ShoppingBag },
   { href: `/#${SectionId.Mix}`, label: "Mix", Icon: Package },
   { href: `/#${SectionId.Promo}`, label: "Offers", Icon: Sparkles },
   { href: "/about", label: "About", Icon: Info },

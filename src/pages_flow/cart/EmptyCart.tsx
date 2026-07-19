@@ -8,7 +8,7 @@ export function EmptyCart() {
         icon={<ShoppingBag className="w-10 h-10 text-earth/15" />}
         label="Your cart is empty"
         description="Add some products to get started."
-        action={{ label: "Browse Products", href: "/#products" }}
+        action={{ label: "Browse Products", href: "/shop" }}
       />
     </main>
   );

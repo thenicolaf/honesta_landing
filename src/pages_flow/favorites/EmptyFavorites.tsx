@@ -7,7 +7,7 @@ export function EmptyFavorites() {
       icon={<IconHeart className="w-10 h-10 text-earth/15" />}
       label="No favorites yet"
       description="Add products to your favorites by tapping the heart icon on any product card."
-      action={{ label: "Browse Products", href: "/#products" }}
+      action={{ label: "Browse Products", href: "/shop" }}
     />
   );
 }

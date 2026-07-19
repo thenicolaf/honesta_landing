@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       .eq("id", id)
       .single();
     if (data?.slug) {
-      return NextResponse.json({ href: `/?category=${data.slug}#products` });
+      return NextResponse.json({ href: `/shop?category=${data.slug}` });
     }
   }
 

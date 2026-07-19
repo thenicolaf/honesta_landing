@@ -46,7 +46,7 @@ export function HeroContent() {
           className="flex flex-col items-center gap-4 animate-hero-fade-up"
           style={{ animationDelay: "0.64s" }}
         >
-          <HashLink href="/#products" className="group">
+          <HashLink href="/shop" className="group">
             <Button
               as="button"
               type="button"
@@ -63,7 +63,7 @@ export function HeroContent() {
             </Button>
           </HashLink>
 
-          <HashLink href="/?mark=best_seller#products" className="group">
+          <HashLink href="/shop?mark=best_seller" className="group">
             <Button
               as="button"
               type="button"

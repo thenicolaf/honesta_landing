@@ -32,7 +32,7 @@ interface ProductDetailPageProps {
 
 export function ProductDetailPage({
   product,
-  backHref = "/#products",
+  backHref = "/shop",
   backLabel = "Back to products",
   belowGrid,
 }: ProductDetailPageProps) {
