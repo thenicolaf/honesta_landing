@@ -1,7 +1,7 @@
 /**
  * Helpers for the "preserve filters on Back navigation" pattern.
  *
- * Pages that show filterable lists (home `#products`, `/panel/products`, …)
+ * Pages that show filterable lists (`/shop`, `/panel/products`, …)
  * encode their current pathname + search params into a `?back=` query param
  * on outbound links to detail pages. The detail page reads `back`, validates
  * it via `isSafeBackHref`, and uses it as the back-button href so the user
@@ -12,7 +12,7 @@
  */
 
 interface BuildBackHrefParams {
-  /** Path of the list page (e.g. "/", "/panel/products"). */
+  /** Path of the list page (e.g. "/shop", "/panel/products"). */
   pathname: string;
   /** Current search params — usually `useSearchParams()` from `next/navigation`. */
   searchParams: { toString(): string } | null;

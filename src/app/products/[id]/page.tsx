@@ -60,7 +60,7 @@ const FROM_MAP: Record<string, { href: string; label: string }> = {
   favorites: { href: "/panel/favorites", label: "Back to favorites" },
   cart: { href: "/cart", label: "Back to cart" },
   promo: { href: "/#promo", label: "Back to promo" },
-  products: { href: "/#products", label: "Back to products" },
+  products: { href: "/shop", label: "Back to products" },
 };
 
 function ProductSkeleton() {

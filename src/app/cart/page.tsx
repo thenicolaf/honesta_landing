@@ -14,7 +14,12 @@ export const metadata: Metadata = {
 };
 
 async function CartContent() {
-  const [{ data: { user } }, activePromotions] = await Promise.all([
+  const [
+    {
+      data: { user },
+    },
+    activePromotions,
+  ] = await Promise.all([
     createSupabaseServerClient().then((s) => s.auth.getUser()),
     getActivePromotionsMap(),
   ]);
@@ -26,8 +31,6 @@ async function CartContent() {
       belowContent={
         <Suspense key="promo-slider" fallback={<PromoSliderSkeleton />}>
           <PromoSliderSection
-            kicker="More to explore"
-            title="You might also like"
             withAnchor={false}
             headerClassName="text-left md:pl-12"
             from="cart"

@@ -134,7 +134,7 @@ export function MarketingPopupForm({ popup }: MarketingPopupFormProps) {
               <FormInput
                 id="popup-cta-url"
                 name="cta_url"
-                placeholder="/?sort=promotions#products or https://…"
+                placeholder="/shop?sort=promotions or https://…"
                 defaultValue={state?.values?.cta_url ?? popup?.cta_url ?? ""}
                 state={state?.fieldErrors?.cta_url ? "error" : "default"}
               />

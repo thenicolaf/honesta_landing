@@ -53,7 +53,7 @@ async function MixContent() {
         description="Mix boxes are coming soon. Check back later to build your own!"
         action={{
           label: "Browse products",
-          href: "/#products",
+          href: "/shop",
           variant: "primary",
         }}
       />

@@ -7,13 +7,23 @@ import {
   useRef,
   useEffect,
   useLayoutEffect,
+  useCallback,
+  useSyncExternalStore,
 } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { IconChevron, IconPlus, IconX } from "@/shared/icons";
 import { cn } from "@/shared/utils/cn";
 import { Tag } from "./Tag";
 
 const DROPDOWN_MAX_H = 240;
+const DROPDOWN_GAP = 6; // px between trigger and dropdown
+const VIEWPORT_PAD = 8;
+
+// useSyncExternalStore helpers for SSR-safe mount detection (createPortal needs document.body)
+const subscribeNoop = () => () => {};
+const getMountedTrue = () => true;
+const getMountedFalse = () => false;
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 
@@ -29,6 +39,7 @@ interface MultiSelectContextValue {
   clearable: boolean;
   search: string;
   direction: "down" | "up";
+  triggerRef: React.RefObject<HTMLDivElement | null>;
   listRef: React.RefObject<HTMLUListElement | null>;
   scrollTopRef: React.RefObject<number>;
   toggle: () => void;
@@ -150,6 +161,7 @@ export function MultiSelect({
         clearable,
         search,
         direction,
+        triggerRef: rootRef,
         listRef,
         scrollTopRef,
         toggle,
@@ -286,8 +298,14 @@ export function MultiSelectContent({
   className,
   searchPlaceholder = "Search...",
 }: MultiSelectContentProps) {
-  const { open, values, options, direction, search, setSearch, listRef, scrollTopRef } =
+  const { open, values, options, direction, search, setSearch, triggerRef, listRef, scrollTopRef } =
     useMultiSelect();
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
 
   const sortedOptions = [...options].sort((a, b) => {
     const aSelected = values.includes(a.value) ? 0 : 1;
@@ -298,15 +316,56 @@ export function MultiSelectContent({
   const resolved = typeof children === "function" ? children(sortedOptions) : children;
   const searchRef = useRef<HTMLInputElement>(null);
 
+  const isUp = direction === "up";
+  const yOffset = isUp ? 6 : -6;
+
+  // SSR safety — createPortal needs document.body (same pattern as Tooltip).
+  const mounted = useSyncExternalStore(
+    subscribeNoop,
+    getMountedTrue,
+    getMountedFalse,
+  );
+
+  // Position the portaled dropdown against the trigger, in viewport (fixed) coords.
+  const updatePosition = useCallback(() => {
+    const trigger = triggerRef.current;
+    const content = contentRef.current;
+    if (!trigger || !content) return;
+
+    const rect = trigger.getBoundingClientRect();
+    const contentHeight = content.offsetHeight;
+    const vw = window.innerWidth;
+
+    let top = isUp
+      ? rect.top - contentHeight - DROPDOWN_GAP
+      : rect.bottom + DROPDOWN_GAP;
+    top = Math.max(VIEWPORT_PAD, top);
+
+    let left = rect.left;
+    const maxLeft = vw - VIEWPORT_PAD - rect.width;
+    if (left > maxLeft) left = maxLeft;
+    if (left < VIEWPORT_PAD) left = VIEWPORT_PAD;
+
+    setCoords({ top, left, width: rect.width });
+  }, [isUp, triggerRef]);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open, updatePosition]);
+
   // Restore scroll position after re-render (saved by MultiSelectItem before toggleItem)
   useLayoutEffect(() => {
     if (listRef.current) {
       listRef.current.scrollTop = scrollTopRef.current;
     }
   }, [values, listRef, scrollTopRef]);
-
-  const isUp = direction === "up";
-  const yOffset = isUp ? 6 : -6;
 
   // Auto-focus search on open
   useEffect(() => {
@@ -316,17 +375,29 @@ export function MultiSelectContent({
     }
   }, [open]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence initial={false}>
       {open && (
         <motion.div
+          ref={contentRef}
+          // Prevent the MultiSelect's document `mousedown` outside-click handler
+          // from firing when interacting with the portaled dropdown.
+          onMouseDown={(e) => e.stopPropagation()}
           initial={{ opacity: 0, y: yOffset, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: yOffset, scale: 0.98 }}
           transition={{ duration: 0.18, ease: "easeOut" }}
+          style={{
+            position: "fixed",
+            top: coords?.top ?? 0,
+            left: coords?.left ?? 0,
+            width: coords?.width,
+            visibility: coords ? "visible" : "hidden",
+          }}
           className={cn(
-            "absolute left-0 right-0 z-50",
-            isUp ? "bottom-full mb-1.5" : "top-full mt-1.5",
+            "z-50",
             "rounded-xl border border-earth/12 bg-white-warm shadow-lg shadow-earth/8",
             "overflow-hidden",
             className,
@@ -377,7 +448,8 @@ export function MultiSelectContent({
           </motion.ul>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }
 

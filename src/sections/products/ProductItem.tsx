@@ -6,7 +6,6 @@ import type { Product } from "./types";
 import { buildProductHref } from "./utils";
 import {
   ProductImage,
-  ProductHeader,
   ProductTitle,
   ProductPriceAndCart,
   ProductVariantSelector,
@@ -25,7 +24,7 @@ interface ProductItemProps {
 }
 
 export function ProductItem({ product, from, backHref }: ProductItemProps) {
-  const { title, category, image_url } = product;
+  const { title, image_url } = product;
 
   const [selectedVariantId, setSelectedVariantId] = useState(
     () => product.variants?.[0]?.id ?? "",
@@ -78,7 +77,6 @@ export function ProductItem({ product, from, backHref }: ProductItemProps) {
       </div>
 
       <div className="flex-1 p-2.5 flex flex-col gap-1.5">
-        <ProductHeader category={category} badge={product.badge} />
         <ProductTitle title={title} />
         {product.variants.length > 0 && (
           <ProductVariantSelector

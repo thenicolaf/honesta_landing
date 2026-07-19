@@ -143,9 +143,6 @@ export function AddressWithMap({
 
   function handleEmirateChange(value: string) {
     setEmirate(value);
-    setCityState("");
-    setAreaState("");
-    setBuildingNameState("");
 
     // Geocode to emirate center for visual feedback
     if (isLoaded) {
@@ -168,13 +165,10 @@ export function AddressWithMap({
 
   function handleCityChange(value: string) {
     setCityState(value);
-    setAreaState("");
-    setBuildingNameState("");
   }
 
   function handleAreaChange(value: string) {
     setAreaState(value);
-    setBuildingNameState("");
   }
 
   // --- Refs ---
@@ -422,10 +416,10 @@ export function AddressWithMap({
           </div>
         )}
 
-        {/* Building Name */}
+        {/* Full Address */}
         <div>
           <FormLabel htmlFor="address-building" required={required}>
-            Building
+            Full Address
           </FormLabel>
           {isLoaded ? (
             <AddressSuggestInput
@@ -433,7 +427,7 @@ export function AddressWithMap({
               value={buildingName}
               onChange={setBuildingNameState}
               onSelect={onBuildingSelect}
-              placeholder="Building name"
+              placeholder="Building name / street"
               state={fieldErrors?.buildingName ? "error" : "default"}
               types={["establishment"]}
               locationBias={locationBias}
@@ -444,7 +438,7 @@ export function AddressWithMap({
               type="text"
               value={buildingName}
               onChange={(e) => setBuildingNameState(e.target.value)}
-              placeholder="Building name"
+              placeholder="Building name / street"
               state={fieldErrors?.buildingName ? "error" : "default"}
             />
           )}

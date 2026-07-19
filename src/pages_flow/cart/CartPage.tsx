@@ -10,6 +10,7 @@ import { CartSummary } from "./ui/CartSummary";
 import { PromoCodeBlock } from "./ui/PromoCodeBlock";
 import { ClearCartButton } from "./ui/ClearCartButton";
 import { buttonVariants } from "@/shared/ui";
+import { cn } from "@/shared/utils/cn";
 import { CartSkeleton } from "./ui/CartSkeleton";
 import { HashLink } from "@/sections/navbar";
 import type { ActivePromotionsMap } from "@/lib/promotionsDb";
@@ -26,7 +27,8 @@ export function CartPage({
   activePromotions,
   belowContent,
 }: CartPageProps) {
-  const { items, total, isHydrated, applyServerPromotions, refresh } = useCart();
+  const { items, total, isHydrated, applyServerPromotions, refresh } =
+    useCart();
 
   useLayoutEffect(() => {
     applyServerPromotions(activePromotions);
@@ -63,8 +65,11 @@ export function CartPage({
       <div className="px-4">
         <div className="mx-auto max-w-2xl">
           <HashLink
-            href="/#products"
-            className={buttonVariants({ variant: "outline", size: "sm" }) + " mb-5 inline-flex"}
+            href="/shop"
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "mb-5 inline-flex sticky top-18 lg:top-22 z-30 bg-cream",
+            )}
           >
             <ArrowLeft size={14} className="mr-2" />
             Back to products
@@ -84,11 +89,13 @@ export function CartPage({
             <ClearCartButton />
           </div>
           <CartGrid />
+        </div>
+        {belowContent}
+        <div className="mx-auto max-w-2xl">
           <PromoCodeBlock isAuthenticated={isAuthenticated} />
           <CartSummary />
         </div>
       </div>
-      {belowContent}
     </main>
   );
 }

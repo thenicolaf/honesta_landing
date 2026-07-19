@@ -1,17 +1,19 @@
 import type { DbCategory } from "@/sections/categories/types";
 
-export function buildHomeStructuredData(
+export function buildShopCollectionJsonLd(
   categories: DbCategory[],
   siteUrl: string,
 ) {
+  const shopUrl = `${siteUrl}/shop`;
+
   return {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    "@id": `${siteUrl}/#collectionpage`,
-    name: "HONESTA — Natural Dried Fruits",
+    "@id": `${shopUrl}#collectionpage`,
+    name: "Shop — HONESTA Natural Dried Fruits",
     description:
       "Handcrafted dried fruits and pastila. 100% fruit. No added sugar. No additives. Small batch production with love.",
-    url: siteUrl,
+    url: shopUrl,
     isPartOf: { "@id": `${siteUrl}/#website` },
     mainEntity: {
       "@type": "ItemList",
@@ -22,15 +24,22 @@ export function buildHomeStructuredData(
         position: i + 1,
         name: c.name,
         description: c.tagline,
-        url: `${siteUrl}/shop?category=${c.slug}`,
+        url: `${shopUrl}?category=${c.slug}`,
         ...(c.image_url ? { image: c.image_url } : {}),
       })),
     },
-    breadcrumb: {
-      "@type": "BreadcrumbList",
-      itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Home", item: siteUrl },
-      ],
-    },
+  };
+}
+
+export function buildShopBreadcrumbJsonLd(siteUrl: string) {
+  const shopUrl = `${siteUrl}/shop`;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: siteUrl },
+      { "@type": "ListItem", position: 2, name: "Shop", item: shopUrl },
+    ],
   };
 }

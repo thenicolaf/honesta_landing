@@ -34,8 +34,8 @@ const NOTIFICATION_URL_MAP: Record<string, string> = {
   order_failed: "/panel/all-orders",
   order_cancelled: "/panel/all-orders",
   new_partnership: "/panel/partnerships",
-  new_promotion: "/?sort=promotions#products",
-  new_product: "/#products",
+  new_promotion: "/shop?sort=promotions",
+  new_product: "/shop",
   new_category: "/#categories",
 };
 
@@ -47,7 +47,7 @@ export async function getNotificationUrl(type: string, relatedId?: string): Prom
     }
     if (type === "new_category") {
       const { data } = await supabaseAdmin.from("categories").select("slug").eq("id", relatedId).single();
-      if (data?.slug) return `/?category=${data.slug}#products`;
+      if (data?.slug) return `/shop?category=${data.slug}`;
     }
   }
   return NOTIFICATION_URL_MAP[type] ?? "/panel";

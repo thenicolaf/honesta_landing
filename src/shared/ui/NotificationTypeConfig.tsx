@@ -92,7 +92,7 @@ export function getNotificationStyle(type: string): NotificationTypeStyle {
 export function getNotificationHref(type: string): string | null {
   switch (type) {
     case "new_promotion":
-      return "/?sort=promotions#products";
+      return "/shop?sort=promotions";
     case "new_order":
     case "order_paid":
     case "order_failed":

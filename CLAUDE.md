@@ -51,7 +51,8 @@ No test suite configured yet.
 src/
 ├── app/                        # Next.js App Router routes
 │   ├── layout.tsx              # Root layout — wraps with ReactQueryProvider + CartProvider + FavoritesProvider + NotificationsProvider; mounts SpeedInsights + GA + GAEventDispatcher + WhatsAppFloatingButton
-│   ├── page.tsx                # Landing page (Hero, Products, Categories)
+│   ├── page.tsx                # Landing page (PromoSlider/Best Offers → Categories → MixCTA → Philosophy; NO Hero, NO product catalog)
+│   ├── shop/                    # /shop — public product catalog (ProductGrid + filters); moved off the landing page
 │   ├── cart/page.tsx           # Shopping cart route
 │   ├── checkout/
 │   │   ├── page.tsx            # Checkout form (reads customer cookie)
@@ -117,7 +118,8 @@ src/
 │   ├── cart/                   # CartPage + CartGrid + CartItem + CartSummary
 │   ├── checkout/               # CheckoutPage + CheckoutForm + OrderSummary + SubmitButton
 │   │   └── actions.ts          # Server action: validate → save to DB → create payment → redirect
-│   ├── home/                   # CategoriesSection, ProductsSection
+│   ├── home/                   # CategoriesSection, PromoSliderSection (landing sections)
+│   ├── shop/                   # ProductsSection (server wrapper: getPublishedProducts + getCategories → ProductGrid)
 │   ├── login/                  # LoginPage + LoginForm + GoogleSignInButton
 │   ├── signup/                 # SignupPage + SignupForm
 │   ├── verify-email/           # VerifyEmailPage (OTP input)
@@ -167,7 +169,7 @@ src/
 │   └── SearchParamsFilterProvider.tsx  # Syncs FilterProvider state to URL search params (supports multiKeys)
 │
 ├── sections/                   # Landing-page section components
-│   ├── Navbar.tsx, Hero.tsx, PhilosophyBlock.tsx, AboutUs.tsx, PartnershipCTA.tsx, MixCTA.tsx, Footer.tsx
+│   ├── Navbar.tsx, PhilosophyBlock.tsx, AboutUs.tsx, PartnershipCTA.tsx, MixCTA.tsx, Footer.tsx (Hero removed)
 │   ├── partnership/            # actions.ts — submitPartnershipInquiry server action → partnership_inquiries table
 │   ├── categories/             # CategoryCard, CategoryGrid, consts, types
 │   └── products/               # ProductGrid, ProductItem, consts, mapDbProducts
@@ -190,7 +192,8 @@ src/
 
 | Route | Purpose |
 |-------|---------|
-| `/` | Landing page |
+| `/` | Landing page (no product catalog — starts at Best Offers; Hero removed) |
+| `/shop` | Product catalog — `ProductGrid` + filters (`?category`/`?sort`/`?search`/`?mark`), moved off the landing page |
 | `/mix` | Mix constructor (public — build your own mix from active boxes) |
 | `/cart` | Shopping cart |
 | `/checkout` | Checkout form (customer info + order summary) |
@@ -257,7 +260,7 @@ Pages use **Suspense + Skeleton** instead of route-level `loading.tsx`. The cano
 
 1. The route's `page.tsx` is **synchronous** (or only `await`s `searchParams` — a mandatory dynamic API, fast). No top-level data fetching.
 2. Data fetching lives in an **async sub-component** (e.g. `CheckoutDataLoader`, `ResultDataLoader`, `MarketingPopupAsync`, `HomeStructuredDataAsync`) defined in the same file.
-3. The sub-component is wrapped in `<Suspense fallback={<SomeSkeleton />}>`. Sections that don't depend on data (Hero, AboutUs, Philosophy, static cancel-card) render in the first HTML stream **immediately** — no waiting on the slowest data dependency.
+3. The sub-component is wrapped in `<Suspense fallback={<SomeSkeleton />}>`. Sections that don't depend on data (AboutUs, Philosophy, static cancel-card) render in the first HTML stream **immediately** — no waiting on the slowest data dependency.
 
 Skeleton primitives live in [src/shared/ui/Skeleton.tsx](src/shared/ui/Skeleton.tsx): `Skeleton`, `SkeletonCard`, `SkeletonGrid`, `SkeletonProductGrid`, `SkeletonSection`. Page-specific skeletons (`CartSkeleton`, `CheckoutSkeleton`, `ProfileSkeleton`, `OrdersSkeleton`, `MovementsHistorySkeleton`, etc.) are defined inline in the page file or co-located in `src/pages_flow/<route>/ui/`. Each skeleton **mirrors the final layout** (same grid, same heights, same padding) so the Suspense → real-content swap has zero CLS.
 
@@ -583,11 +586,11 @@ const FROM_MAP = {
   favorites: { href: "/panel/favorites", label: "Back to favorites" },
   cart:      { href: "/cart",            label: "Back to cart" },
   promo:     { href: "/#promo",          label: "Back to promo" },
-  products:  { href: "/#products",       label: "Back to products" },
+  products:  { href: "/shop",            label: "Back to products" },
 };
 ```
 
-The slider on a product detail page **inherits** the incoming `from` and `back` so that the original entry context propagates through any depth of product-to-product navigation: `from={from ?? "products"}`, `backHref={safeBack}`. If user landed on a product directly (no `from`), the slider falls back to `from="products"` so chained back-clicks return to `/#products` — never `/#promo` (the home variant).
+The slider on a product detail page **inherits** the incoming `from` and `back` so that the original entry context propagates through any depth of product-to-product navigation: `from={from ?? "products"}`, `backHref={safeBack}`. If user landed on a product directly (no `from`), the slider falls back to `from="products"` so chained back-clicks return to `/shop` — never `/#promo` (the home variant).
 
 ### Filter preservation helpers
 
@@ -596,7 +599,7 @@ Three pieces wire up the "Back returns to the same filtered list" UX:
 1. **[buildBackHref / isSafeBackHref](src/shared/utils/backHref.ts)** — single source of truth for the `?back=` value. `buildBackHref({ pathname, searchParams, hash })` produces the URL using `useSearchParams().toString()`; `isSafeBackHref(url)` is the same-origin guard used by every consumer of `?back=`.
 2. **[buildProductHref](src/sections/products/utils/buildProductHref.ts)** — serialises both `from` and `backHref` into the outbound `/products/{slug}?from=…&back=…` URL. Always use this helper instead of hand-rolling the public product link.
 3. **List pages capture filters via `useSearchParams()` and pass `backHref` to each card:**
-   - [src/sections/products/ProductGrid.tsx](src/sections/products/ProductGrid.tsx) — public home `#products` grid passes `backHref = "/?{filters}#products"` and `from="products"`.
+   - [src/sections/products/ProductGrid.tsx](src/sections/products/ProductGrid.tsx) — public `/shop` catalog grid passes `backHref = buildBackHref({ pathname: usePathname(), searchParams })` (i.e. `/shop?{filters}`, no `#products` hash) and `from="products"`.
    - [src/pages_flow/panel/products/AdminProductCard.tsx](src/pages_flow/panel/products/AdminProductCard.tsx) — admin grid passes `back=/panel/products?{filters}` directly into the `/panel/products/{id}/details` link.
 
    Adding a new filterable list page with this UX is two lines: `useSearchParams()` → `buildBackHref(...)` → pass into the link.
@@ -779,9 +782,10 @@ Both views share the same `paginatedData` from hooks like `useOrdersTable` / `us
 
 ## Product card specifics
 
+**Minimal card body (deliberate low cognitive load).** Both public [ProductItem](src/sections/products/ProductItem.tsx) and admin [AdminProductCard](src/pages_flow/panel/products/AdminProductCard.tsx) show only the essentials under the image: **title → variant weights/prices → footer action**. The category-name + badge row (`ProductHeader`) was removed from both card variants; `IngredientsInline` was removed from the admin card. `ProductHeader` still exists but is now used only on the **detail pages** (public [ProductDetailPage](src/pages_flow/products/ProductDetailPage.tsx) + admin panel detail), never on grid cards. `IngredientsInline` is likewise no longer used on any card.
+
 Beyond the shared card anatomy (see **Card grids**), product cards use:
 - `ProductVariantSelector` (public) vs `AdminVariantBadges` (admin) for weights/prices.
-- `IngredientsInline` ([src/sections/products/components/IngredientsInline.tsx](src/sections/products/components/IngredientsInline.tsx)) — uppercase label + `ingredients.join(" · ")` with `line-clamp-2`.
 - `ProductNote` — rendered as `NoteButton` overlay on image bottom-right (Info icon + tooltip with full note); no inline blockquote on the card.
 - `ShareButton` — public only, passed as `actionSuffix` of `ProductPriceAndCart`.
 - `ViewButton` — public only, `ArrowUpRight` icon overlay bottom-left to signal clickability.
@@ -942,7 +946,7 @@ See **Product video** for the full set of changes when MP4/YouTube slides are in
 - **PartnershipCTA** section (`src/sections/PartnershipCTA.tsx`) replaces the old InstagramCTA. It offers two contact channels: Instagram DM button (uses `NEXT_PUBLIC_INSTAGRAM_DM_URL` + `NEXT_PUBLIC_INSTAGRAM_BRAND_URL`) and an inline partnership inquiry form that submits via `useActionState` to a server action saving to `partnership_inquiries`. Always use `target="_blank" rel="noopener noreferrer"` for Instagram links. See `.env.example` for all Instagram env vars.
 - **Product data** loaded from Supabase (with `image_url` + `images` from Storage). `mapDbProducts()` converts Supabase rows to the `Product` type, including variant mapping, image arrays, and promotion calculation.
 - **Delivery fee** is `NEXT_PUBLIC_DELIVERY_FEE` env var (default 25 AED), defined in `src/shared/consts.ts`.
-- **Product badge** — optional `badge` text field on both `products` and `categories` tables. Displayed via `Badge` component in `ProductHeader` and category cards. If empty/null, badge is hidden.
+- **Product badge** — optional `badge` text field on both `products` and `categories` tables. Displayed via `Badge` component on product **detail pages** (`ProductHeader`) and admin category cards. If empty/null, badge is hidden. Note: product **grid cards** and the minimalist public category cards no longer render the badge (deliberate low-cognitive-load simplification — see **Product card specifics**).
 - **Nutrition** — dynamic fields stored as `Array<{ key, name, value }>` in `products.nutrition` JSONB. **Format is an array, not an object** — JSONB normalizes object keys (no order guarantee), but preserves array order, which is what makes admin-defined ordering survive a round-trip. Admin form (`NutritionSection` in [src/pages_flow/panel/products/product-form/NutritionSection.tsx](src/pages_flow/panel/products/product-form/NutritionSection.tsx)) allows adding / removing / **drag-and-drop reordering** fields. DnD via `@dnd-kit/react` (`useSortable` + `PointerSensor` with instant activation, `handle` ref) — same pattern as [SortableThumbnail](src/shared/ui/UploadZone/SortableThumbnail.tsx). Drag handle is a `GripVertical` button absolutely positioned at `top-0 left-0` over the label; on hover-capable devices it appears on `group-hover` and the label slides right via `translate-x-7` (with `transition-transform`); on touch devices (`@media(hover:none)`) the handle is always visible and the label is rendered with the offset upfront. Default 8 fields (Calories, Carbs, etc.) pre-populated for new products. `parseNutritionEntries` is **tolerant** — accepts the new array format **and** the legacy `Record<string, { name, value }>` shape so existing rows in the DB keep working without migration. The single normalization point is [`mapNutrition`](src/sections/products/utils/mapNutrition.ts) which always returns the array form, so `NutritionTable` in public UI iterates `nutrition.map(...)` (no `Object.values`).
 - **Benefits** — managed via `BenefitsSection` with `MultiSelect` compound component. Supports inline creation (Popover form with name + description) and deletion. API: `POST/DELETE /api/options` with `entityType: "benefits"`. Benefits table: `benefits(id, name, description)`.
 - **Product fields** `servingIdeas`, `occasions`, `tags`, `freeFrom` are all rendered **inside the collapsible Details block** on product cards/rows (not exposed on the card body). On detail pages (`ProductExpandedDetails`, public + admin) they're joined by `ingredients` — the 2×2 grid is Tags / FreeFrom / Serving / Occasions, with Ingredients full-width between Nutrition and the grid. On cards/rows `ingredients` stays visible above `ProductNote` (the one exception). Section wrappers with uppercase labels: `ProductTagsSection`, `ProductFreeFromSection`, `ProductIngredientsSection` (all in [ProductDetails.tsx](src/sections/products/components/ProductDetails.tsx)). `hasDetailsContent` considers all six fields when deciding whether to show the Details trigger.
@@ -956,16 +960,17 @@ Products, categories and mixes all use a single compact-card layout (no row-vari
 - **Products** — public + admin + favorites. Card: [ProductItem](src/sections/products/ProductItem.tsx) / [AdminProductCard](src/pages_flow/panel/products/AdminProductCard.tsx). Grid constants in [src/sections/products/ProductGridSkeleton.tsx](src/sections/products/ProductGridSkeleton.tsx):
   - `PUBLIC_PRODUCT_GRID_CLASS` — `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4`.
   - `ADMIN_PRODUCT_GRID_CLASS` — `grid-cols-2 min-[800px]:grid-cols-3 min-[1024px]:grid-cols-2 min-[1124px]:grid-cols-3 min-[1400px]:grid-cols-4` (nonlinear — 2 cols in 1024–1123px where sidebar squeezes the content).
-- **Categories** — public section + admin DnD grid. Card: [CategoryCard](src/sections/categories/CategoryCard.tsx) / [AdminCategoryCard](src/pages_flow/panel/categories/AdminCategoryCard.tsx). Grid constants in [src/sections/categories/CategoryGridSkeleton.tsx](src/sections/categories/CategoryGridSkeleton.tsx):
+- **Categories** — public home section + admin DnD grid. Public [CategoryCard](src/sections/categories/CategoryCard.tsx) is a **minimalist overlay tile** (see **Home categories section** below); admin uses the richer [AdminCategoryCard](src/pages_flow/panel/categories/AdminCategoryCard.tsx). Grid constants in [src/sections/categories/CategoryGridSkeleton.tsx](src/sections/categories/CategoryGridSkeleton.tsx):
   - `PUBLIC_CATEGORY_GRID_CLASS` — identical to public products.
   - `ADMIN_CATEGORY_GRID_CLASS` — identical to admin products.
+  - `CategoryGridSkeleton` is **variant-aware**: `public` renders an image-only tile (matches the overlay card), `admin` keeps the full body tile.
 - **Mixes** — admin DnD grid only (no public mix grid — `/mix` is a constructor, `MixCTA` is a banner). Card: [MixCard](src/pages_flow/panel/mixes/MixCard.tsx). Grid: `ADMIN_MIX_GRID_CLASS` in [src/pages_flow/panel/mixes/MixesSkeleton.tsx](src/pages_flow/panel/mixes/MixesSkeleton.tsx) — same as admin products.
 
 **Shared card anatomy** (all three domains):
 - Root `<div>` with `h-full flex flex-col rounded-2xl bg-white-warm border` + hover shadow.
 - Image aspect-3/2, `rounded-t-2xl overflow-hidden`. Image wrapped in `<Link>` for public (navigation target).
 - Overlay slots: top-left — badges (SALE/BEST/NEW for products, `{cell_count} CELLS` + `Inactive` for mixes, optional `badge` for categories); top-right — `FavoriteButton` for public products, `Out of stock` for admin products, drag handle (GripVertical in a circle, `opacity-0 group-hover:opacity-100`) for admin categories/mixes; bottom-left — `ViewButton` (ArrowUpRight) for products; bottom-right — `NoteButton` (Info + tooltip) for products with `note`.
-- Body `p-3 flex flex-col gap-2 grow`: header row (uppercase category/audience label + `Badge` same line), `ProductTitle` (capitalize, responsive clamp font), secondary line (ingredients/tagline/presets count), stacked footer `mt-auto` with primary action (Add to Cart / Explore) or admin actions pair (`Edit` + `Delete` via `min-[520px]:flex-row min-[520px]:flex-1`).
+- Body `p-3 flex flex-col gap-2 grow`: `ProductTitle` (capitalize, responsive clamp font), then variant weights/prices, stacked footer `mt-auto` with primary action (Add to Cart) or admin actions pair (`Edit` + `Delete` via `min-[520px]:flex-row min-[520px]:flex-1`). **Product cards no longer render the category/badge header row or ingredients line** — see **Product card specifics**. (The public minimalist category card is the exception: it has no body at all — name is overlaid on the image.)
 
 ### Skeletons
 
@@ -978,6 +983,16 @@ Each grid owns its skeleton which mirrors the real card (image + header + title 
 Other list pages (promotions, promo-codes, delivery) have hand-rolled skeletons that copy their real card markup.
 
 **Rule of thumb:** when creating a new list page, copy the real card's outer classes (`rounded-2xl`, `bg-white-warm`, padding) into the skeleton and use inner `<Skeleton>` blocks sized close to the real text/buttons.
+
+## Shop route + home composition
+
+**`/shop` (product catalog).** The product catalog was moved off the landing page onto its own route [src/app/shop/page.tsx](src/app/shop/page.tsx). Structure mirrors `/about`: `generateMetadata` (base + per-`?category=` title/description/OG via `getCategories`, `canonical = ${siteUrl}/shop`), then `<SearchParamsFilterProvider keys={["category","sort","search","mark"]}>` → `<Suspense fallback={ProductsSkeleton}>` → `<ProductsSection>` ([src/pages_flow/shop/ProductsSection.tsx](src/pages_flow/shop/ProductsSection.tsx), the server wrapper that loads `getPublishedProducts` + `getCategories` + `getProductSalesMap` + shuffle cookie and renders `ProductGrid`). JSON-LD (`CollectionPage` + `BreadcrumbList`) in [src/app/shop/structured-data.ts](src/app/shop/structured-data.ts). `/shop` is in `sitemap.ts` (priority 0.8). `<main>` uses `pt-24 md:pt-28` to clear the fixed navbar.
+
+**All catalog entry points point to `/shop`** — every former `/#products` link now targets `/shop` (nav "Shop", Hero was removed, category cards → `/shop?category=<slug>`, notification deep-links → `/shop?sort=promotions` / `/shop?category=<slug>`, empty-state "Browse products" CTAs, `FROM_MAP.products`, `ProductDetailPage` default `backHref`). Filter params (`?category`/`?sort`/`?mark`/`?search`) are read by `SearchParamsFilterProvider` → `useFilteredProducts`, so `/shop?category=x` deep-links open pre-filtered.
+
+**Home landing composition** ([src/app/page.tsx](src/app/page.tsx)): PromoSlider (Best Offers) → **Categories** → MixCTA → Philosophy. No Hero, no catalog. `<main>` has `pt-16 md:pt-20` since Hero no longer provides the navbar spacer.
+
+**Home categories section** (minimalist, low cognitive load). [`CategoriesSection`](src/pages_flow/home/CategoriesSection.tsx) (only `getCategories()`) → [`CategoryGrid`](src/sections/categories/CategoryGrid.tsx) (`bg-sand`, header "Collections / Shop by category", `PUBLIC_CATEGORY_GRID_CLASS`, no filtering — all categories in sequence) → [`CategoryCard`](src/sections/categories/CategoryCard.tsx). The card is a **single `HashLink` to `/shop?category=<slug>`**: full-bleed image (`aspect-3/2`), bottom gradient, category **name only** overlaid (no audience/badge/tagline/count/Explore button). Hover: image `scale-105` + card lift + shadow + darker gradient. Placeholder icon from `CATEGORY_UI_MAP` when no image. (The `CategoriesSection`/`CategoryGrid`/`CategoryCard` trio was previously dead code — now live on the home page.)
 
 ### Admin DnD (categories + mixes)
 
@@ -1046,7 +1061,7 @@ Accepts `role`, `userId`, `allowNotifications` props. When `allowNotifications =
 **UI:** `NotificationBell` in navbar (all logged-in users). `RecentNotifications` + `MarkAllReadButton` on admin dashboard. Both support clickable notifications with navigation.
 
 **Notification links:** `related_id` stores UUID of the related entity. Clicking a notification navigates to the relevant page:
-- `getNotificationHref(type)` in `src/shared/ui/NotificationTypeConfig.tsx` — static URLs (orders → `/panel/all-orders`, promotions → `/?sort=promotions#products`)
+- `getNotificationHref(type)` in `src/shared/ui/NotificationTypeConfig.tsx` — static URLs (orders → `/panel/all-orders`, promotions → `/shop?sort=promotions`)
 - `resolveNotificationHref(type, relatedId)` in `src/shared/utils/resolveNotificationHref.ts` — async, resolves product/category UUID → slug via `/api/notifications/resolve`
 - Push notifications resolve URLs server-side via `getNotificationUrl()` in `src/lib/pushNotification.ts`
 
@@ -1289,7 +1304,7 @@ Form-level glue: parent passes `state?.values?.X` (or destructured) directly to 
 
 ## Animations
 
-Import as `import { motion } from "motion/react";`. Used in Navbar (scroll-driven header opacity) and below-the-fold sections (PhilosophyBlock, PartnershipCTA). **Prefer CSS animations over motion/react for above-the-fold content** — Hero uses CSS `@keyframes` + `animation-timeline: scroll()` for parallax (0 JS). AboutUs and CategoryGrid use CSS `animate-hero-fade-up` / `animate-about-stagger` classes defined in `globals.css`.
+Import as `import { motion } from "motion/react";`. Used in Navbar (scroll-driven header background/shadow opacity) and below-the-fold sections (PhilosophyBlock, PartnershipCTA). **Prefer CSS animations over motion/react for above-the-fold content** — AboutUs and CategoryGrid use CSS `animate-hero-fade-up` / `animate-about-stagger` classes defined in `globals.css`. (The Hero parallax + the navbar logo reveal-on-scroll animation were removed with the Hero section — the logo is now always visible; only the header background/shadow still animate on scroll.)
 
 Any section that uses `motion` hooks (`useScroll`, `useTransform`) must add `"use client"` at the top of the file.
 
@@ -1320,7 +1335,7 @@ Product/order/inquiry list pages use a shared pattern for search:
 - **`HashTracker`** (`src/app/_components/HashTracker.tsx`) — scroll-spy on home page. Uses `IntersectionObserver` to update URL hash as user scrolls through sections. `MutationObserver` handles Suspense-deferred sections. Dispatches `hashchange` event (no polling).
 - **`useActiveHash`** (`src/sections/navbar/useActiveHash.ts`) — `useSyncExternalStore` listening for `hashchange` + `popstate` events (no polling).
 - **Scroll restoration** — inline `<script>` in `layout.tsx` with `history.scrollRestoration = "manual"` + sessionStorage save/restore (needed because native restoration fails with Suspense streaming).
-- **Navigation links** — shared source of truth in `src/shared/consts/navLinks.ts`. `SectionId` enum (`Hero`, `About`, `Mix`, `Promo`, `Categories`, `Products`, `Story`, `Contact`), `SECTION_IDS = Object.values(SectionId)` (used by `HashTracker`), `NAV_LINKS` and `TAB_LINKS` (typed with `NavLink<T>` generic). Used by Navbar, NavMobileTabBar, Footer, and HashTracker. The mobile tab bar (`NavMobileTabBar`) hides text labels under `500px` and enlarges the icon (`w-5.5`) to keep tap targets comfortable when only the glyph is visible; `<500px` labels are kept as `sr-only` for screen readers.
+- **Navigation links** — shared source of truth in `src/shared/consts/navLinks.ts`. `SectionId` enum (`Mix`, `Promo`, `Categories`, `Story` — `Hero` and `Products` were removed; `Products` because "Shop" is now the `/shop` route, `Hero` because the section was deleted), `SECTION_IDS = Object.values(SectionId)` (used by `HashTracker`), `NAV_LINKS` and `TAB_LINKS` (typed with `NavLink<T>` generic; "Shop" → `/shop` route, "About"/"Partnership" → routes, "Mix"/"Offers" → home hashes). Used by Navbar, NavMobileTabBar, Footer, and HashTracker. The mobile tab bar (`NavMobileTabBar`) hides text labels under `500px` and enlarges the icon (`w-5.5`) to keep tap targets comfortable when only the glyph is visible; `<500px` labels are kept as `sr-only` for screen readers.
 
 ## Product sorting
 
@@ -1337,21 +1352,24 @@ Product/order/inquiry list pages use a shared pattern for search:
 - `WebPage` (root)
 
 **Home page** (`src/app/page.tsx`):
-- `generateMetadata()` — dynamic title/description when `?category=slug` is present (reads category data from DB)
-- `CollectionPage` JSON-LD (`src/app/home-structured-data.ts`) — ItemList of categories with BreadcrumbList
+- `CollectionPage` JSON-LD (`src/app/home-structured-data.ts`) — ItemList of categories (URLs → `/shop?category=<slug>`) with BreadcrumbList.
+
+**Shop page** (`src/app/shop/page.tsx`):
+- `generateMetadata()` — dynamic per-category title/description/OG when `?category=slug` is present (reads category data from DB), else base "Shop" metadata; `canonical = ${siteUrl}/shop` (or `/shop?category=<slug>`). This per-category metadata logic moved here from the home page when the catalog moved to `/shop`.
+- `CollectionPage` + `BreadcrumbList` JSON-LD (`src/app/shop/structured-data.ts`).
 
 **Product detail pages** (`src/app/products/[id]/page.tsx`):
 - **Product schema** — with `AggregateOffer` for multi-variant pricing, promotion `priceValidUntil`, `additionalProperty` for tags/freeFrom, all images.
 - **BreadcrumbList** — Home → Category → Product.
 - Structured data builders in `src/app/products/[id]/structured-data.ts`. `buildDescription(dbProduct, product)` is **shared between `generateMetadata` and the Product JSON-LD** so the meta-description and schema description stay in sync (tagline + tags + `Free from: …`).
 - `generateMetadata` returns `alternates.canonical` per-slug, `twitter` card (summary_large_image), `keywords` from `product.tags`, `openGraph.images` = full `[image_url, ...images]`, `openGraph.url` per-slug.
-- **Back navigation** — `FROM_MAP` maps `?from=` param to back button href/label (e.g. `?from=favorites` → "Back to favorites", `?from=cart` → "Back to cart"). Default: "Back to products" → `/#products`.
+- **Back navigation** — `FROM_MAP` maps `?from=` param to back button href/label (e.g. `?from=favorites` → "Back to favorites", `?from=cart` → "Back to cart"). Default: "Back to products" → `/shop`.
 
 **Mix page** (`src/app/mix/page.tsx`):
 - `generateMetadata` sets canonical `${siteUrl}/mix`, OG/Twitter image = first active `mix_box.image_url` (fallback to root `/og-image.jpg` if no active boxes).
 - `CollectionPage` JSON-LD with `ItemList` of active boxes + `BreadcrumbList` — both from `src/app/mix/structured-data.ts` (`buildMixCollectionJsonLd`, `buildMixBreadcrumbJsonLd`). Individual boxes are **not** separate URLs — they live under `/mix?box={slug}` query params, so only `/mix` is in sitemap (avoids canonical conflicts).
 
-**Indexing** — private routes have `robots: { index: false }`: `(auth)/*`, `/cart`, `/checkout/*`, `/panel/*`. `robots.ts` disallows these paths for crawlers. Sitemap (`src/app/sitemap.ts`) includes `/`, `/mix`, and `/products/*`.
+**Indexing** — private routes have `robots: { index: false }`: `(auth)/*`, `/cart`, `/checkout/*`, `/panel/*`. `robots.ts` disallows these paths for crawlers. Sitemap (`src/app/sitemap.ts`) includes `/`, `/shop`, `/mix`, `/about`, `/partnership`, and `/products/*`.
 
 **Production `PUBLIC_BASE_URL`** — `metadataBase` in [src/app/metadata.ts](src/app/metadata.ts) reads this env var. If it's unset or points to `localhost`, all `og:image`/`canonical`/JSON-LD URLs become broken in production and crawlers fall back to the root-layout defaults (which looks like "generic site info instead of page info"). Always set this to the live origin in `.env.production`.
 

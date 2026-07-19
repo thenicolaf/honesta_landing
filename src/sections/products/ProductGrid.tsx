@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { EmptyState } from "@/shared/ui";
 import { IconLeaf } from "@/shared/icons";
 import { buildBackHref } from "@/shared/utils/backHref";
@@ -34,11 +34,10 @@ function ProductHeader() {
 }
 
 function ProductList({ products }: { products: Product[] }) {
-  // Preserve active filters + scroll back to the products section.
+  // Preserve active filters so the back button returns to the same filtered list.
   const backHref = buildBackHref({
-    pathname: "/",
+    pathname: usePathname(),
     searchParams: useSearchParams(),
-    hash: "#products",
   });
 
   return (

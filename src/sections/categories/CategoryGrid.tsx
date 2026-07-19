@@ -4,10 +4,8 @@ import type { DbCategory, CategoryCard as CategoryCardData } from "./types";
 
 export function CategoryGrid({
   categories: dbCategories,
-  productCountMap,
 }: {
   categories?: DbCategory[];
-  productCountMap?: Record<string, number>;
 }) {
   const categories: CategoryCardData[] = (dbCategories ?? []).map((c) => ({
     id: c.id,
@@ -18,9 +16,10 @@ export function CategoryGrid({
     description: c.description,
     image_url: c.image_url,
     badge: c.badge,
-    href: `/?category=${c.slug}#products`,
-    productCount: productCountMap?.[c.id],
+    href: `/shop?category=${c.slug}`,
   }));
+
+  if (categories.length === 0) return null;
 
   return (
     <section id="categories" className="bg-sand py-20 md:py-28">
@@ -33,7 +32,7 @@ export function CategoryGrid({
             className="font-display font-semibold text-heading leading-tight"
             style={{ fontSize: "clamp(2rem, 4vw, 3rem)" }}
           >
-            Find your perfect snack
+            Shop by category
           </h2>
         </div>
 

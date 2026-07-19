@@ -14,7 +14,7 @@ export function Footer() {
           {/* Column 1: Brand */}
           <div className="flex flex-col gap-5 items-center sm:items-start">
             <HashLink
-              href="/#hero"
+              href="/"
               className="flex flex-col leading-none select-none w-fit"
             >
               <span className="font-display font-bold text-2xl text-white-warm tracking-widest uppercase">

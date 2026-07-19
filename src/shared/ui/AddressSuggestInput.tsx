@@ -126,7 +126,7 @@ export function AddressSuggestInput({
         onClear={handleClear}
       />
 
-      <DropdownMenuContent className="left-0 right-0 max-h-60">
+      <DropdownMenuContent matchTriggerWidth className="max-h-60">
         {suggestions.map((p) => (
           <DropdownMenuItem
             key={p.place_id}

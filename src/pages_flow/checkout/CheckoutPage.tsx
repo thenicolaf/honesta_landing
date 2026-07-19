@@ -36,7 +36,8 @@ export function CheckoutPage({
   isAuthenticated,
   activePromotions,
 }: CheckoutPageProps) {
-  const { items, total, isHydrated, applyServerPromotions, refresh } = useCart();
+  const { items, total, isHydrated, applyServerPromotions, refresh } =
+    useCart();
   const [emirate, setEmirate] = useState(() =>
     extractEmirateFromAddress(defaultValues?.address ?? "", addresses),
   );
@@ -67,7 +68,12 @@ export function CheckoutPage({
   return (
     <main className="grow min-h-160 bg-cream pt-24 pb-16 px-4">
       <div className="mx-auto max-w-5xl">
-        <Button href="/cart" variant="outline" size="sm" className="gap-1.5 mb-4">
+        <Button
+          href="/cart"
+          variant="outline"
+          size="sm"
+          className="gap-1.5 mb-4 sticky top-18 lg:top-22 z-30 bg-cream"
+        >
           <IconChevron className="w-3.5 h-3.5 rotate-90" aria-hidden />
           Back to cart
         </Button>

@@ -6,9 +6,7 @@ import { Badge } from "@/shared/ui";
 import type { AdminDbProduct } from "@/lib/productsDb";
 import {
   ProductImage,
-  ProductHeader,
   ProductTitle,
-  IngredientsInline,
   NoteButton,
   VideoButton,
   ViewButton,
@@ -21,7 +19,7 @@ import { AdminVariantBadges } from "./AdminVariantBadges";
 
 export function AdminProductCard({ product }: { product: AdminDbProduct }) {
   const { openDelete } = useProductActions();
-  const { badge, category, ingredients, promotion } = mapAdminProduct(product);
+  const { promotion } = mapAdminProduct(product);
 
   // Preserve current admin filters (status, category, search, sort, etc.) on
   // the back URL so returning from the detail page lands on the same view.
@@ -69,10 +67,7 @@ export function AdminProductCard({ product }: { product: AdminDbProduct }) {
       </div>
 
       <div className="flex-1 p-3 flex flex-col gap-2">
-        <ProductHeader category={category} badge={badge} />
         <ProductTitle title={product.title} />
-
-        <IngredientsInline ingredients={ingredients} />
 
         <div className="mt-auto flex flex-col gap-2 pt-1">
           <AdminVariantBadges

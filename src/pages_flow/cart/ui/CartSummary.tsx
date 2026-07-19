@@ -76,7 +76,7 @@ export function CartSummary() {
           Proceed to Checkout
         </Button>
         <HashLink
-          href="/#products"
+          href="/shop"
           className={buttonVariants({ variant: "text", size: "sm" }) + " text-earth/50 hover:text-orange mx-auto"}
         >
           Continue Shopping

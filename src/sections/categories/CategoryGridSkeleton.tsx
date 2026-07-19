@@ -13,7 +13,14 @@ const GRID_CLASS: Record<Variant, string> = {
   admin: ADMIN_CATEGORY_GRID_CLASS,
 };
 
-function CardItem() {
+// Public overlay card = a single full-bleed image tile (name sits on top of it),
+// so its skeleton is just the image block — keeps zero-CLS with the real card.
+function PublicCardItem() {
+  return <Skeleton className="w-full aspect-3/2 rounded-2xl" />;
+}
+
+// Admin card keeps the richer body (title, meta, actions).
+function AdminCardItem() {
   return (
     <div className="rounded-2xl bg-white-warm border border-parchment/30 overflow-hidden">
       <Skeleton className="w-full aspect-3/2 rounded-none" />
@@ -42,6 +49,7 @@ export function CategoryGridSkeleton({
   count?: number;
   variant?: Variant;
 }) {
+  const CardItem = variant === "admin" ? AdminCardItem : PublicCardItem;
   return (
     <div className={GRID_CLASS[variant]}>
       {Array.from({ length: count }, (_, i) => (
