@@ -69,16 +69,18 @@ export async function generateMetadata({
 
 function ProductsSkeleton() {
   return (
-    <div className="mx-auto max-w-7xl px-6 lg:px-10">
-      <div className="mb-10 text-center">
-        <Skeleton className="h-3 w-28 mx-auto mb-4" />
-        <Skeleton className="h-8 w-56 mx-auto mb-3" />
-        <Skeleton className="h-4 w-40 mx-auto" />
+    <div className="bg-cream pt-28 pb-20 md:pt-32 md:pb-28">
+      <div className="mx-auto max-w-7xl px-6 lg:px-10">
+        <div className="mb-10 text-center">
+          <Skeleton className="h-3 w-28 mx-auto mb-4" />
+          <Skeleton className="h-8 w-56 mx-auto mb-3" />
+          <Skeleton className="h-4 w-40 mx-auto" />
+        </div>
+        <div className="mb-10 flex items-center gap-3">
+          <Skeleton className="h-9 grow" />
+        </div>
+        <ProductGridSkeleton count={6} />
       </div>
-      <div className="mb-10 flex items-center gap-3">
-        <Skeleton className="h-9 grow" />
-      </div>
-      <ProductGridSkeleton count={6} />
     </div>
   );
 }
@@ -108,7 +110,7 @@ async function ShopStructuredData() {
 
 export default function ShopPage() {
   return (
-    <main className="grow min-h-160 pt-24 md:pt-28">
+    <main className="grow min-h-160">
       <SearchParamsFilterProvider keys={["category", "sort", "search", "mark"]}>
         <Suspense fallback={<ProductsSkeleton />}>
           <ProductsSection />
