@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowLeft } from "lucide-react";
 import { buttonVariants } from "@/shared/ui";
+import { cn } from "@/shared/utils/cn";
 import { HashLink } from "@/sections/navbar";
 import { productToGAItem, trackViewItem } from "@/lib/analytics";
 import type { Product } from "@/sections/products/types";
@@ -71,7 +72,10 @@ export function ProductDetailPage({
         {/* Back link */}
         <HashLink
           href={backHref}
-          className={buttonVariants({ variant: "outline", size: "sm" }) + " mb-5 inline-flex"}
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "mb-5 inline-flex sticky top-18 lg:top-22 z-30 bg-cream",
+          )}
         >
           <ArrowLeft size={14} className="mr-2" />
           {backLabel}

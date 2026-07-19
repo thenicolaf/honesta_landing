@@ -10,6 +10,7 @@ import { CartSummary } from "./ui/CartSummary";
 import { PromoCodeBlock } from "./ui/PromoCodeBlock";
 import { ClearCartButton } from "./ui/ClearCartButton";
 import { buttonVariants } from "@/shared/ui";
+import { cn } from "@/shared/utils/cn";
 import { CartSkeleton } from "./ui/CartSkeleton";
 import { HashLink } from "@/sections/navbar";
 import type { ActivePromotionsMap } from "@/lib/promotionsDb";
@@ -64,7 +65,10 @@ export function CartPage({
         <div className="mx-auto max-w-2xl">
           <HashLink
             href="/#products"
-            className={buttonVariants({ variant: "outline", size: "sm" }) + " mb-5 inline-flex"}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "mb-5 inline-flex sticky top-18 lg:top-22 z-30 bg-cream",
+            )}
           >
             <ArrowLeft size={14} className="mr-2" />
             Back to products
