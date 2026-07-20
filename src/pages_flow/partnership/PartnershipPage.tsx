@@ -5,6 +5,7 @@ import { Check } from "lucide-react";
 import { PartnershipForm } from "@/sections/partnership/PartnershipForm";
 import { PartnershipInstagramCard } from "@/sections/partnership/PartnershipInstagramCard";
 import { fadeUp } from "@/sections/partnership/consts";
+import { BackLink } from "@/shared/ui";
 
 const BENEFITS = [
   "Honest ingredients, no compromises",
@@ -24,7 +25,8 @@ const BUSINESS_CHIPS = [
 export function PartnershipPage() {
   return (
     <section className="noise relative bg-linear-to-b from-cream to-sand">
-      <div className="relative mx-auto max-w-7xl px-5 sm:px-6 lg:px-10 pt-28 lg:pt-36 pb-20 lg:pb-28">
+      <div className="relative mx-auto max-w-7xl px-5 sm:px-6 lg:px-10 pt-12 lg:pt-16 pb-20 lg:pb-28">
+        <BackLink sticky className="mb-8" />
         <motion.div
           initial="hidden"
           animate="visible"

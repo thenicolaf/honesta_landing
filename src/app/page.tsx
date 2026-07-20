@@ -3,6 +3,7 @@ import {
   MixCTA,
   MarketingPopupDialog,
   PromoSliderSkeleton,
+  TrustMarks,
 } from "@/sections";
 import { Skeleton } from "@/shared/ui";
 import { CategoryGridSkeleton } from "@/sections";
@@ -76,7 +77,8 @@ async function HomeStructuredDataAsync() {
 
 export default function Home() {
   return (
-    <main className="grow min-h-160 pt-16 md:pt-20">
+    <main className="grow min-h-160">
+      <TrustMarks />
       <Suspense fallback={<PromoSliderSkeleton />}>
         <PromoSliderSection title="Best Offers" kicker="Top picks & deals" />
       </Suspense>

@@ -1,5 +1,5 @@
 import { GraduationCap, Sparkles } from "lucide-react";
-import { Card } from "@/shared/ui";
+import { BackLink, Card } from "@/shared/ui";
 import {
   IconLeaf,
   IconLightning,
@@ -70,8 +70,9 @@ const badges = [
 
 export function AboutUs() {
   return (
-    <section className="noise relative bg-cream overflow-hidden">
-      <div className="mx-auto max-w-7xl px-6 lg:px-10 pt-28 lg:pt-36 pb-20 lg:pb-28">
+    <section className="noise relative bg-cream">
+      <div className="mx-auto max-w-7xl px-6 lg:px-10 pt-12 lg:pt-16 pb-20 lg:pb-28">
+        <BackLink sticky className="mb-8" />
         {/* ── Header ─────────────────────────────────── */}
         <div className="mx-auto max-w-3xl text-center mb-8 lg:mb-10">
           <p

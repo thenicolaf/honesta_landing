@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AboutUs } from "@/sections";
+import { AboutUs, TrustMarks } from "@/sections";
 import {
   buildAboutPageJsonLd,
   buildAboutBreadcrumbJsonLd,
@@ -39,6 +39,7 @@ export default function AboutPage() {
 
   return (
     <main className="grow">
+      <TrustMarks />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
