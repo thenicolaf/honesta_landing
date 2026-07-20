@@ -4,6 +4,7 @@ export * from "./products";
 export { PhilosophyBlock } from "./PhilosophyBlock";
 export { AboutUs } from "./AboutUs";
 export { MixCTA } from "./MixCTA";
+export { TrustMarks } from "./TrustMarks";
 export * from "./partnership";
 export { Footer } from "./Footer";
 export { MarketingPopupDialog } from "./marketing/MarketingPopupDialog";

@@ -4,6 +4,7 @@ import { Skeleton } from "@/shared/ui";
 import { ProductGridSkeleton } from "@/sections/products/ProductGridSkeleton";
 import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvider";
 import { ProductsSection } from "@/pages_flow/shop";
+import { TrustMarks } from "@/sections";
 import { getCategories } from "@/lib/categoriesDb";
 import {
   buildShopCollectionJsonLd,
@@ -69,7 +70,7 @@ export async function generateMetadata({
 
 function ProductsSkeleton() {
   return (
-    <div className="bg-cream pt-28 pb-20 md:pt-32 md:pb-28">
+    <div className="bg-cream pt-12 pb-20 md:pt-16 md:pb-28">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <div className="mb-10 text-center">
           <Skeleton className="h-3 w-28 mx-auto mb-4" />
@@ -111,6 +112,7 @@ async function ShopStructuredData() {
 export default function ShopPage() {
   return (
     <main className="grow min-h-160">
+      <TrustMarks />
       <SearchParamsFilterProvider keys={["category", "sort", "search", "mark"]}>
         <Suspense fallback={<ProductsSkeleton />}>
           <ProductsSection />

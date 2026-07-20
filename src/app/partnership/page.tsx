@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PartnershipPage } from "@/pages_flow/partnership/PartnershipPage";
+import { TrustMarks } from "@/sections";
 import {
   buildPartnershipPageJsonLd,
   buildPartnershipBreadcrumbJsonLd,
@@ -39,6 +40,7 @@ export default function Partnership() {
 
   return (
     <main className="grow">
+      <TrustMarks />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { EmptyState } from "@/shared/ui";
+import { BackLink, EmptyState } from "@/shared/ui";
 import { IconLeaf } from "@/shared/icons";
 import { buildBackHref } from "@/shared/utils/backHref";
 import { productToGAItem, trackViewItemList } from "@/lib/analytics";
@@ -88,8 +88,9 @@ export function ProductGrid({
   useTrackViewItemList(filters.products, filters.categoryFilter.value, categories);
 
   return (
-    <section id="products" className="bg-cream pt-28 pb-20 md:pt-32 md:pb-28">
+    <section id="products" className="bg-cream pt-12 pb-20 md:pt-16 md:pb-28">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
+        <BackLink sticky className="mb-6" />
         <ProductHeader />
         <ProductToolbar categories={categories} filters={filters} />
         {filters.products.length === 0 ? (
