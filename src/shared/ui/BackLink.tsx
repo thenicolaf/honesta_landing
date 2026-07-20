@@ -28,7 +28,7 @@ export function BackLink({
       size="sm"
       className={cn(
         "inline-flex",
-        sticky && "sticky top-18 lg:top-22 z-100 bg-cream",
+        sticky && "sticky top-32 md:top-40 lg:top-44 z-100 bg-cream",
         className,
       )}
     >
