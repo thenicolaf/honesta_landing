@@ -10,7 +10,7 @@ export const structuredData = {
       name: "HONESTA",
       url: siteUrl,
       description:
-        "Handcrafted natural dried fruits. No added sugar, no additives. Small batch production.",
+        "Premium natural foods made in the UAE. Real ingredients, honest taste. Nothing else.",
       sameAs: [instagramUrl],
       address: {
         "@type": "PostalAddress",
@@ -42,9 +42,9 @@ export const structuredData = {
       "@type": "WebPage",
       "@id": `${siteUrl}/#webpage`,
       url: siteUrl,
-      name: "HONESTA — Natural Dried Fruits. No Added Sugar. No Additives.",
+      name: "HONESTA — Premium Natural Foods Made in UAE",
       description:
-        "Handcrafted dried fruits and pastila. 100% fruit. No Added sugar. No additives.",
+        "Premium natural foods made in the UAE — dried fruits, fruit rolls, dried vegetables, ghee, jerky and gifts. Real ingredients, honest taste.",
       isPartOf: { "@id": `${siteUrl}/#website` },
       about: { "@id": `${siteUrl}/#organization` },
     },

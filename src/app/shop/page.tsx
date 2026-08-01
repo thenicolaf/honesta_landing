@@ -12,7 +12,7 @@ import {
 } from "./structured-data";
 
 const SHOP_DESCRIPTION =
-  "Shop HONESTA natural dried fruits, fruit leathers and crisps — 100% fruit, no added sugar, no additives. Filter by category, browse best sellers and offers.";
+  "Shop HONESTA dried fruits, fruit rolls, dried vegetables, ghee, jerky and gift selections, carefully made in the UAE.";
 
 export async function generateMetadata({
   searchParams,
@@ -57,13 +57,13 @@ export async function generateMetadata({
       siteName: "HONESTA",
       locale: "en_US",
       type: "website",
-      images: [{ url: "/og-image.jpg" }],
+      images: [{ url: "/og-image.webp" }],
     },
     twitter: {
       card: "summary_large_image",
       title: "Shop — HONESTA",
       description: SHOP_DESCRIPTION,
-      images: ["/og-image.jpg"],
+      images: ["/og-image.webp"],
     },
   };
 }

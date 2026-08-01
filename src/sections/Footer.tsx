@@ -21,14 +21,14 @@ export function Footer() {
                 HONESTA
               </span>
               <span className="font-body font-light text-xs uppercase tracking-[0.22em] text-sand/50 mt-0.5">
-                Sweetness Before Marketing
+                Real ingredients, honest taste
               </span>
             </HashLink>
 
             <p className="font-body font-light text-sand/50 text-sm leading-relaxed max-w-55">
-              Handcrafted dried fruit snacks.
+              Premium natural foods made in the UAE.
               <br />
-              100% fruit. No additives. Made with care.
+              Real ingredients, honest taste. Nothing else.
             </p>
           </div>
 

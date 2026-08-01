@@ -14,11 +14,11 @@ export const metadata: Metadata = {
   },
   manifest: "/favicon/site.webmanifest",
   title: {
-    default: "HONESTA — Natural Dried Fruits. No Added Sugar. No Additives.",
+    default: "HONESTA — Premium Natural Foods Made in UAE",
     template: "%s — HONESTA",
   },
   description:
-    "Handcrafted dried fruits and pastila. 100% fruit. No added sugar. No additives. Small batch production with love.",
+    "Discover HONESTA premium natural foods made in the UAE, including dried fruits, fruit rolls, dried vegetables, ghee, jerky and curated gifts. Real ingredients, honest taste.",
   keywords: [
     "dried fruits online",
     "natural fruit snacks no added sugar",
@@ -35,16 +35,17 @@ export const metadata: Metadata = {
     canonical: siteUrl,
   },
   openGraph: {
-    title: "HONESTA — Natural Dried Fruits",
-    description: "Honest. Simple. No additives. Small Batch & Handcrafted.",
+    title: "HONESTA — Premium Natural Foods Made in UAE",
+    description:
+      "Real ingredients, honest taste. Premium natural foods made in the UAE.",
     url: siteUrl,
     siteName: "HONESTA",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "/og-image.webp",
         width: 1200,
         height: 630,
-        alt: "HONESTA Natural Dried Fruits — Honest. Simple. No Additives.",
+        alt: "HONESTA — Premium Natural Foods Made in the UAE",
       },
     ],
     type: "website",
@@ -52,9 +53,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "HONESTA — Natural Dried Fruits",
-    description: "Honest. Simple. No additives. Small Batch & Handcrafted.",
-    images: ["/og-image.jpg"],
+    title: "HONESTA — Premium Natural Foods Made in UAE",
+    description:
+      "Real ingredients, honest taste. Premium natural foods made in the UAE.",
+    images: ["/og-image.webp"],
   },
   robots: {
     index: true,

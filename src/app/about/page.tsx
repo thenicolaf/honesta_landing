@@ -23,13 +23,13 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: "HONESTA",
       locale: "en_US",
       type: "website",
-      images: [{ url: "/og-image.jpg" }],
+      images: [{ url: "/og-image.webp" }],
     },
     twitter: {
       card: "summary_large_image",
       title: "About Us — HONESTA",
       description: ABOUT_DESCRIPTION,
-      images: ["/og-image.jpg"],
+      images: ["/og-image.webp"],
     },
   };
 }

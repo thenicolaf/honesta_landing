@@ -18,16 +18,16 @@ function ProductHeader() {
   return (
     <div className="mb-10 text-center">
       <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-moss mb-4">
-        What&apos;s inside the bag
+        Made in the UAE
       </p>
       <h2
         className="font-display font-bold italic text-heading leading-tight mb-3"
         style={{ fontSize: "clamp(2rem, 4vw, 3rem)" }}
       >
-        Pure fruit. Nothing else.
+        Real ingredients. Nothing hidden.
       </h2>
       <p className="font-body font-light text-earth/55 text-lg">
-        Nothing added. Nothing hidden.
+        Premium natural foods made in the UAE.
       </p>
     </div>
   );

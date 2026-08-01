@@ -8,9 +8,9 @@ export function buildHomeStructuredData(
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "@id": `${siteUrl}/#collectionpage`,
-    name: "HONESTA — Natural Dried Fruits",
+    name: "HONESTA — Premium Natural Foods Made in UAE",
     description:
-      "Handcrafted dried fruits and pastila. 100% fruit. No added sugar. No additives. Small batch production with love.",
+      "Premium natural foods made in the UAE — dried fruits, fruit rolls, dried vegetables, ghee, jerky and curated gifts. Real ingredients, honest taste.",
     url: siteUrl,
     isPartOf: { "@id": `${siteUrl}/#website` },
     mainEntity: {

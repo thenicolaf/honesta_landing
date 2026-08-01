@@ -190,56 +190,57 @@ src/
 
 ## Routes
 
-| Route | Purpose |
-|-------|---------|
-| `/` | Landing page (no product catalog — starts at Best Offers; Hero removed) |
-| `/shop` | Product catalog — `ProductGrid` + filters (`?category`/`?sort`/`?search`/`?mark`), moved off the landing page |
-| `/mix` | Mix constructor (public — build your own mix from active boxes) |
-| `/cart` | Shopping cart |
-| `/checkout` | Checkout form (customer info + order summary) |
-| `/checkout/result?ref={orderRef}` | Payment result — polls N-Genius, shows success/failure |
-| `/checkout/cancel` | Payment cancelled screen |
-| `POST /api/payment/webhook` | N-Genius webhook — updates `orders.status` in Supabase |
-| `GET/PATCH /api/notifications` | Notification endpoints (any authenticated user) |
-| `GET /api/notifications/resolve` | Resolve notification UUID → href (`?type=new_product&id=uuid`) |
-| `POST/DELETE /api/push-subscription` | Manage push notification subscriptions (authenticated) |
-| `/login` | Email/password + Google OAuth login |
-| `/signup` | Registration (name, email, password) |
-| `/verify-email?email={email}` | OTP verification after signup |
-| `/forgot-password` | Request password reset email |
-| `/reset-password?email={email}` | OTP + new password form |
-| `/auth/callback` | OAuth PKCE code exchange → session cookie → redirect |
-| `/panel` | Admin dashboard with statistics (admin only) |
-| `/panel/profile` | User profile + change password |
-| `/panel/favorites` | Saved favourite products |
-| `/panel/orders` | Order history |
-| `/panel/all-orders` | All orders management (admin only) |
-| `/panel/all-orders/create` | Manually create a PAID order (admin only) |
-| `/panel/partnerships` | Partnership inquiries (admin only) |
-| `/panel/categories` | Category management (admin only) |
-| `/panel/categories/create` | Create new category (admin only) |
-| `/panel/categories/[id]/edit` | Edit category (admin only) |
-| `/panel/products` | Product management (admin only) |
-| `/panel/products/create` | Create new product (admin only) |
-| `/panel/products/[id]/details` | Product detail view (admin only) |
-| `/panel/products/[id]/edit` | Edit product (admin only) |
-| `/panel/mixes` | Mix box management — DnD reorder (admin only) |
-| `/panel/mixes/create` | Create new mix box (admin only) |
-| `/panel/mixes/[id]/edit` | Edit mix box + presets (admin only) |
-| `/panel/inventory` | Inventory management — per-product stock, cost & threshold (admin only) |
-| `/panel/inventory/history` | Full stock movements history with filters (admin only) |
-| `/panel/promotions` | Promotion management (admin only) |
-| `/panel/promotions/create` | Create new promotion (admin only) |
-| `/panel/promotions/[id]/edit` | Edit promotion (admin only) |
-| `/panel/users` | Registered users browser — search/sort/filter, WhatsApp + Create promo code + View orders per row (admin only) |
-| `/panel/marketing-popup` | Marketing popups catalog — list with Activate/Edit/Delete (admin only) |
-| `/panel/marketing-popup/create` | Create new popup (admin only) |
-| `/panel/marketing-popup/[id]/edit` | Edit popup (admin only) |
-| `/panel/delivery` | Delivery settings — emirates + slots (CRUD via Dialog) + blackouts (CRUD via Dialog), admin only |
+| Route                                | Purpose                                                                                                        |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `/`                                  | Landing page (no product catalog — starts at Best Offers; Hero removed)                                        |
+| `/shop`                              | Product catalog — `ProductGrid` + filters (`?category`/`?sort`/`?search`/`?mark`), moved off the landing page  |
+| `/mix`                               | Mix constructor (public — build your own mix from active boxes)                                                |
+| `/cart`                              | Shopping cart                                                                                                  |
+| `/checkout`                          | Checkout form (customer info + order summary)                                                                  |
+| `/checkout/result?ref={orderRef}`    | Payment result — polls N-Genius, shows success/failure                                                         |
+| `/checkout/cancel`                   | Payment cancelled screen                                                                                       |
+| `POST /api/payment/webhook`          | N-Genius webhook — updates `orders.status` in Supabase                                                         |
+| `GET/PATCH /api/notifications`       | Notification endpoints (any authenticated user)                                                                |
+| `GET /api/notifications/resolve`     | Resolve notification UUID → href (`?type=new_product&id=uuid`)                                                 |
+| `POST/DELETE /api/push-subscription` | Manage push notification subscriptions (authenticated)                                                         |
+| `/login`                             | Email/password + Google OAuth login                                                                            |
+| `/signup`                            | Registration (name, email, password)                                                                           |
+| `/verify-email?email={email}`        | OTP verification after signup                                                                                  |
+| `/forgot-password`                   | Request password reset email                                                                                   |
+| `/reset-password?email={email}`      | OTP + new password form                                                                                        |
+| `/auth/callback`                     | OAuth PKCE code exchange → session cookie → redirect                                                           |
+| `/panel`                             | Admin dashboard with statistics (admin only)                                                                   |
+| `/panel/profile`                     | User profile + change password                                                                                 |
+| `/panel/favorites`                   | Saved favourite products                                                                                       |
+| `/panel/orders`                      | Order history                                                                                                  |
+| `/panel/all-orders`                  | All orders management (admin only)                                                                             |
+| `/panel/all-orders/create`           | Manually create a PAID order (admin only)                                                                      |
+| `/panel/partnerships`                | Partnership inquiries (admin only)                                                                             |
+| `/panel/categories`                  | Category management (admin only)                                                                               |
+| `/panel/categories/create`           | Create new category (admin only)                                                                               |
+| `/panel/categories/[id]/edit`        | Edit category (admin only)                                                                                     |
+| `/panel/products`                    | Product management (admin only)                                                                                |
+| `/panel/products/create`             | Create new product (admin only)                                                                                |
+| `/panel/products/[id]/details`       | Product detail view (admin only)                                                                               |
+| `/panel/products/[id]/edit`          | Edit product (admin only)                                                                                      |
+| `/panel/mixes`                       | Mix box management — DnD reorder (admin only)                                                                  |
+| `/panel/mixes/create`                | Create new mix box (admin only)                                                                                |
+| `/panel/mixes/[id]/edit`             | Edit mix box + presets (admin only)                                                                            |
+| `/panel/inventory`                   | Inventory management — per-product stock, cost & threshold (admin only)                                        |
+| `/panel/inventory/history`           | Full stock movements history with filters (admin only)                                                         |
+| `/panel/promotions`                  | Promotion management (admin only)                                                                              |
+| `/panel/promotions/create`           | Create new promotion (admin only)                                                                              |
+| `/panel/promotions/[id]/edit`        | Edit promotion (admin only)                                                                                    |
+| `/panel/users`                       | Registered users browser — search/sort/filter, WhatsApp + Create promo code + View orders per row (admin only) |
+| `/panel/marketing-popup`             | Marketing popups catalog — list with Activate/Edit/Delete (admin only)                                         |
+| `/panel/marketing-popup/create`      | Create new popup (admin only)                                                                                  |
+| `/panel/marketing-popup/[id]/edit`   | Edit popup (admin only)                                                                                        |
+| `/panel/delivery`                    | Delivery settings — emirates + slots (CRUD via Dialog) + blackouts (CRUD via Dialog), admin only               |
 
 ## Panel Section (`panel` route segment)
 
 All panel routes live under `/panel` and share an authenticated layout:
+
 - `AdminLayout` — server component, reads user via `createSupabaseServerClient()`, passes `email` to `AdminSidebar`
 - `AdminSidebar` — responsive: horizontal on mobile, sticky vertical on desktop; contains `AdminNav` + sign-out button
 - `AdminNav` — client component with route-aware active underline
@@ -271,6 +272,7 @@ Skeleton primitives live in [src/shared/ui/Skeleton.tsx](src/shared/ui/Skeleton.
 ## E-commerce & Payment Flow
 
 **Checkout server action** (`src/pages_flow/checkout/actions.ts`) — phased pipeline (see **Delivery schedule → Server-side revalidation in `submitCheckout`** for the full breakdown). All step helpers extracted to [checkoutSteps.ts](src/pages_flow/checkout/checkoutSteps.ts) so `submitCheckout` reads as a linear sequence of `Promise.all` phases. Headline:
+
 1. Phase 1 (parallel): auth + active slots + emirate setting + mix composition map. `persistCustomerCookie` is fire-and-forget.
 2. Validate customer + delivery date/slot (date+slot required only when admin configured at least one slot).
 3. Phase 3 (parallel): re-apply promo code + re-validate the (date, slot) pair against current `delivery_slots`/`delivery_blackouts`/`cutoff_hour`.
@@ -284,6 +286,7 @@ Skeleton primitives live in [src/shared/ui/Skeleton.tsx](src/shared/ui/Skeleton.
 **Defensive variant existence check.** Before inserting the `orders` row, `createOrderWithItems` calls [`findMissingVariantIds`](src/lib/validateOrderVariants.ts) — a single batched SELECT against `product_variants` for the non-null `variant_id`s in the row set. If anything is missing, it returns a friendly `"Some items in your cart are no longer available. Please refresh the page and try again."` error instead of letting the FK constraint blow up later. Avoids the create-then-rollback-on-FK-fail dance and gives the user a sensible toast. Common trigger: race between the cart `syncCartPrices` self-heal and an admin edit that removed a variant after the cart was last loaded.
 
 **Result page** (`src/app/checkout/result/page.tsx`):
+
 - Server component — polls N-Genius directly for final status
 - Updates `orders.status` → `PAID` or `FAILED` (idempotent via `.neq("status", newStatus)`)
 - On `PAID`: records promo code redemption, calls `clearCartAndCleanup(supabaseAdmin, user_id)` for auth users (wipes `cart_items` + cleans up orphan mix-variants from cart), and additionally calls `cleanupOrphanedMixVariants` with `variant_id`s from this order's `order_items` — this covers guest flow where `user_id` is NULL
@@ -292,6 +295,7 @@ Skeleton primitives live in [src/shared/ui/Skeleton.tsx](src/shared/ui/Skeleton.
 - Renders [`<ResultToast>`](src/app/checkout/result/ResultToast.tsx) — fires a structured multi-line JSX toast on mount using `{ title, parts }` returned by `settleOrder` (the admin realtime path can only render plain text via `formatNotificationMessage`). Double-fire defence: a `fired.current` ref inside the component's `useEffect` short-circuits a second invocation within the same mount, and on subsequent visits/refreshes `settleOrder` returns `null` (idempotent via `.neq("status", newStatus)`), so `title`/`parts` arrive as `null` and the effect's guard `!title || !parts` skips the toast. The same component is reused on `/checkout/cancel` (with `success={false}`).
 
 **Manual admin orders** (`src/app/panel/all-orders/create/page.tsx` + `src/pages_flow/panel/orders/manual-order/`):
+
 - Form decomposed into per-block sections under [sections/](src/pages_flow/panel/orders/manual-order/sections/) (CustomerInfoSection, DeliveryAddressSection, DeliveryScheduleSection, ProductsSection, MixesSection, NotesSection, OrderSummarySection, ManualOrderFooter — all wrapped by a shared `ManualOrderSection` card). Logic split into [`useDeliverySchedule`](src/pages_flow/panel/orders/manual-order/useDeliverySchedule.ts) (date+slot state with weekday filter) and [`buildManualOrderTotals`](src/pages_flow/panel/orders/manual-order/totals.ts) (pure subtotal/discount/delivery/total calculation). `ManualOrderForm` itself is now ~110 lines of linear orchestration.
 - Admin date picker has **no `minDate`/`maxDate`** — past dates are intentionally allowed for back-filling historical orders; cut-off and blackouts are also bypassed.
 - `createManualOrderAction` ([src/pages_flow/panel/orders/manual-order/actions.ts](src/pages_flow/panel/orders/manual-order/actions.ts)) — re-checks `profiles.role='admin'` (defence-in-depth, on top of `proxy.ts`), loads authoritative variant prices + promotions, loads boxes+presets in one query, builds `OrderItemRow[]` directly (inline `mix_composition` for mixes, `variant_id=NULL` for them), inserts with `status=OrderStatus.PAID` and `delivery_schedule` from a hidden field composed client-side.
@@ -300,6 +304,7 @@ Skeleton primitives live in [src/shared/ui/Skeleton.tsx](src/shared/ui/Skeleton.
 - `revalidatePath("/panel/all-orders")` + `revalidatePath("/panel")` on success so dashboard stats refresh.
 
 **Webhook** (`src/app/api/payment/webhook/route.ts`):
+
 - Receives N-Genius events; maps states (PURCHASED/CAPTURED → PAID, FAILED/REVERSED → FAILED/CANCELLED)
 - Validates via `NGENIUS_WEBHOOK_SECRET` header
 - On `PAID`: all side-effects run in a single `Promise.all` block — `deductInventoryForOrder` (writes `stock_movements` + UPSERTs `product_inventory.stock_g`), `recordPromoCodeRedemption` (if a code was used), `clearCartAndCleanup` (auth users), `cleanupOrphanedMixVariants` (variant_ids from `order_items`), and `createNotification("order_paid")`. Same parallel block lives in `settleOrder` on the result page; manual admin order action also fires `deductInventoryForOrder` next to its `revalidatePath` calls.
@@ -331,10 +336,12 @@ Manual codes a user enters in the cart/checkout to get an extra discount, parall
 **Authenticated-only.** Promo codes are completely hidden for guests. The `PromoCodeInput` component shows a "Sign in" CTA when `isAuthenticated=false`. All server actions reject calls without `user.id` via `validatePromoCode`.
 
 **Stacking with product promotions.** Each code has a `stack_with_promotions` flag:
+
 - `false` (default) = items already on a product promotion are **excluded** from the promo code's eligible subtotal
 - `true` = the code applies on top of the already-discounted price (`item.price`, not `originalPrice`), giving a double discount
 
 **Discount calculation lives in two places — both must stay in sync:**
+
 - Server: [src/lib/promoCodeApply.ts](src/lib/promoCodeApply.ts) `validatePromoCode({ code, items, userId })` runs status, targeting, min order, usage limits, and computes the final discount. Used by `applyPromoCodeAction` and re-run inside `submitCheckout`.
 - Client: [src/shared/utils/recalculatePromoDiscount.ts](src/shared/utils/recalculatePromoDiscount.ts) — `recalculatePromoDiscount(items, code)` (used by `CartProvider` to derive `promoDiscount` synchronously on every render so quantity changes update the UI instantly without waiting for the server roundtrip), and `getPerItemPromoDiscounts(items, code)` returns a `Map<variantId, discountPerUnit>` for line-item rendering and for persisting per-item snapshots in `order_items.promo_discount`.
 
@@ -406,6 +413,7 @@ Per-session, not per-version. The client component ([src/sections/marketing/Mark
 ### Admin catalog UI
 
 `/panel/marketing-popup` lists all popups as cards sorted by status (`active → scheduled → inactive → expired`). Each card shows `title` (heading, falls back to "(untitled)" if missing), status badge, optional date range, and three action buttons:
+
 - **Edit** → `/panel/marketing-popup/[id]/edit`
 - **Activate / Deactivate** → calls `activateMarketingPopupAction` / `deactivateMarketingPopupAction` (no confirmation)
 - **Delete** → confirmation Dialog → `deleteMarketingPopupAction`
@@ -425,11 +433,12 @@ Per-session, not per-version. The client component ([src/sections/marketing/Mark
 ### Action contracts
 
 All in [src/pages_flow/panel/marketing-popup/actions.ts](src/pages_flow/panel/marketing-popup/actions.ts):
+
 - `createMarketingPopupAction(_prevState, formData)` → INSERT, redirect to list with `?toast=created`
 - `updateMarketingPopupAction(id, _prevState, formData)` → UPDATE, redirect with `?toast=updated`
 - `deleteMarketingPopupAction(id)` → DELETE + cleanup of image from bucket
 - `activateMarketingPopupAction(id)` / `deactivateMarketingPopupAction(id)` → flip `is_active` without touching content
-All sanitize body via `sanitizeNoteHtml`, validate dates, validate CTA URL (absolute `http(s)://` or relative `/...`), revalidate `/` + `/panel/marketing-popup`.
+  All sanitize body via `sanitizeNoteHtml`, validate dates, validate CTA URL (absolute `http(s)://` or relative `/...`), revalidate `/` + `/panel/marketing-popup`.
 
 ### No notification on save
 
@@ -478,10 +487,12 @@ Because each "Add to cart" creates a new `product_variants` row + cells, the DB 
 Single source of truth: [`MixCompositionList`](src/shared/ui/MixCompositionList.tsx) from `@/shared/ui`. Renders a `Collapsible` with trigger `Composition · N items` and a list of rows `[36px thumbnail with ×count pill] · name / total weight · total price`. Accepts any items matching `MixCompositionItem` (`name`, `image_url?`, `count`, `weight_g`, `price`) — compatible with both `CartItem.mixItems` and `order_items.mix_composition` (`MixCompositionEntry`).
 
 Props:
+
 - `triggerLabel?: string` — override default label (e.g. `Presets · ${n}` for admin mix cards).
 - `showCountBadge?: boolean` (default `true`) — hide the `×N` pill when listing presets (where count is always 1).
 
 Used in:
+
 - [`OrderCards`](src/pages_flow/orders/ui/OrderCards.tsx), [`AdminOrderCards`](src/pages_flow/panel/orders/AdminOrderCards.tsx), [`columns.tsx`](src/pages_flow/orders/columns.tsx) itemsColumn (both user `/panel/orders` + admin `/panel/all-orders`, cards + desktop table).
 - [`CartItem`](src/pages_flow/cart/ui/CartItem.tsx) — mini-mix row in cart.
 - [`MixSummary`](src/pages_flow/mix/MixSummary.tsx) — `/mix` constructor right column.
@@ -523,6 +534,7 @@ Customers pick a delivery date + slot during checkout. Admins manage slots and p
 ### Admin UI (`/panel/delivery`)
 
 Three sections on a single page:
+
 1. **Emirates** (existing) — per-row form with `delivery_fee`, threshold, minimum, days, **cutoff_hour** (`FormNumberInput` 0–23 with an `Info` tooltip explaining the semantics).
 2. **Delivery slots** ([SlotsSection](src/pages_flow/panel/delivery/SlotsSection.tsx)) — card grid sorted by `start_time`, each card shows time range (Jost tabular-nums) + label + 7 weekday chips (Mon–Sun, on/off) + status badge + Edit/Delete buttons in the same style as `PromotionCard`. Add/Edit open a `Dialog` with [`SlotForm`](src/pages_flow/panel/delivery/SlotForm.tsx) — `FormInput` label, two `FormTimePicker` (HH:mm), `TagToolbarMulti` weekday chips, `FormCheckbox` is_active, plus a "Free: …" hint computed by [`computeFreeWindows`](src/pages_flow/panel/delivery/freeWindows.ts) showing remaining gaps for the selected weekdays.
 3. **Blocked dates** ([BlackoutsSection](src/pages_flow/panel/delivery/BlackoutsSection.tsx)) — same card pattern. Card shows date (large) + "All day" or "{slot label} · {range}" badge + reason. Edit + Delete in the dialog. [`BlackoutForm`](src/pages_flow/panel/delivery/BlackoutForm.tsx) — `FormDatePicker`, then a `FormSelect` of slots **filtered by the chosen date's weekday** (so admin can't block a slot on a day it doesn't run); "All day" is the first/default option.
@@ -532,6 +544,7 @@ Server actions in [src/pages_flow/panel/delivery/actions.ts](src/pages_flow/pane
 ### Checkout UI
 
 The customer picker is decomposed under [src/pages_flow/checkout/ui/delivery-schedule/](src/pages_flow/checkout/ui/delivery-schedule):
+
 - [`buildDayCells.ts`](src/pages_flow/checkout/ui/delivery-schedule/buildDayCells.ts) — pure `buildDayGrid(slots, blackouts, cutoffHour)` returns `{ cells, weekdayLabels, earliestAvailable }`. Grid is **2 weeks × 7 columns**, anchored to the Monday of the week containing `getMinDeliveryDate(...)` (so past days are never wasted on a row when the picker opens later in the week).
 - [`useDeliverySchedulePicker.ts`](src/pages_flow/checkout/ui/delivery-schedule/useDeliverySchedulePicker.ts) — owns picker state, derives effective `selectedDateIso`/`selectedSlotId` during render (no setState-in-effect cascades when upstream changes), notifies parent via `onSelectionChange(selected: boolean)` from a `useEffect` guarded by `useRef`.
 - [`DateGrid.tsx`](src/pages_flow/checkout/ui/delivery-schedule/DateGrid.tsx) — header row (`EEEEE` letters via `format`) + `FormTileRadio` with `className="grid grid-cols-7 gap-1.5"` overriding the default flex; cells are `aspect-square` `FormTileRadioItem` with the day-of-month, `disabled` prop on unavailable cells.
@@ -584,9 +597,9 @@ Mapping in [src/app/products/[id]/page.tsx](src/app/products/[id]/page.tsx):
 ```ts
 const FROM_MAP = {
   favorites: { href: "/panel/favorites", label: "Back to favorites" },
-  cart:      { href: "/cart",            label: "Back to cart" },
-  promo:     { href: "/#promo",          label: "Back to promo" },
-  products:  { href: "/shop",            label: "Back to products" },
+  cart: { href: "/cart", label: "Back to cart" },
+  promo: { href: "/#promo", label: "Back to promo" },
+  products: { href: "/shop", label: "Back to products" },
 };
 ```
 
@@ -633,6 +646,7 @@ Two auth methods: **email/password** and **Google OAuth**.
 Session refresh: `src/proxy.ts` exports a middleware helper (`proxy()`) that must be called from `middleware.ts`. It creates an `@supabase/ssr` server client and calls `auth.getUser()` on every request to keep the session cookie fresh.
 
 **Route guards** in `src/proxy.ts`:
+
 - `/panel/*` → unauthenticated users redirected to `/login?next={pathname}`
 - `/panel/*` (except `/profile`, `/favorites`, `/orders`) → require `role=admin`
 - Guest-only routes (`/login`, `/signup`, `/verify-email`, `/forgot-password`, `/reset-password`) → authenticated users redirected away
@@ -649,6 +663,7 @@ Session refresh: `src/proxy.ts` exports a middleware helper (`proxy()`) that mus
 ## Supabase
 
 Two files, three client instances:
+
 - `src/lib/supabase.ts` — `createSupabaseBrowserClient()` — browser client for Client Components
 - `src/lib/supabase.server.ts` — three server-side exports:
   - `supabase` — static anon client, subject to RLS (non-auth server queries)
@@ -662,12 +677,14 @@ Two files, three client instances:
 **Order visibility invariant.** PENDING orders are filtered out of both [src/app/panel/orders/page.tsx](src/app/panel/orders/page.tsx) (user view) and [src/app/panel/all-orders/page.tsx](src/app/panel/all-orders/page.tsx) (admin view) via `.neq("status", OrderStatus.PENDING)` in the Supabase query. The `ORDER_STATUS_OPTIONS` filter in [src/pages_flow/panel/orders/helpers.ts](src/pages_flow/panel/orders/helpers.ts) likewise only lists `Paid | Failed | Cancelled`. A freshly-created order is invisible until N-Genius (via webhook or `/checkout/result`) transitions it to PAID/FAILED/CANCELLED.
 
 **Shared `useAutoRouterRefresh` hook.** [src/shared/hooks/useAutoRouterRefresh.ts](src/shared/hooks/useAutoRouterRefresh.ts) — generic TanStack Query hook whose `queryFn` triggers `router.refresh()` as a side-effect (returned data is `null` — TQ is used as a scheduler here, not a data store). Accepts a `queryKey` so each call site has its own cache observer. Settings: `refetchInterval: DEFAULT_STALE_TIME_MS` (30s), `refetchOnWindowFocus: true`, `refetchOnReconnect: true`, `refetchIntervalInBackground: false` (skipped when tab hidden), `staleTime: 3_000` (throttles focus/visibility refetches to once per 3s), `gcTime: 0` (cache cleared on unmount so remount re-arms first-skip). An `isFirstRef` ref skips the very first invocation on mount — the page just SSR'd with fresh data. Used by:
+
 - [`AllOrdersInner`](src/pages_flow/panel/orders/AllOrdersPage.tsx) — `useAutoRouterRefresh(["panel-orders-refresh"])`. Replaces the old Supabase Realtime subscription on `orders`.
 - [`PartnershipsInner`](src/pages_flow/panel/partnerships/PartnershipsPage.tsx) — `useAutoRouterRefresh(["panel-partnerships-refresh"])`. Replaces the old Supabase Realtime subscription on `partnership_inquiries`.
 
 Both eliminate the WebSocket connection without losing live updates for the admin (max 30s lag, instant on focus). New orders are still always PENDING and filtered out server-side; they appear after the UPDATE that flips status to PAID/FAILED/CANCELLED.
 
 **Order notification messages.** [src/lib/orderNotifications.ts](src/lib/orderNotifications.ts) exposes two helpers built around the same `OrderNotificationParts` shape `{ customer, totalQty, itemsText, totalText, deliverySchedule }`:
+
 - `buildOrderNotificationParts(order, items)` — structured pieces, used by `ResultToast` to render a multi-line JSX toast.
 - `formatOrderNotificationMessage(order, items)` — joins the same pieces with " · " into a single string for push notifications and the in-app realtime toast (which can only display plain text).
 
@@ -701,6 +718,7 @@ Typography pattern: display H1 → `font-display font-bold italic`, H2–H3 → 
 Grain texture: add class `noise` + `relative` on a section — the `.noise::after` pseudo-element in `globals.css` renders a CSS-only SVG texture (no PNG).
 
 **Color semantics for product attribute lists** (rendered inside `ProductDetails` / `ProductExpandedDetails`, collapsed by default in cards/rows, expanded on detail pages):
+
 - **Tags** — `text-moss` + `bg-moss` bullet — natural qualities, positive signal
 - **Free From** — red `✕` prefix (`text-red-600`) on `text-earth/55` text — warning / absence marker
 - **Ingredients** — `text-earth/90` + bright `bg-orange` bullet (1.5px, not 1px) — factual composition, deliberately more prominent than Serving
@@ -755,6 +773,7 @@ Compound components (e.g. `Collapsible`, `TagToolbar`) hold state in React conte
 ## Responsive table/cards pattern
 
 Admin data pages (orders, partnerships) use a dual-render approach:
+
 - `< xl` — `DataCard` cards via `DataCardList` (typically `md:grid-cols-2` for 2 columns from 768px)
 - `xl+` — `DataTable` with full sorting and pagination
 
@@ -785,6 +804,7 @@ Both views share the same `paginatedData` from hooks like `useOrdersTable` / `us
 **Minimal card body (deliberate low cognitive load).** Both public [ProductItem](src/sections/products/ProductItem.tsx) and admin [AdminProductCard](src/pages_flow/panel/products/AdminProductCard.tsx) show only the essentials under the image: **title → variant weights/prices → footer action**. The category-name + badge row (`ProductHeader`) was removed from both card variants; `IngredientsInline` was removed from the admin card. `ProductHeader` still exists but is now used only on the **detail pages** (public [ProductDetailPage](src/pages_flow/products/ProductDetailPage.tsx) + admin panel detail), never on grid cards. `IngredientsInline` is likewise no longer used on any card.
 
 Beyond the shared card anatomy (see **Card grids**), product cards use:
+
 - `ProductVariantSelector` (public) vs `AdminVariantBadges` (admin) for weights/prices.
 - `ProductNote` — rendered as `NoteButton` overlay on image bottom-right (Info icon + tooltip with full note); no inline blockquote on the card.
 - `ShareButton` — public only, passed as `actionSuffix` of `ProductPriceAndCart`.
@@ -836,6 +856,7 @@ Each product can optionally carry **one** review/recipe video — either an uplo
 ### videoUrl utilities
 
 [src/shared/utils/videoUrl.ts](src/shared/utils/videoUrl.ts) — shared between client and server:
+
 - `getVideoKind(url)` → `"youtube" | "mp4" | null`. Pattern-matches.
 - `extractYouTubeId(url)` — handles `youtube.com/watch?v=`, `youtu.be/`, `youtube.com/shorts/`, `youtube.com/embed/`, `/live/`. Validates the 11-char id.
 - `getYouTubeThumbnail(id)` → `https://img.youtube.com/vi/{id}/hqdefault.jpg`.
@@ -854,8 +875,15 @@ Each product can optionally carry **one** review/recipe video — either an uplo
 
 ```ts
 declare module "yet-another-react-lightbox" {
-  interface SlideTypes { youtube: SlideYouTube }
-  interface SlideYouTube extends GenericSlide { type: "youtube"; videoId: string; poster?: string; alt?: string }
+  interface SlideTypes {
+    youtube: SlideYouTube;
+  }
+  interface SlideYouTube extends GenericSlide {
+    type: "youtube";
+    videoId: string;
+    poster?: string;
+    alt?: string;
+  }
 }
 ```
 
@@ -868,6 +896,7 @@ Plus `render.thumbnail` covers both: `<video preload="metadata" muted>` for mp4 
 ### Gallery extension for video
 
 [src/shared/ui/Gallery.tsx](src/shared/ui/Gallery.tsx) — `GalleryImage` now accepts:
+
 - `isVideo?: boolean` — adds a centered Play-icon overlay on the tile (used for both mp4 and YouTube thumbnails).
 - `videoSrc?: string` — if set, renders a `<video preload="metadata" muted>` element instead of `<img>`, so the browser shows the actual first frame for MP4 thumbnails. YouTube thumbnails use `<img>` with `hqdefault.jpg`.
 
@@ -876,6 +905,7 @@ Plus `render.thumbnail` covers both: `<video preload="metadata" muted>` for mp4 
 ### Admin form
 
 [VideoSection](src/pages_flow/panel/products/product-form/VideoSection.tsx) sits between `BasicInfoSection` and `VariantsSection`. Structure:
+
 - `FormTileRadio name="video_mode"` toggle between `upload` and `youtube`.
 - **Upload mode**: `<FormUploadZone>` with `name="video_file"`, `accept="video/*"`, `mimePrefix="video/"`, `noun="a video"`, `acceptLabel="MP4, WebM, MOV"`, `maxSizeMb={80}`, `multiple={false}`, `bucket="product-videos"`, `slug="product-video"`. `initialUrl` is populated only when DB value is mp4-kind.
 - **YouTube mode**: `<FormInput name="video_youtube_url">`. `defaultValue` populated only when DB value is youtube-kind.
@@ -899,12 +929,14 @@ Mode autoresolves from `product?.video_url` via `getVideoKind` on mount. Switchi
 ### Config — body size limits
 
 Two limits in [next.config.ts](next.config.ts) must both clear the video size:
+
 - `experimental.serverActions.bodySizeLimit: "100mb"` — applies to the action handler.
 - `experimental.proxyClientMaxBodySize: "100mb"` — Next 16 middleware (`src/proxy.ts`) caps request body at **10 MB by default**, which truncates multipart uploads before they reach the action and surfaces as the very misleading `Unexpected end of form` from busboy. **Both** settings need bumping for video uploads to work; raising only `bodySizeLimit` does nothing if middleware is active.
 
 ### MOV / codec caveats
 
 Browser support varies by codec inside the MOV container:
+
 - H.264 inside MOV — plays in Chrome via the `getPlayableVideoMime` remap to `video/mp4`. Most phone MOVs fall here.
 - HEVC / ProRes inside MOV — Chrome can't decode regardless of MIME. No frontend fix; would need server-side transcoding.
 
@@ -967,6 +999,7 @@ Products, categories and mixes all use a single compact-card layout (no row-vari
 - **Mixes** — admin DnD grid only (no public mix grid — `/mix` is a constructor, `MixCTA` is a banner). Card: [MixCard](src/pages_flow/panel/mixes/MixCard.tsx). Grid: `ADMIN_MIX_GRID_CLASS` in [src/pages_flow/panel/mixes/MixesSkeleton.tsx](src/pages_flow/panel/mixes/MixesSkeleton.tsx) — same as admin products.
 
 **Shared card anatomy** (all three domains):
+
 - Root `<div>` with `h-full flex flex-col rounded-2xl bg-white-warm border` + hover shadow.
 - Image aspect-3/2, `rounded-t-2xl overflow-hidden`. Image wrapped in `<Link>` for public (navigation target).
 - Overlay slots: top-left — badges (SALE/BEST/NEW for products, `{cell_count} CELLS` + `Inactive` for mixes, optional `badge` for categories); top-right — `FavoriteButton` for public products, `Out of stock` for admin products, drag handle (GripVertical in a circle, `opacity-0 group-hover:opacity-100`) for admin categories/mixes; bottom-left — `ViewButton` (ArrowUpRight) for products; bottom-right — `NoteButton` (Info + tooltip) for products with `note`.
@@ -1014,6 +1047,7 @@ Categories have a `sort_order` integer column. Order is controlled via drag-and-
 Multi-role notification system, **polling-only via TanStack Query** (no Supabase Realtime / WebSockets).
 
 **Tables:**
+
 - `notifications` — `user_id` (UUID, nullable) + `audience` (`user_role` enum, nullable). `user_id` set = personal notification. `user_id` NULL = broadcast. `audience` NULL = all roles, specific role = only that role.
 - `notification_reads` — `(notification_id, user_id)` PK. Presence of row = read. Used for both personal and broadcast notifications.
 - RLS enabled on both tables — users only see notifications targeted to them.
@@ -1025,6 +1059,7 @@ Multi-role notification system, **polling-only via TanStack Query** (no Supabase
 **TanStack Query setup.** Root layout wraps the tree in [`<ReactQueryProvider>`](src/providers/ReactQueryProvider.tsx) — a `QueryClient` instantiated via `useState` lazy initializer with defaults `refetchOnWindowFocus: true`, `refetchOnReconnect: true`, `staleTime: DEFAULT_STALE_TIME_MS` (30s), `retry: 1`. The exported `DEFAULT_STALE_TIME_MS` constant is reused by individual hooks that want to match the global cadence (`useNotificationsList`, `useNotificationsSinceQuery`, `useAutoRouterRefresh`).
 
 **Provider decomposition.** `src/providers/notifications/` is split by concern:
+
 - [`NotificationsProvider.tsx`](src/providers/notifications/NotificationsProvider.tsx) — thin provider, composes `useNotificationsBackgroundPolling` + `useServiceWorker`. Holds **no local notifications/list state** — exposes `userId`, `role`, `allowNotifications` (so consumer hooks can build their query keys), `unreadCount`, mutations (`markAsRead`/`markAllAsRead`/`refresh`), and push state.
 - [`filters.ts`](src/providers/notifications/filters.ts) — `isNotificationForUser`, `formatNotificationMessage`, `filterByPermissions`, type `NotificationsListData`. Pure functions reused by both since-effect and list-select.
 - [`queryKeys.ts`](src/providers/notifications/queryKeys.ts) — `notificationKeys` factory: `list(userId)`, `unread(userId)`, `since(userId)`. Centralised so every hook references the same keys.
@@ -1061,6 +1096,7 @@ Accepts `role`, `userId`, `allowNotifications` props. When `allowNotifications =
 **UI:** `NotificationBell` in navbar (all logged-in users). `RecentNotifications` + `MarkAllReadButton` on admin dashboard. Both support clickable notifications with navigation.
 
 **Notification links:** `related_id` stores UUID of the related entity. Clicking a notification navigates to the relevant page:
+
 - `getNotificationHref(type)` in `src/shared/ui/NotificationTypeConfig.tsx` — static URLs (orders → `/panel/all-orders`, promotions → `/shop?sort=promotions`)
 - `resolveNotificationHref(type, relatedId)` in `src/shared/utils/resolveNotificationHref.ts` — async, resolves product/category UUID → slug via `/api/notifications/resolve`
 - Push notifications resolve URLs server-side via `getNotificationUrl()` in `src/lib/pushNotification.ts`
@@ -1070,17 +1106,20 @@ Accepts `role`, `userId`, `allowNotifications` props. When `allowNotifications =
 Native push notifications via Web Push API + Service Worker.
 
 **PWA setup:**
+
 - Manifest: `public/favicon/site.webmanifest` (name, icons, start_url, display: standalone)
 - Service Worker: `public/sw.js` — handles `push` (showNotification) and `notificationclick` (open/focus tab)
 - No caching — SW only handles push events
 
 **Server-side:** `src/lib/pushNotification.ts`
+
 - `web-push` with lazy VAPID initialization (`ensureVapid()` — skips if env vars missing)
 - `sendPushNotifications({ title, body, url, audience, userId })` — queries `push_subscriptions` joined with `profiles` for role/preference filtering
 - Auto-cleanup of expired subscriptions (HTTP 410/404)
 - Called from `createNotification()` as fire-and-forget
 
 **Client-side:** `src/providers/notifications/hooks/useServiceWorker.ts`
+
 - Registers SW on mount, resolves initial push state
 - Auto-resubscribes if permission granted but subscription lost (unless user explicitly opted out via `PUSH_OPT_OUT_KEY` in localStorage)
 - Exposes `subscribeToPush()`, `unsubscribeFromPush()`, `pushState` via context
@@ -1097,7 +1136,7 @@ GA4 wired via `@next/third-parties/google`. Single-source helper at [src/lib/ana
 
 ### Loading
 
-[src/app/_components/Analytics.tsx](src/app/_components/Analytics.tsx) — server component that mounts `<GoogleAnalytics gaId={NEXT_PUBLIC_GA_ID}>` if the env var is set. **Cookie consent does NOT gate GA loading** (decision: maximize tracking volume; banner exists for compliance disclosure but doesn't block analytics). The cookie value is only used to track Accept/Decline as a `cookie_consent` event in [CookieConsent.tsx](src/shared/ui/CookieConsent.tsx).
+[src/app/\_components/Analytics.tsx](src/app/_components/Analytics.tsx) — server component that mounts `<GoogleAnalytics gaId={NEXT_PUBLIC_GA_ID}>` if the env var is set. **Cookie consent does NOT gate GA loading** (decision: maximize tracking volume; banner exists for compliance disclosure but doesn't block analytics). The cookie value is only used to track Accept/Decline as a `cookie_consent` event in [CookieConsent.tsx](src/shared/ui/CookieConsent.tsx).
 
 ### Server-action → client GA bridge
 
@@ -1112,14 +1151,14 @@ This pattern handles `login` (email + Google) and `sign_up`. Add new server-side
 
 **E-commerce voronka** — standard GA4 events, populate Monetization reports automatically:
 
-| Event | Where | Notes |
-|---|---|---|
-| `view_item_list` | [ProductGrid.tsx](src/sections/products/ProductGrid.tsx) — `useTrackViewItemList` hook | Fires on category change, ref-guard blocks dups on search/sort changes |
-| `view_item` | [ProductDetailPage.tsx](src/pages_flow/products/ProductDetailPage.tsx) | `useEffect` + ref-guard, uses `selectedVariant` for price |
-| `add_to_cart` / `remove_from_cart` | [useCartActions.ts](src/providers/cart/useCartActions.ts) | Sends **delta** quantity (not totals), so revenue maths reconcile |
-| `view_cart` | [CartPage.tsx](src/pages_flow/cart/CartPage.tsx) | After `isHydrated && items.length > 0`, ref-guard |
-| `begin_checkout` | [CheckoutFormSection.tsx](src/pages_flow/checkout/ui/CheckoutFormSection.tsx) | On mount, includes `coupon` if applied |
-| `purchase` (key event) | [page.tsx](src/app/checkout/result/page.tsx) → [ResultToast.tsx](src/app/checkout/result/ResultToast.tsx) | See **Purchase pipeline** below |
+| Event                              | Where                                                                                                     | Notes                                                                  |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `view_item_list`                   | [ProductGrid.tsx](src/sections/products/ProductGrid.tsx) — `useTrackViewItemList` hook                    | Fires on category change, ref-guard blocks dups on search/sort changes |
+| `view_item`                        | [ProductDetailPage.tsx](src/pages_flow/products/ProductDetailPage.tsx)                                    | `useEffect` + ref-guard, uses `selectedVariant` for price              |
+| `add_to_cart` / `remove_from_cart` | [useCartActions.ts](src/providers/cart/useCartActions.ts)                                                 | Sends **delta** quantity (not totals), so revenue maths reconcile      |
+| `view_cart`                        | [CartPage.tsx](src/pages_flow/cart/CartPage.tsx)                                                          | After `isHydrated && items.length > 0`, ref-guard                      |
+| `begin_checkout`                   | [CheckoutFormSection.tsx](src/pages_flow/checkout/ui/CheckoutFormSection.tsx)                             | On mount, includes `coupon` if applied                                 |
+| `purchase` (key event)             | [page.tsx](src/app/checkout/result/page.tsx) → [ResultToast.tsx](src/app/checkout/result/ResultToast.tsx) | See **Purchase pipeline** below                                        |
 
 **Auth** — via redirect-param dispatcher:
 | Event | Trigger |
@@ -1155,6 +1194,7 @@ This pattern handles `login` (email + Google) and `sign_up`. Add new server-side
 ### GA4 Admin TODOs
 
 Not configurable from code — set up once in the GA4 dashboard:
+
 - **Key events** (Admin → Настройки ресурса → События → Ключевые события): `purchase` is auto-marked. Manually mark `sign_up` and `partnership_inquiry`.
 - **Custom dimensions** (Admin → Custom definitions → Custom dimensions, scope=Event): `consent`, `method`, `coupon`, `box_id`, `business_type` — required only if you want to filter/group standard reports by these params (Realtime/DebugView already shows them).
 
@@ -1163,6 +1203,7 @@ A user-facing summary of all events lives in [GA_EVENTS.md](GA_EVENTS.md) at the
 ## Address system
 
 `AddressWithMap` (`src/shared/ui/AddressWithMap.tsx`) — 5 fields: Emirate (select), City, Area, Building (all with `AddressSuggestInput` for Google Places suggestions), Flat/Villa. Bidirectional sync with Google Maps:
+
 - **Fields → Map:** debounced forward geocoding on manual input (700ms)
 - **Map → Fields:** reverse geocoding on map click
 - **Suggestion select → Map:** `PlacesService.getDetails` for coordinates + `extractAddressParts` for emirate
@@ -1170,6 +1211,7 @@ A user-facing summary of all events lives in [GA_EVENTS.md](GA_EVENTS.md) at the
 `AddressSuggestInput` (`src/shared/ui/AddressSuggestInput.tsx`) — wraps `DropdownMenu` (controlled mode) + `FormInput`. Uses `AutocompleteService.getPlacePredictions` with `types` and `locationBias` per field.
 
 Address utilities in `src/shared/utils/address.ts`:
+
 - `composeAddress({ emirate, city, area, buildingName, flatNumber })` → string (always includes city for correct round-trip parsing)
 - `parseAddress(string)` → `ParsedAddressProps` (extracts fields from composed string)
 - `displayAddress(address)` → string (like composeAddress but skips city when equals emirate — for UI display)
@@ -1178,6 +1220,7 @@ Address utilities in `src/shared/utils/address.ts`:
 ## Phone validation
 
 All phone fields use `FormPhoneInput` (displays `0XX XXX XXXX`, submits normalized `+971XXXXXXXXX` via hidden input). Shared validation in `src/shared/utils/validatePhone.ts`:
+
 - `normalizePhone(raw)` — accepts `0501234567`, `501234567`, `+971501234567`, `971501234567` → returns `+971501234567`
 - `formatPhoneDisplay(raw)` — formats for display as `0XX XXX XXXX`
 - `validatePhone(phone, { required })` — validates against `/^\+971[0-9]{9}$/`
@@ -1207,6 +1250,7 @@ Two pieces, both built around `https://wa.me/{digits}` (phone stripped to digits
 ### CSS tokens
 
 Brand green is exposed via `@theme` in [globals.css](src/app/globals.css):
+
 - `--color-whatsapp: #25d366` → `bg-whatsapp` / `border-whatsapp`
 - `--color-whatsapp-hover: #1ebe5d` → `bg-whatsapp-hover` / `border-whatsapp-hover`
 
@@ -1261,6 +1305,7 @@ export async function updateFoo(
 ```
 
 **Rules:**
+
 - `"use server"` always at top
 - State interface exported from the same `actions.ts` file
 - Validation collects all field errors before returning — never throw, always return state
@@ -1275,7 +1320,7 @@ export async function updateFoo(
 
 When a server action returns and `useActionState` commits a new state with `state.values` (the echoed-back form data on validation error), uncontrolled inputs (`FormInput`, `FormTextarea`) re-read `defaultValue` automatically because React 19 fires the form `reset` event after action commit. Controlled inputs that hold their own state — `FormPhoneInput`, `FormSelect`, `FormTimePicker`, `FormRichTextarea`, `AddressWithMap` — need to **explicitly re-sync internal state when `defaultValue` changes**.
 
-We previously had a `useFormReset` hook that listened to the form's `reset` event. It was racy: in `useActionState` flows the `reset` event dispatched **before** the new state committed, so the callback's closure had `defaultValue` from the render *before* the latest one. The user-visible symptom was fields snapping back to stale values that had already been overwritten.
+We previously had a `useFormReset` hook that listened to the form's `reset` event. It was racy: in `useActionState` flows the `reset` event dispatched **before** the new state committed, so the callback's closure had `defaultValue` from the render _before_ the latest one. The user-visible symptom was fields snapping back to stale values that had already been overwritten.
 
 **Use the in-render setState pattern** ([React's official "adjust state on prop change"](https://react.dev/reference/react/useState#storing-information-from-previous-renders)):
 
@@ -1289,6 +1334,7 @@ if (defaultValue !== prevDefaultValue) {
 ```
 
 For components with multiple defaults (e.g. `AddressWithMap` has 7), build a composite key:
+
 ```ts
 const defaultsKey = `${defaultEmirate}|${defaultCity}|${defaultArea}|…`;
 const [prevDefaultsKey, setPrevDefaultsKey] = useState(defaultsKey);
@@ -1320,6 +1366,7 @@ export const getFoo = cache(async (): Promise<Foo[]> => { ... });
 ## Search optimization
 
 Product/order/inquiry list pages use a shared pattern for search:
+
 1. **Pre-computed search index** — `buildSearchIndex(items)` builds lowercase haystack once per data change, not on every keystroke
 2. **`useDeferredValue`** — defers search input so typing stays responsive while filtering catches up
 3. **Filter hook** — `useFilteredProducts`, `useFilteredAdminProducts`, `useFilteredOrders`, `useFilteredInquiries` encapsulate search index + deferred value + all filter logic
@@ -1347,18 +1394,22 @@ Product/order/inquiry list pages use a shared pattern for search:
 ## SEO
 
 **Root structured data** (`src/app/structured-data.ts`) — injected in root layout:
+
 - `Organization` + `LocalBusiness` (Dubai, UAE, AED)
 - `WebSite` with `SearchAction` (sitelinks search box)
 - `WebPage` (root)
 
 **Home page** (`src/app/page.tsx`):
+
 - `CollectionPage` JSON-LD (`src/app/home-structured-data.ts`) — ItemList of categories (URLs → `/shop?category=<slug>`) with BreadcrumbList.
 
 **Shop page** (`src/app/shop/page.tsx`):
+
 - `generateMetadata()` — dynamic per-category title/description/OG when `?category=slug` is present (reads category data from DB), else base "Shop" metadata; `canonical = ${siteUrl}/shop` (or `/shop?category=<slug>`). This per-category metadata logic moved here from the home page when the catalog moved to `/shop`.
 - `CollectionPage` + `BreadcrumbList` JSON-LD (`src/app/shop/structured-data.ts`).
 
 **Product detail pages** (`src/app/products/[id]/page.tsx`):
+
 - **Product schema** — with `AggregateOffer` for multi-variant pricing, promotion `priceValidUntil`, `additionalProperty` for tags/freeFrom, all images.
 - **BreadcrumbList** — Home → Category → Product.
 - Structured data builders in `src/app/products/[id]/structured-data.ts`. `buildDescription(dbProduct, product)` is **shared between `generateMetadata` and the Product JSON-LD** so the meta-description and schema description stay in sync (tagline + tags + `Free from: …`).
@@ -1366,7 +1417,8 @@ Product/order/inquiry list pages use a shared pattern for search:
 - **Back navigation** — `FROM_MAP` maps `?from=` param to back button href/label (e.g. `?from=favorites` → "Back to favorites", `?from=cart` → "Back to cart"). Default: "Back to products" → `/shop`.
 
 **Mix page** (`src/app/mix/page.tsx`):
-- `generateMetadata` sets canonical `${siteUrl}/mix`, OG/Twitter image = first active `mix_box.image_url` (fallback to root `/og-image.jpg` if no active boxes).
+
+- `generateMetadata` sets canonical `${siteUrl}/mix`, OG/Twitter image = first active `mix_box.image_url` (fallback to root `/og-image.webp` if no active boxes).
 - `CollectionPage` JSON-LD with `ItemList` of active boxes + `BreadcrumbList` — both from `src/app/mix/structured-data.ts` (`buildMixCollectionJsonLd`, `buildMixBreadcrumbJsonLd`). Individual boxes are **not** separate URLs — they live under `/mix?box={slug}` query params, so only `/mix` is in sitemap (avoids canonical conflicts).
 
 **Indexing** — private routes have `robots: { index: false }`: `(auth)/*`, `/cart`, `/checkout/*`, `/panel/*`. `robots.ts` disallows these paths for crawlers. Sitemap (`src/app/sitemap.ts`) includes `/`, `/shop`, `/mix`, `/about`, `/partnership`, and `/products/*`.
@@ -1401,6 +1453,7 @@ Mix-system products (`products.status = 'system'`, virtual containers for mix bo
 [`deductInventoryForOrder(orderId)`](src/lib/inventoryDb.ts) — single helper invoked from all three PAID entry points (webhook, `/checkout/result` `settleOrder`, manual admin order action) inside a `Promise.all` block alongside other side-effects.
 
 Algorithm:
+
 1. One JOIN-query: `order_items` + `product_variants.product_id` + `products.status` for regular rows.
 2. Build `Map<product_id, total_grams>`:
    - regular row: `weight_g × quantity` (skip if `products.status = 'system'`).
@@ -1415,7 +1468,7 @@ Algorithm:
   - **Adjust** ([AdjustStockForm](src/pages_flow/panel/inventory/AdjustStockForm.tsx)) — `delta_g` (positive or negative integer via `FormNumberInput`), `reason` from `restock | correction | damage | manual_adjust`, optional `note` rendered as `FormRichTextarea`. Server-action sanitizes the HTML via `sanitizeNoteHtml`. On success, the form invalidates the local movements cache (see below). Info-tooltip on the `Change (grams)` label explains `Positive number to restock, negative to write off.`
   - **Settings** ([EditInventoryForm](src/pages_flow/panel/inventory/EditInventoryForm.tsx)) — edit `cost_per_100g` and `low_stock_threshold_g` only (no stock changes — those go through Adjust). Info-tooltip on the threshold label.
   - **History** ([MovementsHistory](src/pages_flow/panel/inventory/MovementsHistory.tsx)) — `DataTable` of last 50 movements for one product (`Date · Reason · Δ · Note`) with local `useTableSort` + `useTablePagination`, no URL state (it's modal-scoped). Footer link `View all history → /panel/inventory/history?product=…` opens the global page pre-filtered. Module-level `Map<product_id, StockMovement[]>` cache makes reopening the same product instant; `invalidateMovementsCache(productId)` is exported and called from `AdjustStockForm` after success.
-- **`/panel/inventory/history`** ([app/panel/inventory/history/page.tsx](src/app/panel/inventory/history/page.tsx)) — full audit log, parallel `Promise.all` loads `getAllMovements(1000)` + `getInventoryRows()` (the latter purely to get product options for the filter so even products *without* movements appear in the dropdown). Toolbar: text search (matches product title and note, with `stripHtml` so rich-text content is searchable as plain text), `MultiSelect` for reasons, `MultiSelect` for products (with `maxVisibleTags={2}` so the trigger doesn't blow up the toolbar grid when several are selected). Mobile = `HistoryCard` (1-line layout: thumbnail + product + delta + meta), desktop = `DataTable` with sortable columns via `historyColumns`. Both reuse `useInventoryTable` (URL-synced sort + pagination, default page size 10).
+- **`/panel/inventory/history`** ([app/panel/inventory/history/page.tsx](src/app/panel/inventory/history/page.tsx)) — full audit log, parallel `Promise.all` loads `getAllMovements(1000)` + `getInventoryRows()` (the latter purely to get product options for the filter so even products _without_ movements appear in the dropdown). Toolbar: text search (matches product title and note, with `stripHtml` so rich-text content is searchable as plain text), `MultiSelect` for reasons, `MultiSelect` for products (with `maxVisibleTags={2}` so the trigger doesn't blow up the toolbar grid when several are selected). Mobile = `HistoryCard` (1-line layout: thumbnail + product + delta + meta), desktop = `DataTable` with sortable columns via `historyColumns`. Both reuse `useInventoryTable` (URL-synced sort + pagination, default page size 10).
 
 ### Admin dashboard (`/panel`)
 
@@ -1472,6 +1525,7 @@ Admin-facing index of every registered user with one-click access to WhatsApp, t
 [src/app/panel/users/page.tsx](src/app/panel/users/page.tsx) is the server shell — wraps `<UsersContent>` (calls `getAdminUsers()`) in a `Suspense` boundary with a custom skeleton, all under a `SearchParamsFilterProvider` keyed on `["search", "gender", "hasOrders", "sortKey", "sortDir", "page", "pageSize"]`. Mirrors `/panel/all-orders` patterns 1:1.
 
 Client tree under [src/pages_flow/panel/users/](src/pages_flow/panel/users/):
+
 - [`UsersPage`](src/pages_flow/panel/users/UsersPage.tsx) — composes `useFilteredUsers` + `useUsersTable`, renders mobile `<AdminUserCards>` (`xl:hidden`) + desktop `<DataTable>` (`hidden xl:block`). No `useAutoRouterRefresh` — registrations are infrequent and the page already refreshes on focus.
 - [`useFilteredUsers`](src/pages_flow/panel/users/useFilteredUsers.ts) — search index over `id + firstName + lastName + email + phone`, `useDeferredValue` defers the input, plus `gender` and `hasOrders` predicates. Same shape as `useFilteredOrders`.
 - [`useUsersTable`](src/pages_flow/panel/users/useUsersTable.ts) — thin re-export of `useOrdersTable` (the hook is generic over `T, K` already; bumping it into `@/shared/hooks` is a later cleanup).
