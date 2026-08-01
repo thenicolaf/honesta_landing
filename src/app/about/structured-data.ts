@@ -7,7 +7,7 @@ export function buildAboutPageJsonLd(siteUrl: string) {
     "@id": `${aboutUrl}#aboutpage`,
     name: "About HONESTA",
     description:
-      "HONESTA is a family project crafting natural dried fruits, fruit leathers and crisps in Dubai — no added sugar, no additives, small batch and honest.",
+      "HONESTA is a UAE-based family brand creating dried fruits, fruit rolls, dried vegetables, ghee, jerky and signature mixes. Real ingredients, honest taste.",
     url: aboutUrl,
     isPartOf: { "@id": `${siteUrl}/#website` },
     about: { "@id": `${siteUrl}/#organization` },

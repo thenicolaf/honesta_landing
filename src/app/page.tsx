@@ -80,7 +80,10 @@ export default function Home() {
     <main className="grow min-h-160">
       <TrustMarks />
       <Suspense fallback={<PromoSliderSkeleton />}>
-        <PromoSliderSection title="Best Offers" kicker="Top picks & deals" />
+        <PromoSliderSection
+          title="Customer Favourites"
+          kicker="Loved by our customers"
+        />
       </Suspense>
       <Suspense
         fallback={

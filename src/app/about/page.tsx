@@ -5,19 +5,20 @@ import {
   buildAboutBreadcrumbJsonLd,
 } from "./structured-data";
 
+const ABOUT_TITLE = "About HONESTA | Premium Natural Food Brand in UAE";
 const ABOUT_DESCRIPTION =
-  "HONESTA is a family project crafting natural dried fruits, fruit leathers and crisps in Dubai — 100% fruit, no added sugar, no additives. Discover our story, values and mission.";
+  "Learn about HONESTA, a UAE-based family brand creating dried fruits, fruit rolls, dried vegetables, ghee, jerky and other thoughtfully made foods.";
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteUrl = process.env.PUBLIC_BASE_URL!;
   const aboutUrl = `${siteUrl}/about`;
 
   return {
-    title: "About Us",
+    title: { absolute: ABOUT_TITLE },
     description: ABOUT_DESCRIPTION,
     alternates: { canonical: aboutUrl },
     openGraph: {
-      title: "About Us — HONESTA",
+      title: ABOUT_TITLE,
       description: ABOUT_DESCRIPTION,
       url: aboutUrl,
       siteName: "HONESTA",
@@ -27,7 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      title: "About Us — HONESTA",
+      title: ABOUT_TITLE,
       description: ABOUT_DESCRIPTION,
       images: ["/og-image.webp"],
     },

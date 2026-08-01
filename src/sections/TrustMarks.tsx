@@ -6,8 +6,8 @@ import { useScroll, useMotionValueEvent } from "motion/react";
 import { cn } from "@/shared/utils/cn";
 
 /**
- * Trust-marks strip (No Added Sugar, 100% Natural, No Preservatives, Made in UAE)
- * shown as the first child of a public page's <main>.
+ * Trust-marks strip (Real Ingredients, Clear Recipes, No Unnecessary Additives,
+ * Made in UAE) shown as the first child of a public page's <main>.
  *
  * Positioned `fixed` under the navbar (mirroring Navbar.tsx) so shrinking it on
  * scroll never reflows page content — an aria-hidden spacer reserves the navbar
@@ -17,9 +17,9 @@ import { cn } from "@/shared/utils/cn";
  * same-coloured sections below.
  */
 const MARKS = [
-  { src: "/images/marks/mark-2.png", alt: "100% Natural", width: 432, height: 474 },
-  { src: "/images/marks/mark-1.png", alt: "No Added Sugar", width: 501, height: 474 },
-  { src: "/images/marks/mark-3.png", alt: "No Preservatives", width: 465, height: 454 },
+  { src: "/images/marks/mark-2.png", alt: "Real Ingredients", width: 432, height: 474 },
+  { src: "/images/marks/mark-1.png", alt: "Clear Recipes", width: 501, height: 474 },
+  { src: "/images/marks/mark-3.png", alt: "No Unnecessary Additives", width: 465, height: 454 },
   { src: "/images/marks/mark-4.png", alt: "Made in UAE", width: 432, height: 460 },
 ];
 
