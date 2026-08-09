@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { IconInstagram } from "@/shared/icons";
+import { IconInstagram, IconWhatsApp } from "@/shared/icons";
 import { NAV_LINKS } from "@/shared/consts/navLinks";
 import { HashLink } from "./navbar/HashLink";
 
@@ -79,7 +79,17 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                {/* TODO: replace with real email address */}
+                <a
+                  href={`https://wa.me/${(process.env.NEXT_PUBLIC_WHATSAPP_SUPPORT_PHONE ?? "").replace(/\D/g, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 font-body font-light text-sand/65 text-sm hover:text-orange-light transition-colors duration-200"
+                >
+                  <IconWhatsApp className="w-3.5 h-3.5 shrink-0" />
+                  WhatsApp
+                </a>
+              </li>
+              <li>
                 <a
                   href={`mailto:${process.env.NEXT_PUBLIC_EMAIL}`}
                   className="font-body font-light text-sand/65 text-sm hover:text-orange-light transition-colors duration-200"
