@@ -45,7 +45,8 @@ export default function TermsPage() {
             </h2>
             <p>
               Honesta provides natural food products, including dried fruits,
-              fruit leather, seed mixes, and other food products.
+              fruit rolls, dried vegetables, ghee, jerky, mixes, gifts and other
+              food products.
             </p>
             <ul className="list-disc pl-5 space-y-2">
               <li>

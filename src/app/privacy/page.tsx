@@ -55,8 +55,8 @@ export default function PrivacyPage() {
                 <strong className="font-medium text-earth">
                   Order Details:
                 </strong>{" "}
-                History of products purchased (dried fruits, fruit leather, seed
-                mixes, and other food products).
+                Information about the products purchased, quantities, delivery
+                preferences and transaction history.
               </li>
               <li>
                 <strong className="font-medium text-earth">
