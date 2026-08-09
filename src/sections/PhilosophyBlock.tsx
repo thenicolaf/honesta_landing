@@ -4,17 +4,9 @@ import Image from "next/image";
 import { motion } from "motion/react";
 
 const manifestLines = [
-  { prefix: "We don't add", emphasis: "flavors", suffix: "to mask reality." },
-  {
-    prefix: "We don't add",
-    emphasis: "sugar",
-    suffix: "to make up for poor ingredients.",
-  },
-  {
-    prefix: "We don't add",
-    emphasis: "colors",
-    suffix: "to make things look good in photos.",
-  },
+  "No unnecessary additives.",
+  "No misleading promises.",
+  "Nothing hidden.",
 ];
 
 const fadeUp = {
@@ -55,53 +47,48 @@ export function PhilosophyBlock() {
               className="font-display font-bold italic text-heading leading-tight mb-10"
               style={{ fontSize: "clamp(2rem, 4vw, 3.2rem)" }}
             >
-              Sweetness Before Marketing
+              Honesty Before Compromise
             </motion.h2>
+
+            {/* Intro */}
+            <motion.p
+              variants={fadeUp}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="font-body font-light text-earth/70 text-base leading-relaxed mb-8 max-w-lg"
+            >
+              We believe good food should be easy to understand. That is why we
+              choose real ingredients, clear recipes and careful production.
+            </motion.p>
 
             {/* Manifesto lines */}
             <motion.ul
               variants={fadeUp}
               transition={{ duration: 0.6, ease: "easeOut" }}
-              className="flex flex-col gap-3.5 mb-8"
+              className="flex flex-col w-full max-w-sm mb-10"
             >
-              {manifestLines.map(({ prefix, emphasis, suffix }) => (
-                <li
-                  key={emphasis}
-                  className="font-body font-light text-earth/70 text-base leading-relaxed"
-                >
-                  {prefix}{" "}
-                  <span className="font-medium text-earth italic">
-                    {emphasis}
-                  </span>{" "}
-                  {suffix}
-                </li>
-              ))}
+              {manifestLines.map((line) => {
+                const [lead, ...rest] = line.split(" ");
+                return (
+                  <li
+                    key={line}
+                    className="flex items-baseline gap-3 border-b border-earth/10 py-3 first:pt-0 last:border-0"
+                  >
+                    <span
+                      aria-hidden
+                      className="h-px w-5 shrink-0 translate-y-[-0.35em] bg-orange/50"
+                    />
+                    <span className="font-body text-earth/75 text-base leading-relaxed">
+                      <span className="font-semibold uppercase tracking-wide text-orange text-sm">
+                        {lead}
+                      </span>{" "}
+                      <span className="italic">{rest.join(" ")}</span>
+                    </span>
+                  </li>
+                );
+              })}
             </motion.ul>
 
-            {/* "What we DO add" */}
-            <motion.div
-              variants={fadeUp}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="mb-10 space-y-1"
-            >
-              <p className="font-body font-light text-earth/70 text-base leading-relaxed">
-                What we{" "}
-                <span className="font-semibold text-orange">DO</span> add
-                — is{" "}
-                <span className="font-semibold text-orange italic">
-                  time
-                </span>
-                .
-              </p>
-              <p className="font-body font-light text-earth/70 text-base leading-relaxed">
-                Each batch is made slowly, by hand, with care.
-              </p>
-              <p className="font-body font-semibold text-earth text-base pt-1">
-                That&apos;s the whole recipe.
-              </p>
-            </motion.div>
-
-            {/* Pull-quote */}
+            {/* Closing line */}
             <motion.blockquote
               variants={fadeUp}
               transition={{ duration: 0.6, ease: "easeOut" }}
@@ -111,9 +98,7 @@ export function PhilosophyBlock() {
                 className="font-display italic text-earth/80 leading-snug"
                 style={{ fontSize: "clamp(1.05rem, 2vw, 1.3rem)" }}
               >
-                &ldquo;If it grows on a tree, it belongs in the bag.
-                <br />
-                If it doesn&apos;t&nbsp;— it doesn&apos;t.&rdquo;
+                Just honest food, made with care in the UAE.
               </p>
             </motion.blockquote>
           </motion.div>

@@ -6,38 +6,58 @@ import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvid
 import { ProductsSection } from "@/pages_flow/shop";
 import { TrustMarks } from "@/sections";
 import { getCategories } from "@/lib/categoriesDb";
+import { getCategorySeo } from "./categorySeo";
 import {
   buildShopCollectionJsonLd,
   buildShopBreadcrumbJsonLd,
 } from "./structured-data";
 
+const SHOP_TITLE = "Shop Premium Natural Foods in UAE | HONESTA";
 const SHOP_DESCRIPTION =
-  "Shop HONESTA natural dried fruits, fruit leathers and crisps — 100% fruit, no added sugar, no additives. Filter by category, browse best sellers and offers.";
+  "Shop HONESTA dried fruits, fruit rolls, dried vegetables, ghee, jerky and gift selections, carefully made in the UAE.";
 
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{
+    category?: string;
+    sort?: string;
+    search?: string;
+    mark?: string;
+  }>;
 }): Promise<Metadata> {
   const siteUrl = process.env.PUBLIC_BASE_URL!;
   const shopUrl = `${siteUrl}/shop`;
-  const { category } = await searchParams;
+  const { category, sort, search, mark } = await searchParams;
+
+  // Search/sort/mark create unbounded query combinations — keep them out of the
+  // index (noindex, follow) per TZ §12. Category-only pages stay indexable and
+  // canonicalize to their permanent /shop/<slug> page.
+  const filtered = Boolean(sort || search || mark);
+  const robots = filtered
+    ? { robots: { index: false, follow: true } }
+    : {};
 
   if (category) {
     const categories = await getCategories();
     const match = categories.find((c) => c.slug === category);
 
     if (match) {
+      const seo = getCategorySeo(match.slug);
+      const title = seo ? seo.title : `${match.name} — HONESTA`;
+      const description =
+        seo?.description ||
+        match.description ||
+        `${match.name}. ${match.tagline}. Natural dried fruits by HONESTA.`;
       return {
-        title: `${match.name} — HONESTA`,
-        description:
-          match.description ||
-          `${match.name}. ${match.tagline}. Natural dried fruits by HONESTA.`,
-        alternates: { canonical: `${shopUrl}?category=${match.slug}` },
+        title: { absolute: title },
+        description,
+        ...robots,
+        alternates: { canonical: `${siteUrl}/shop/${match.slug}` },
         openGraph: {
-          title: `${match.name} — HONESTA`,
-          description: match.tagline,
-          url: `${shopUrl}?category=${match.slug}`,
+          title,
+          description: seo?.description || match.tagline,
+          url: `${siteUrl}/shop/${match.slug}`,
           ...(match.image_url
             ? { images: [{ url: match.image_url, alt: match.name }] }
             : {}),
@@ -47,23 +67,24 @@ export async function generateMetadata({
   }
 
   return {
-    title: "Shop",
+    title: { absolute: SHOP_TITLE },
     description: SHOP_DESCRIPTION,
+    ...robots,
     alternates: { canonical: shopUrl },
     openGraph: {
-      title: "Shop — HONESTA",
+      title: SHOP_TITLE,
       description: SHOP_DESCRIPTION,
       url: shopUrl,
       siteName: "HONESTA",
       locale: "en_US",
       type: "website",
-      images: [{ url: "/og-image.jpg" }],
+      images: [{ url: "/og-image.webp" }],
     },
     twitter: {
       card: "summary_large_image",
-      title: "Shop — HONESTA",
+      title: SHOP_TITLE,
       description: SHOP_DESCRIPTION,
-      images: ["/og-image.jpg"],
+      images: ["/og-image.webp"],
     },
   };
 }

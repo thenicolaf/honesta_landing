@@ -49,4 +49,8 @@ export interface DbProductGridProps {
   categories?: CategoryItem[];
   salesMap?: Record<string, number>;
   shuffleSeed?: string | null;
+  /** Lock the grid to one category slug (category page). Hides the header + category select. */
+  fixedCategory?: string;
+  /** Suppress the built-in ProductHeader (the page renders its own <h1>). */
+  hideHeader?: boolean;
 }

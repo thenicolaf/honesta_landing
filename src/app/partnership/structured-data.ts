@@ -7,7 +7,7 @@ export function buildPartnershipPageJsonLd(siteUrl: string) {
     "@id": `${partnershipUrl}#contactpage`,
     name: "Partnership — HONESTA",
     description:
-      "Wholesale and partnerships with HONESTA. We supply restaurants, coffee shops, gyms, spas, hotels and event catering with honest, small-batch natural products.",
+      "Wholesale and partnerships with HONESTA — premium natural foods made in the UAE for cafés, restaurants, hotels, gyms, retailers and events.",
     url: partnershipUrl,
     isPartOf: { "@id": `${siteUrl}/#website` },
     about: { "@id": `${siteUrl}/#organization` },

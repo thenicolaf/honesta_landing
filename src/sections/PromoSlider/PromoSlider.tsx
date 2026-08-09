@@ -64,7 +64,7 @@ export function PromoSlider({
     <div
       role="region"
       aria-roledescription="carousel"
-      aria-label="Top picks and deals"
+      aria-label="Customer favourites"
     >
       <div className="grid grid-cols-1 items-center gap-3 md:grid-cols-[auto_1fr_auto] md:gap-4">
         {products.length > 1 && (

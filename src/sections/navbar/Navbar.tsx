@@ -37,7 +37,7 @@ function NavLogo() {
           HONESTA
         </span>
         <span className="font-body font-light text-xs uppercase tracking-[0.22em] text-bark mt-0.5 hidden sm:block">
-          Sweetness Before Marketing
+          Real ingredients, honest taste
         </span>
       </div>
     </HashLink>

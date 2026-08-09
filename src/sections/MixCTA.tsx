@@ -73,9 +73,8 @@ export function MixCTA({ hasActiveBoxes }: MixCTAProps) {
               transition={{ duration: 0.6, ease: "easeOut" }}
               className="font-body font-light text-white-warm/80 text-sm md:text-base lg:text-lg leading-relaxed mb-6 lg:mb-8 max-w-lg"
             >
-              Choose a box, fill each cell with your favourite dried fruits and
-              fruit leathers — create a unique combination tailored to your
-              taste.
+              Choose a box and fill each section with your favourite HONESTA
+              products to create a mix made for you.
             </motion.p>
 
             <motion.div

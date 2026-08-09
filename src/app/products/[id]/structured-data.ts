@@ -1,5 +1,6 @@
 import type { DbProduct } from "@/sections/products/types/db-types";
 import type { Product } from "@/sections/products/types";
+import { calculateDiscountedPrice } from "@/shared/utils/calculateDiscount";
 
 export function buildDescription(dbProduct: DbProduct, product: Product): string {
   return (
@@ -20,14 +21,31 @@ function buildVariantOffers(
   productUrl: string,
 ) {
   return product.variants.map((v) => {
+    // Discount is recomputed per variant (matching the visible page) — a single
+    // product-level discountedPrice would be wrong for larger variants under a
+    // percentage promotion.
+    const price = product.promotion
+      ? calculateDiscountedPrice(
+          v.price,
+          product.promotion.discountType,
+          product.promotion.discountValue,
+        )
+      : v.price;
+
     const offer: Record<string, unknown> = {
       "@type": "Offer",
       name: `${v.weight_g}g`,
       sku: `${slug}-${v.id}`,
-      price: product.promotion ? product.promotion.discountedPrice : v.price,
+      price,
       priceCurrency: "AED",
+      itemCondition: "https://schema.org/NewCondition",
       availability,
       url: productUrl,
+      weight: {
+        "@type": "QuantitativeValue",
+        value: v.weight_g,
+        unitCode: "GRM",
+      },
     };
     if (product.promotion?.endsAt) {
       offer.priceValidUntil = product.promotion.endsAt.split("T")[0];
@@ -69,12 +87,14 @@ export function buildProductJsonLd(dbProduct: DbProduct, product: Product, siteU
             priceCurrency: "AED",
             offerCount: product.variants.length,
             availability,
+            url: productUrl,
             offers: variantOffers,
           }
         : variantOffers[0] ?? {
             "@type": "Offer",
             price: product.price ?? 0,
             priceCurrency: "AED",
+            itemCondition: "https://schema.org/NewCondition",
             availability,
             url: productUrl,
           },
@@ -84,16 +104,33 @@ export function buildProductJsonLd(dbProduct: DbProduct, product: Product, siteU
 
 export function buildBreadcrumbJsonLd(dbProduct: DbProduct, product: Product, siteUrl: string) {
   const productUrl = `${siteUrl}/products/${dbProduct.slug}`;
+  const categorySlug = dbProduct.categories?.slug;
+
+  // Mirror the visible breadcrumbs: Home > Shop > Category > Product.
+  const items = [
+    { name: "Home", item: siteUrl },
+    { name: "Shop", item: `${siteUrl}/shop` },
+    ...(product.category
+      ? [
+          {
+            name: product.category,
+            item: categorySlug
+              ? `${siteUrl}/shop/${categorySlug}`
+              : `${siteUrl}/shop`,
+          },
+        ]
+      : []),
+    { name: dbProduct.title, item: productUrl },
+  ];
 
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: siteUrl },
-      ...(product.category
-        ? [{ "@type": "ListItem", position: 2, name: product.category, item: `${siteUrl}/#categories` }]
-        : []),
-      { "@type": "ListItem", position: product.category ? 3 : 2, name: dbProduct.title, item: productUrl },
-    ],
+    itemListElement: items.map((entry, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: entry.name,
+      item: entry.item,
+    })),
   };
 }

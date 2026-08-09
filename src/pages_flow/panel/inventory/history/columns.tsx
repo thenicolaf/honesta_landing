@@ -51,7 +51,7 @@ const productColumn: ColumnDef<StockMovementWithProduct, HistoryColumnKey> = {
         ) : null}
       </div>
       <span className="font-semibold text-sm text-earth capitalize truncate">
-        {m.product_title.toLowerCase()}
+        {m.product_title}
       </span>
     </div>
   ),

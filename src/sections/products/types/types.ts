@@ -25,6 +25,8 @@ export interface Product {
   /** Marketing display name shown as card heading, e.g. "Natural Apple Snack" */
   title: string;
   category: string;
+  /** Category slug for linking to /shop/<slug> (empty when uncategorised) */
+  categorySlug: string;
   /** Short text shown in hover overlay */
   tagline: string;
   /** Key highlight chips, 3–5 items */

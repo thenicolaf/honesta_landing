@@ -45,6 +45,7 @@ export function mapDbProducts(
       badge: p.badge ?? undefined,
       note: p.note ?? undefined,
       category: p.categories?.name ?? "",
+      categorySlug: p.categories?.slug ?? "",
       tags: p.product_tags.map((pt) => pt.tag_options.label),
       freeFrom: p.product_free_froms.map((pf) => pf.free_from_options.label),
       ingredients: (p.product_ingredients ?? []).map((pi) => pi.ingredient_options.label),

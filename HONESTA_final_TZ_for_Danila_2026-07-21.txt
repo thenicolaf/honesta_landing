@@ -1,0 +1,1506 @@
+ОКОНЧАТЕЛЬНОЕ ТЕХНИЧЕСКОЕ ЗАДАНИЕ ДЛЯ ДАНИЛА
+Сайт: https://www.honesta.ae
+Дата повторной проверки: 21 июля 2026
+
+ЦЕЛЬ
+
+Полностью привести сайт HONESTA в соответствие с текущим состоянием бренда.
+
+HONESTA уже не является только брендом сухофруктов и пастилы. Текущие направления:
+
+— Dried Fruits
+— Fruit Rolls
+— Dried Vegetables
+— Ghee / Pure Essentials
+— Jerky
+— Mixes & Gifts
+
+На сайте необходимо отказаться от позиционирования HONESTA как исключительно «dried fruit snacks» или «100% fruit brand». Эти формулировки уже не описывают весь ассортимент и будут ещё сильнее противоречить сайту после добавления Jerky.
+
+ВАЖНО
+
+В данном ТЗ SEO означает Search Engine Optimization. Не CEO.
+
+
+==================================================
+1. КРИТИЧЕСКИЕ ПРОБЛЕМЫ, КОТОРЫЕ НУЖНО ИСПРАВИТЬ СРАЗУ
+==================================================
+
+1.1. Устаревшее позиционирование бренда
+
+Сейчас в title главной страницы используется:
+
+HONESTA — Natural Dried Fruits. No Added Sugar. No Additives.
+
+Это больше не соответствует ассортименту.
+
+Заменить на:
+
+HONESTA — Premium Natural Foods Made in UAE
+
+Альтернативный вариант, если нужен более коммерческий title:
+
+HONESTA UAE — Premium Natural Foods, Fruit Rolls, Ghee & Jerky
+
+Предпочтительный вариант для главной:
+
+<title>HONESTA — Premium Natural Foods Made in UAE</title>
+
+
+1.2. Устаревший footer
+
+Сейчас в footer используется:
+
+Handcrafted dried fruit snacks.
+100% fruit. No additives. Made with care.
+
+Эта формулировка неправильна для Ghee, Dried Vegetables и Jerky.
+
+Заменить на:
+
+Premium natural foods made in the UAE.
+Real ingredients, honest taste. Nothing else.
+
+Или более короткий вариант:
+
+Natural food, honestly made in the UAE.
+Real ingredients. Nothing else.
+
+
+1.3. Устаревшая формулировка на странице Shop
+
+Сейчас заголовок:
+
+Pure fruit. Nothing else.
+
+Это не подходит для магазина, где продаются Ghee, Dried Vegetables, продукты с Parmesan, Honey, Peanut и скоро Jerky.
+
+Заменить на:
+
+Real ingredients. Nothing hidden.
+
+Подзаголовок:
+
+Premium natural foods made in the UAE.
+
+Или:
+
+Carefully made products with clear ingredients and honest taste.
+
+
+1.4. Устаревший текст Mix Constructor
+
+Сейчас:
+
+Choose a box, fill each cell with your favourite dried fruits and fruit leathers...
+
+Исправить как минимум слово fruit leathers на fruit rolls.
+
+Рекомендуемый новый текст:
+
+Choose a box and fill each section with your favourite HONESTA products to create a mix made for you.
+
+Если конструктор фактически позволяет выбирать только сухофрукты и Fruit Rolls:
+
+Choose a box and fill each section with your favourite dried fruits and fruit rolls to create your own HONESTA mix.
+
+
+1.5. Неактуальный slogan / philosophy block
+
+Сейчас используется:
+
+Sweetness Before Marketing
+
+и:
+
+“If it grows on a tree, it belongs in the bag.
+If it doesn’t — it doesn’t.”
+
+Эта цитата полностью противоречит развитию бренда.
+
+Ghee не растёт на дереве.
+Jerky не растёт на дереве.
+Parmesan не растёт на дереве.
+Dried Vegetables не всегда связаны с деревьями.
+
+Эту цитату удалить полностью.
+
+“Sweetness Before Marketing” также слишком сильно связывает бренд со сладкими фруктовыми продуктами. Для Jerky, Ghee и овощей это уже не универсальная философия.
+
+Рекомендуется заменить главный философский заголовок на:
+
+Honesty Before Compromise
+
+или:
+
+Real Ingredients. Honest Taste.
+
+Предпочтительный вариант:
+
+Our Philosophy
+
+HONESTY BEFORE COMPROMISE
+
+We believe good food should be easy to understand.
+That is why we choose real ingredients, clear recipes and careful production.
+
+No unnecessary additives.
+No misleading promises.
+Nothing hidden.
+
+Just honest food, made with care in the UAE.
+
+
+==================================================
+2. ГЛАВНАЯ СТРАНИЦА
+==================================================
+
+2.1. Главная страница должна быстро отвечать на четыре вопроса
+
+За первые несколько секунд пользователь должен понять:
+
+— Что такое HONESTA?
+— Что здесь продаётся?
+— Почему этим продуктам можно доверять?
+— Куда нажать, чтобы купить?
+
+Сейчас после изменения структуры на главной отсутствует сильное общее представление бренда. Страница сразу показывает категории и предложения, но не формирует полноценное позиционирование компании.
+
+Добавить компактный introductory block перед категориями или сразу после них.
+
+Рекомендуемый H1:
+
+Premium Natural Foods Made in the UAE
+
+Рекомендуемый текст:
+
+HONESTA creates premium natural foods from carefully selected ingredients. Discover our dried fruits, fruit rolls, dried vegetables, ghee, jerky and signature gift mixes.
+
+Real ingredients, honest taste. Nothing else.
+
+Основные кнопки:
+
+SHOP ALL
+EXPLORE CATEGORIES
+
+Дополнительная кнопка для B2B:
+
+PARTNER WITH US
+
+
+2.2. Порядок категорий
+
+После добавления Jerky рекомендованный порядок:
+
+1. Fruit Rolls
+2. Dried Fruits
+3. Jerky
+4. Dried Vegetables
+5. Ghee
+6. Mixes & Gifts
+
+Категории Healthy Snacks, Pure Essentials и Nuts сейчас выглядят неоднозначно.
+
+Проблема:
+
+— Healthy Snacks слишком общая категория.
+— Pure Essentials непонятна без пояснения.
+— Nuts может быть почти пустой категорией.
+— некоторые категории могут содержать только один товар.
+
+Рекомендация:
+
+Не показывать отдельную категорию, если в ней нет хотя бы 2–3 полноценных товара, если только это не стратегически важное направление.
+
+Для Ghee можно использовать:
+
+Ghee & Essentials
+
+Для подарков:
+
+Mixes & Gifts
+
+Исправить везде единое написание:
+
+Mix & Gift или Mixes & Gifts
+
+Предпочтительно:
+
+Mixes & Gifts
+
+
+2.3. Best Offers
+
+Сейчас блок называется Best Offers, но в нём показаны скорее популярные товары, а не специальные предложения.
+
+Если скидок нет, заменить:
+
+Best Offers
+
+на:
+
+Best Sellers
+
+или:
+
+Customer Favourites
+
+Не называть товары offer, если у них нет специальной цены или выгоды.
+
+
+2.4. Badges
+
+Проверить, чтобы четыре badge:
+
+100% Natural
+No Added Sugar
+No Preservatives
+Made in UAE
+
+не применялись автоматически ко всему бренду или каждому товару.
+
+Важно:
+
+— No Added Sugar нельзя бездумно применять к продуктам с honey или другим добавленным сахаром.
+— 100% Fruit нельзя применять к Ghee, Jerky, Zucchini with Parmesan и смешанным продуктам.
+— 100% Natural нужно использовать только там, где формулировка подтверждена составом и допустима с точки зрения маркировки.
+— Made in UAE можно использовать как общий брендовый claim, если производство конкретного товара действительно происходит в UAE.
+
+Badge должны быть либо общими ценностями бренда с оговоркой, либо динамическими по продуктам.
+
+Лучшее решение:
+
+На главной оставить:
+
+REAL INGREDIENTS
+CLEAR RECIPES
+NO UNNECESSARY ADDITIVES
+MADE IN UAE
+
+А продуктовые claims показывать отдельно на каждой карточке.
+
+
+==================================================
+3. ABOUT US — ПОЛНАЯ ЗАМЕНА ТЕКСТА
+==================================================
+
+Текущий About Us больше не соответствует развитию HONESTA.
+
+Проблемы текущего текста:
+
+— бренд описан как протест против “snack shelves”;
+— акцент почти полностью на fruit snacks;
+— используются “100% Fruit” и “Nothing else added” как универсальные свойства;
+— используется fruit leathers;
+— говорится только о leathers and crisps;
+— упоминается Belgian Callebaut chocolate, хотя это не ключевое текущее направление;
+— HONESTA описывается главным образом как snack brand;
+— не отражены Ghee, Dried Vegetables и Jerky;
+— “The Perfect Snack for Everyone” слишком узко;
+— “sugar crashes” является нежелательной медициноподобной формулировкой;
+— “preserve maximum nutritional value” — слишком сильное и трудно доказываемое утверждение;
+— раздел нужно перевести от «здоровых снеков» к бренду честной натуральной еды.
+
+НОВЫЙ ТЕКСТ ABOUT US
+
+ABOUT US
+
+A BRAND BUILT ON HONEST FOOD
+
+HONESTA began with a simple belief: people should be able to understand what they are eating.
+
+We create premium natural foods in the UAE using carefully selected ingredients, clear recipes and thoughtful production methods. What started with dried fruits and fruit rolls has grown into a broader collection that includes dried vegetables, ghee, jerky and signature mixes.
+
+Our products are different, but the principle behind them is always the same: real ingredients, honest taste and nothing unnecessary.
+
+WHY HONESTA
+
+Our name is our promise.
+
+We do not use complicated recipes to make simple food look more impressive. We focus on the quality of the ingredients, the balance of flavour and careful production at every stage.
+
+We make products that we are happy to eat ourselves and proud to share with our families, customers and business partners.
+
+OUR PRODUCTS
+
+Our collection includes:
+
+— Dried fruits
+— Fruit rolls
+— Dried vegetables
+— Ghee
+— Jerky
+— Mixes and gifts
+
+Each product has its own recipe and character. Some contain only one ingredient, while others combine a small number of carefully selected ingredients. Every ingredient is clearly declared.
+
+MADE IN THE UAE
+
+HONESTA is a UAE-based family brand.
+
+Our products are made in the UAE in carefully controlled batches using professional equipment and hands-on quality control. We pay attention to every stage — from ingredient selection and preparation to production and packaging.
+
+OUR APPROACH
+
+REAL INGREDIENTS
+
+We choose ingredients for their quality, flavour and purpose.
+
+CLEAR RECIPES
+
+We believe customers should always know what is inside the product.
+
+CAREFUL PRODUCTION
+
+We use thoughtful preparation and controlled processes to achieve consistent quality and honest taste.
+
+NO UNNECESSARY ADDITIVES
+
+We do not add ingredients simply to make a product look more impressive or to hide the natural character of the food.
+
+WHO HONESTA IS FOR
+
+HONESTA is made for people who value quality, clarity and real flavour.
+
+Our products can be enjoyed at home, at work, while travelling, with tea or coffee, as part of breakfast, in recipes, at events, or as a thoughtful gift.
+
+We also work with cafés, restaurants, hotels, gyms, retailers, corporate clients and event partners across the UAE.
+
+OUR MISSION
+
+Our mission is to build a trusted UAE food brand known for clear ingredients, thoughtful products and uncompromising attention to quality.
+
+We want choosing honest food to feel simple.
+
+HONESTA
+
+Real ingredients, honest taste.
+Nothing else.
+
+
+==================================================
+4. SHOP И КАТЕГОРИИ
+==================================================
+
+4.1. Отдельные постоянные URL категорий
+
+Сейчас категории работают через query parameters:
+
+/shop?category=fruit-roll
+/shop?category=dried-fruits
+
+Для SEO лучше создать полноценные страницы:
+
+/collections/fruit-rolls
+/collections/dried-fruits
+/collections/jerky
+/collections/dried-vegetables
+/collections/ghee
+/collections/mixes-gifts
+
+Или:
+
+/shop/fruit-rolls
+/shop/dried-fruits
+/shop/jerky
+/shop/dried-vegetables
+/shop/ghee
+/shop/mixes-gifts
+
+Каждая категория должна иметь:
+
+— уникальный URL;
+— H1;
+— title;
+— meta description;
+— короткий вводный текст;
+— canonical;
+— Open Graph;
+— список товаров;
+— ItemList structured data;
+— breadcrumbs.
+
+Query-параметры можно оставить для фильтрации, но canonical должен вести на постоянную страницу категории.
+
+
+4.2. Рекомендуемые SEO-тексты категорий
+
+FRUIT ROLLS
+
+H1:
+Natural Fruit Rolls Made in the UAE
+
+Text:
+Discover HONESTA fruit rolls made from real fruit purée and carefully dehydrated for a rich, naturally fruity taste. Explore classic and signature combinations made in the UAE.
+
+DRIED FRUITS
+
+H1:
+Premium Dried Fruits Made in the UAE
+
+Text:
+Explore HONESTA dried fruits made from carefully selected fruit and gently dehydrated to develop concentrated flavour and a naturally satisfying texture.
+
+JERKY
+
+H1:
+Premium Jerky Made in the UAE
+
+Text:
+Discover HONESTA jerky made in the UAE from carefully selected meat, balanced seasoning and controlled dehydration for a rich, savoury taste.
+
+Не писать “no preservatives” или “100% natural” для Jerky до проверки окончательной рецептуры и этикетки.
+
+DRIED VEGETABLES
+
+H1:
+Premium Dried Vegetables Made in the UAE
+
+Text:
+Explore flavourful dried vegetables crafted for snacking, serving and creative use in meals, cafés and hospitality.
+
+GHEE
+
+H1:
+Premium Ghee Made in the UAE
+
+Text:
+Discover HONESTA ghee made from premium-quality butter for a rich aroma, clean taste and versatile everyday use.
+
+MIXES & GIFTS
+
+H1:
+HONESTA Mixes and Gifts
+
+Text:
+Create a personalised selection or choose a ready-made HONESTA gift featuring our signature products.
+
+
+==================================================
+5. КАРТОЧКИ ТОВАРОВ
+==================================================
+
+5.1. Единый формат названий
+
+Использовать title case:
+
+Dried Apple
+Dried Pineapple
+Apple Fruit Roll
+Apple & Raspberry Fruit Roll
+Dried Zucchini with Parmesan
+HONESTA Ghee
+
+Не показывать названия товаров полностью строчными буквами в HTML.
+
+Визуально CSS может менять регистр, но исходное название должно храниться корректно.
+
+
+5.2. Старые URL и APPLE ROLE
+
+Google всё ещё знает URL:
+
+/products/apple-role
+
+Нельзя просто оставить этот URL или удалить его без перенаправления.
+
+Новый URL:
+
+/products/apple-fruit-roll
+
+Старый URL должен отдавать:
+
+301 Permanent Redirect
+
+Также проверить все старые slug:
+
+apple-role
+apple-banana-role
+apple-pineapple-role
+fruit-role
+fruits-role
+fruit-leather
+fruit-leathers
+
+Настроить 301 на актуальные страницы.
+
+
+5.3. Product page SEO
+
+На каждой карточке товара:
+
+Title:
+[Product Name] | HONESTA UAE
+
+Пример:
+
+Apple & Raspberry Fruit Roll | HONESTA UAE
+
+Meta description должна быть уникальной и содержать:
+
+— точное название;
+— ключевую особенность;
+— Made in UAE;
+— без неподтверждённых claims.
+
+Пример:
+
+Discover HONESTA Apple & Raspberry Fruit Roll, made in the UAE from apple and raspberry purée and carefully dehydrated for a naturally rich fruit taste.
+
+
+5.4. Необоснованные health claims
+
+В карточке Dried Pineapple сейчас используются формулировки:
+
+Supports digestion and gut health
+Supports immune function
+Help protect cells from oxidative stress
+Provide steady energy throughout the day
+
+Такие утверждения нужно юридически и документально проверять.
+
+До отдельной проверки лучше убрать раздел Health Benefits либо заменить его на нейтральный Product Highlights:
+
+Made from real pineapple
+Naturally fruity taste
+Carefully dehydrated
+Convenient serving format
+No added sugar — только если это подтверждено составом и маркировкой
+
+Также осторожно с:
+
+preserve nutrients
+preserve vitamins
+maximum nutritional value
+energy boosting
+safe for children
+supports recovery
+gluten free
+keto-friendly
+
+Все claims должны быть доказуемыми и соответствовать фактической рецептуре, лабораторным данным и правилам маркировки.
+
+
+5.5. Nutrition Facts
+
+Проверить:
+
+— одинаковый формат единиц;
+— пробел между числом и единицей: 60 g, не 60g;
+— единый порядок показателей;
+— корректное округление;
+— отсутствие вручную придуманных значений;
+— соответствие этикетке;
+— данные должны меняться для каждой вариации, если состав или вес различаются;
+— Calories лучше заменить на Energy с kcal и при необходимости kJ, если это требуется для локальной маркировки;
+— “Added sugars” и “Natural sugars” должны быть согласованы с официальной таблицей.
+
+Не делать медицинских выводов из Nutrition Facts.
+
+
+5.6. Ingredients и allergens
+
+Для каждого продукта обязательно:
+
+Ingredients
+Allergens
+Storage
+Net weight
+Country of production / Made in UAE, если применимо
+
+Аллергены должны быть явно выделены.
+
+Примеры:
+
+Contains: Milk
+
+для Zucchini with Parmesan и Ghee, если применимо.
+
+Contains: Peanuts
+
+для Dried Apple, Honey & Peanut.
+
+Contains: Walnuts
+
+для Apple with Walnut Fruit Roll.
+
+Для Jerky отдельно проверить возможные allergens:
+
+soy
+gluten
+mustard
+sesame
+milk
+
+в зависимости от маринада.
+
+
+5.7. Free From
+
+Не показывать одинаковый универсальный список “Free From” для всех товаров.
+
+Он должен формироваться индивидуально.
+
+Например, нельзя автоматически указывать gluten-free, если нет контроля перекрёстного загрязнения или подтверждения.
+
+
+5.8. Product structured data
+
+Для каждого товара добавить JSON-LD Product:
+
+— name
+— image
+— description
+— sku
+— brand: HONESTA
+— category
+— offers.price
+— offers.priceCurrency: AED
+— offers.availability
+— offers.url
+— itemCondition
+— weight, если возможно
+
+Если есть несколько весов, корректно реализовать ProductGroup / hasVariant либо отдельные Offer для вариантов.
+
+Цена и наличие в JSON-LD должны совпадать с видимой страницей.
+
+
+==================================================
+6. PARTNERSHIP
+==================================================
+
+Текущая страница в целом полезна, но слишком часто описывает продукты как small-batch snacks.
+
+Новый рекомендуемый hero:
+
+WHOLESALE & PARTNERSHIPS
+
+Bring HONESTA to Your Business
+
+HONESTA supplies premium natural foods made in the UAE to cafés, restaurants, hotels, gyms, retailers, corporate clients and event partners.
+
+Our collection includes dried fruits, fruit rolls, dried vegetables, ghee, jerky and curated gift selections.
+
+Преимущества:
+
+— Clear and carefully selected ingredients
+— Flexible order volumes
+— Retail and food-service formats
+— Private-label and custom solutions, только если реально предлагается
+— Personal support from enquiry to delivery
+
+Заменить основной способ контакта с Instagram на WhatsApp.
+
+Главная CTA:
+
+CONTACT US ON WHATSAPP
+
+Ссылка:
+
+https://wa.me/971529573869
+
+Также оставить форму и email.
+
+Email на сайте лучше сделать кликабельным:
+
+mailto:honestauae@gmail.com
+
+В footer и Partnership добавить:
+
+WhatsApp: +971 52 957 3869
+
+
+==================================================
+7. TERMS, PRIVACY И ЮРИДИЧЕСКИЕ ТЕКСТЫ
+==================================================
+
+7.1. Terms
+
+Сейчас указано:
+
+dried fruits, fruit leather, seed mixes, and other food products
+
+Заменить на:
+
+dried fruits, fruit rolls, dried vegetables, ghee, jerky, mixes, gifts and other food products.
+
+“fruit leather” удалить со всего сайта.
+
+Проверить актуальность юридического названия:
+
+Honesta F.Z.E
+
+Использовать единое написание во всех местах, без случайных вариантов:
+
+Honesta - F.Z.E
+Honesta F.Z.E
+HONESTA F.Z.E
+
+Предпочтительно юридически точное написание из лицензии.
+
+
+7.2. Privacy
+
+Сейчас в Order Details также указано fruit leather и seed mixes.
+
+Заменить на актуальный общий текст:
+
+Order Details: information about the products purchased, quantities, delivery preferences and transaction history.
+
+Так текст не придётся переделывать при каждом новом направлении.
+
+
+7.3. Cookie banner
+
+Проверить, какие cookies реально используются.
+
+Если используются analytics, advertising или tracking cookies:
+
+— до Accept не запускать необязательные cookies;
+— Decline должен реально отключать их;
+— добавить Cookie Policy или подробный раздел;
+— предоставить возможность изменить consent позже.
+
+Не ограничиваться визуальной кнопкой, если технически tracking продолжает загружаться.
+
+
+==================================================
+8. SEO ГЛАВНОЙ СТРАНИЦЫ
+==================================================
+
+Title:
+
+HONESTA — Premium Natural Foods Made in UAE
+
+Meta description:
+
+Discover HONESTA premium natural foods made in the UAE, including dried fruits, fruit rolls, dried vegetables, ghee, jerky and curated gifts. Real ingredients, honest taste.
+
+H1:
+
+Premium Natural Foods Made in the UAE
+
+На странице должен быть только один основной H1.
+
+Проверить, что название HONESTA выводится в таком регистре:
+
+HONESTA
+
+а не:
+
+honesta
+Honesta
+
+Добавить:
+
+<meta property="og:site_name" content="HONESTA">
+
+WebSite structured data:
+
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "HONESTA",
+  "alternateName": "HONESTA UAE",
+  "url": "https://www.honesta.ae/"
+}
+
+Organization structured data:
+
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "HONESTA",
+  "legalName": "Honesta F.Z.E",
+  "url": "https://www.honesta.ae/",
+  "logo": "FULL-URL-TO-LOGO",
+  "email": "honestauae@gmail.com",
+  "sameAs": [
+    "https://www.instagram.com/honesta_uae/"
+  ]
+}
+
+Можно добавить contactPoint с номером WhatsApp.
+
+
+==================================================
+9. TITLE И META DESCRIPTION ДЛЯ ОСНОВНЫХ СТРАНИЦ
+==================================================
+
+HOME
+
+Title:
+HONESTA — Premium Natural Foods Made in UAE
+
+Description:
+Discover HONESTA premium natural foods made in the UAE, including dried fruits, fruit rolls, dried vegetables, ghee, jerky and curated gifts. Real ingredients, honest taste.
+
+
+SHOP
+
+Title:
+Shop Premium Natural Foods in UAE | HONESTA
+
+Description:
+Shop HONESTA dried fruits, fruit rolls, dried vegetables, ghee, jerky and gift selections, carefully made in the UAE.
+
+
+ABOUT
+
+Title:
+About HONESTA | Premium Natural Food Brand in UAE
+
+Description:
+Learn about HONESTA, a UAE-based family brand creating dried fruits, fruit rolls, dried vegetables, ghee, jerky and other thoughtfully made foods.
+
+
+PARTNERSHIP
+
+Title:
+Wholesale Natural Food Supplier in UAE | HONESTA
+
+Description:
+Partner with HONESTA for premium natural foods made in the UAE. Wholesale solutions for cafés, restaurants, hotels, gyms, retailers and events.
+
+
+FRUIT ROLLS
+
+Title:
+Natural Fruit Rolls Made in UAE | HONESTA
+
+Description:
+Shop HONESTA fruit rolls made from real fruit purée and carefully dehydrated in the UAE for rich, naturally fruity taste.
+
+
+DRIED FRUITS
+
+Title:
+Premium Dried Fruits Made in UAE | HONESTA
+
+Description:
+Explore HONESTA premium dried fruits, carefully prepared and dehydrated in the UAE for concentrated natural flavour.
+
+
+JERKY
+
+Title:
+Premium Jerky Made in UAE | HONESTA
+
+Description:
+Discover HONESTA jerky made in the UAE from carefully selected meat, balanced seasoning and controlled dehydration.
+
+
+DRIED VEGETABLES
+
+Title:
+Premium Dried Vegetables Made in UAE | HONESTA
+
+Description:
+Explore HONESTA dried vegetables made in the UAE for flavourful snacking, serving and creative culinary use.
+
+
+GHEE
+
+Title:
+Premium Ghee Made in UAE | HONESTA
+
+Description:
+Discover HONESTA premium ghee made in the UAE from quality butter for rich taste and versatile everyday use.
+
+
+MIXES & GIFTS
+
+Title:
+Natural Food Gift Boxes in UAE | HONESTA
+
+Description:
+Explore HONESTA gift selections and personalised mixes featuring premium products made in the UAE.
+
+
+==================================================
+10. TECHNICAL SEO
+==================================================
+
+10.1. Canonical
+
+На каждой индексируемой странице должен быть self-referencing canonical.
+
+Пример:
+
+<link rel="canonical" href="https://www.honesta.ae/about">
+
+Выбрать одну основную версию домена.
+
+Рекомендуется:
+
+https://www.honesta.ae
+
+Все варианты:
+
+http://honesta.ae
+http://www.honesta.ae
+https://honesta.ae
+
+должны делать 301 на:
+
+https://www.honesta.ae
+
+
+10.2. Sitemap
+
+Создать или проверить:
+
+https://www.honesta.ae/sitemap.xml
+
+В sitemap должны быть только:
+
+— canonical страницы;
+— действующие товары;
+— действующие категории;
+— About;
+— Partnership;
+— Terms;
+— Privacy;
+— другие полезные публичные страницы.
+
+Не включать:
+
+— URL с query parameters;
+— cart;
+— checkout;
+— account;
+— API;
+— внутренний поиск;
+— удалённые товары;
+— старые role URLs;
+— страницы с noindex;
+— дубликаты.
+
+Для товаров и важных страниц обновлять lastmod после реального изменения.
+
+
+10.3. Robots.txt
+
+Проверить:
+
+https://www.honesta.ae/robots.txt
+
+Он не должен блокировать:
+
+— /
+— /shop
+— /about
+— /partnership
+— /products/
+— /collections/ или /shop/category/
+— изображения;
+— CSS;
+— JavaScript.
+
+В robots.txt должна быть ссылка:
+
+Sitemap: https://www.honesta.ae/sitemap.xml
+
+
+10.4. Robots meta
+
+Главная, категории и товары:
+
+index, follow
+
+Cart, checkout, account, internal search:
+
+noindex, follow
+
+
+10.5. SSR / Next.js metadata
+
+Поскольку сайт на Next.js, вся важная SEO-информация должна быть доступна в первоначальном HTML:
+
+— title;
+— description;
+— canonical;
+— H1;
+— текст;
+— product name;
+— price;
+— availability;
+— Product JSON-LD;
+— internal links.
+
+Не загружать ключевую информацию только на клиенте после JavaScript.
+
+Использовать Next.js Metadata API:
+
+generateMetadata()
+
+для динамических страниц товаров и категорий.
+
+
+10.6. 404
+
+Создать фирменную 404 страницу:
+
+Page not found
+
+The page may have moved, but there is more to discover at HONESTA.
+
+Кнопки:
+
+SHOP ALL
+BACK TO HOME
+
+Удалённые товары:
+
+— если есть точный аналог, 301 на аналог;
+— если аналогов нет, 410 или качественная 404;
+— не перенаправлять все удалённые URL на главную.
+
+
+10.7. Redirect map
+
+Даниле нужно составить таблицу:
+
+OLD URL
+NEW URL
+STATUS
+
+Минимально проверить:
+
+/products/apple-role
+/products/apple-banana-role
+/products/apple-pineapple-role
+/?category=fruit-role
+/shop?category=fruit-role
+
+и любые другие старые slug.
+
+
+==================================================
+11. ВНУТРЕННЯЯ ПЕРЕЛИНКОВКА
+==================================================
+
+Каждая карточка товара должна содержать:
+
+— ссылку на категорию;
+— breadcrumbs;
+— related products;
+— ссылку на Shop;
+— при необходимости ссылку на Mixes & Gifts.
+
+Пример breadcrumbs:
+
+Home > Fruit Rolls > Apple & Raspberry Fruit Roll
+
+На About добавить ссылки на категории.
+
+На Partnership добавить ссылку на Shop и Catalog, если каталог существует.
+
+В footer сделать прямые ссылки:
+
+Shop
+Fruit Rolls
+Dried Fruits
+Jerky
+Dried Vegetables
+Ghee
+Mixes & Gifts
+About
+Partnership
+Terms
+Privacy
+
+
+==================================================
+12. ПОИСК И ФИЛЬТРЫ
+==================================================
+
+Проверить поиск:
+
+— находит товары по правильным названиям;
+— находит Fruit Roll по запросам fruit roll и fruit rolls;
+— не требует старых слов pastila или leather;
+— находит Jerky;
+— нет пустых категорий;
+— нет дублирующихся результатов;
+— Out of Stock отображается корректно;
+— выбранная граммовка явно выделена;
+— цена меняется сразу и понятно;
+— Add to Cart добавляет выбранный вариант, а не вариант по умолчанию.
+
+Query-страницы поиска и фильтров закрыть noindex, если они создают бесконечные комбинации.
+
+
+==================================================
+13. ВИЗУАЛ И КОНВЕРСИЯ
+==================================================
+
+13.1. Единый регистр
+
+Сейчас часть названий отображается строчными буквами:
+
+dried pineapple
+ghee
+mixed fruit rolls
+
+Для премиального бренда лучше:
+
+Dried Pineapple
+Ghee
+Mixed Fruit Rolls
+
+Проверить весь интерфейс.
+
+
+13.2. Единые веса
+
+Использовать:
+
+50 g
+60 g
+100 g
+300 g
+
+Не смешивать:
+
+50g
+50 g
+50G
+
+
+13.3. CTA
+
+Использовать единые кнопки:
+
+Add to Cart
+Shop Now
+Explore Category
+Build Your Mix
+Contact on WhatsApp
+
+Не смешивать разные стили и регистр без причины.
+
+
+13.4. Trust before checkout
+
+На карточках и возле корзины ясно показать:
+
+— Made in UAE;
+— ingredient transparency;
+— delivery area;
+— storage requirements;
+— secure payment;
+— WhatsApp support.
+
+Не перегружать страницу значками.
+
+
+13.5. Mobile
+
+На iPhone проверить:
+
+— header;
+— menu;
+— category cards;
+— product titles;
+— selectors weights;
+— Add to Cart;
+— cookie banner;
+— forms;
+— checkout;
+— sticky buttons;
+— horizontal overflow;
+— размер текста;
+— кликабельные зоны не менее примерно 44 × 44 px.
+
+
+==================================================
+14. PERFORMANCE И CORE WEB VITALS
+==================================================
+
+Проверить через PageSpeed Insights мобильную версию:
+
+— LCP;
+— INP;
+— CLS;
+— TTFB.
+
+Необходимые действия:
+
+— изображения WebP/AVIF;
+— next/image;
+— правильные width и height;
+— lazy loading ниже fold;
+— preload только главного изображения;
+— не загружать ненужные шрифты;
+— font-display: swap;
+— убрать неиспользуемый JavaScript;
+— уменьшить client components;
+— кешировать статические данные;
+— оптимизировать Supabase-запросы;
+— не загружать весь каталог для каждого фильтра;
+— не допускать layout shift при загрузке фото и карточек.
+
+
+==================================================
+15. ACCESSIBILITY
+==================================================
+
+Проверить:
+
+— один H1 на странице;
+— логичная структура H2/H3;
+— alt у всех значимых изображений;
+— пустой alt у чисто декоративных изображений;
+— label у form fields;
+— видимый focus;
+— контраст текста;
+— кнопки не реализованы как некликабельные div;
+— aria-label у меню, корзины и иконок;
+— ошибки формы описываются текстом;
+— сайт можно использовать с клавиатуры.
+
+
+==================================================
+16. ПОСЛЕ ДОБАВЛЕНИЯ JERKY
+==================================================
+
+Создать отдельную категорию Jerky.
+
+Не помещать Jerky в Healthy Snacks как единственное место.
+
+Для первого товара Jerky обязательно:
+
+— правильное название;
+— состав;
+— аллергенная информация;
+— storage;
+— net weight;
+— country of origin / production;
+— уникальное описание;
+— Product JSON-LD;
+— Open Graph image;
+— title и description;
+— nutrition facts;
+— availability;
+— отдельное качественное фото;
+— related products.
+
+Не применять к Jerky:
+
+100% Fruit
+No Added Sugar
+Vegan
+Plant-based
+Sweetness Before Marketing
+If it grows on a tree...
+
+Любые claims “high protein”, “low fat”, “keto”, “no preservatives” публиковать только после проверки рецептуры, анализа и требований маркировки.
+
+
+==================================================
+17. GOOGLE SEARCH CONSOLE
+==================================================
+
+После публикации:
+
+1. Проверить Domain Property для honesta.ae.
+2. Отправить актуальный sitemap.
+3. Проверить URL Inspection для:
+   — главной;
+   — Shop;
+   — About;
+   — Partnership;
+   — всех категорий;
+   — ключевых товаров;
+   — новой Jerky category.
+4. Нажать Request Indexing для ключевых страниц.
+5. Проверить, какой title и canonical увидел Google.
+6. Проверить Page Indexing.
+7. Проверить HTTPS.
+8. Проверить Core Web Vitals.
+9. Проверить Product snippets / Merchant listings.
+10. Проверить старые role URLs.
+11. Проверить, что Google больше не индексирует fruit leather.
+12. Проверить sitemap после каждого массового обновления ассортимента.
+
+
+==================================================
+18. GOOGLE MERCHANT CENTER
+==================================================
+
+Если товары будут продвигаться в Google Shopping:
+
+— подключить Merchant Center;
+— настроить product feed;
+— синхронизировать:
+  title
+  description
+  price
+  availability
+  image
+  product URL
+  brand
+  identifier / GTIN
+  weight
+— данные feed должны совпадать с сайтом;
+— цены и наличие должны обновляться автоматически;
+— добавить shipping policy;
+— добавить return/refund policy.
+
+
+==================================================
+19. ОБЯЗАТЕЛЬНЫЙ ГЛОБАЛЬНЫЙ ПОИСК ПО КОДУ И БАЗЕ
+==================================================
+
+Провести поиск по:
+
+pastila
+fruit leather
+fruit leathers
+role
+fruit-role
+fruits role
+APPLE ROLE
+Mix & Gifr
+healthly-snacks
+Handcrafted dried fruit snacks
+100% fruit
+Pure fruit. Nothing else.
+Sweetness Before Marketing
+If it grows on a tree
+Callebaut
+sugar crashes
+maximum nutritional value
+preserve vitamins
+crunch
+crunchy
+
+Проверить:
+
+— frontend;
+— Supabase;
+— product table;
+— category table;
+— metadata;
+— JSON-LD;
+— alt;
+— sitemap;
+— redirects;
+— static files;
+— cached pages;
+— OG tags;
+— email templates;
+— checkout;
+— admin panel;
+— old seed data.
+
+
+==================================================
+20. КРИТЕРИИ ПРИЁМКИ
+==================================================
+
+Работа считается законченной, когда:
+
+1. Главная позиционирует HONESTA как premium natural food brand, а не только dried fruit snack brand.
+
+2. На сайте явно представлены:
+   Dried Fruits
+   Fruit Rolls
+   Dried Vegetables
+   Ghee
+   Jerky
+   Mixes & Gifts
+
+3. В title главной больше нет Natural Dried Fruits как общего определения бренда.
+
+4. Footer обновлён и подходит для всех категорий.
+
+5. “Pure fruit. Nothing else.” убрано с общего Shop.
+
+6. Fruit leather полностью заменено на Fruit Roll.
+
+7. APPLE ROLE и все URL с role исправлены.
+
+8. Для старых URL работают 301 redirects.
+
+9. Цитата “If it grows on a tree...” удалена.
+
+10. Sweetness Before Marketing заменено на универсальную философию бренда.
+
+11. About Us полностью обновлён.
+
+12. About Us содержит новые направления и Jerky.
+
+13. Terms и Privacy не содержат fruit leather и устаревший список ассортимента.
+
+14. Partnership отражает полный ассортимент и содержит WhatsApp.
+
+15. Категории имеют постоянные SEO URL.
+
+16. У всех страниц уникальные title и description.
+
+17. На всех страницах корректные canonical.
+
+18. Sitemap содержит только актуальные URL.
+
+19. Robots.txt не блокирует важные страницы.
+
+20. Product JSON-LD соответствует видимой цене и наличию.
+
+21. Неподтверждённые health claims удалены или юридически проверены.
+
+22. Claims применяются индивидуально по товару.
+
+23. Веса и регистр названий оформлены единообразно.
+
+24. В Google Search Console отправлен новый sitemap.
+
+25. Ключевые страницы запрошены на повторную индексацию.
+
+26. Новая категория Jerky создана и корректно проиндексирована.
+
+27. Мобильная версия проверена вручную на iPhone.
+
+28. PageSpeed и Core Web Vitals проверены после релиза.
+
+29. Поиск по всему проекту не находит устаревшие слова и ошибки.
+
+30. Данила передаёт итоговый redirect map и список обновлённых metadata.
+
+
+ПРИОРИТЕТ РАБОТ
+
+P0 — исправить немедленно:
+
+— title и description главной;
+— footer;
+— Shop heading;
+— fruit leather;
+— apple-role;
+— role redirects;
+— About Us;
+— tree quote;
+— старые Terms и Privacy;
+— базовые metadata;
+— sitemap и Search Console.
+
+P1 — выполнить сразу после:
+
+— отдельные category URLs;
+— Product JSON-LD;
+— Breadcrumbs;
+— Partnership и WhatsApp;
+— Jerky category;
+— claims audit;
+— internal linking.
+
+P2 — оптимизация:
+
+— Core Web Vitals;
+— accessibility;
+— image SEO;
+— Merchant Center;
+— улучшение фильтров;
+— расширение категорий и контента.

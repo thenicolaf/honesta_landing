@@ -13,6 +13,13 @@ export const getCategories = cache(async (): Promise<DbCategory[]> => {
   return data as DbCategory[];
 });
 
+export const getCategoryBySlug = cache(
+  async (slug: string): Promise<DbCategory | null> => {
+    const categories = await getCategories();
+    return categories.find((c) => c.slug === slug) ?? null;
+  },
+);
+
 export const getCategoryProductCountMap = cache(
   async (): Promise<Record<string, number>> => {
     const { data } = await supabaseAdmin

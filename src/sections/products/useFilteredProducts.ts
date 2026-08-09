@@ -21,6 +21,22 @@ function buildSearchIndex(products: DbProduct[]): string[] {
   });
 }
 
+/**
+ * Plural-tolerant substring search: every whitespace token must appear in the
+ * haystack; a token ending in "s" also matches its singular (so "fruit rolls"
+ * finds "Fruit Roll", "gifts" finds "gift"). No stemming lib needed.
+ */
+function matchesSearch(haystack: string, query: string): boolean {
+  return query
+    .split(/\s+/)
+    .filter(Boolean)
+    .every(
+      (t) =>
+        haystack.includes(t) ||
+        (t.endsWith("s") && haystack.includes(t.slice(0, -1))),
+    );
+}
+
 function matchesMark(p: DbProduct, mark: string): boolean {
   if (mark === "promotions") return !!findActivePromotion(p.promotion_products);
   if (mark === "best_seller") return p.mark === "best_seller";
@@ -32,6 +48,7 @@ export function useFilteredProducts(
   rawProducts: DbProduct[],
   salesMap?: Record<string, number>,
   shuffleSeed?: string | null,
+  fixedCategory?: string,
 ) {
   const categoryFilter = useFilterBar("category");
   const sortFilter = useFilterBar("sort");
@@ -52,12 +69,12 @@ export function useFilteredProducts(
 
   const products = useMemo(() => {
     const searchVal = deferredSearch.toLowerCase();
-    const category = categoryFilter.value;
+    const category = fixedCategory ?? categoryFilter.value;
     const mark = markFilter.value;
 
     const filtered = rawProducts.filter((p, i) => {
       if (category && p.categories?.slug !== category) return false;
-      if (searchVal && !searchIndex[i].includes(searchVal)) return false;
+      if (searchVal && !matchesSearch(searchIndex[i], searchVal)) return false;
       if (mark && !matchesMark(p, mark)) return false;
       return true;
     });
@@ -70,6 +87,7 @@ export function useFilteredProducts(
     rawProducts,
     salesMap,
     searchIndex,
+    fixedCategory,
     categoryFilter.value,
     effectiveSort,
     deferredSearch,

@@ -45,7 +45,7 @@ export async function submitPartnershipInquiry(
       console.error("Partnership inquiry insert error:", error);
       return {
         error:
-          "Something went wrong. Please try again or message us on Instagram.",
+          "Something went wrong. Please try again or message us on WhatsApp.",
         values: data,
       };
     }
@@ -61,7 +61,7 @@ export async function submitPartnershipInquiry(
     console.error("Partnership inquiry error:", err);
     return {
       error:
-        "Something went wrong. Please try again or message us on Instagram.",
+        "Something went wrong. Please try again or message us on WhatsApp.",
       values: data,
     };
   }

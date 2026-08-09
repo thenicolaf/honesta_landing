@@ -3,7 +3,9 @@ import { GoBackButton } from "@/app/_components/GoBackButton";
 
 export const metadata: Metadata = {
   title: "Terms and Conditions",
-  robots: { index: false },
+  description:
+    "HONESTA terms and conditions for using our website and purchasing premium natural foods made in the UAE.",
+  alternates: { canonical: `${process.env.PUBLIC_BASE_URL!}/terms` },
 };
 
 export default function TermsPage() {
@@ -45,7 +47,8 @@ export default function TermsPage() {
             </h2>
             <p>
               Honesta provides natural food products, including dried fruits,
-              fruit leather, seed mixes, and other food products.
+              fruit rolls, dried vegetables, ghee, jerky, mixes, gifts and other
+              food products.
             </p>
             <ul className="list-disc pl-5 space-y-2">
               <li>

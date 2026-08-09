@@ -20,7 +20,7 @@ import { ResultToast } from "./ResultToast";
 import { ResultCard, MissingRefCard } from "./ui";
 
 export const metadata: Metadata = {
-  robots: { index: false, follow: false },
+  robots: { index: false, follow: true },
 };
 
 const SUCCESS_STATES = new Set(["PURCHASED", "CAPTURED"]);

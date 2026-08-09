@@ -6,31 +6,32 @@ import {
   buildPartnershipBreadcrumbJsonLd,
 } from "./structured-data";
 
+const PARTNERSHIP_TITLE = "Wholesale Natural Food Supplier in UAE | HONESTA";
 const PARTNERSHIP_DESCRIPTION =
-  "Bring HONESTA to your business. Wholesale and partnerships for restaurants, coffee shops, gyms, spas, hotels and event catering — honest, small-batch natural products, flexible volumes, personal service.";
+  "Partner with HONESTA for premium natural foods made in the UAE. Wholesale solutions for cafés, restaurants, hotels, gyms, retailers and events.";
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteUrl = process.env.PUBLIC_BASE_URL!;
   const partnershipUrl = `${siteUrl}/partnership`;
 
   return {
-    title: "Partnership",
+    title: { absolute: PARTNERSHIP_TITLE },
     description: PARTNERSHIP_DESCRIPTION,
     alternates: { canonical: partnershipUrl },
     openGraph: {
-      title: "Partnership — HONESTA",
+      title: PARTNERSHIP_TITLE,
       description: PARTNERSHIP_DESCRIPTION,
       url: partnershipUrl,
       siteName: "HONESTA",
       locale: "en_US",
       type: "website",
-      images: [{ url: "/og-image.jpg" }],
+      images: [{ url: "/og-image.webp" }],
     },
     twitter: {
       card: "summary_large_image",
-      title: "Partnership — HONESTA",
+      title: PARTNERSHIP_TITLE,
       description: PARTNERSHIP_DESCRIPTION,
-      images: ["/og-image.jpg"],
+      images: ["/og-image.webp"],
     },
   };
 }

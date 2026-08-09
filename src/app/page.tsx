@@ -78,9 +78,17 @@ async function HomeStructuredDataAsync() {
 export default function Home() {
   return (
     <main className="grow min-h-160">
+      {/* SEO H1 — visually hidden; the page's brand statement for search engines
+          and screen readers without adding a visible heading block. */}
+      <h1 className="sr-only">
+        Premium Natural Foods Made in the UAE — real ingredients, honest taste.
+      </h1>
       <TrustMarks />
       <Suspense fallback={<PromoSliderSkeleton />}>
-        <PromoSliderSection title="Best Offers" kicker="Top picks & deals" />
+        <PromoSliderSection
+          title="Customer Favourites"
+          kicker="Loved by our customers"
+        />
       </Suspense>
       <Suspense
         fallback={

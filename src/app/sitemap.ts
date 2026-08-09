@@ -1,15 +1,26 @@
 import type { MetadataRoute } from "next";
 import { getPublishedSlugs } from "@/lib/productsDb";
+import { getCategories } from "@/lib/categoriesDb";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = process.env.PUBLIC_BASE_URL!;
-  const products = await getPublishedSlugs();
+  const [products, categories] = await Promise.all([
+    getPublishedSlugs(),
+    getCategories(),
+  ]);
 
   const productUrls: MetadataRoute.Sitemap = products.map((p) => ({
     url: `${siteUrl}/products/${p.slug}`,
     lastModified: new Date(p.updated_at),
     changeFrequency: "weekly",
     priority: 0.8,
+  }));
+
+  const categoryUrls: MetadataRoute.Sitemap = categories.map((c) => ({
+    url: `${siteUrl}/shop/${c.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly",
+    priority: 0.7,
   }));
 
   return [
@@ -43,6 +54,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.6,
     },
+    {
+      url: `${siteUrl}/terms`,
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: `${siteUrl}/privacy`,
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    ...categoryUrls,
     ...productUrls,
   ];
 }

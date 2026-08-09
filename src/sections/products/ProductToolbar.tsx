@@ -29,9 +29,12 @@ const SORT_OPTIONS: { value: ProductSortKey; label: string }[] = [
 export function ProductToolbar({
   categories,
   filters,
+  hideCategory,
 }: {
   categories: DbProductGridProps["categories"];
   filters: FilteredProducts;
+  /** Hide the category select (category pages lock category via the URL path). */
+  hideCategory?: boolean;
 }) {
   const { sortDisabled, categoryFilter, sortFilter, searchFilter, markFilter } =
     filters;
@@ -50,29 +53,36 @@ export function ProductToolbar({
         className="h-9 text-sm bg-white-warm! border-earth/15! hover:border-earth/35!"
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:contents">
-        <Select
-          value={categoryFilter.value}
-          onValueChange={categoryFilter.onValueChange}
-          options={(categories ?? []).map((c) => ({
-            value: c.value,
-            label: c.label,
-          }))}
-          clearable
-        >
-          <SelectTrigger className="w-full lg:w-56 h-9">
-            <SelectValue placeholder="All Categories" />
-          </SelectTrigger>
-          <SelectContent>
-            {(options) =>
-              options.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))
-            }
-          </SelectContent>
-        </Select>
+      <div
+        className={cn(
+          "grid grid-cols-1 gap-3 lg:contents",
+          hideCategory ? "sm:grid-cols-2" : "sm:grid-cols-3",
+        )}
+      >
+        {!hideCategory && (
+          <Select
+            value={categoryFilter.value}
+            onValueChange={categoryFilter.onValueChange}
+            options={(categories ?? []).map((c) => ({
+              value: c.value,
+              label: c.label,
+            }))}
+            clearable
+          >
+            <SelectTrigger className="w-full lg:w-56 h-9">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              {(options) =>
+                options.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))
+              }
+            </SelectContent>
+          </Select>
+        )}
 
         <Select
           value={markFilter.value}

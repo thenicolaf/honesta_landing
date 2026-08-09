@@ -3,7 +3,9 @@ import { GoBackButton } from "@/app/_components/GoBackButton";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  robots: { index: false },
+  description:
+    "How HONESTA collects, uses and protects your personal data when you browse our website and place orders in the UAE.",
+  alternates: { canonical: `${process.env.PUBLIC_BASE_URL!}/privacy` },
 };
 
 export default function PrivacyPage() {
@@ -55,8 +57,8 @@ export default function PrivacyPage() {
                 <strong className="font-medium text-earth">
                   Order Details:
                 </strong>{" "}
-                History of products purchased (dried fruits, fruit leather, seed
-                mixes, and other food products).
+                Information about the products purchased, quantities, delivery
+                preferences and transaction history.
               </li>
               <li>
                 <strong className="font-medium text-earth">

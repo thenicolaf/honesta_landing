@@ -3,23 +3,26 @@
 import { motion } from "motion/react";
 import { Check } from "lucide-react";
 import { PartnershipForm } from "@/sections/partnership/PartnershipForm";
-import { PartnershipInstagramCard } from "@/sections/partnership/PartnershipInstagramCard";
+import { PartnershipContactCard } from "@/sections/partnership/PartnershipContactCard";
 import { fadeUp } from "@/sections/partnership/consts";
-import { BackLink } from "@/shared/ui";
+import { BackLink, Button } from "@/shared/ui";
 
 const BENEFITS = [
-  "Honest ingredients, no compromises",
-  "Flexible volumes for any size",
-  "Personal service end to end",
+  "Clear and carefully selected ingredients",
+  "Flexible order volumes",
+  "Retail and food-service formats",
+  "Private-label and custom solutions",
+  "Personal support from enquiry to delivery",
 ];
 
 const BUSINESS_CHIPS = [
+  "Cafés",
   "Restaurants",
-  "Coffee shops",
-  "Gyms",
-  "Spas",
   "Hotels",
-  "Event catering",
+  "Gyms",
+  "Retailers",
+  "Corporate",
+  "Event partners",
 ];
 
 export function PartnershipPage() {
@@ -53,7 +56,7 @@ export function PartnershipPage() {
               className="font-display font-bold italic text-heading leading-tight"
               style={{ fontSize: "clamp(2rem, 5vw, 3.8rem)" }}
             >
-              Bring Honesta to your business
+              Bring HONESTA to Your Business
             </motion.h1>
 
             <motion.p
@@ -61,10 +64,20 @@ export function PartnershipPage() {
               transition={{ duration: 0.6, ease: "easeOut" }}
               className="font-body font-light text-earth/70 text-base md:text-lg leading-relaxed max-w-xl"
             >
-              Restaurants, coffee shops, gyms, spas, hotels, and event
-              catering — we supply businesses of any size with honest,
-              small-batch products your guests will trust.
+              HONESTA supplies premium natural foods made in the UAE to cafés,
+              restaurants, hotels, gyms, retailers, corporate clients and event
+              partners. Our collection includes dried fruits, fruit rolls, dried
+              vegetables, ghee, jerky and curated gift selections.
             </motion.p>
+
+            <motion.div
+              variants={fadeUp}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+            >
+              <Button href="/shop" variant="outline" size="sm">
+                Explore our shop
+              </Button>
+            </motion.div>
 
             {/* Benefits */}
             <motion.ul
@@ -101,13 +114,13 @@ export function PartnershipPage() {
               ))}
             </motion.ul>
 
-            {/* Instagram card */}
+            {/* Contact card */}
             <motion.div
               variants={fadeUp}
               transition={{ duration: 0.6, ease: "easeOut" }}
               className="mt-1"
             >
-              <PartnershipInstagramCard />
+              <PartnershipContactCard />
             </motion.div>
           </div>
 
