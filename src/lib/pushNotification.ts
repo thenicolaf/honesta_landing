@@ -47,7 +47,7 @@ export async function getNotificationUrl(type: string, relatedId?: string): Prom
     }
     if (type === "new_category") {
       const { data } = await supabaseAdmin.from("categories").select("slug").eq("id", relatedId).single();
-      if (data?.slug) return `/shop?category=${data.slug}`;
+      if (data?.slug) return `/shop/${data.slug}`;
     }
   }
   return NOTIFICATION_URL_MAP[type] ?? "/panel";

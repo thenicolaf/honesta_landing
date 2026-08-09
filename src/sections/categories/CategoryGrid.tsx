@@ -16,7 +16,7 @@ export function CategoryGrid({
     description: c.description,
     image_url: c.image_url,
     badge: c.badge,
-    href: `/shop?category=${c.slug}`,
+    href: `/shop/${c.slug}`,
   }));
 
   if (categories.length === 0) return null;

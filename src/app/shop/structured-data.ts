@@ -10,9 +10,9 @@ export function buildShopCollectionJsonLd(
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "@id": `${shopUrl}#collectionpage`,
-    name: "Shop — HONESTA Natural Dried Fruits",
+    name: "Shop — HONESTA Premium Natural Foods",
     description:
-      "Handcrafted dried fruits and pastila. 100% fruit. No added sugar. No additives. Small batch production with love.",
+      "Shop HONESTA dried fruits, fruit rolls, dried vegetables, ghee, jerky and gift selections, carefully made in the UAE.",
     url: shopUrl,
     isPartOf: { "@id": `${siteUrl}/#website` },
     mainEntity: {
@@ -24,7 +24,7 @@ export function buildShopCollectionJsonLd(
         position: i + 1,
         name: c.name,
         description: c.tagline,
-        url: `${shopUrl}?category=${c.slug}`,
+        url: `${siteUrl}/shop/${c.slug}`,
         ...(c.image_url ? { image: c.image_url } : {}),
       })),
     },

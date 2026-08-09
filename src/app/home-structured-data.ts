@@ -22,7 +22,7 @@ export function buildHomeStructuredData(
         position: i + 1,
         name: c.name,
         description: c.tagline,
-        url: `${siteUrl}/shop?category=${c.slug}`,
+        url: `${siteUrl}/shop/${c.slug}`,
         ...(c.image_url ? { image: c.image_url } : {}),
       })),
     },

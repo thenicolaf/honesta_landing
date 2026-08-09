@@ -82,17 +82,32 @@ export function ProductGrid({
   categories,
   salesMap,
   shuffleSeed,
+  fixedCategory,
+  hideHeader,
 }: DbProductGridProps) {
-  const filters = useFilteredProducts(rawProducts, salesMap, shuffleSeed);
+  const filters = useFilteredProducts(
+    rawProducts,
+    salesMap,
+    shuffleSeed,
+    fixedCategory,
+  );
 
-  useTrackViewItemList(filters.products, filters.categoryFilter.value, categories);
+  useTrackViewItemList(
+    filters.products,
+    fixedCategory ?? filters.categoryFilter.value,
+    categories,
+  );
 
   return (
     <section id="products" className="bg-cream pt-12 pb-20 md:pt-16 md:pb-28">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
-        <BackLink sticky className="mb-6" />
-        <ProductHeader />
-        <ProductToolbar categories={categories} filters={filters} />
+        {!hideHeader && <BackLink sticky className="mb-6" />}
+        {!hideHeader && <ProductHeader />}
+        <ProductToolbar
+          categories={categories}
+          filters={filters}
+          hideCategory={!!fixedCategory}
+        />
         {filters.products.length === 0 ? (
           <EmptyState
             icon={<IconLeaf className="w-12 h-12 text-earth/15" />}

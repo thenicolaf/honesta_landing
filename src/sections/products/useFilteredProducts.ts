@@ -32,6 +32,7 @@ export function useFilteredProducts(
   rawProducts: DbProduct[],
   salesMap?: Record<string, number>,
   shuffleSeed?: string | null,
+  fixedCategory?: string,
 ) {
   const categoryFilter = useFilterBar("category");
   const sortFilter = useFilterBar("sort");
@@ -52,7 +53,7 @@ export function useFilteredProducts(
 
   const products = useMemo(() => {
     const searchVal = deferredSearch.toLowerCase();
-    const category = categoryFilter.value;
+    const category = fixedCategory ?? categoryFilter.value;
     const mark = markFilter.value;
 
     const filtered = rawProducts.filter((p, i) => {
@@ -70,6 +71,7 @@ export function useFilteredProducts(
     rawProducts,
     salesMap,
     searchIndex,
+    fixedCategory,
     categoryFilter.value,
     effectiveSort,
     deferredSearch,

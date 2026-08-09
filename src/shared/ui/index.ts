@@ -1,5 +1,7 @@
 export { Button, buttonVariants } from "./Button";
 export { BackLink } from "./BackLink";
+export { Breadcrumbs } from "./Breadcrumbs";
+export type { BreadcrumbItem } from "./Breadcrumbs";
 export { CookieConsent } from "./CookieConsent";
 export { WhatsAppFloatingButton } from "./WhatsAppFloatingButton";
 export { Avatar } from "./Avatar";

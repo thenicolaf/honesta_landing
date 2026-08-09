@@ -33,11 +33,11 @@ export async function generateMetadata({
         description:
           match.description ||
           `${match.name}. ${match.tagline}. Natural dried fruits by HONESTA.`,
-        alternates: { canonical: `${shopUrl}?category=${match.slug}` },
+        alternates: { canonical: `${siteUrl}/shop/${match.slug}` },
         openGraph: {
           title: `${match.name} — HONESTA`,
           description: match.tagline,
-          url: `${shopUrl}?category=${match.slug}`,
+          url: `${siteUrl}/shop/${match.slug}`,
           ...(match.image_url
             ? { images: [{ url: match.image_url, alt: match.name }] }
             : {}),
