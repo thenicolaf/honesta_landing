@@ -37,7 +37,7 @@ export function InventoryCard({ row }: { row: InventoryRow }) {
             ) : null}
           </div>
           <p className="font-semibold text-sm text-earth capitalize truncate">
-            {row.product_title.toLowerCase()}
+            {row.product_title}
           </p>
         </div>
         <InventoryStatusBadge status={row.status} />

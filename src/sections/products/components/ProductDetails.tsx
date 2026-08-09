@@ -38,7 +38,7 @@ export function NutritionTable({ nutrition }: { nutrition: NutritionInfo }) {
   return (
     <div>
       <p className="font-body font-semibold uppercase tracking-[0.13em] text-2xs text-earth/55 mb-2.5">
-        Nutrition facts Per 100g
+        Nutrition facts Per 100 g
       </p>
       <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
         {rows.map(({ label, value }) => (

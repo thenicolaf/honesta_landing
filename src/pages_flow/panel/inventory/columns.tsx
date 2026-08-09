@@ -45,7 +45,7 @@ const productColumn: ColumnDef<InventoryRow, InventoryColumnKey> = {
         ) : null}
       </div>
       <span className="font-semibold text-sm text-earth capitalize truncate">
-        {r.product_title.toLowerCase()}
+        {r.product_title}
       </span>
     </div>
   ),

@@ -1,5 +1,6 @@
 import type { DbProduct } from "@/sections/products/types/db-types";
 import type { Product } from "@/sections/products/types";
+import { calculateDiscountedPrice } from "@/shared/utils/calculateDiscount";
 
 export function buildDescription(dbProduct: DbProduct, product: Product): string {
   return (
@@ -20,14 +21,31 @@ function buildVariantOffers(
   productUrl: string,
 ) {
   return product.variants.map((v) => {
+    // Discount is recomputed per variant (matching the visible page) — a single
+    // product-level discountedPrice would be wrong for larger variants under a
+    // percentage promotion.
+    const price = product.promotion
+      ? calculateDiscountedPrice(
+          v.price,
+          product.promotion.discountType,
+          product.promotion.discountValue,
+        )
+      : v.price;
+
     const offer: Record<string, unknown> = {
       "@type": "Offer",
       name: `${v.weight_g}g`,
       sku: `${slug}-${v.id}`,
-      price: product.promotion ? product.promotion.discountedPrice : v.price,
+      price,
       priceCurrency: "AED",
+      itemCondition: "https://schema.org/NewCondition",
       availability,
       url: productUrl,
+      weight: {
+        "@type": "QuantitativeValue",
+        value: v.weight_g,
+        unitCode: "GRM",
+      },
     };
     if (product.promotion?.endsAt) {
       offer.priceValidUntil = product.promotion.endsAt.split("T")[0];
@@ -69,12 +87,14 @@ export function buildProductJsonLd(dbProduct: DbProduct, product: Product, siteU
             priceCurrency: "AED",
             offerCount: product.variants.length,
             availability,
+            url: productUrl,
             offers: variantOffers,
           }
         : variantOffers[0] ?? {
             "@type": "Offer",
             price: product.price ?? 0,
             priceCurrency: "AED",
+            itemCondition: "https://schema.org/NewCondition",
             availability,
             url: productUrl,
           },

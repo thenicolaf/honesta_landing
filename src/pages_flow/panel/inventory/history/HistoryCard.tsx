@@ -45,7 +45,7 @@ export function HistoryCard({
         </div>
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-sm text-earth capitalize truncate">
-            {movement.product_title.toLowerCase()}
+            {movement.product_title}
           </p>
           <p className="text-2xs text-earth/55 tabular-nums truncate">
             <span>{REASON_LABELS[movement.reason] ?? movement.reason}</span>

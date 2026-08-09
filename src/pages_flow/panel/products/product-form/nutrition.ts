@@ -5,7 +5,7 @@ export interface NutritionEntry {
 }
 
 export const DEFAULT_NUTRITION_FIELDS: { key: string; name: string }[] = [
-  { key: "calories", name: "Calories" },
+  { key: "calories", name: "Energy (kcal)" },
   { key: "carbs", name: "Carbs (g)" },
   { key: "natural_sugars", name: "Natural sugars (g)" },
   { key: "added_sugars", name: "Added sugars (g)" },
