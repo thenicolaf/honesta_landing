@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase.server";
 import { AdminSidebar } from "./_components/AdminSidebar";
 
 export const metadata: Metadata = {
-  robots: { index: false, follow: false },
+  robots: { index: false, follow: true },
 };
 
 export default async function AdminLayout({

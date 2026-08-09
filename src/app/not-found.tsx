@@ -1,6 +1,5 @@
 import { SearchX } from "lucide-react";
 import { Card, Button } from "@/shared/ui";
-import { GoBackButton } from "./_components/GoBackButton";
 
 export default function NotFound() {
   return (
@@ -11,14 +10,16 @@ export default function NotFound() {
             <SearchX className="w-7 h-7 text-earth/50" />
           </div>
           <h1 className="font-display font-semibold text-heading text-2xl mb-2">
-            Page Not Found
+            Page not found
           </h1>
           <p className="font-body font-light text-earth/60 text-sm mb-8">
-            The page you&apos;re looking for doesn&apos;t exist or has been moved.
+            The page may have moved, but there is more to discover at HONESTA.
           </p>
           <div className="flex flex-col gap-3">
-            <Button href="/">Back to Home</Button>
-            <GoBackButton />
+            <Button href="/shop">SHOP ALL</Button>
+            <Button href="/" variant="outline">
+              BACK TO HOME
+            </Button>
           </div>
         </Card>
       </div>

@@ -6,11 +6,13 @@ import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvid
 import { ProductsSection } from "@/pages_flow/shop";
 import { TrustMarks } from "@/sections";
 import { getCategories } from "@/lib/categoriesDb";
+import { getCategorySeo } from "./categorySeo";
 import {
   buildShopCollectionJsonLd,
   buildShopBreadcrumbJsonLd,
 } from "./structured-data";
 
+const SHOP_TITLE = "Shop Premium Natural Foods in UAE | HONESTA";
 const SHOP_DESCRIPTION =
   "Shop HONESTA dried fruits, fruit rolls, dried vegetables, ghee, jerky and gift selections, carefully made in the UAE.";
 
@@ -28,15 +30,19 @@ export async function generateMetadata({
     const match = categories.find((c) => c.slug === category);
 
     if (match) {
+      const seo = getCategorySeo(match.slug);
+      const title = seo ? seo.title : `${match.name} — HONESTA`;
+      const description =
+        seo?.description ||
+        match.description ||
+        `${match.name}. ${match.tagline}. Natural dried fruits by HONESTA.`;
       return {
-        title: `${match.name} — HONESTA`,
-        description:
-          match.description ||
-          `${match.name}. ${match.tagline}. Natural dried fruits by HONESTA.`,
+        title: { absolute: title },
+        description,
         alternates: { canonical: `${siteUrl}/shop/${match.slug}` },
         openGraph: {
-          title: `${match.name} — HONESTA`,
-          description: match.tagline,
+          title,
+          description: seo?.description || match.tagline,
           url: `${siteUrl}/shop/${match.slug}`,
           ...(match.image_url
             ? { images: [{ url: match.image_url, alt: match.name }] }
@@ -47,11 +53,11 @@ export async function generateMetadata({
   }
 
   return {
-    title: "Shop",
+    title: { absolute: SHOP_TITLE },
     description: SHOP_DESCRIPTION,
     alternates: { canonical: shopUrl },
     openGraph: {
-      title: "Shop — HONESTA",
+      title: SHOP_TITLE,
       description: SHOP_DESCRIPTION,
       url: shopUrl,
       siteName: "HONESTA",
@@ -61,7 +67,7 @@ export async function generateMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: "Shop — HONESTA",
+      title: SHOP_TITLE,
       description: SHOP_DESCRIPTION,
       images: ["/og-image.webp"],
     },

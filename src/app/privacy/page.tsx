@@ -3,7 +3,9 @@ import { GoBackButton } from "@/app/_components/GoBackButton";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  robots: { index: false },
+  description:
+    "How HONESTA collects, uses and protects your personal data when you browse our website and place orders in the UAE.",
+  alternates: { canonical: `${process.env.PUBLIC_BASE_URL!}/privacy` },
 };
 
 export default function PrivacyPage() {

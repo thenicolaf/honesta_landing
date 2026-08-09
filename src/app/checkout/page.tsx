@@ -15,7 +15,7 @@ import { getActivePromotionsMap } from "@/lib/promotionsDb";
 export const metadata: Metadata = {
   title: "Checkout",
   description: "Complete your order for natural dried fruits delivery in UAE.",
-  robots: { index: false, follow: false },
+  robots: { index: false, follow: true },
 };
 
 export default function CheckoutRoute() {

@@ -3,7 +3,9 @@ import { GoBackButton } from "@/app/_components/GoBackButton";
 
 export const metadata: Metadata = {
   title: "Terms and Conditions",
-  robots: { index: false },
+  description:
+    "HONESTA terms and conditions for using our website and purchasing premium natural foods made in the UAE.",
+  alternates: { canonical: `${process.env.PUBLIC_BASE_URL!}/terms` },
 };
 
 export default function TermsPage() {

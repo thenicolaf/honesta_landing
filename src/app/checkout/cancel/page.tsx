@@ -12,7 +12,7 @@ import {
 import { ResultToast } from "../result/ResultToast";
 
 export const metadata: Metadata = {
-  robots: { index: false, follow: false },
+  robots: { index: false, follow: true },
 };
 
 interface CancelResult {

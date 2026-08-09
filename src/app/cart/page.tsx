@@ -10,7 +10,7 @@ import { PromoSliderSkeleton } from "@/sections";
 export const metadata: Metadata = {
   title: "Cart",
   description: "Review your selected natural dried fruits before checkout.",
-  robots: { index: false, follow: false },
+  robots: { index: false, follow: true },
 };
 
 async function CartContent() {

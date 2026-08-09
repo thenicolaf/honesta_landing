@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { Breadcrumbs, Skeleton } from "@/shared/ui";
 import { ProductGridSkeleton } from "@/sections/products/ProductGridSkeleton";
 import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvider";
@@ -8,6 +8,7 @@ import { ProductsSection } from "@/pages_flow/shop";
 import { TrustMarks } from "@/sections";
 import { getCategoryBySlug } from "@/lib/categoriesDb";
 import { getPublishedProducts } from "@/lib/productsDb";
+import { getCategorySeo } from "../categorySeo";
 import {
   buildCategoryCollectionJsonLd,
   buildCategoryBreadcrumbJsonLd,
@@ -24,15 +25,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const siteUrl = process.env.PUBLIC_BASE_URL!;
   const url = `${siteUrl}/shop/${category.slug}`;
+  const seo = getCategorySeo(category.slug);
+  const title = seo ? seo.title : `${category.name} — HONESTA`;
   const description =
-    category.description || `${category.name}. ${category.tagline}`.trim();
+    seo?.description ||
+    category.description ||
+    `${category.name}. ${category.tagline}`.trim();
 
   return {
-    title: `${category.name} — HONESTA`,
+    title: { absolute: title },
     description,
     alternates: { canonical: url },
     openGraph: {
-      title: `${category.name} — HONESTA`,
+      title,
       description,
       url,
       siteName: "HONESTA",
@@ -42,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      title: `${category.name} — HONESTA`,
+      title,
       description,
       images: [category.image_url || "/og-image.webp"],
     },
