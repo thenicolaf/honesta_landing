@@ -104,16 +104,33 @@ export function buildProductJsonLd(dbProduct: DbProduct, product: Product, siteU
 
 export function buildBreadcrumbJsonLd(dbProduct: DbProduct, product: Product, siteUrl: string) {
   const productUrl = `${siteUrl}/products/${dbProduct.slug}`;
+  const categorySlug = dbProduct.categories?.slug;
+
+  // Mirror the visible breadcrumbs: Home > Shop > Category > Product.
+  const items = [
+    { name: "Home", item: siteUrl },
+    { name: "Shop", item: `${siteUrl}/shop` },
+    ...(product.category
+      ? [
+          {
+            name: product.category,
+            item: categorySlug
+              ? `${siteUrl}/shop/${categorySlug}`
+              : `${siteUrl}/shop`,
+          },
+        ]
+      : []),
+    { name: dbProduct.title, item: productUrl },
+  ];
 
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: siteUrl },
-      ...(product.category
-        ? [{ "@type": "ListItem", position: 2, name: product.category, item: `${siteUrl}/#categories` }]
-        : []),
-      { "@type": "ListItem", position: product.category ? 3 : 2, name: dbProduct.title, item: productUrl },
-    ],
+    itemListElement: items.map((entry, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: entry.name,
+      item: entry.item,
+    })),
   };
 }

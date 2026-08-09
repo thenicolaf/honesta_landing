@@ -5,7 +5,7 @@ import { Check } from "lucide-react";
 import { PartnershipForm } from "@/sections/partnership/PartnershipForm";
 import { PartnershipContactCard } from "@/sections/partnership/PartnershipContactCard";
 import { fadeUp } from "@/sections/partnership/consts";
-import { BackLink } from "@/shared/ui";
+import { BackLink, Button } from "@/shared/ui";
 
 const BENEFITS = [
   "Clear and carefully selected ingredients",
@@ -69,6 +69,15 @@ export function PartnershipPage() {
               partners. Our collection includes dried fruits, fruit rolls, dried
               vegetables, ghee, jerky and curated gift selections.
             </motion.p>
+
+            <motion.div
+              variants={fadeUp}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+            >
+              <Button href="/shop" variant="outline" size="sm">
+                Explore our shop
+              </Button>
+            </motion.div>
 
             {/* Benefits */}
             <motion.ul

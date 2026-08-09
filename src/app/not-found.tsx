@@ -16,9 +16,9 @@ export default function NotFound() {
             The page may have moved, but there is more to discover at HONESTA.
           </p>
           <div className="flex flex-col gap-3">
-            <Button href="/shop">SHOP ALL</Button>
+            <Button href="/shop">Shop all</Button>
             <Button href="/" variant="outline">
-              BACK TO HOME
+              Back to home
             </Button>
           </div>
         </Card>

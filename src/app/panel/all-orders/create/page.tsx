@@ -67,6 +67,7 @@ async function getManualOrderProducts(): Promise<Product[]> {
       title: p.title,
       tagline: "",
       category: p.categories?.name ?? "",
+      categorySlug: "",
       tags: [],
       freeFrom: [],
       ingredients: [],

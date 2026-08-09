@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { BackLink, Card } from "@/shared/ui";
+import { SHOP_CATEGORY_LINKS } from "@/shared/consts/navLinks";
 import {
   IconLeaf,
   IconHands,
@@ -6,15 +8,6 @@ import {
   IconCleanLabel,
   IconNoSugar,
 } from "@/shared/icons";
-
-const products = [
-  "Dried Fruits",
-  "Fruit Rolls",
-  "Dried Vegetables",
-  "Ghee",
-  "Jerky",
-  "Mixes & Gifts",
-];
 
 const approachCards = [
   {
@@ -123,17 +116,20 @@ export function AboutUs() {
             </p>
 
             <ul className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4 mb-8">
-              {products.map((name) => (
-                <li key={name} className="animate-about-stagger">
-                  <div className="group flex h-full flex-col items-center justify-center gap-3 rounded-2xl bg-white-warm border border-parchment/60 px-4 py-6 md:py-7 transition-all duration-300 hover:border-orange/40 hover:shadow-sm hover:-translate-y-0.5">
+              {SHOP_CATEGORY_LINKS.map(({ label, href }) => (
+                <li key={href} className="animate-about-stagger">
+                  <Link
+                    href={href}
+                    className="group flex h-full flex-col items-center justify-center gap-3 rounded-2xl bg-white-warm border border-parchment/60 px-4 py-6 md:py-7 transition-all duration-300 hover:border-orange/40 hover:shadow-sm hover:-translate-y-0.5"
+                  >
                     <span className="font-display font-semibold text-heading text-lg md:text-xl text-center leading-snug">
-                      {name}
+                      {label}
                     </span>
                     <span
                       aria-hidden
                       className="h-px w-6 bg-orange/50 transition-all duration-300 group-hover:w-10"
                     />
-                  </div>
+                  </Link>
                 </li>
               ))}
             </ul>

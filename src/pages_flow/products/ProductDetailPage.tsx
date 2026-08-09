@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowLeft } from "lucide-react";
-import { buttonVariants } from "@/shared/ui";
+import { buttonVariants, Breadcrumbs } from "@/shared/ui";
 import { cn } from "@/shared/utils/cn";
 import { HashLink } from "@/sections/navbar";
 import { productToGAItem, trackViewItem } from "@/lib/analytics";
@@ -39,6 +39,7 @@ export function ProductDetailPage({
   const {
     title,
     category,
+    categorySlug,
     badge,
     tagline,
     tags,
@@ -81,6 +82,19 @@ export function ProductDetailPage({
           {backLabel}
         </HashLink>
 
+        {/* Breadcrumbs — Home > Shop > Category > Product */}
+        <Breadcrumbs
+          items={[
+            { label: "Home", href: "/" },
+            { label: "Shop", href: "/shop" },
+            ...(categorySlug
+              ? [{ label: category, href: `/shop/${categorySlug}` }]
+              : []),
+            { label: title },
+          ]}
+          className="mb-5"
+        />
+
         {/* Two-column layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-14">
           <ProductDetailImage
@@ -97,6 +111,7 @@ export function ProductDetailPage({
           <div className="flex flex-col gap-5">
             <ProductHeader
               category={category}
+              categoryHref={categorySlug ? `/shop/${categorySlug}` : undefined}
               badge={badge}
               extraBadges={
                 product.id && (

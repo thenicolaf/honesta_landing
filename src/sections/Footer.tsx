@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { IconInstagram, IconWhatsApp } from "@/shared/icons";
-import { NAV_LINKS } from "@/shared/consts/navLinks";
+import { NAV_LINKS, SHOP_CATEGORY_LINKS } from "@/shared/consts/navLinks";
 import { HashLink } from "./navbar/HashLink";
 
 export function Footer() {
@@ -10,7 +10,7 @@ export function Footer() {
     <footer className="noise relative bg-earth overflow-hidden">
       <div className="relative mx-auto max-w-7xl px-6 lg:px-10 py-16 md:py-20">
         {/* ── Main columns ─────────────────────────────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-12 md:gap-8 pb-12 border-b border-sand/10 text-center sm:text-left">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-8 pb-12 border-b border-sand/10 text-center sm:text-left">
           {/* Column 1: Brand */}
           <div className="flex flex-col gap-5 items-center sm:items-start">
             <HashLink
@@ -51,7 +51,34 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Column 3: Contact */}
+          {/* Column 3: Shop */}
+          <div>
+            <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-sand/40 mb-5">
+              Shop
+            </p>
+            <ul className="flex flex-col gap-3">
+              <li>
+                <HashLink
+                  href="/shop"
+                  className="font-body font-light text-sand/65 text-sm hover:text-orange-light transition-colors duration-200"
+                >
+                  Shop all
+                </HashLink>
+              </li>
+              {SHOP_CATEGORY_LINKS.map(({ href, label }) => (
+                <li key={href}>
+                  <HashLink
+                    href={href}
+                    className="font-body font-light text-sand/65 text-sm hover:text-orange-light transition-colors duration-200"
+                  >
+                    {label}
+                  </HashLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Column 4: Contact */}
           <div>
             <p className="font-body font-semibold uppercase tracking-[0.18em] text-2xs text-sand/40 mb-5">
               Contact
