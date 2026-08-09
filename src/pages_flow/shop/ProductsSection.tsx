@@ -23,10 +23,20 @@ export async function ProductsSection({
   const shuffleSeed =
     cookieStore.get(PRODUCTS_SHUFFLE_SEED_COOKIE)?.value ?? null;
 
+  // Only offer categories that actually have published products — no empty
+  // categories in the filter dropdown (TZ §12). Derived from the already
+  // fetched published products, so no extra query.
+  const presentSlugs = new Set(
+    rawProducts.map((p) => p.categories?.slug).filter(Boolean),
+  );
+  const categoryOptions = categories
+    .filter((c) => presentSlugs.has(c.slug))
+    .map((c) => ({ value: c.slug, label: c.name }));
+
   return (
     <ProductGrid
       rawProducts={rawProducts}
-      categories={categories.map((c) => ({ value: c.slug, label: c.name }))}
+      categories={categoryOptions}
       salesMap={salesMap}
       shuffleSeed={shuffleSeed}
       fixedCategory={fixedCategory}

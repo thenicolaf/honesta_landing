@@ -19,11 +19,24 @@ const SHOP_DESCRIPTION =
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{
+    category?: string;
+    sort?: string;
+    search?: string;
+    mark?: string;
+  }>;
 }): Promise<Metadata> {
   const siteUrl = process.env.PUBLIC_BASE_URL!;
   const shopUrl = `${siteUrl}/shop`;
-  const { category } = await searchParams;
+  const { category, sort, search, mark } = await searchParams;
+
+  // Search/sort/mark create unbounded query combinations — keep them out of the
+  // index (noindex, follow) per TZ §12. Category-only pages stay indexable and
+  // canonicalize to their permanent /shop/<slug> page.
+  const filtered = Boolean(sort || search || mark);
+  const robots = filtered
+    ? { robots: { index: false, follow: true } }
+    : {};
 
   if (category) {
     const categories = await getCategories();
@@ -39,6 +52,7 @@ export async function generateMetadata({
       return {
         title: { absolute: title },
         description,
+        ...robots,
         alternates: { canonical: `${siteUrl}/shop/${match.slug}` },
         openGraph: {
           title,
@@ -55,6 +69,7 @@ export async function generateMetadata({
   return {
     title: { absolute: SHOP_TITLE },
     description: SHOP_DESCRIPTION,
+    ...robots,
     alternates: { canonical: shopUrl },
     openGraph: {
       title: SHOP_TITLE,
