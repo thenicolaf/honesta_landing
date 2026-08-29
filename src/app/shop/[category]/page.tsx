@@ -117,11 +117,7 @@ export default async function CategoryPage({ params }: Props) {
 
       <div className="sticky top-32 md:top-40 lg:top-44 z-100 mt-12 md:mt-16 pointer-events-none">
         <div className="mx-auto max-w-7xl px-6 lg:px-10">
-          <BackLink
-            href="/shop"
-            label="Back to shop"
-            className="pointer-events-auto bg-cream"
-          />
+          <BackLink className="pointer-events-auto bg-cream" />
         </div>
       </div>
 
