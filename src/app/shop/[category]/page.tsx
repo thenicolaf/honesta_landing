@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { Breadcrumbs, Skeleton } from "@/shared/ui";
+import { BackLink, Breadcrumbs, Skeleton } from "@/shared/ui";
 import { ProductGridSkeleton } from "@/sections/products/ProductGridSkeleton";
 import { SearchParamsFilterProvider } from "@/providers/SearchParamsFilterProvider";
 import { ProductsSection } from "@/pages_flow/shop";
@@ -115,7 +115,17 @@ export default async function CategoryPage({ params }: Props) {
     <main className="grow min-h-160">
       <TrustMarks />
 
-      <section className="bg-cream pt-12 md:pt-16">
+      <div className="sticky top-32 md:top-40 lg:top-44 z-100 mt-12 md:mt-16 pointer-events-none">
+        <div className="mx-auto max-w-7xl px-6 lg:px-10">
+          <BackLink
+            href="/shop"
+            label="Back to shop"
+            className="pointer-events-auto bg-cream"
+          />
+        </div>
+      </div>
+
+      <section className="bg-cream pt-6">
         <div className="mx-auto max-w-7xl px-6 lg:px-10">
           <Breadcrumbs
             items={[
