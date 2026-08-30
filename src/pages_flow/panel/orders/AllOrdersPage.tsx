@@ -13,7 +13,7 @@ import { AdminOrderCards } from "./AdminOrderCards";
 export function AllOrdersInner({ orders }: { orders: AdminOrder[] }) {
   useAutoRouterRefresh(["panel-orders-refresh"]);
 
-  const { filtered, searchFilter, statusFilter, fulfilledFilter } =
+  const { filtered, searchFilter, statusFilter, fulfilledFilter, promoFilter } =
     useFilteredOrders(orders);
 
   const { paginatedData, sort, onSort, pagination } = useOrdersTable(
@@ -24,7 +24,8 @@ export function AllOrdersInner({ orders }: { orders: AdminOrder[] }) {
   const hasFilters = !!(
     searchFilter.value ||
     statusFilter.value ||
-    fulfilledFilter.value
+    fulfilledFilter.value ||
+    promoFilter.value
   );
 
   const emptyDescription = hasFilters

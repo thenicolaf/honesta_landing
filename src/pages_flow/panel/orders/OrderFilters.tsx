@@ -13,10 +13,11 @@ export function OrderFilters() {
   const searchFilter = useFilterBar("search");
   const statusFilter = useFilterBar("status");
   const fulfilledFilter = useFilterBar("fulfilled");
+  const promoFilter = useFilterBar("promo");
   const pageFilter = useFilterBar("page");
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-[1fr_180px_180px] gap-3 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[1fr_180px_180px_180px] gap-3 mb-6">
       <div>
         <FormLabel htmlFor="order-search" className="sr-only">
           Search
@@ -33,6 +34,26 @@ export function OrderFilters() {
           }}
           onChange={(e) => {
             searchFilter.onValueChange(e.target.value);
+            pageFilter.onValueChange("");
+          }}
+        />
+      </div>
+      <div>
+        <FormLabel htmlFor="order-promo" className="sr-only">
+          Promo code
+        </FormLabel>
+        <FormInput
+          id="order-promo"
+          placeholder="Promo code…"
+          className="bg-white-warm"
+          value={promoFilter.value}
+          clearable
+          onClear={() => {
+            promoFilter.onValueChange("");
+            pageFilter.onValueChange("");
+          }}
+          onChange={(e) => {
+            promoFilter.onValueChange(e.target.value);
             pageFilter.onValueChange("");
           }}
         />

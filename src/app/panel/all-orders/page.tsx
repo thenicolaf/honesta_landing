@@ -10,6 +10,7 @@ const FILTER_KEYS = [
   "search",
   "status",
   "fulfilled",
+  "promo",
   "sortKey",
   "sortDir",
   "page",

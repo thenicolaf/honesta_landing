@@ -14,16 +14,24 @@ export function useFilteredOrders(orders: AdminOrder[]) {
   const searchFilter = useFilterBar("search");
   const statusFilter = useFilterBar("status");
   const fulfilledFilter = useFilterBar("fulfilled");
+  const promoFilter = useFilterBar("promo");
 
   const searchIndex = useMemo(
     () => buildSearchIndex(orders),
     [orders],
   );
 
+  const promoIndex = useMemo(
+    () => orders.map((o) => (o.promo_code?.code ?? "").toLowerCase()),
+    [orders],
+  );
+
   const deferredSearch = useDeferredValue(searchFilter.value);
+  const deferredPromo = useDeferredValue(promoFilter.value);
 
   const filtered = useMemo(() => {
     const searchVal = deferredSearch.trim().toLowerCase();
+    const promoVal = deferredPromo.trim().toLowerCase();
     const status = statusFilter.value;
     const fulfilled = fulfilledFilter.value;
 
@@ -32,13 +40,16 @@ export function useFilteredOrders(orders: AdminOrder[]) {
       if (fulfilled === "yes" && !o.is_fulfilled) return false;
       if (fulfilled === "no" && o.is_fulfilled) return false;
       if (searchVal && !searchIndex[i].includes(searchVal)) return false;
+      if (promoVal && !promoIndex[i].includes(promoVal)) return false;
       return true;
     });
   }, [
     orders,
     searchIndex,
+    promoIndex,
     statusFilter.value,
     deferredSearch,
+    deferredPromo,
     fulfilledFilter.value,
   ]);
 
@@ -47,5 +58,6 @@ export function useFilteredOrders(orders: AdminOrder[]) {
     searchFilter,
     statusFilter,
     fulfilledFilter,
+    promoFilter,
   };
 }
