@@ -11,6 +11,8 @@ const FILTER_KEYS = [
   "status",
   "fulfilled",
   "promo",
+  "dateFrom",
+  "dateTo",
   "sortKey",
   "sortDir",
   "page",
@@ -21,13 +23,10 @@ function OrdersSkeleton() {
   return (
     <>
       {/* Filters skeleton */}
-      <div className="flex flex-col gap-3 mb-6 xl:flex-row xl:items-end">
-        <Skeleton className="h-9 w-full xl:flex-1" />
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 xl:contents">
-          <Skeleton className="h-9 w-full xl:w-44" />
-          <Skeleton className="h-9 w-full xl:w-44" />
-          <Skeleton className="h-9 w-full xl:w-44" />
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 mb-6">
+        {Array.from({ length: 6 }, (_, i) => (
+          <Skeleton key={i} className="h-9 w-full" />
+        ))}
       </div>
 
       {/* Mobile: card skeletons */}

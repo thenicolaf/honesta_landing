@@ -1,7 +1,8 @@
 "use client";
 
-import { FormInput, FormSelect, FormLabel } from "@/shared/ui";
+import { FormInput, FormSelect, FormLabel, FormDatePicker } from "@/shared/ui";
 import { useFilterBar } from "@/providers/FilterProvider";
+import { toDateOnlyString, fromDateOnlyString } from "@/shared/utils/zonedTime";
 import { ORDER_STATUS_OPTIONS } from "./helpers";
 
 const FULFILLED_OPTIONS = [
@@ -14,10 +15,19 @@ export function OrderFilters() {
   const statusFilter = useFilterBar("status");
   const fulfilledFilter = useFilterBar("fulfilled");
   const promoFilter = useFilterBar("promo");
+  const dateFromFilter = useFilterBar("dateFrom");
+  const dateToFilter = useFilterBar("dateTo");
   const pageFilter = useFilterBar("page");
 
+  const dateFrom = dateFromFilter.value
+    ? fromDateOnlyString(dateFromFilter.value)
+    : undefined;
+  const dateTo = dateToFilter.value
+    ? fromDateOnlyString(dateToFilter.value)
+    : undefined;
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[1fr_180px_180px_180px] gap-3 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 mb-6">
       <div>
         <FormLabel htmlFor="order-search" className="sr-only">
           Search
@@ -90,6 +100,42 @@ export function OrderFilters() {
           clearable
           onValueChange={(v) => {
             fulfilledFilter.onValueChange(v);
+            pageFilter.onValueChange("");
+          }}
+        />
+      </div>
+      <div>
+        <FormLabel htmlFor="order-date-from" className="sr-only">
+          Start date
+        </FormLabel>
+        <FormDatePicker
+          id="order-date-from"
+          name="dateFrom"
+          placeholder="From date"
+          className="[&_input]:bg-white-warm"
+          clearable
+          value={dateFrom}
+          maxDate={dateTo}
+          onValueChange={(d) => {
+            dateFromFilter.onValueChange(d ? toDateOnlyString(d) : "");
+            pageFilter.onValueChange("");
+          }}
+        />
+      </div>
+      <div>
+        <FormLabel htmlFor="order-date-to" className="sr-only">
+          End date
+        </FormLabel>
+        <FormDatePicker
+          id="order-date-to"
+          name="dateTo"
+          placeholder="To date"
+          className="[&_input]:bg-white-warm"
+          clearable
+          value={dateTo}
+          minDate={dateFrom}
+          onValueChange={(d) => {
+            dateToFilter.onValueChange(d ? toDateOnlyString(d) : "");
             pageFilter.onValueChange("");
           }}
         />
