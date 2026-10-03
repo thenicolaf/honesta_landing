@@ -10,7 +10,12 @@ import type { CartItem } from "@/sections/products/types";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function SummaryRow({ label, value, color = "earth", bold = false }: {
+function SummaryRow({
+  label,
+  value,
+  color = "earth",
+  bold = false,
+}: {
   label: React.ReactNode;
   value: React.ReactNode;
   color?: "earth" | "moss" | "orange";
@@ -18,32 +23,47 @@ function SummaryRow({ label, value, color = "earth", bold = false }: {
 }) {
   return (
     <div className="flex justify-between items-baseline gap-3">
-      <span className={cn(
-        "font-body text-sm min-w-0 wrap-break-word",
-        bold ? "font-semibold text-earth text-base" : `font-light text-${color === "earth" ? "earth/60" : color}`,
-      )}>
+      <span
+        className={cn(
+          "font-body text-sm min-w-0 wrap-break-word",
+          bold
+            ? "font-semibold text-earth text-base"
+            : `font-light text-${color === "earth" ? "earth/60" : color}`,
+        )}
+      >
         {label}
       </span>
-      <span className={cn(
-        "font-body font-semibold shrink-0 whitespace-nowrap",
-        bold ? "text-orange text-lg" : `text-${color} text-sm`,
-      )}>
+      <span
+        className={cn(
+          "font-body font-semibold shrink-0 whitespace-nowrap",
+          bold ? "text-orange text-lg" : `text-${color} text-sm`,
+        )}
+      >
         {value}
       </span>
     </div>
   );
 }
 
-function OrderLineItem({ item, promoPerUnit, promoCodeEndsAt }: {
+function OrderLineItem({
+  item,
+  promoPerUnit,
+  promoCodeEndsAt,
+}: {
   item: CartItem;
   promoPerUnit: number;
   promoCodeEndsAt?: string;
 }) {
   const hasPromoCode = promoPerUnit > 0;
-  const hasPromotion = item.originalPrice != null && item.originalPrice !== item.price;
+  const hasPromotion =
+    item.originalPrice != null && item.originalPrice !== item.price;
   const finalLineTotal = Math.max(0, item.price - promoPerUnit) * item.quantity;
 
-  const priceColor = hasPromoCode ? "text-moss" : hasPromotion ? "text-orange" : "text-earth";
+  const priceColor = hasPromoCode
+    ? "text-moss"
+    : hasPromotion
+      ? "text-orange"
+      : "text-earth";
   const strikeAmount = hasPromoCode
     ? item.price * item.quantity
     : hasPromotion
@@ -88,7 +108,11 @@ function OrderLineItem({ item, promoPerUnit, promoCodeEndsAt }: {
   );
 }
 
-function DeliveryRow({ fee, isFree, originalFee }: {
+function DeliveryRow({
+  fee,
+  isFree,
+  originalFee,
+}: {
   fee: number;
   isFree: boolean;
   originalFee?: number;
@@ -177,7 +201,14 @@ export function OrderSummary({
           )}
           {appliedPromoCode && promoDiscount > 0 && (
             <SummaryRow
-              label={<>Promo code <span className="font-mono tracking-widest">{appliedPromoCode.code}</span></>}
+              label={
+                <>
+                  Promo code{" "}
+                  <span className="font-mono tracking-widest">
+                    {appliedPromoCode.code}
+                  </span>
+                </>
+              }
               value={`−AED ${promoDiscount.toFixed(2)}`}
               color="moss"
             />
@@ -195,9 +226,10 @@ export function OrderSummary({
         </div>
 
         {freeThreshold && (
-          <div className="mt-3 pt-3 border-t border-parchment/60">
+          <div className="mt-3">
             <DeliveryInfo
-              label={`Free in ${emirate} from AED ${freeThreshold}`}
+              variant="highlight"
+              label={`Free delivery in ${emirate} from AED ${freeThreshold}`}
             />
           </div>
         )}
