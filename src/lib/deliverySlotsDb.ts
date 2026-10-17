@@ -2,10 +2,15 @@ import { cache } from "react";
 import { supabaseAdmin } from "./supabase.server";
 
 export {
-  findSlotConflict,
+  findSlotConflicts,
   getAvailableSlotsForDate,
+  resolveEmirateSchedule,
+  summarizeEmirateSchedules,
 } from "@/shared/utils/deliverySlots";
-export type { SlotConflict } from "@/shared/utils/deliverySlots";
+export type {
+  EmirateSchedule,
+  SlotConflict,
+} from "@/shared/utils/deliverySlots";
 
 export type DeliverySlot = {
   id: string;
@@ -14,6 +19,8 @@ export type DeliverySlot = {
   end_time: string;
   is_active: boolean;
   available_weekdays: number[];
+  /** `delivery_settings.emirate` names; empty = all emirates (default schedule). */
+  emirates: string[];
   created_at: string;
   updated_at: string;
 };
@@ -24,10 +31,11 @@ export type DeliverySlotInput = {
   end_time: string;
   is_active: boolean;
   available_weekdays: number[];
+  emirates: string[];
 };
 
 const SELECT_COLUMNS =
-  "id, label, start_time, end_time, is_active, available_weekdays, created_at, updated_at";
+  "id, label, start_time, end_time, is_active, available_weekdays, emirates, created_at, updated_at";
 
 // ─── Queries ────────────────────────────────────────────────────────────────
 

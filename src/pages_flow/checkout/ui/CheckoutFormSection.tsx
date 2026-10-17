@@ -7,6 +7,8 @@ import { CheckoutForm } from "./CheckoutForm";
 import { DeliveryScheduleSection } from "./DeliveryScheduleSection";
 import { toastError } from "@/shared/ui";
 import { calculateDelivery } from "@/shared/utils/calculateDelivery";
+import { resolveEmirateSchedule } from "@/shared/utils/deliverySlots";
+import { DEFAULT_EMIRATE } from "@/shared/consts";
 import { trackBeginCheckout } from "@/lib/analytics";
 import type { CustomerInfo } from "@/shared/types";
 import type { UserAddress } from "@/lib/addressesDb";
@@ -59,7 +61,13 @@ export function CheckoutFormSection({
   const cutoffHour = emirateSetting?.cutoff_hour ?? 19;
   const deliveryDays = emirateSetting?.delivery_days ?? 1;
 
-  const scheduleRequired = deliverySlots.length > 0;
+  // Per-emirate schedule: own slots override the all-emirates ones. Empty
+  // emirate falls back to the default the server uses in `readEmirate`.
+  const schedule = resolveEmirateSchedule(
+    deliverySlots,
+    emirate || DEFAULT_EMIRATE,
+  );
+  const scheduleRequired = schedule.status === "active";
   const [scheduleSelected, setScheduleSelected] = useState(false);
 
   const [state, formAction] = useActionState(
@@ -98,7 +106,7 @@ export function CheckoutFormSection({
         scheduleSelected={scheduleSelected}
         scheduleSlot={
           <DeliveryScheduleSection
-            slots={deliverySlots}
+            slots={schedule.slots}
             blackouts={deliveryBlackouts}
             cutoffHour={cutoffHour}
             deliveryDays={deliveryDays}

@@ -52,6 +52,23 @@ export function SlotCard({ slot }: { slot: DeliverySlot }) {
         })}
       </div>
 
+      <div className="flex flex-wrap gap-1 mt-2">
+        {slot.emirates.length === 0 ? (
+          <span className="text-2xs font-body tracking-[0.06em] text-earth/45">
+            All emirates
+          </span>
+        ) : (
+          slot.emirates.map((emirate) => (
+            <span
+              key={emirate}
+              className="px-2 py-0.5 rounded-full text-2xs font-body font-semibold tracking-[0.06em] bg-orange/10 text-orange border border-orange/30"
+            >
+              {emirate}
+            </span>
+          ))
+        )}
+      </div>
+
       <div className="flex items-center gap-2 mt-auto pt-3">
         <Button
           as="button"

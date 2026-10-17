@@ -29,7 +29,7 @@ export function BlackoutCard({ blackout, slots }: BlackoutCardProps) {
           <div className="flex items-center gap-2 mt-1">
             {slot ? (
               <Badge variant="warm" size="xs">
-                {slot.label} · {slot.start_time.slice(0, 5)}–{slot.end_time.slice(0, 5)}
+                {slot.label}
               </Badge>
             ) : (
               <Badge variant="warm" size="xs">

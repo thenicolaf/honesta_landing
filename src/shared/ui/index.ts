@@ -27,6 +27,7 @@ export {
 } from "./Form/index";
 export { RichText } from "./RichText";
 export { Skeleton, SkeletonCard, SkeletonGrid, SkeletonProductGrid, SkeletonSection } from "./Skeleton";
+export { Alert } from "./Alert";
 export { Badge } from "./Badge";
 export { Card } from "./Card";
 export { DeliveryInfo } from "./DeliveryInfo";

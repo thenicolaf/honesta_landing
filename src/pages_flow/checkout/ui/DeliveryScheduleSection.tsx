@@ -34,9 +34,10 @@ export function DeliveryScheduleSection({
     onSelectionChange,
   });
 
-  // No slots configured at all → admin hasn't set anything up. Render nothing
-  // so the rest of checkout (notes/promo/submit) keeps working without delivery
-  // scheduling. Guests can still place an order.
+  // No active slots for the selected emirate (neither its own nor the
+  // all-emirates ones — `slots` arrives already resolved by
+  // `resolveEmirateSchedule`). Render nothing so the rest of checkout keeps
+  // working without delivery scheduling; the order goes through without a date.
   if (slots.length === 0) return null;
 
   return (

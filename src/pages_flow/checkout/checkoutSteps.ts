@@ -20,9 +20,9 @@ import {
 import { getCartTotals } from "@/lib/cart";
 import { getPerItemPromoDiscounts } from "@/shared/utils/recalculatePromoDiscount";
 import {
-  getActiveDeliverySlots,
   getAvailableSlotsForDate,
   type DeliverySlot,
+  type EmirateSchedule,
 } from "@/lib/deliverySlotsDb";
 import { getDeliveryBlackouts } from "@/lib/deliveryBlackoutsDb";
 import {
@@ -196,26 +196,28 @@ export function evaluateDeliveryFee(
 
 // ─── 5. Delivery window re-validation ────────────────────────────────────────
 
+/**
+ * `schedule` is the emirate's already-resolved schedule (own slots override
+ * the all-emirates ones — see `resolveEmirateSchedule`), so a slot belonging
+ * to another emirate is simply not found and rejected.
+ */
 export async function revalidateDeliveryWindow(
   delivery: DeliveryFormFields,
+  schedule: EmirateSchedule<DeliverySlot>,
   cutoffHour: number,
   deliveryDays: number,
 ): Promise<StepResult<ValidatedDeliveryWindow>> {
-  const [allSlots, blackouts] = await Promise.all([
-    getActiveDeliverySlots(),
-    getDeliveryBlackouts(),
-  ]);
-
-  // Admin hasn't configured any active slots — accept the order without a
-  // schedule (matches the client-side "scheduleRequired = slots.length > 0").
-  if (allSlots.length === 0) {
+  // No active slots for this emirate — accept the order without a schedule
+  // (matches the client-side `scheduleRequired = status === "active"`).
+  if (schedule.status === "off") {
     return succeed({ deliverySchedule: null, chosenSlot: null });
   }
 
+  const blackouts = await getDeliveryBlackouts();
   const date = fromDateOnlyString(delivery.deliveryDate);
   const availableSlots = getAvailableSlotsForDate(
     date,
-    allSlots,
+    schedule.slots,
     blackouts,
     cutoffHour,
     deliveryDays,

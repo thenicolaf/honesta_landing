@@ -2,6 +2,8 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { toastError } from "@/shared/ui";
+import { DEFAULT_EMIRATE } from "@/shared/consts";
+import { parseAddress } from "@/shared/utils/address";
 import type { CustomerInfo } from "@/shared/types";
 import type { Product } from "@/sections/products/types/types";
 import type { DeliverySetting } from "@/lib/deliveryDb";
@@ -60,8 +62,14 @@ export function ManualOrderForm({
 
   const [rows, setRows] = useState<ItemRow[]>([emptyRow()]);
   const [mixes, setMixes] = useState<PendingMix[]>([]);
-  const [emirate, setEmirate] = useState<string>("Dubai");
-  const schedule = useDeliverySchedule(slots);
+  // Seed from the prefilled address so totals and slots match what the
+  // address section shows before the admin touches it.
+  const [emirate, setEmirate] = useState<string>(
+    () =>
+      parseAddress(initialValues?.address ?? "").defaultEmirate ||
+      DEFAULT_EMIRATE,
+  );
+  const schedule = useDeliverySchedule(slots, emirate || DEFAULT_EMIRATE);
 
   useToastOnStateChange(state);
 
@@ -87,7 +95,7 @@ export function ManualOrderForm({
         onEmirateChange={setEmirate}
       />
 
-      {slots.length > 0 && (
+      {schedule.status === "active" && (
         <DeliveryScheduleSection
           date={schedule.date}
           slotId={schedule.slotId}

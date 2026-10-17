@@ -16,7 +16,7 @@ import {
 } from "@/shared/ui";
 import type { DeliverySlot } from "@/lib/deliverySlotsDb";
 import { deleteSlotAction } from "./actions";
-import { SlotForm } from "./SlotForm";
+import { SlotForm, type EmirateOption } from "./SlotForm";
 
 interface SlotActionsContextValue {
   openCreate: () => void;
@@ -35,9 +35,11 @@ export function useSlotActions() {
 
 export function SlotActionsProvider({
   slots,
+  emirateOptions,
   children,
 }: {
   slots: DeliverySlot[];
+  emirateOptions: EmirateOption[];
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -87,7 +89,12 @@ export function SlotActionsProvider({
             </DialogTitle>
           </DialogHeader>
           {(creating || editing) && (
-            <SlotForm slot={editing} allSlots={slots} onClose={close} />
+            <SlotForm
+              slot={editing}
+              allSlots={slots}
+              emirateOptions={emirateOptions}
+              onClose={close}
+            />
           )}
         </DialogContent>
       </Dialog>
