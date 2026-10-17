@@ -10,7 +10,10 @@ import {
   createOrderWithItems,
 } from "@/lib/orders";
 import { createPaymentForOrder } from "@/lib/payments";
-import { getActiveDeliverySlots } from "@/lib/deliverySlotsDb";
+import {
+  getActiveDeliverySlots,
+  resolveEmirateSchedule,
+} from "@/lib/deliverySlotsDb";
 import {
   applyPromoCode,
   computeCheckoutTotals,
@@ -58,9 +61,10 @@ export async function submitCheckout(
     // Best-effort cookie write — don't await DB-bound work on it.
     void persistCustomerCookie(customer, user.id !== null);
 
-    // Phase 2 — pure validation. Schedule fields are required only when admin
-    // configured at least one active slot.
-    const scheduleRequired = activeSlots.length > 0;
+    // Phase 2 — pure validation. Schedule fields are required only when the
+    // customer's emirate has active slots (its own, or the all-emirates ones).
+    const schedule = resolveEmirateSchedule(activeSlots, emirate);
+    const scheduleRequired = schedule.status === "active";
     const fieldErrors = validateCheckoutFields(
       customer,
       deliveryFields,
@@ -74,6 +78,7 @@ export async function submitCheckout(
       applyPromoCode(submittedPromo, items, user.id),
       revalidateDeliveryWindow(
         deliveryFields,
+        schedule,
         setting?.cutoff_hour ?? 19,
         setting?.delivery_days ?? 1,
       ),

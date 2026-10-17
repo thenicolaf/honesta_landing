@@ -1,14 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { updateDeliverySetting } from "@/lib/deliveryDb";
+import { getDeliverySettings, updateDeliverySetting } from "@/lib/deliveryDb";
 import {
   deleteDeliverySlot,
-  findSlotConflict,
+  findSlotConflicts,
   getDeliverySlots,
   insertDeliverySlot,
   updateDeliverySlot,
-  type DeliverySlot,
 } from "@/lib/deliverySlotsDb";
 import {
   deleteDeliveryBlackout,
@@ -16,11 +15,8 @@ import {
   updateDeliveryBlackout,
 } from "@/lib/deliveryBlackoutsDb";
 import { fromDateOnlyString, getZoneIsoWeekday } from "@/shared/utils/zonedTime";
-import {
-  WEEKDAYS_ISO,
-  weekdayShortLabel,
-  type WeekdayIso,
-} from "@/shared/consts/delivery";
+import { WEEKDAYS_ISO } from "@/shared/consts/delivery";
+import { toConflictInfo, type SlotConflictInfo } from "./slotScope";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -146,13 +142,32 @@ interface SlotValues {
   end_time: string;
   available_weekdays: number[];
   is_active: boolean;
+  /** Empty = all emirates. */
+  emirates: string[];
 }
 
 export interface SlotState {
   success?: boolean;
   error?: string;
   fieldErrors?: Record<string, string>;
+  /** Overlapping slots within the same schedule — saving is blocked. */
+  conflicts?: SlotConflictInfo[];
   values?: SlotValues;
+}
+
+function parseEmirates(raw: string | null): string[] {
+  if (!raw?.trim()) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    const names = parsed
+      .filter((v): v is string => typeof v === "string")
+      .map((v) => v.trim())
+      .filter(Boolean);
+    return Array.from(new Set(names));
+  } catch {
+    return [];
+  }
 }
 
 function parseSlotValues(formData: FormData): SlotValues {
@@ -169,6 +184,7 @@ function parseSlotValues(formData: FormData): SlotValues {
     end_time: ((formData.get("end_time") as string) ?? "").trim(),
     available_weekdays: Array.from(new Set(weekdaysRaw)).sort((a, b) => a - b),
     is_active: formData.get("is_active") === "true",
+    emirates: parseEmirates(formData.get("emirates") as string | null),
   };
 }
 
@@ -192,28 +208,82 @@ function validateSlot(values: SlotValues): Record<string, string> | null {
   return Object.keys(fieldErrors).length > 0 ? fieldErrors : null;
 }
 
-function formatRange(slot: DeliverySlot): string {
-  return `${slot.start_time.slice(0, 5)}–${slot.end_time.slice(0, 5)}`;
+/**
+ * Maps submitted emirate names onto the canonical spelling from
+ * `delivery_settings` (case-insensitive). Unknown names are a field error.
+ */
+async function normalizeSlotEmirates(
+  values: SlotValues,
+): Promise<{ emirates: string[]; error?: string }> {
+  if (values.emirates.length === 0) return { emirates: [] };
+  const settings = await getDeliverySettings();
+  const byLower = new Map(
+    settings.map((s) => [s.emirate.toLowerCase(), s.emirate]),
+  );
+  const emirates: string[] = [];
+  for (const name of values.emirates) {
+    const canonical = byLower.get(name.toLowerCase());
+    if (!canonical) return { emirates: [], error: `Unknown emirate: ${name}` };
+    if (!emirates.includes(canonical)) emirates.push(canonical);
+  }
+  return { emirates };
 }
 
-async function checkConflict(
+/**
+ * Authoritative overlap check against the current DB state — the form runs
+ * the same `findSlotConflicts` live, this catches races between tabs.
+ */
+async function checkConflicts(
   values: SlotValues,
   excludeId?: string,
-): Promise<string | null> {
+): Promise<SlotConflictInfo[]> {
   const existing = await getDeliverySlots();
-  const conflict = findSlotConflict(
-    `${values.start_time}:00`,
-    `${values.end_time}:00`,
-    values.available_weekdays,
-    existing,
-    excludeId,
-  );
-  if (!conflict) return null;
-  return `Conflicts with "${conflict.slot.label} ${formatRange(conflict.slot)}" on ${weekdayShortLabel(conflict.weekday as WeekdayIso)}`;
+  return findSlotConflicts(values, existing, excludeId).map(toConflictInfo);
+}
+
+async function prepareSlot(
+  formData: FormData,
+  excludeId?: string,
+): Promise<{ values: SlotValues; failure?: SlotState }> {
+  const values = parseSlotValues(formData);
+  const fieldErrors = validateSlot(values) ?? {};
+
+  const { emirates, error: emiratesError } =
+    await normalizeSlotEmirates(values);
+  if (emiratesError) fieldErrors.emirates = emiratesError;
+  if (Object.keys(fieldErrors).length > 0) {
+    return { values, failure: { fieldErrors, values } };
+  }
+
+  const normalized = { ...values, emirates };
+  const conflicts = await checkConflicts(normalized, excludeId);
+  if (conflicts.length > 0) {
+    return {
+      values: normalized,
+      failure: {
+        error: `Overlaps with ${conflicts.length} slot${conflicts.length === 1 ? "" : "s"}`,
+        conflicts,
+        values: normalized,
+      },
+    };
+  }
+  return { values: normalized };
+}
+
+function toSlotInput(values: SlotValues) {
+  return {
+    label: values.label,
+    start_time: values.start_time,
+    end_time: values.end_time,
+    is_active: values.is_active,
+    available_weekdays: values.available_weekdays,
+    emirates: values.emirates,
+  };
 }
 
 function revalidateDelivery() {
   revalidatePath("/panel/delivery");
+  revalidatePath("/panel/all-orders/create");
   revalidatePath("/cart");
   revalidatePath("/checkout");
 }
@@ -222,21 +292,14 @@ export async function createSlotAction(
   _prevState: SlotState | null,
   formData: FormData,
 ): Promise<SlotState> {
-  const values = parseSlotValues(formData);
-  const fieldErrors = validateSlot(values);
-  if (fieldErrors) return { fieldErrors, values };
+  let values = parseSlotValues(formData);
 
   try {
-    const conflict = await checkConflict(values);
-    if (conflict) return { fieldErrors: { start_time: conflict }, values };
+    const prepared = await prepareSlot(formData);
+    values = prepared.values;
+    if (prepared.failure) return prepared.failure;
 
-    const { error } = await insertDeliverySlot({
-      label: values.label,
-      start_time: values.start_time,
-      end_time: values.end_time,
-      is_active: values.is_active,
-      available_weekdays: values.available_weekdays,
-    });
+    const { error } = await insertDeliverySlot(toSlotInput(values));
     if (error) return { error: `Failed to create slot: ${error}`, values };
 
     revalidateDelivery();
@@ -252,21 +315,14 @@ export async function updateSlotAction(
   _prevState: SlotState | null,
   formData: FormData,
 ): Promise<SlotState> {
-  const values = parseSlotValues(formData);
-  const fieldErrors = validateSlot(values);
-  if (fieldErrors) return { fieldErrors, values };
+  let values = parseSlotValues(formData);
 
   try {
-    const conflict = await checkConflict(values, id);
-    if (conflict) return { fieldErrors: { start_time: conflict }, values };
+    const prepared = await prepareSlot(formData, id);
+    values = prepared.values;
+    if (prepared.failure) return prepared.failure;
 
-    const { error } = await updateDeliverySlot(id, {
-      label: values.label,
-      start_time: values.start_time,
-      end_time: values.end_time,
-      is_active: values.is_active,
-      available_weekdays: values.available_weekdays,
-    });
+    const { error } = await updateDeliverySlot(id, toSlotInput(values));
     if (error) return { error: `Failed to update slot: ${error}`, values };
 
     revalidateDelivery();

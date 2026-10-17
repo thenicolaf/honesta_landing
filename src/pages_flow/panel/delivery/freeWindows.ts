@@ -1,4 +1,5 @@
 import type { DeliverySlot } from "@/lib/deliverySlotsDb";
+import { slotScopesCompatible } from "@/shared/utils/deliverySlots";
 import {
   WEEKDAYS_ISO,
   weekdayShortLabel,
@@ -63,8 +64,14 @@ export interface FreeWindow {
   free: Interval[];
 }
 
+/**
+ * Free time per selected weekday within the schedule the edited slot belongs
+ * to — only slots with a compatible emirate scope occupy time (a Dubai slot
+ * doesn't block a Fujairah window).
+ */
 export function computeFreeWindows(
   selectedWeekdays: readonly number[],
+  emirates: readonly string[],
   existing: readonly DeliverySlot[],
   excludeId?: string,
 ): FreeWindow[] {
@@ -73,6 +80,7 @@ export function computeFreeWindows(
       const occupied = existing
         .filter((s) => s.id !== excludeId)
         .filter((s) => s.is_active)
+        .filter((s) => slotScopesCompatible({ emirates }, s))
         .filter((s) => s.available_weekdays.includes(weekday))
         .map<Interval>((s) => ({
           start: s.start_time.slice(0, 5),

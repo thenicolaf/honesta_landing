@@ -24,6 +24,8 @@ import {
   updateBlackoutAction,
   type BlackoutState,
 } from "./actions";
+import { formatEmiratesScope, formatSlotRange } from "./slotScope";
+import { weekdayShortLabel, type WeekdayIso } from "@/shared/consts/delivery";
 
 interface BlackoutFormProps {
   blackout: DeliveryBlackout | null;
@@ -138,10 +140,24 @@ export function BlackoutForm({ blackout, slots, onClose }: BlackoutFormProps) {
           placeholder={!date ? "Pick a date first" : "All day"}
           options={[
             { value: "", label: "All day" },
-            ...filteredSlots.map((s) => ({
-              value: s.id,
-              label: `${s.label} · ${s.start_time.slice(0, 5)}–${s.end_time.slice(0, 5)}`,
-            })),
+            // Every slot is listed so the admin sees why one can't be picked
+            // (disabled, or doesn't run on the chosen weekday) instead of it
+            // silently missing from the list.
+            ...[...slots]
+              .sort((a, b) => a.start_time.localeCompare(b.start_time))
+              .map((s) => {
+                const unavailableReason = !s.is_active
+                  ? "inactive"
+                  : date &&
+                      !s.available_weekdays.includes(getZoneIsoWeekday(date))
+                    ? `not on ${weekdayShortLabel(getZoneIsoWeekday(date) as WeekdayIso)}`
+                    : null;
+                return {
+                  value: s.id,
+                  label: `${s.label} · ${formatSlotRange(s)} · ${formatEmiratesScope(s.emirates)}${unavailableReason ? ` (${unavailableReason})` : ""}`,
+                  disabled: unavailableReason !== null,
+                };
+              }),
           ]}
           state={state?.fieldErrors?.slot_id ? "error" : "default"}
         />

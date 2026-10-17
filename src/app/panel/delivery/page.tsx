@@ -30,7 +30,7 @@ async function DeliveryContent() {
         </div>
       </section>
 
-      <SlotsSection slots={slots} />
+      <SlotsSection slots={slots} settings={settings} />
 
       <BlackoutsSection blackouts={blackouts} slots={slots} />
     </div>
